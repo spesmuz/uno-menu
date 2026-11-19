@@ -370,6 +370,11 @@ input,select,textarea{font-family:inherit}
 .auth h1{margin:0;text-align:center;font-family:Montserrat;font-size:20px;font-weight:800}
 .auth p{margin:0;text-align:center;color:var(--muted);font-size:13px;line-height:1.5}
 .auth .fld{min-width:0}
+.auth-slider{width:100%;max-width:400px;overflow:hidden;border-radius:24px}
+.auth-track{display:flex;align-items:flex-start;width:200%;transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.auth-track>.auth{width:50%;max-width:none;flex:0 0 50%}
+.auth-track.pin{transform:translateX(-50%)}
+.auth .linkbtn{background:none;border:0;color:var(--gold);font:inherit;font-size:14px;font-weight:600;padding:6px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .progress{height:4px;border-radius:2px;background:#2A2C33;overflow:hidden}
 .progress i{display:block;height:100%;width:40%;background:var(--gold);animation:prog 1.2s ease-in-out infinite}
 @keyframes prog{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
@@ -1217,14 +1222,20 @@ function renderAuth(mode){
       '<label class="fld"><span>Parol</span><input id="auPass" type="password" autocomplete="current-password" required></label>'+
       '<div id="auMsg"></div><button class="btn gold" type="submit" style="height:50px">Kirish</button>';
   }
-  h+='<a class="btn" href="#menyu">Menyuga qaytish</a></form>';
-  if(window.UnoKiosk && window.UnoKiosk.exitWithPin){
-    h+='<form class="auth" id="pinForm" novalidate style="margin-top:14px"><h1 style="font-size:17px">Internet yo\'qmi?</h1><p>Ilovadan PIN-kod bilan chiqish.</p>'+
+  var kiosk=!!(window.UnoKiosk && window.UnoKiosk.exitWithPin);
+  h+='<a class="btn" href="#menyu">Menyuga qaytish</a>'+(kiosk?'<button type="button" class="linkbtn" id="toPin">Internet yo\'qmi? PIN bilan chiqish</button>':'')+'</form>';
+  if(kiosk){
+    h+='<form class="auth" id="pinForm" novalidate>'+logoHTML()+'<h1>Ilovadan chiqish</h1><p>Internet bo\'lmaganda planshetni PIN-kod bilan oching.</p>'+
        '<label class="fld"><span>PIN-kod</span><input id="exitPin" type="password" inputmode="numeric" maxlength="8" autocomplete="off"></label>'+
-       '<div id="pinMsg"></div><button class="btn danger" type="submit" style="height:46px">Ilovadan chiqish</button></form>';
+       '<div id="pinMsg"></div><button class="btn danger" type="submit" style="height:50px">Ilovadan chiqish</button>'+
+       '<button type="button" class="btn" id="fromPin">Orqaga</button></form>';
+    h=h.replace('<form class="auth" id="authForm"','<div class="auth-slider"><div class="auth-track" id="authTrack"><form class="auth" id="authForm"')+'</div></div>';
   }
   h+='</div>';
   A.innerHTML=h;
+  var tp=$("toPin"), fp=$("fromPin");
+  if(tp) tp.onclick=function(){ $("authTrack").classList.add("pin"); setTimeout(function(){ $("exitPin").focus(); },460); };
+  if(fp) fp.onclick=function(){ $("authTrack").classList.remove("pin"); msg($("pinMsg"),""); };
   var pf=$("pinForm"); if(pf) pf.addEventListener("submit",function(e){ e.preventDefault(); var ok=false; try{ ok=window.UnoKiosk.exitWithPin($("exitPin").value.trim()); }catch(_){} if(!ok){ msg($("pinMsg"),"PIN-kod noto'g'ri.","err"); $("exitPin").value=""; } });
   $("auLogin").focus();
   $("authForm").addEventListener("submit",function(e){ e.preventDefault(); if(mode==="setup") doSetup(); else doLogin(); });
