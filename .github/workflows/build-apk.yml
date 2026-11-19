@@ -6,7 +6,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/build-apk.yml'
-      - 'uno_icon.png'
+      - 'android/**'
 
 jobs:
   build:
@@ -35,15 +35,15 @@ jobs:
           SITE_URL=$(echo "$SITE_URL" | tr 'A-Z' 'a-z')
           echo "Menyu manzili: $SITE_URL"
 
-          mkdir -p src/uz/uno/airways classes dex res/drawable
-          cp uno_icon.png res/drawable/uno_icon.png
+          mkdir -p src/uz/uno/airways classes dex
+          cp -r android/res res
 
           cat > AndroidManifest.xml <<MANIFEST
           <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="uz.uno.airways" android:versionCode="${VERSION}" android:versionName="1.${VERSION}">
             <uses-sdk android:minSdkVersion="23" android:targetSdkVersion="32"/>
             <uses-permission android:name="android.permission.INTERNET"/>
             <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-            <application android:label="UNO Airways" android:icon="@drawable/uno_icon" android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen" android:hardwareAccelerated="true" android:usesCleartextTraffic="false">
+            <application android:label="UNO Airways" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen" android:hardwareAccelerated="true" android:usesCleartextTraffic="false">
               <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="fullSensor" android:launchMode="singleTask" android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|keyboard|navigation|uiMode">
                 <intent-filter>
                   <action android:name="android.intent.action.MAIN"/>

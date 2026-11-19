@@ -162,6 +162,62 @@ input,select,textarea{font-family:inherit}
 #stage.portrait .drawer{width:min(460px,100%)}
 #stage.portrait .info h2{font-size:24px}
 
+/* ---- phones ---- */
+#stage.phone{padding:12px 14px 54px;gap:10px;border-radius:0}
+#stage.phone .m-head{gap:8px;row-gap:10px}
+#stage.phone .logo{min-width:0;gap:7px}
+#stage.phone .logo img{width:40px;height:40px}
+#stage.phone .logo b{font-size:17px;letter-spacing:.12em}
+#stage.phone .logo span{font-size:7px;letter-spacing:.22em}
+#stage.phone .icon-btn{width:40px;height:40px}
+#stage.phone .icon-btn svg{width:17px;height:17px}
+#stage.phone .cart-btn{height:40px;padding:0 12px 0 10px;gap:7px}
+#stage.phone .cart-btn .t b{font-size:13px}#stage.phone .cart-btn .t small{font-size:10px}
+#stage.phone .tabs{scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#stage.phone .tabs::-webkit-scrollbar{display:none}
+#stage.phone .tab{height:36px;padding:0 12px;font-size:11px}
+#stage.phone .card{padding:11px;gap:8px;border-radius:24px}
+#stage.phone .media{height:calc(var(--cardW,372px) - 22px);border-radius:17px}
+#stage.phone .info{height:auto;min-height:30px}
+#stage.phone .info h2{font-size:19px}
+#stage.phone .info .price{font-size:17px}
+#stage.phone .desc{font-size:13.5px;height:60px;-webkit-line-clamp:3!important}
+#stage.phone .actions{height:42px}
+#stage.phone .more-btn,#stage.phone .add-btn{height:42px;font-size:13px}
+#stage.phone .add-btn{padding:0 16px}
+#stage.phone .arrow{width:38px;height:38px;margin-top:-19px}
+#stage.phone .langs.float{right:12px;bottom:10px}
+#stage.phone .langs button{height:32px;min-width:36px;font-size:11px}
+#stage.phone .dots{bottom:10px;max-width:60%}
+#stage.phone .dots button{padding:0 3px}
+#stage.phone .dots span{width:7px;height:7px}
+#stage.phone .dots button[aria-current="true"] span{width:20px}
+/* landscape phone */
+#stage.phoneL{padding:8px 18px 44px;gap:6px}
+#stage.phoneL .m-head{height:46px}
+#stage.phoneL .logo img{width:36px;height:36px}
+#stage.phoneL .langs.float{bottom:6px}
+#stage.phoneL .dots{bottom:4px}
+#stage.phoneL .card{display:grid;grid-template-columns:var(--mediaW) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;column-gap:12px;row-gap:6px}
+#stage.phoneL .media{grid-row:1/4;width:var(--mediaW);height:var(--mediaW)}
+#stage.phoneL .info{flex-direction:column;align-items:flex-start;gap:4px;padding:6px 4px 0}
+#stage.phoneL .info h2{white-space:normal;font-size:19px;line-height:1.2;display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+#stage.phoneL .info .price{font-size:18px}
+#stage.phoneL .desc{height:auto;padding:0 4px;-webkit-line-clamp:4!important;align-self:start}
+#stage.phoneL .actions{flex-wrap:wrap;height:auto;padding:0 2px 2px;justify-content:space-between}
+#stage.phone .drawer{width:min(400px,100%);padding:20px 18px 18px;gap:12px}
+#stage.phoneL .drawer{width:min(480px,62%);overflow-y:auto;padding:14px 18px;gap:10px}
+#stage.phoneL .drawer>*{flex-shrink:0}
+#stage.phoneL .gold-btn{height:48px}
+#stage.phone .detail{padding:16px;gap:14px}
+#stage.phone .d-name{font-size:26px}
+#stage.phone .d-close{top:24px;right:24px}
+#stage.phoneL .detail{padding:12px 16px;gap:18px}
+#stage.phoneL .d-media{flex:0 0 auto;height:100%;width:auto;aspect-ratio:1/1;max-width:55%}
+#stage.phoneL .d-info{padding:30px 2px 6px;gap:10px}
+#stage.phoneL .d-name{font-size:24px}
+#stage.phoneL .d-close{top:14px;right:16px}
+
 .dots{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:250;display:flex;justify-content:center;align-items:center;gap:2px;height:40px;max-width:640px}
 .dots button{height:28px;padding:0 4px;border:0;background:transparent;display:flex;align-items:center}
 .dots span{display:block;width:8px;height:8px;border-radius:4px;background:rgba(255,255,255,.24);transition:width .5s cubic-bezier(.22,1,.36,1),background .5s}
@@ -376,7 +432,10 @@ var stage=$("stage"), track=$("track"), slidesEl=$("slides");
 var XS=[0,355,550,690,790], SC=[1,.62,.51,.43,.38], SLOT=360;
 var GEO={
   land:{W:1180,minH:720,maxH:1500,cardW:500,maxW:640,baseW:500,XS:[0,355,550,690,790],SC:[1,.62,.51,.43,.38],SLOT:360},
-  port:{W:820,minH:1000,maxH:1900,cardW:620,maxW:750,baseW:600,XS:[0,425,600,720,820],SC:[1,.6,.48,.4,.36],SLOT:420}
+  port:{W:820,minH:1000,maxH:1900,cardW:620,maxW:750,baseW:600,XS:[0,425,600,720,820],SC:[1,.6,.48,.4,.36],SLOT:420},
+  /* phones: own compact layouts instead of a shrunken tablet stage */
+  phoneP:{W:430,minH:680,maxH:1100,cardW:372,maxW:384,baseW:372,XS:[0,292,392,452,492],SC:[1,.74,.58,.48,.42],SLOT:292,extra:186},
+  phoneL:{W:900,minH:430,maxH:430,wide:true,text:300,XR:[0,.72,1.0,1.18,1.3],SC:[1,.62,.51,.43,.38]}
 };
 var _rotT=null;
 function showRotSplash(){
@@ -387,10 +446,15 @@ function showRotSplash(){
 }
 function fit(){
   var vw=window.innerWidth||1180, vh=window.innerHeight||820;
-  var portrait = vh > vw*1.05, g = portrait?GEO.port:GEO.land;
+  var portrait = vh > vw*1.05, phone = Math.min(vw,vh) < 560, g;
+  if(phone && portrait) g=GEO.phoneP;
+  else if(phone){ g=Object.assign({},GEO.phoneL); g.W=Math.max(700,Math.min(1180,Math.round(430*vw/vh))); }
+  else g = portrait?GEO.port:GEO.land;
   if(S.portrait!==undefined && S.portrait!==portrait && S.view==="menu") showRotSplash();
   S.portrait=portrait; S.geo=g;
   stage.classList.toggle("portrait",portrait);
+  stage.classList.toggle("phone",phone);
+  stage.classList.toggle("phoneL",phone&&!portrait);
   var H=Math.max(g.minH, Math.min(g.maxH, Math.round(g.W*vh/vw)));
   stage.style.width=g.W+"px"; stage.style.height=H+"px";
   var s=Math.min(vw/g.W, vh/H);
@@ -401,6 +465,16 @@ function fit(){
 var CARD_EXTRA=150; /* card height = width + 150 (square photo + text block) */
 function sizeCards(){
   var g=S.geo||GEO.land, th=track.clientHeight||600;
+  if(g.wide){
+    /* landscape phone: square photo on the left, text on the right */
+    var chw=Math.max(200,th-4), side=chw-28, cww=side+28+10+g.text;
+    XS=g.XR.map(function(x){ return x*cww; }); SLOT=g.XR[1]*cww;
+    stage.style.setProperty("--cardW", cww+"px"); stage.style.setProperty("--cardH", chw+"px");
+    stage.style.setProperty("--mediaW", side+"px");
+    stage.style.setProperty("--cardTop", Math.max(0,Math.round((th-chw)/2))+"px");
+    return;
+  }
+  var CARD_EXTRA=g.extra||150;
   /* fill the free height down to the dots, keeping the square photo; cap the width */
   var cw=Math.max(260, Math.min(g.maxW, th-CARD_EXTRA-6));
   var ch=cw+CARD_EXTRA;
@@ -708,7 +782,10 @@ var sx=0, sy=0, st=0, down=false, swiped=false, gMode=null, tiltCard=null;
 function centreCard(){ var el=slideNodes[S.idx]; return el ? el.querySelector(".card") : null; }
 function tiltTo(card, clientX, clientY, k){
   var r=card.getBoundingClientRect(); if(!r.width) return;
-  var nx=Math.max(-1,Math.min(1,((clientX-r.left)/r.width)*2-1)), ny=Math.max(-1,Math.min(1,((clientY-r.top)/r.height)*2-1));
+  tiltN(card, ((clientX-r.left)/r.width)*2-1, ((clientY-r.top)/r.height)*2-1, k);
+}
+function tiltN(card, nx, ny, k){
+  nx=Math.max(-1,Math.min(1,nx)); ny=Math.max(-1,Math.min(1,ny));
   k=k||1;
   card.classList.add("tilting");
   card.style.transform="perspective(1000px) rotateX("+(-ny*9*k).toFixed(2)+"deg) rotateY("+(nx*11*k).toFixed(2)+"deg)";
@@ -721,6 +798,48 @@ function untilt(card){
   card.classList.remove("tilting"); card.style.transform="";
   card.style.setProperty("--go",0); card.style.setProperty("--px","0px"); card.style.setProperty("--py","0px");
 }
+
+/* ---- gyroscope tilt: the centred card follows how the device is held ---- */
+var GY={on:false, b0:null, g0:null, x:0, y:0, tx:0, ty:0, raf:0, last:0, card:null};
+function gyroIdle(){ return !down && !S.dragging && !S.detail && !S.cartOpen && S.view!=="admin" && !document.hidden; }
+function gyroFrame(){
+  GY.raf=0;
+  GY.x+=(GY.tx-GY.x)*0.18; GY.y+=(GY.ty-GY.y)*0.18;
+  var c=centreCard();
+  if(GY.card && GY.card!==c){ untilt(GY.card); GY.card=null; }
+  if(c && gyroIdle()){
+    if(Math.abs(GY.x)<0.02 && Math.abs(GY.y)<0.02){ if(GY.card){ untilt(c); GY.card=null; } }
+    else { tiltN(c, GY.x, GY.y, 0.8); GY.card=c; }
+  }
+  if(Math.abs(GY.tx-GY.x)>0.004 || Math.abs(GY.ty-GY.y)>0.004) GY.raf=requestAnimationFrame(gyroFrame);
+}
+function onOrient(e){
+  if(e.beta==null || e.gamma==null) return;
+  var ang=(screen.orientation&&typeof screen.orientation.angle==="number")?screen.orientation.angle:(window.orientation||0);
+  var b=e.beta, g=e.gamma, x, y;
+  // map device axes to screen axes for the current rotation
+  if(ang===90){ x=b; y=-g; } else if(ang===-90||ang===270){ x=-b; y=g; } else if(ang===180){ x=-g; y=-b; } else { x=g; y=b; }
+  var now=Date.now();
+  if(GY.b0===null || now-GY.last>1500){ GY.b0=y; GY.g0=x; }
+  // the neutral position slowly follows how the device is being held
+  GY.b0+=(y-GY.b0)*0.012; GY.g0+=(x-GY.g0)*0.012; GY.last=now;
+  var dx=x-GY.g0, dy=y-GY.b0, RANGE=14;
+  if(Math.abs(dx)<0.5) dx=0; if(Math.abs(dy)<0.5) dy=0;
+  GY.tx=Math.max(-1,Math.min(1,dx/RANGE)); GY.ty=Math.max(-1,Math.min(1,dy/RANGE));
+  if(!GY.raf) GY.raf=requestAnimationFrame(gyroFrame);
+}
+function startGyro(){
+  if(GY.on || !("DeviceOrientationEvent" in window)) return;
+  try{ if(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return; }catch(_){}
+  GY.on=true; window.addEventListener("deviceorientation",onOrient);
+}
+startGyro();
+/* iPhone/iPad (and some browsers) only send motion data after permission is given from a tap */
+var _gyPerm=false;
+document.addEventListener("pointerdown",function(){
+  if(_gyPerm || GY.last) return; var D=window.DeviceOrientationEvent;
+  if(D && typeof D.requestPermission==="function"){ _gyPerm=true; D.requestPermission().then(function(st){ if(st!=="granted") _gyPerm=false; }).catch(function(){ _gyPerm=false; }); }
+},{passive:true});
 track.addEventListener("pointerdown",function(e){
   if(e.button!==undefined&&e.button!==0) return; if(e.target.closest(".arrow")) return;
   sx=e.clientX; sy=e.clientY; st=Date.now(); down=true; swiped=false; gMode=null;
@@ -747,7 +866,7 @@ track.addEventListener("pointermove",function(e){
 function endDrag(e){
   if(e.type==="pointerleave" && e.pointerType==="mouse" && !down){ untilt(centreCard()); return; }
   if(!down) return; down=false;
-  if(tiltCard){ untilt(tiltCard); tiltCard=null; }
+  if(tiltCard){ untilt(tiltCard); tiltCard=null; GY.card=null; }
   var mode=gMode; gMode=null;
   if(mode!=="swipe"){ if(swiped) setTimeout(function(){ swiped=false; },0); return; }
   var dx=Math.max(-SLOT*2,Math.min(SLOT*2,(e.clientX-sx)/(S.scale||1))), dt=Math.max(1,Date.now()-st), flick=Math.abs(dx)/dt>.5;
