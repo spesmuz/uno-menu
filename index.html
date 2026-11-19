@@ -262,7 +262,8 @@ input,select,textarea{font-family:inherit}
 .media.has-vid .badge.vid{opacity:1}
 .vidwrap video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#111}
 /* photo → video: the photo softly blurs away while the video comes into focus */
-.slide.center .media .thumb{transition:filter .6s ease-out,opacity .7s ease .55s}
+.slide.center .media .thumb{transition:opacity .25s}
+.slide.center .media.has-vid .thumb{transition:filter .6s ease-out,opacity .7s ease .55s}
 .slide.center .media.has-vid .thumb{opacity:0;filter:blur(20px) brightness(1.1) saturate(.85)}
 .slide.center .media .vidwrap{opacity:0;filter:blur(20px) brightness(1.1);transition:opacity .5s ease .5s,filter .9s ease-out .6s}
 .slide.center .media .vidwrap.show{opacity:1;filter:blur(0) brightness(1)}
@@ -823,17 +824,29 @@ function holoHTML(d, nn){
     '<div class="shadow"></div><div class="dish"><div>'+inner+'</div></div>'+
     '<div class="lbl"><span class="num">'+nn+'</span><span class="tx"><b>'+esc(dn(d))+'</b><i></i></span></div><div class="ln"></div></div>';
 }
+/* call cb once the first video frame is really on screen (not just "playing") */
+function onFirstFrame(v, cb){
+  var done=false; function go(){ if(done) return; done=true; cb(); }
+  if(v.requestVideoFrameCallback){ var f=function(){ if(!v.paused && v.currentTime>0) go(); else v.requestVideoFrameCallback(f); }; v.requestVideoFrameCallback(f); }
+  else {
+    var tu=function(){ if(v.currentTime>0.05 && v.readyState>=2){ v.removeEventListener("timeupdate",tu); go(); } };
+    v.addEventListener("timeupdate",tu);
+  }
+}
+/* play only when enough of the video is loaded; until then the photo stays */
+function playWhenReady(v, ok, onShown){
+  function start(){ if(!ok()) return; if(onShown) onFirstFrame(v, onShown); var pr=v.play(); if(pr&&pr.catch) pr.catch(function(){}); }
+  if(v.readyState>=3) start();
+  else { v.addEventListener("canplay",function(){ start(); },{once:true}); try{ if(v.preload!=="auto") v.preload="auto"; v.load&&v.networkState===0&&v.load(); }catch(_){} }
+}
 var VIDEO_DELAY=2000, _vidT=null;
 function scheduleVideo(m, id){
   clearTimeout(_vidT);
   var v=m.querySelector("video"), w=m.querySelector(".vidwrap"); if(!v) return;
   v.muted=true;
-  v.addEventListener("playing",function(){ w.classList.add("show"); m.classList.add("has-vid"); setTimeout(function(){ w.classList.add("done"); },1700); },{once:true});
-  _vidT=setTimeout(function(){
-    var c=curList[S.idx];
-    if(!c || c.id!==id || S.detail || !m.isConnected || S.view!=="menu") return;
-    var pr=v.play(); if(pr&&pr.catch) pr.catch(function(){});
-  }, VIDEO_DELAY);
+  var shown=function(){ w.classList.add("show"); m.classList.add("has-vid"); setTimeout(function(){ w.classList.add("done"); },1700); };
+  var ok=function(){ var c=curList[S.idx]; return !!(c && c.id===id && !S.detail && m.isConnected && S.view==="menu"); };
+  _vidT=setTimeout(function(){ if(ok()) playWhenReady(v, ok, shown); }, VIDEO_DELAY);
 }
 function pauseCarouselVideo(){ clearTimeout(_vidT); slidesEl.querySelectorAll("video").forEach(function(v){ try{ v.pause(); }catch(_){} }); }
 function resumeCarouselVideo(){
@@ -986,9 +999,10 @@ function setupLayer(layer, d){
   layer.querySelectorAll("img[data-fit]").forEach(fitImg);
   var v=layer.querySelector("video"); if(!v) return;
   v.muted=true; var id=d.id;
-  v.addEventListener("playing",function(){ v.classList.add("show"); layer.classList.add("has-vid"); setTimeout(function(){ v.classList.add("done"); },1700); },{once:true});
+  var shown=function(){ v.classList.add("show"); layer.classList.add("has-vid"); setTimeout(function(){ v.classList.add("done"); },1700); };
   clearTimeout(S.dVidT);
-  S.dVidT=setTimeout(function(){ if(S.detail!==id || !v.isConnected) return; var pr=v.play(); if(pr&&pr.catch) pr.catch(function(){}); }, VIDEO_DELAY);
+  var ok=function(){ return S.detail===id && v.isConnected; };
+  S.dVidT=setTimeout(function(){ if(ok()) playWhenReady(v, ok, shown); }, VIDEO_DELAY);
 }
 function preloadAround(){
   var n=curList.length; if(n<2) return;
