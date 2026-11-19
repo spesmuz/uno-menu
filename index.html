@@ -163,6 +163,8 @@ input,select,textarea{font-family:inherit}
 #stage.portrait .info h2{font-size:24px}
 
 /* ---- phones ---- */
+#logoBox{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation;cursor:default}
+#logoBox *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;pointer-events:none}
 #stage.phone{padding:12px 14px 54px;gap:10px;border-radius:0}
 #stage.phone .m-head{gap:8px;row-gap:10px}
 #stage.phone .logo{min-width:0;gap:7px}
@@ -362,7 +364,7 @@ input,select,textarea{font-family:inherit}
 <div id="menuView">
   <div id="stage" role="application" aria-label="Restoran menyusi">
     <header class="m-head">
-      <div class="logo" id="logoBox"><img id="rLogo" class="hidden" alt="Restoran logotipi"><div class="lt"><b id="rName">RESTORAN</b><span id="rSub">RESTORAN</span></div></div>
+      <div class="logo" id="logoBox"><img id="rLogo" class="hidden" alt="Restoran logotipi" draggable="false"><div class="lt"><b id="rName">RESTORAN</b><span id="rSub">RESTORAN</span></div></div>
       <div class="tabs-wrap">
         <nav class="tabs noscroll" id="tabs" aria-label="Kategoriyalar"></nav>
         <label class="search-box hidden" id="searchBox"><span class="sr" id="searchLbl">Taom qidirish</span><input type="search" id="searchInput" placeholder="Taom nomi yoki tarkibi…"><button class="icon-btn" style="width:36px;height:36px;border:0;background:#26282F" id="searchClose" aria-label="Qidiruvni yopish"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></label>
@@ -838,13 +840,24 @@ function endDrag(e){
 }
 track.addEventListener("pointerup",endDrag); track.addEventListener("pointercancel",endDrag); track.addEventListener("pointerleave",endDrag);
 
-/* ---------- hidden admin entry: press and hold the logo for 3 s ---------- */
+/* ---------- hidden admin entry: hold the logo for 3 s, or tap it 7 times quickly ---------- */
 (function(){
-  var tmr=null, box=$("logoBox");
+  var tmr=null, box=$("logoBox"), taps=0, tapT=null, startX=0, startY=0;
+  function openAdmin(){ cancel(); taps=0; location.hash="#admin"; }
   function cancel(){ if(tmr){ clearTimeout(tmr); tmr=null; } }
-  box.addEventListener("pointerdown",function(e){ cancel(); tmr=setTimeout(function(){ tmr=null; location.hash="#admin"; },3000); });
-  ["pointerup","pointerleave","pointercancel"].forEach(function(ev){ box.addEventListener(ev,cancel); });
+  function start(x,y){ cancel(); startX=x; startY=y; tmr=setTimeout(function(){ tmr=null; openAdmin(); },3000);
+    taps++; clearTimeout(tapT); tapT=setTimeout(function(){ taps=0; },1500); if(taps>=7) openAdmin(); }
+  function move(x,y){ if(tmr && (Math.abs(x-startX)>24 || Math.abs(y-startY)>24)) cancel(); }
+  /* touch: block the system long-press (text selection / image menu) so the timer is not cancelled */
+  box.addEventListener("touchstart",function(e){ e.preventDefault(); var t=e.touches[0]; start(t.clientX,t.clientY); },{passive:false});
+  box.addEventListener("touchmove",function(e){ var t=e.touches[0]; move(t.clientX,t.clientY); },{passive:true});
+  box.addEventListener("touchend",cancel); box.addEventListener("touchcancel",cancel);
+  /* mouse / pen */
+  box.addEventListener("pointerdown",function(e){ if(e.pointerType==="touch") return; start(e.clientX,e.clientY); });
+  box.addEventListener("pointermove",function(e){ if(e.pointerType!=="touch") move(e.clientX,e.clientY); });
+  ["pointerup","pointerleave"].forEach(function(ev){ box.addEventListener(ev,function(e){ if(e.pointerType!=="touch") cancel(); }); });
   box.addEventListener("contextmenu",function(e){ e.preventDefault(); });
+  box.addEventListener("dragstart",function(e){ e.preventDefault(); });
 })();
 
 /* ---------- detail ---------- */
