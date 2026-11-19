@@ -434,7 +434,7 @@ var GEO={
   land:{W:1180,minH:720,maxH:1500,cardW:500,maxW:640,baseW:500,XS:[0,355,550,690,790],SC:[1,.62,.51,.43,.38],SLOT:360},
   port:{W:820,minH:1000,maxH:1900,cardW:620,maxW:750,baseW:600,XS:[0,425,600,720,820],SC:[1,.6,.48,.4,.36],SLOT:420},
   /* phones: own compact layouts instead of a shrunken tablet stage */
-  phoneP:{W:430,minH:680,maxH:1100,cardW:372,maxW:384,baseW:372,XS:[0,292,392,452,492],SC:[1,.74,.58,.48,.42],SLOT:292,extra:186},
+  phoneP:{W:430,minH:680,maxH:1100,cardW:372,maxW:384,baseW:372,XS:[0,292,392,452,492],SC:[1,.74,.58,.48,.42],SLOT:292,extra:162},
   phoneL:{W:900,minH:430,maxH:430,wide:true,text:300,XR:[0,.72,1.0,1.18,1.3],SC:[1,.62,.51,.43,.38]}
 };
 var _rotT=null;
@@ -484,6 +484,8 @@ function sizeCards(){
   stage.style.setProperty("--cardTop", Math.max(0,Math.round((th-ch)/2))+"px");
 }
 var _rzT=null;
+/* re-measure when the free space for the card changes (header grows after logo/tabs load, browser bars hide…) */
+if(window.ResizeObserver){ var _lastTH=0; new ResizeObserver(function(){ var h=track.clientHeight; if(Math.abs(h-_lastTH)<2) return; _lastTH=h; sizeCards(); if(typeof layout==="function" && curList.length) layout(true); }).observe(track); }
 window.addEventListener("resize",function(){ fit(); clearTimeout(_rzT); _rzT=setTimeout(function(){ fit(); if(typeof layout==="function" && curList.length) layout(true); },120); });
 window.addEventListener("orientationchange",function(){ setTimeout(function(){ fit(); if(curList.length) layout(true); },250); });
 
