@@ -1,4 +1,5 @@
 name: APK yig'ish (UNO Airways Menu)
+# APK: Actions → "APK yig'ish" → Run workflow
 
 on:
   workflow_dispatch:
