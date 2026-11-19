@@ -1360,7 +1360,7 @@ function makeBackend(){
       fetching=null;
       if(r.error) throw r.error;
       var n={}; (r.data||[]).forEach(function(row){ n[row.path]=row.data||{}; });
-      cache=n; fresh=true; save(); emit(false);
+      cache=n; fresh=true; window.__unoFresh=true; save(); emit(false);
       try{ window.dispatchEvent(new CustomEvent("uno-db-ok")); }catch(_){}
     }).catch(function(e){ fetching=null; console.warn("fetch",e); emit(true);
       try{ window.dispatchEvent(new CustomEvent("uno-db-error",{detail:(e&&(e.message||e.code))||String(e)})); }catch(_){}
@@ -1447,6 +1447,9 @@ function renderAdmin(){
      (ro?'':'<div class="a-row"><label class="btn">Logotip tanlash<input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" class="sr"></label>'+(S.settings.logoId?'<button class="btn danger" data-a="rmLogo">Olib tashlash</button>':'')+'</div>')+'</div></div>'+
      '<div class="a-row" style="margin-top:14px"><label class="fld"><span>Restoran nomi (birinchi so\'z katta, qolgani kichik yoziladi)</span><input id="setName" maxlength="40" value="'+esc(S.settings.name||"")+'" '+(ro?"disabled":"")+'></label><button class="btn gold" data-a="saveName" '+(ro?"disabled":"")+'>Saqlash</button></div>'+
      '<div class="a-row" style="margin-top:14px;align-items:center"><label class="chk" style="font-size:14px;color:var(--text)"><input type="checkbox" id="setSound" '+(S.settings.soundOn!==false?"checked":"")+' '+(ro?"disabled":"")+'> Menyu ovozlari (taom tanlanganda, savatchaga qo\'shilganda, buyurtmada)</label>'+(ro?'':'<button class="btn sm" data-a="testSound">Ovozni sinash</button>')+'</div><div id="setMsg"></div></section>';
+  // offline readiness
+  h+='<section class="a-sec"><h2>Oflayn rejim</h2><p class="help">Menyu, rasmlar va videolar shu qurilmada saqlanadi: internet bo\'lmasa ham menyu to\'liq ishlaydi. Internet qaytganda o\'zgarishlar o\'zi yuklanadi.</p>'+
+     '<div id="offStat" style="margin-top:10px;font-size:14px"></div><div class="a-row" style="margin-top:10px"><button class="btn" data-a="syncMedia">Hozir yuklash</button></div></section>';
   // tables, service charge, QR codes
   var base=location.origin+location.pathname.replace(/[^\/]*$/,"");
   h+='<section class="a-sec"><h2>Stollar, xizmat haqi va QR-kodlar</h2>'+
@@ -1531,6 +1534,7 @@ function renderAdmin(){
   var y=window.scrollY; A.innerHTML=h; window.scrollTo(0,y);
   var lf=$("logoFile"); if(lf) lf.onchange=function(){ var f=this.files[0]; this.value=""; if(f) uploadLogo(f); };
   if(S.aiBulk && $("aiBulkBox")) renderAiBulk();
+  offlineUI(); if(!Offline.last && !Offline.busy) syncMedia();
   var qf=$("qrFrom"), qt=$("qrTo"), ql=$("qrLink");
   if(qf&&qt&&ql){ var upd=function(){ var a=Math.max(1,parseInt(qf.value)||1), b=Math.max(a,parseInt(qt.value)||a); ql.href=ql.href.replace(/\?.*$/,"")+"?from="+a+"&to="+Math.min(b,a+199); }; qf.oninput=upd; qt.oninput=upd; }
   var ss=$("setSound"); if(ss) ss.onchange=async function(){ var on=this.checked; try{ await saveSettings({soundOn:on}); msg($("setMsg"), on?"Ovozlar yoqildi.":"Ovozlar o'chirildi.","ok"); }catch(err){ msg($("setMsg"),errText(err),"err"); } };
@@ -1579,6 +1583,7 @@ A.addEventListener("click", async function(e){
     }
     else if(act==="saveName"){ await saveSettings({name:$("setName").value.trim()}); msg($("setMsg"),"Restoran nomi saqlandi.","ok"); }
     else if(act==="setPin"){ var pv=$("kioskPin").value.trim(); if(!/^\d{4,8}$/.test(pv)){ msg($("pinSetMsg"),"4–8 ta raqam kiriting.","err"); return; } var okp=false; try{ okp=window.UnoKiosk.setPin(pv); }catch(_){} msg($("pinSetMsg"), okp?"PIN-kod shu planshetda saqlandi. Internet bo\'lmaganda admin kirish oynasidan shu PIN bilan chiqasiz.":"Saqlanmadi.", okp?"ok":"err"); $("kioskPin").value=""; }
+    else if(act==="syncMedia"){ Offline.last=0; syncMedia(); }
     else if(act==="saveTable"){ setTableNo($("setTable").value); msg($("tblMsg"), tableNo()?("Bu planshet: "+tableNo()+"-stol."):"Stol raqami olib tashlandi.","ok"); }
     else if(act==="saveSvc"){ var v=Math.round(Number($("setSvc").value)); if(!isFinite(v)||v<0||v>50){ msg($("tblMsg"),"0 dan 50 gacha son kiriting.","err"); return; } try{ await saveSettings({service:v}); msg($("tblMsg"),"Xizmat haqi: "+v+"%.","ok"); }catch(err){ msg($("tblMsg"),errText(err),"err"); } }
     else if(act==="tgFind"){
@@ -1900,7 +1905,50 @@ window.addEventListener("hashchange",route);
 
 function onData(){
   if(S.view==="admin") renderAdmin(); else refreshMenu();
+  clearTimeout(Offline.t); Offline.t=setTimeout(syncMedia,4000);
 }
+/* ---------- offline: keep every dish photo and video on the tablet ---------- */
+var MEDIA_CACHE="uno-media-v1";
+var Offline={busy:false,total:0,done:0,saved:0,failed:0,t:0};
+function mediaUrls(){
+  var out=[], seen={};
+  function add(id){ if(!id) return; var u=new URL(blob(id),location.href).href; if(!seen[u]){ seen[u]=1; out.push(u); } }
+  if(S.settings) add(S.settings.logoId);
+  (S.dishes||[]).forEach(function(d){ add(d.imgId); add(d.videoId); });
+  return out;
+}
+async function syncMedia(){
+  if(!("caches" in window) || Offline.busy || navigator.onLine===false || !(S.dishes&&S.dishes.length)) return;
+  Offline.busy=true; Offline.failed=0;
+  try{
+    var c=await caches.open(MEDIA_CACHE), urls=mediaUrls();
+    Offline.total=urls.length; Offline.done=0; Offline.saved=0; offlineUI();
+    for(var i=0;i<urls.length;i++){
+      var u=urls[i], hit=await c.match(u);
+      if(!hit){
+        try{ var res=await fetch(u,{mode:"cors"}); if(res.ok){ await c.put(u,res); hit=true; } else Offline.failed++; }
+        catch(e){ Offline.failed++; }
+      }
+      if(hit) Offline.saved++;
+      Offline.done++; offlineUI();
+    }
+    /* forget photos and videos that are no longer in the menu (only after a fresh sync) */
+    if(window.__unoFresh && !Offline.failed){
+      var keys=await c.keys();
+      for(var k=0;k<keys.length;k++){ if(urls.indexOf(keys[k].url)<0) await c.delete(keys[k]); }
+    }
+  }catch(e){ console.warn("offline sync",e); }
+  Offline.busy=false; Offline.last=Date.now(); offlineUI();
+}
+function offlineUI(){
+  var el=$("offStat"); if(!el) return;
+  var all=Offline.total||mediaUrls().length;
+  el.innerHTML = Offline.busy
+    ? 'Yuklanmoqda: '+Offline.done+' / '+all+' <div class="progress" style="margin-top:8px"><i style="width:'+Math.round(100*Offline.done/Math.max(1,all))+'%;animation:none"></i></div>'
+    : (Offline.last ? ('Planshetda saqlangan: <b>'+Offline.saved+' / '+all+'</b> ta rasm va video'+(Offline.failed?' · <span style="color:#ff9a8a">'+Offline.failed+' tasi yuklanmadi</span>':' ✅')) : 'Tekshirilmoqda…');
+}
+window.addEventListener("online",function(){ setTimeout(syncMedia,3000); });
+setInterval(syncMedia, 30*60000);
 /* load the Supabase library without blocking the page; give up after a few seconds when offline */
 function loadSupabase(ms){
   return new Promise(function(done){
