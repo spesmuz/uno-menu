@@ -20,10 +20,31 @@ Restoran planshetlari uchun menyu va admin panel. Bitta APK ichida ishlaydi.
 4. **GitHub → Settings → Pages:**
    - Source: *Deploy from a branch*
    - Branch: `main`, papka `/ (root)` → **Save**
-5. **GitHub → Actions → "APK yig'ish" → Run workflow.** 2–3 daqiqadan keyin pastdagi *Artifacts* bo'limidan `UNO-Airways-APK` yuklab olinadi.
+5. **GitHub → Settings → Secrets and variables → Actions → New repository secret:** nomi `KEYSTORE_B64`, qiymati ilovaning imzo kaliti (base64). Bu kalitsiz APK yig'ilmaydi.
+6. **APK:** https://github.com/spesmuz/uno-menu/releases/download/apk/UNO-Airways.apk (har yig'ishda yangilanadi).
 
 ## Yangilash
 
 - **Menyu kodi:** `index.html` o'zgartirilsa, planshetlar keyingi ochilishda yangisini oladi. APK'ni qayta o'rnatish shart emas.
 - **Taomlar, narxlar, rasmlar:** admin panel orqali o'zgartiriladi.
-- **APK yangilanishi:** yangi APK eskisining ustiga o'rnatilishi uchun bir xil imzo kerak. Buning uchun `KEYSTORE_B64` nomli GitHub secret qo'shing. U bo'lmasa, har yig'ishda yangi imzo yaratiladi va yangi APK'dan oldin eskisini o'chirish kerak bo'ladi.
+- **APK yangilanishi:** barcha APK'lar `KEYSTORE_B64` kaliti bilan imzolanadi, shuning uchun yangisi eskisining ustiga o'rnatiladi.
+
+## Kiosk rejimi (mijoz ilovadan chiqa olmaydi)
+
+**1-daraja: avtomatik.**
+- Ilova ekranga mahkamlanadi (screen pinning) va bosh ekran (launcher) bo'lib ishlaydi.
+- Birinchi ochilishda Android "bosh ekran ilovasini tanlang" deb so'rasa: **UNO Airways → Har doim**.
+- Planshetga ekran qulfi PIN-kodini qo'ying. *Sozlamalar → Xavfsizlik → Ilovani mahkamlash* bo'limida "Yechishdan oldin PIN so'rash" yoqilgan bo'lsin.
+
+**2-daraja: to'liq kiosk (qurilma egasi).** Bu rejimda hech qanday tugma yoki tugmalar birikmasi bilan chiqib bo'lmaydi, bildirishnomalar pardasi ham o'chadi. Har bir planshetda bir marta, kompyuter orqali bajariladi:
+1. Planshetda Google va boshqa barcha hisoblarni o'chiring (*Sozlamalar → Hisoblar*).
+2. *Sozlamalar → Planshet haqida* bo'limida "Build raqami" ustiga 7 marta bosing, so'ng *Dasturchi sozlamalari → USB orqali tuzatish* ni yoqing.
+3. Kompyuterga [Android platform-tools](https://developer.android.com/tools/releases/platform-tools) yuklang, planshetni USB bilan ulang va quyidagi buyruqni bajaring:
+   ```
+   adb shell dpm set-device-owner uz.uno.airways/.AdminReceiver
+   ```
+4. "Success" chiqqach, ilovani oching. Endi hisoblarni qayta qo'shsangiz ham bo'ladi.
+
+**Yashirin chiqish:** logotipni 3 soniya bosib turing yoki 7 marta bosing → admin login → *Planshet (kiosk rejimi)*:
+- **Ilovadan chiqish (vaqtincha)** — ilova yopiladi. Uy tugmasi bosilsa yoki planshet qayta yoqilsa, menyu yana ochiladi.
+- **Kiosk rejimini butunlay o'chirish** — ikki marta bosiladi. Ilova oddiy ilovaga aylanadi va uni o'chirib tashlash mumkin bo'ladi.

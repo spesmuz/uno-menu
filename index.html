@@ -1326,6 +1326,16 @@ function renderAdmin(){
       '<label class="fld"><span>Yangi parolni takrorlang</span><input id="pwNew2" type="password" autocomplete="new-password"></label>'+
       '<button class="btn gold" data-a="changePw">O\'zgartirish</button></div><div id="pwMsg"></div></section>';
   }
+  if(!ro && window.UnoKiosk){
+    var km=""; try{ km=window.UnoKiosk.mode?window.UnoKiosk.mode():"pin"; }catch(_){}
+    h+='<section class="a-sec"><h2>Planshet (kiosk rejimi)</h2>'+
+      '<p class="help">'+(km==="owner"
+        ? 'To\'liq kiosk yoqilgan: mijoz ilovadan hech qanday yo\'l bilan chiqa olmaydi.'
+        : 'Ilova ekranga mahkamlangan va bosh ekran sifatida ishlaydi. To\'liq kiosk uchun yo\'riqnomadagi "qurilma egasi" qadamini bajaring.')+'</p>'+
+      '<div class="a-row" style="margin-top:12px"><button class="btn danger" data-a="exitApp">Ilovadan chiqish (vaqtincha)</button>'+
+      '<button class="btn danger" data-a="disableKiosk">'+(S.confirmKiosk?'Tasdiqlash uchun yana bosing':'Kiosk rejimini butunlay o\'chirish')+'</button></div>'+
+      '<p class="help" style="margin-top:10px">"Vaqtincha chiqish" ilovani yopadi, uy tugmasi bosilsa yoki planshet qayta yoqilsa menyu yana ochiladi. "Butunlay o\'chirish" ilovani oddiy ilovaga aylantiradi, keyin uni o\'chirib tashlash ham mumkin.</p></section>';
+  }
   h+='</div>';
   var y=window.scrollY; A.innerHTML=h; window.scrollTo(0,y);
   var lf=$("logoFile"); if(lf) lf.onchange=function(){ var f=this.files[0]; this.value=""; if(f) uploadLogo(f); };
@@ -1355,6 +1365,8 @@ A.addEventListener("click", async function(e){
     if(act==="aiBulkCancel"){ S.aiBulk=null; $("aiBulkBox").innerHTML=""; return; }
     if(act==="logout"){ endSession(); closeEditor(); location.hash="#menyu"; return; }
     if(act==="exitApp"){ endSession(); closeEditor(); location.hash="#menyu"; try{ window.UnoKiosk.exitApp(); }catch(_){} return; }
+    if(act==="disableKiosk"){ if(!S.confirmKiosk){ S.confirmKiosk=true; renderAdmin(); setTimeout(function(){ S.confirmKiosk=false; if(S.view==="admin") renderAdmin(); },5000); return; }
+      S.confirmKiosk=false; endSession(); closeEditor(); location.hash="#menyu"; try{ window.UnoKiosk.disableKiosk(); }catch(_){} return; }
     if(act==="changePw"){ await changeCred(); return; }
     if(S.canEdit && S.cred && !sessionOK()){ renderAdmin(); return; }
     if(act==="new"){ S.editing={id:null,name:"",desc:"",price:"",cat:(cats()[0]||{}).id||"",imgId:"",videoId:"",enhance:true}; renderEditor(); }
