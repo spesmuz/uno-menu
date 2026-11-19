@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-title" content="UNO Menyu">
 <meta name="theme-color" content="#08090B">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <style>
 :root{--gold:#E8B04B;--gold2:#F3C873;--ink:#0E0F12;--panel:#17181C;--card:#1E2026;--line:rgba(255,255,255,.10);--text:#F3EFE7;--muted:#A39E94;--spd:.7s}
 *{box-sizing:border-box}
@@ -412,7 +412,6 @@ input,select,textarea{font-family:inherit}
 <div id="rotOverlay" class="rot hidden" aria-hidden="true"></div>
 <div id="adminView" class="hidden"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
 "use strict";
@@ -1218,8 +1217,15 @@ function renderAuth(mode){
       '<label class="fld"><span>Parol</span><input id="auPass" type="password" autocomplete="current-password" required></label>'+
       '<div id="auMsg"></div><button class="btn gold" type="submit" style="height:50px">Kirish</button>';
   }
-  h+='<a class="btn" href="#menyu">Menyuga qaytish</a></form></div>';
+  h+='<a class="btn" href="#menyu">Menyuga qaytish</a></form>';
+  if(window.UnoKiosk && window.UnoKiosk.exitWithPin){
+    h+='<form class="auth" id="pinForm" novalidate style="margin-top:14px"><h1 style="font-size:17px">Internet yo\'qmi?</h1><p>Ilovadan PIN-kod bilan chiqish.</p>'+
+       '<label class="fld"><span>PIN-kod</span><input id="exitPin" type="password" inputmode="numeric" maxlength="8" autocomplete="off"></label>'+
+       '<div id="pinMsg"></div><button class="btn danger" type="submit" style="height:46px">Ilovadan chiqish</button></form>';
+  }
+  h+='</div>';
   A.innerHTML=h;
+  var pf=$("pinForm"); if(pf) pf.addEventListener("submit",function(e){ e.preventDefault(); var ok=false; try{ ok=window.UnoKiosk.exitWithPin($("exitPin").value.trim()); }catch(_){} if(!ok){ msg($("pinMsg"),"PIN-kod noto'g'ri.","err"); $("exitPin").value=""; } });
   $("auLogin").focus();
   $("authForm").addEventListener("submit",function(e){ e.preventDefault(); if(mode==="setup") doSetup(); else doLogin(); });
 }
@@ -1351,6 +1357,11 @@ function adminNotice(){
 }
 function renderAdmin(){
   if(S.view!=="admin") return;
+  if(!S.db){
+    /* no connection: the panel cannot be used, but the tablet can still be unlocked with the PIN */
+    if(A.dataset.mode!=="offline"){ A.dataset.mode="offline"; renderAuth("login"); msg($("auMsg"),"Internet yo'q: admin panelga kirib bo'lmaydi.","err"); }
+    return;
+  }
   if(S.canEdit && S.db){
     if(!S.credLoaded){ A.dataset.mode="loading"; A.innerHTML='<div class="auth-wrap"><div class="auth"><p>Yuklanmoqda…</p><div class="progress"><i></i></div></div></div>'; return; }
     if(!S.cred){ if(!$("authForm")||A.dataset.mode!=="setup"){ A.dataset.mode="setup"; renderAuth("setup"); } return; }
@@ -1446,6 +1457,7 @@ function renderAdmin(){
         : 'Ilova ekranga mahkamlangan va bosh ekran sifatida ishlaydi. To\'liq kiosk uchun yo\'riqnomadagi "qurilma egasi" qadamini bajaring.')+'</p>'+
       '<div class="a-row" style="margin-top:12px"><button class="btn danger" data-a="exitApp">Ilovadan chiqish (vaqtincha)</button>'+
       '<button class="btn danger" data-a="disableKiosk">'+(S.confirmKiosk?'Tasdiqlash uchun yana bosing':'Kiosk rejimini butunlay o\'chirish')+'</button></div>'+
+      (window.UnoKiosk.setPin?'<div class="a-row" style="margin-top:14px"><label class="fld" style="max-width:240px"><span>Internetsiz chiqish PIN-kodi (4–8 raqam)</span><input id="kioskPin" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="'+((window.UnoKiosk.hasPin&&window.UnoKiosk.hasPin())?"o\'rnatilgan":"hozir: 0000")+'"></label><button class="btn gold" data-a="setPin">Saqlash</button></div><div id="pinSetMsg"></div>':'')+
       '<p class="help" style="margin-top:10px">"Vaqtincha chiqish" ilovani yopadi, uy tugmasi bosilsa yoki planshet qayta yoqilsa menyu yana ochiladi. "Butunlay o\'chirish" ilovani oddiy ilovaga aylantiradi, keyin uni o\'chirib tashlash ham mumkin.</p></section>';
   }
   h+='</div>';
@@ -1499,6 +1511,7 @@ A.addEventListener("click", async function(e){
       for(var k=0;k<list.length;k++){ if((list[k].order||0)!==k*10){ await S.db.doc("dishes/"+list[k].id).update({order:k*10}); } }
     }
     else if(act==="saveName"){ await saveSettings({name:$("setName").value.trim()}); msg($("setMsg"),"Restoran nomi saqlandi.","ok"); }
+    else if(act==="setPin"){ var pv=$("kioskPin").value.trim(); if(!/^\d{4,8}$/.test(pv)){ msg($("pinSetMsg"),"4–8 ta raqam kiriting.","err"); return; } var okp=false; try{ okp=window.UnoKiosk.setPin(pv); }catch(_){} msg($("pinSetMsg"), okp?"PIN-kod shu planshetda saqlandi. Internet bo\'lmaganda admin kirish oynasidan shu PIN bilan chiqasiz.":"Saqlanmadi.", okp?"ok":"err"); $("kioskPin").value=""; }
     else if(act==="saveTable"){ setTableNo($("setTable").value); msg($("tblMsg"), tableNo()?("Bu planshet: "+tableNo()+"-stol."):"Stol raqami olib tashlandi.","ok"); }
     else if(act==="saveSvc"){ var v=Math.round(Number($("setSvc").value)); if(!isFinite(v)||v<0||v>50){ msg($("tblMsg"),"0 dan 50 gacha son kiriting.","err"); return; } try{ await saveSettings({service:v}); msg($("tblMsg"),"Xizmat haqi: "+v+"%.","ok"); }catch(err){ msg($("tblMsg"),errText(err),"err"); } }
     else if(act==="tgFind"){
@@ -1821,13 +1834,31 @@ window.addEventListener("hashchange",route);
 function onData(){
   if(S.view==="admin") renderAdmin(); else refreshMenu();
 }
+/* load the Supabase library without blocking the page; give up after a few seconds when offline */
+function loadSupabase(ms){
+  return new Promise(function(done){
+    if(window.supabase) return done(true);
+    var fin=false, t=setTimeout(function(){ if(!fin){ fin=true; done(false); } }, ms);
+    var sc=document.createElement("script");
+    sc.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
+    sc.onload=function(){ if(!fin){ fin=true; clearTimeout(t); done(!!window.supabase); } };
+    sc.onerror=function(){ if(!fin){ fin=true; clearTimeout(t); done(false); } };
+    document.head.appendChild(sc);
+  });
+}
+if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")){
+  window.addEventListener("load",function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
+}
 async function init(){
   applyStatic(); fit(); route(); buildSlides();
   var note=$("statusNote");
   var timer=setTimeout(function(){ if(!S.loadedDishes){ note.textContent="Menyu hali yuklanmadi. Internet aloqasini tekshiring."; if(S.view==="admin") renderAdmin(); } },10000);
   window.addEventListener("uno-db-error",function(e){ S.dbError=String(e.detail||""); if(!S.dishes||!S.dishes.length) note.textContent="Bazaga ulanib bo'lmadi: "+S.dbError; if(S.view==="admin") renderAdmin(); });
   window.addEventListener("uno-db-ok",function(){ if(S.dbError){ S.dbError=""; note.textContent=""; } });
-  var be=null; try{ if(window.supabase) be=makeBackend(); }catch(e){ console.error(e); note.textContent="Supabase kutubxonasi yuklanmadi."; }
+  await loadSupabase(navigator.onLine===false?1500:6000);
+  var be=null; try{ if(window.supabase) be=makeBackend(); }catch(e){ console.error(e); }
+  /* started offline: reload once the internet is back so live updates and admin work again */
+  if(!be) window.addEventListener("online",function(){ setTimeout(function(){ location.reload(); },1500); });
   if(be){ S.sb=be.sb; S.db=be.db; S.assets=be.assets; S.canEdit=true; }
   refreshCallUI();
   S.sample=null; S.cred={login:""}; S.credLoaded=true;
@@ -1842,7 +1873,7 @@ async function init(){
       S.dishes=Object.keys(cc).filter(function(k){return k.indexOf("dishes/")===0;}).map(function(k){ var d=cc[k]||{}; var o={id:k.slice(7),name:String(d.name||""),desc:String(d.desc||""),price:Number(d.price)||0,cat:String(d.cat||""),order:Number(d.order)||0,imgId:String(d.imgId||""),videoId:String(d.videoId||""),weight:String(d.weight||""),time:Number(d.time)||0,kcal:Number(d.kcal)||0,prot:Number(d.prot)||0,fat:Number(d.fat)||0,carb:Number(d.carb)||0,kcalEst:!!d.kcalEst}; ["ingr","name_ru","desc_ru","ingr_ru","name_en","desc_en","ingr_en"].forEach(function(x){ o[x]=String(d[x]||""); }); return o; });
       S.loadedSettings=true; }
     else note.textContent="Menyu ma'lumotlarini olib bo'lmadi. Internetni tekshiring.";
-    S.loadedDishes=true; onData(); setTimeout(function(){ location.reload(); },30000); return;
+    S.loadedDishes=true; onData(); if(!cc) setTimeout(function(){ location.reload(); },30000); return;
   }
   S.db.doc("settings/main").onSnapshot(function(snap){
     var d=snap.exists?snap.data():{}; S.settings={name:(d&&d.name)||"", logoId:String((d&&d.logoId)||""), soundOn:!(d&&d.soundOn===false), service:d&&d.service, cats:Array.isArray(d&&d.cats)?d.cats.filter(function(c){return c&&c.id&&c.label;}):[]};

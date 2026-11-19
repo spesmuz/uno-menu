@@ -27,6 +27,15 @@ public class MainActivity extends Activity {
   ValueCallback<Uri[]> fileCb;
   final Handler h = new Handler();
   boolean failed = false;
+  boolean loading = false;
+  static final String DEFAULT_PIN = "0000";
+
+  String exitPin() { return getSharedPreferences("uno", MODE_PRIVATE).getString("exit_pin", DEFAULT_PIN); }
+
+  /* the page did not finish in 20 s (e.g. Wi-Fi without internet): show the waiting screen */
+  final Runnable watchdog = new Runnable() { public void run() {
+    if (loading) { loading = false; try { web.stopLoading(); } catch (Exception e) { } failed = true; showOffline(); }
+  } };
   boolean exiting = false;
 
   DevicePolicyManager dpm;
@@ -98,6 +107,18 @@ public class MainActivity extends Activity {
     @JavascriptInterface public String mode() { return owner() ? "owner" : "pin"; }
     @JavascriptInterface public void exitApp() { runOnUiThread(new Runnable() { public void run() { leave(false); } }); }
     @JavascriptInterface public void disableKiosk() { runOnUiThread(new Runnable() { public void run() { leave(true); } }); }
+    /* offline exit: PIN kept on this tablet, set from the admin panel */
+    @JavascriptInterface public boolean hasPin() { return !DEFAULT_PIN.equals(exitPin()); }
+    @JavascriptInterface public boolean setPin(String p) {
+      if (p == null || !p.matches("\\d{4,8}")) return false;
+      return getSharedPreferences("uno", MODE_PRIVATE).edit().putString("exit_pin", p).commit();
+    }
+    @JavascriptInterface public boolean exitWithPin(String p) {
+      if (p == null || !p.equals(exitPin())) return false;
+      runOnUiThread(new Runnable() { public void run() { leave(false); } });
+      return true;
+    }
+    @JavascriptInterface public void retry() { runOnUiThread(new Runnable() { public void run() { failed = false; web.loadUrl(URL); } }); }
   }
 
   void immersive() {
@@ -131,7 +152,13 @@ public class MainActivity extends Activity {
 
     web.setWebViewClient(new WebViewClient() {
       @Override public void onReceivedError(WebView v, WebResourceRequest r, WebResourceError e) {
-        if (r.isForMainFrame()) { failed = true; showOffline(); }
+        if (r.isForMainFrame()) { loading = false; h.removeCallbacks(watchdog); failed = true; showOffline(); }
+      }
+      @Override public void onPageStarted(WebView v, String url, android.graphics.Bitmap icon) {
+        if (url != null && url.startsWith(URL)) { loading = true; h.removeCallbacks(watchdog); h.postDelayed(watchdog, 20000); }
+      }
+      @Override public void onPageFinished(WebView v, String url) {
+        if (url != null && url.startsWith(URL)) { loading = false; h.removeCallbacks(watchdog); }
       }
       @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
         String u = r.getUrl().toString();
@@ -162,11 +189,18 @@ public class MainActivity extends Activity {
 
   void showOffline() {
     web.loadDataWithBaseURL(null,
-      "<html><body style='margin:0;background:#0A0908;color:#E8B04B;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;text-align:center'>" +
-      "<div><div style='font-size:26px;margin-bottom:12px'>UNO Airways Restaurante</div>" +
-      "<div style='color:#bbb;font-size:17px'>Internetga ulanish kutilmoqda…<br>Подключение к интернету…</div></div></body></html>",
+      "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'><style>" +
+      "body{margin:0;background:#0A0908;color:#E8B04B;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;text-align:center;-webkit-user-select:none;user-select:none}" +
+      "h1{font-size:26px;letter-spacing:.12em;margin:0 0 14px;font-weight:700}p{color:#bbb;font-size:17px;line-height:1.5;margin:0 0 22px}" +
+      "button{height:52px;padding:0 28px;border-radius:16px;border:0;background:#E8B04B;color:#1a1306;font-size:17px;font-weight:700}" +
+      "#pin{display:none;margin-top:26px}#pin input{height:48px;width:160px;border-radius:12px;border:1px solid #5a4a2a;background:#16140f;color:#fff;font-size:22px;text-align:center;letter-spacing:.3em}" +
+      "#pin button{background:#3a1d1a;color:#ff9a8a;margin-left:8px}#m{color:#ff9a8a;font-size:14px;margin-top:10px;min-height:18px}</style></head><body><div>" +
+      "<h1 id='t'>UNO AIRWAYS</h1><p>Internetga ulanish kutilmoqda…<br>Подключение к интернету…</p>" +
+      "<button onclick='UnoKiosk.retry()'>Qayta urinish</button>" +
+      "<div id='pin'><input id='v' type='password' inputmode='numeric' maxlength='8' placeholder='PIN'><button onclick=\"if(!UnoKiosk.exitWithPin(document.getElementById('v').value)){document.getElementById('m').textContent='PIN noto\\'g\\'ri';document.getElementById('v').value='';}\">Chiqish</button><div id='m'></div></div>" +
+      "</div><script>var n=0,tt=null,open=false;document.getElementById('t').addEventListener('click',function(){n++;clearTimeout(tt);tt=setTimeout(function(){n=0},1500);if(n>=7){open=true;document.getElementById('pin').style.display='block';document.getElementById('v').focus();}});" +
+      "setInterval(function(){if(!open)UnoKiosk.retry();},15000);</script></body></html>",
       "text/html", "utf-8", null);
-    h.postDelayed(new Runnable() { public void run() { if (failed) { failed = false; web.loadUrl(URL); } } }, 8000);
   }
 
   @Override protected void onActivityResult(int rq, int rc, Intent data) {
