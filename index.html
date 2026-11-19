@@ -801,47 +801,6 @@ function untilt(card){
   card.style.setProperty("--go",0); card.style.setProperty("--px","0px"); card.style.setProperty("--py","0px");
 }
 
-/* ---- gyroscope tilt: the centred card follows how the device is held ---- */
-var GY={on:false, b0:null, g0:null, x:0, y:0, tx:0, ty:0, raf:0, last:0, card:null};
-function gyroIdle(){ return !down && !S.dragging && !S.detail && !S.cartOpen && S.view!=="admin" && !document.hidden; }
-function gyroFrame(){
-  GY.raf=0;
-  GY.x+=(GY.tx-GY.x)*0.18; GY.y+=(GY.ty-GY.y)*0.18;
-  var c=centreCard();
-  if(GY.card && GY.card!==c){ untilt(GY.card); GY.card=null; }
-  if(c && gyroIdle()){
-    if(Math.abs(GY.x)<0.02 && Math.abs(GY.y)<0.02){ if(GY.card){ untilt(c); GY.card=null; } }
-    else { tiltN(c, GY.x, GY.y, 0.8); GY.card=c; }
-  }
-  if(Math.abs(GY.tx-GY.x)>0.004 || Math.abs(GY.ty-GY.y)>0.004) GY.raf=requestAnimationFrame(gyroFrame);
-}
-function onOrient(e){
-  if(e.beta==null || e.gamma==null) return;
-  var ang=(screen.orientation&&typeof screen.orientation.angle==="number")?screen.orientation.angle:(window.orientation||0);
-  var b=e.beta, g=e.gamma, x, y;
-  // map device axes to screen axes for the current rotation
-  if(ang===90){ x=b; y=-g; } else if(ang===-90||ang===270){ x=-b; y=g; } else if(ang===180){ x=-g; y=-b; } else { x=g; y=b; }
-  var now=Date.now();
-  if(GY.b0===null || now-GY.last>1500){ GY.b0=y; GY.g0=x; }
-  // the neutral position slowly follows how the device is being held
-  GY.b0+=(y-GY.b0)*0.012; GY.g0+=(x-GY.g0)*0.012; GY.last=now;
-  var dx=x-GY.g0, dy=y-GY.b0, RANGE=14;
-  if(Math.abs(dx)<0.5) dx=0; if(Math.abs(dy)<0.5) dy=0;
-  GY.tx=Math.max(-1,Math.min(1,dx/RANGE)); GY.ty=Math.max(-1,Math.min(1,dy/RANGE));
-  if(!GY.raf) GY.raf=requestAnimationFrame(gyroFrame);
-}
-function startGyro(){
-  if(GY.on || !("DeviceOrientationEvent" in window)) return;
-  try{ if(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return; }catch(_){}
-  GY.on=true; window.addEventListener("deviceorientation",onOrient);
-}
-startGyro();
-/* iPhone/iPad (and some browsers) only send motion data after permission is given from a tap */
-var _gyPerm=false;
-document.addEventListener("pointerdown",function(){
-  if(_gyPerm || GY.last) return; var D=window.DeviceOrientationEvent;
-  if(D && typeof D.requestPermission==="function"){ _gyPerm=true; D.requestPermission().then(function(st){ if(st!=="granted") _gyPerm=false; }).catch(function(){ _gyPerm=false; }); }
-},{passive:true});
 track.addEventListener("pointerdown",function(e){
   if(e.button!==undefined&&e.button!==0) return; if(e.target.closest(".arrow")) return;
   sx=e.clientX; sy=e.clientY; st=Date.now(); down=true; swiped=false; gMode=null;
@@ -868,7 +827,7 @@ track.addEventListener("pointermove",function(e){
 function endDrag(e){
   if(e.type==="pointerleave" && e.pointerType==="mouse" && !down){ untilt(centreCard()); return; }
   if(!down) return; down=false;
-  if(tiltCard){ untilt(tiltCard); tiltCard=null; GY.card=null; }
+  if(tiltCard){ untilt(tiltCard); tiltCard=null; }
   var mode=gMode; gMode=null;
   if(mode!=="swipe"){ if(swiped) setTimeout(function(){ swiped=false; },0); return; }
   var dx=Math.max(-SLOT*2,Math.min(SLOT*2,(e.clientX-sx)/(S.scale||1))), dt=Math.max(1,Date.now()-st), flick=Math.abs(dx)/dt>.5;
