@@ -164,6 +164,30 @@
 
   if (!window.supabase) { online(false, "Internetga ulanib bo'lmadi"); setTimeout(function () { location.reload(); }, 15000); return; }
   sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: false } });
+
+  /* opened from the Telegram "Qabul qildim" button: ofitsiant.html?accept=ID */
+  var acceptId = Number(new URLSearchParams(location.search).get("accept") || 0);
+  if (acceptId) {
+    var box = document.createElement("div");
+    box.className = "call new"; box.style.marginBottom = "18px";
+    box.innerHTML = '<div class="what" style="grid-column:1/-1">Yuklanmoqda…</div>';
+    $("newList").parentNode.insertBefore(box, $("newList"));
+    var doAccept = async function () {
+      var g = await sb.from("uno_calls").select("*").eq("id", acceptId).maybeSingle();
+      var c = g.data;
+      if (!c) { box.className = "call done"; box.innerHTML = '<div class="what" style="grid-column:1/-1">Chaqiruv topilmadi yoki eskirgan.</div>'; return; }
+      var label = esc(c.table_no) + "-stol · " + (c.kind === "bill" ? "hisob" : "ofitsiant chaqiruvi");
+      if (c.status !== "new") { box.className = "call done"; box.innerHTML = '<div class="num"><b>' + esc(c.table_no) + '</b><small>STOL</small></div><div class="what">Allaqachon qabul qilingan</div><div class="meta">' + label + ' · ' + esc(c.accepted_by || "") + '</div>'; return; }
+      if (!name()) { box.innerHTML = '<div class="what" style="grid-column:1/-1">Avval ismingizni kiriting</div>'; askName(); $("nameOk").addEventListener("click", function once() { $("nameOk").removeEventListener("click", once); doAccept(); }); return; }
+      var r = await sb.rpc("uno_accept_call", { p_id: acceptId, p_by: name() });
+      if (r.error) { box.innerHTML = '<div class="what" style="grid-column:1/-1">Xatolik: ' + esc(r.error.message) + '</div>'; return; }
+      box.className = "call done"; box.style.opacity = "1";
+      box.innerHTML = '<div class="num"><b>' + esc(c.table_no) + '</b><small>STOL</small></div><div class="what" style="color:var(--green)">✅ Qabul qildingiz</div><div class="meta">' + label + '</div>';
+      try { history.replaceState(null, "", location.pathname); } catch (_) {}
+      load();
+    };
+    doAccept();
+  }
   sb.channel("calls").on("postgres_changes", { event: "*", schema: "public", table: "uno_calls" }, function (pl) {
     if (pl.new && pl.new.id) calls[pl.new.id] = pl.new;
     render();

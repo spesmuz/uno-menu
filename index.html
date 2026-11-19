@@ -1193,7 +1193,7 @@ function sessionOK_old(){
   return false;
 }
 function startSession(){ try{ sessionStorage.setItem(SESSION_KEY,String(Date.now())); }catch(_){} }
-function endSession(){ S.sbSession=null; try{ sessionStorage.removeItem(SESSION_KEY); }catch(_){} if(S.sb) S.sb.auth.signOut().catch(function(){}); }
+function endSession(){ S.sbSession=null; S.tg=undefined; try{ sessionStorage.removeItem(SESSION_KEY); }catch(_){} if(S.sb) S.sb.auth.signOut().catch(function(){}); }
 function loginEmail(l){ l=String(l||"").trim().toLowerCase(); return l.indexOf("@")>=0?l:l+"@uno.local"; }
 function logoHTML(){ return S.settings.logoId?'<img alt="Logotip" src="'+blob(S.settings.logoId)+'">':''; }
 function renderAuth(mode){
@@ -1373,6 +1373,24 @@ function renderAdmin(){
      '<p class="help" style="margin-top:6px">Har stol uchun QR-kod: mijoz o\'z telefoni bilan skanerlasa, menyu shu stol raqami bilan ochiladi. Chop etishni kompyuter yoki telefondan qiling.</p>'+
      '<div class="a-row" style="margin-top:16px"><a class="btn" target="_blank" rel="noopener" href="'+esc(base)+'ofitsiant.html">Ofitsiant ekranini ochish</a></div>'+
      '<div id="tblMsg"></div></section>';
+  // telegram bot
+  if(!ro && S.sb){
+    if(S.tg===undefined && sessionOK()){ S.tg=null; S.sb.rpc("uno_telegram_status").then(function(r){ S.tg=r.error?{err:r.error.message}:(r.data||{}); if(S.view==="admin") renderAdmin(); }); }
+    var tg=S.tg||{};
+    h+='<section class="a-sec"><h2>Telegram bot (ofitsiant chaqiruvlari)</h2>'+
+      (tg.err?'<div class="msg err">'+(/uno_telegram_status|function/.test(tg.err)?'Avval telegram.sql faylini Supabase SQL Editor\'da ishga tushiring.':esc(tg.err))+'</div>':'')+
+      (tg.configured?'<div class="msg ok">Ulangan: <b>'+esc(tg.title||tg.chat)+'</b>. Chaqiruvlar shu guruhga keladi.</div>':'')+
+      '<ol class="help" style="margin:6px 0 12px;padding-left:20px;line-height:1.7">'+
+        '<li>Telegram\'da <b>@BotFather</b> → <b>/newbot</b> → bot nomini yozing. U bergan <b>token</b>ni nusxalang.</li>'+
+        '<li>Ofitsiantlar uchun guruh oching, botni guruhga qo\'shing va guruhga <b>/start</b> deb yozing.</li>'+
+        '<li>Tokenni pastga joylab, <b>Guruhni topish</b> ni bosing, guruhni tanlab <b>Saqlash</b> ni bosing.</li>'+
+      '</ol>'+
+      '<div class="a-row"><label class="fld"><span>Bot tokeni</span><input id="tgToken" type="password" autocomplete="off" placeholder="123456789:AA…"></label><button class="btn" data-a="tgFind">Guruhni topish</button></div>'+
+      '<div id="tgChats" style="margin-top:10px"></div>'+
+      '<div class="a-row" style="margin-top:10px"><label class="fld" style="max-width:260px"><span>Guruh ID (avtomatik to\'ladi)</span><input id="tgChat" placeholder="-100…" value="'+esc(S.tgPick?S.tgPick.id:"")+'"></label>'+
+      '<button class="btn gold" data-a="tgSave">Saqlash</button>'+(tg.configured?'<button class="btn" data-a="tgTest">Sinov xabari</button>':'')+'</div>'+
+      '<div id="tgMsg"></div></section>';
+  }
   // categories
   h+='<section class="a-sec"><h2>Kategoriyalar</h2><p class="help" style="margin-bottom:10px">Har bir kategoriya nomini o\'zbek, rus va ingliz tilida yozing. Rus/ingliz bo\'sh qolsa, o\'zbekchasi ko\'rsatiladi.</p>';
   cats().forEach(function(c,i){
@@ -1475,6 +1493,33 @@ A.addEventListener("click", async function(e){
     else if(act==="saveName"){ await saveSettings({name:$("setName").value.trim()}); msg($("setMsg"),"Restoran nomi saqlandi.","ok"); }
     else if(act==="saveTable"){ setTableNo($("setTable").value); msg($("tblMsg"), tableNo()?("Bu planshet: "+tableNo()+"-stol."):"Stol raqami olib tashlandi.","ok"); }
     else if(act==="saveSvc"){ var v=Math.round(Number($("setSvc").value)); if(!isFinite(v)||v<0||v>50){ msg($("tblMsg"),"0 dan 50 gacha son kiriting.","err"); return; } try{ await saveSettings({service:v}); msg($("tblMsg"),"Xizmat haqi: "+v+"%.","ok"); }catch(err){ msg($("tblMsg"),errText(err),"err"); } }
+    else if(act==="tgFind"){
+      var tok=$("tgToken").value.trim(); if(!/^\d+:[\w-]{20,}$/.test(tok)){ msg($("tgMsg"),"Token noto'g'ri ko'rinadi. @BotFather bergan to'liq tokenni joylang.","err"); return; }
+      S.tgToken=tok; msg($("tgMsg"),"Qidirilmoqda…");
+      try{
+        var res=await fetch("https://api.telegram.org/bot"+tok+"/getUpdates?allowed_updates=%5B%22message%22%2C%22my_chat_member%22%5D");
+        var js=await res.json();
+        if(!js.ok){ msg($("tgMsg"),"Telegram: "+(js.description||"xato")+". Tokenni tekshiring.","err"); return; }
+        var seen={}, list=[];
+        (js.result||[]).forEach(function(u){ var c=(u.message&&u.message.chat)||(u.my_chat_member&&u.my_chat_member.chat)||(u.channel_post&&u.channel_post.chat); if(c&&(c.type==="group"||c.type==="supergroup")&&!seen[c.id]){ seen[c.id]=1; list.push({id:String(c.id),title:c.title||String(c.id)}); } });
+        if(!list.length){ $("tgChats").innerHTML=""; msg($("tgMsg"),"Guruh topilmadi. Botni guruhga qo'shing, guruhga /start deb yozing va qayta bosing.","err"); return; }
+        $("tgChats").innerHTML=list.map(function(c){ return '<button class="btn" style="margin:0 8px 8px 0" data-a="tgPick" data-id="'+esc(c.id)+'" data-t="'+esc(c.title)+'">'+esc(c.title)+'</button>'; }).join("");
+        if(list.length===1){ S.tgPick=list[0]; $("tgChat").value=list[0].id; }
+        msg($("tgMsg"),list.length===1?("Topildi: "+list[0].title+". Endi Saqlash ni bosing."):"Guruhni tanlang.","ok");
+      }catch(err){ $("tgMsg").innerHTML='<div class="msg err">Brauzer Telegram\'ga to\'g\'ridan-to\'g\'ri ulana olmadi. <a href="https://api.telegram.org/bot'+esc(tok)+'/getUpdates" target="_blank" rel="noopener" style="color:var(--gold)">Shu havolani oching</a>, matndan <b>"chat":{"id":</b> dan keyingi minus bilan boshlanadigan raqamni nusxalab, "Guruh ID" maydoniga joylang.</div>'; }
+    }
+    else if(act==="tgPick"){ S.tgPick={id:b.dataset.id,title:b.dataset.t}; $("tgChat").value=b.dataset.id; msg($("tgMsg"),"Tanlandi: "+b.dataset.t+". Endi Saqlash ni bosing.","ok"); }
+    else if(act==="tgSave"){
+      var tok2=($("tgToken").value.trim()||S.tgToken||""), chat=$("tgChat").value.trim();
+      if(!tok2||!chat){ msg($("tgMsg"),"Token va guruh ID kerak.","err"); return; }
+      var title=(S.tgPick&&S.tgPick.id===chat)?S.tgPick.title:"";
+      var site=location.origin+location.pathname.replace(/[^\/]*$/,"");
+      var rs=await S.sb.rpc("uno_set_telegram",{p_token:tok2,p_chat:chat,p_title:title,p_site:site});
+      if(rs.error){ msg($("tgMsg"),/function|uno_set_telegram/.test(rs.error.message)?"Avval telegram.sql ni ishga tushiring.":errText(rs.error),"err"); return; }
+      await S.sb.rpc("uno_telegram_test");
+      S.tg=undefined; S.tgToken=""; renderAdmin(); setTimeout(function(){ msg($("tgMsg"),"Saqlandi. Guruhga sinov xabari yuborildi.","ok"); },400);
+    }
+    else if(act==="tgTest"){ var rt=await S.sb.rpc("uno_telegram_test"); msg($("tgMsg"), rt.error?errText(rt.error):"Sinov xabari yuborildi. Guruhni tekshiring.", rt.error?"err":"ok"); }
     else if(act==="testSound"){ var was=S.settings.soundOn; S.settings.soundOn=true; SFX.dish(); setTimeout(function(){ SFX.add(); },700); setTimeout(function(){ SFX.order(); S.settings.soundOn=was; },1400); }
     else if(act==="rmLogo"){ var old=S.settings.logoId; await saveSettings({logoId:""}); if(old&&S.assets) S.assets.delete(old).catch(function(){}); }
     else if(act==="addCat"){
