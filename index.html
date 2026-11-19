@@ -847,6 +847,7 @@ function updateMedia(){
     var want = (center ? "c:"+d.id+":"+(d.imgId||"")+":"+(d.videoId||"") : "s:"+(d.imgId||""))+":"+S.lang+":"+dn(d)+":"+d.cat;
     if(m.dataset.k===want) return;
     m.dataset.k=want;
+    m.classList.remove("has-vid");   /* new content: show the photo again until its video starts */
     var cl='<span class="badge cat">'+esc(catL(d.cat))+'</span>'+(d.kcal?'<span class="badge kc">'+ICON.flame+(d.kcalEst?'≈ ':'')+num(d.kcal)+' '+esc(t("kcal"))+'</span>':'');
     if(center){
       var open='<button class="sel open" data-more="'+esc(d.id)+'" aria-label="'+esc(dn(d))+' — '+esc(t("more"))+'"></button>';
