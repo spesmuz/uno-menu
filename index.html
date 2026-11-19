@@ -44,7 +44,10 @@ input,select,textarea{font-family:inherit}
 .logo-pv{width:120px;height:120px;border-radius:16px;background:#0F1013;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--muted);font-size:12px;text-align:center;flex:0 0 auto}
 .logo-pv img{max-width:100%;max-height:100%;object-fit:contain}
 .tabs-wrap{flex:1;display:flex;justify-content:center;min-width:0}
-.tabs{display:flex;gap:4px;padding:4px;border-radius:26px;background:#1A1C21;border:1px solid var(--line);max-width:100%;overflow-x:auto}
+.tabs{display:flex;gap:4px;padding:4px;border-radius:26px;background:#1A1C21;border:1px solid var(--line);max-width:100%;overflow-x:auto;scroll-behavior:auto}
+.tabs.fade-r{-webkit-mask-image:linear-gradient(to right,#000 0,#000 calc(100% - 46px),rgba(0,0,0,.15) 100%);mask-image:linear-gradient(to right,#000 0,#000 calc(100% - 46px),rgba(0,0,0,.15) 100%)}
+.tabs.fade-l{-webkit-mask-image:linear-gradient(to right,rgba(0,0,0,.15) 0,#000 46px,#000 100%);mask-image:linear-gradient(to right,rgba(0,0,0,.15) 0,#000 46px,#000 100%)}
+.tabs.fade-l.fade-r{-webkit-mask-image:linear-gradient(to right,rgba(0,0,0,.15) 0,#000 46px,#000 calc(100% - 46px),rgba(0,0,0,.15) 100%);mask-image:linear-gradient(to right,rgba(0,0,0,.15) 0,#000 46px,#000 calc(100% - 46px),rgba(0,0,0,.15) 100%)}
 .tab{height:40px;padding:0 13px;border-radius:20px;border:0;background:transparent;color:#C9C3B8;font-family:Montserrat;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;transition:background .35s,color .35s,box-shadow .35s}
 .tabs.tight .tab{padding:0 9px;font-size:11px;letter-spacing:.04em}
 .tabs.tighter .tab{padding:0 7px;font-size:10.5px;letter-spacing:.02em}
@@ -653,13 +656,66 @@ function renderTabs(){
     tb.appendChild(b);
   });
   fitTabs();
+  tabsHint.start();
 }
 function fitTabs(){
   var tb=$("tabs"); if(!tb) return;
   tb.classList.remove("tight","tighter");
   if(tb.scrollWidth>tb.clientWidth+1){ tb.classList.add("tight"); if(tb.scrollWidth>tb.clientWidth+1) tb.classList.add("tighter"); }
-  var a=tb.querySelector('[aria-pressed="true"]'); if(a && tb.scrollWidth>tb.clientWidth+1) a.scrollIntoView({block:"nearest",inline:"nearest"});
+  var a=tb.querySelector('[aria-pressed="true"]'); if(a && tb.scrollWidth>tb.clientWidth+1 && !tabsHint.busy) tb.scrollLeft=tabTarget(tb,a);
+  tabsEdges();
 }
+/* scroll position that shows the active tab with a little room on both sides */
+function tabTarget(tb,a){
+  var max=tb.scrollWidth-tb.clientWidth, l=a.offsetLeft-tb.clientLeft, cur=tb.scrollLeft;
+  if(l-24<cur) return Math.max(0,l-24);
+  if(l+a.offsetWidth+24>cur+tb.clientWidth) return Math.min(max,l+a.offsetWidth+24-tb.clientWidth);
+  return cur;
+}
+/* fade the edge where more categories are hidden */
+function tabsEdges(){
+  var tb=$("tabs"); if(!tb) return;
+  var ov=tb.scrollWidth>tb.clientWidth+2;
+  tb.classList.toggle("fade-l", ov && tb.scrollLeft>4);
+  tb.classList.toggle("fade-r", ov && tb.scrollLeft<tb.scrollWidth-tb.clientWidth-4);
+}
+/* gently slide the category row to the end and back, so guests see there is more to swipe */
+var tabsHint=(function(){
+  var api={busy:false}, lastTouch=0, raf=0, timer=0;
+  function anim(tb,to,ms){
+    return new Promise(function(done){
+      var from=tb.scrollLeft, t0=performance.now();
+      cancelAnimationFrame(raf);
+      (function step(now){
+        if(!api.busy){ done(false); return; }
+        var k=Math.min(1,(now-t0)/ms), e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+        tb.scrollLeft=from+(to-from)*e; tabsEdges();
+        if(k<1) raf=requestAnimationFrame(step); else done(true);
+      })(t0);
+    });
+  }
+  function wait(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
+  async function run(){
+    var tb=$("tabs"); if(!tb || api.busy) return;
+    var max=tb.scrollWidth-tb.clientWidth;
+    if(max<8 || S.view!=="menu" || S.detail || S.cartOpen || tb.classList.contains("hidden") || Date.now()-lastTouch<8000) return;
+    api.busy=true;
+    var a=tb.querySelector('[aria-pressed="true"]'), home=a?tabTarget(tb,a):0;
+    var far = tb.scrollLeft < max/2 ? max : 0;
+    var dur=Math.min(4200, 1400+Math.abs(far-tb.scrollLeft)*6);
+    if(await anim(tb,far,dur)) { await wait(900); if(api.busy) await anim(tb,home,dur); }
+    api.busy=false; tabsEdges();
+  }
+  function stop(){ lastTouch=Date.now(); api.busy=false; cancelAnimationFrame(raf); }
+  api.start=function(){
+    var tb=$("tabs"); if(!tb || api.started) return; api.started=true;
+    ["pointerdown","touchstart","wheel"].forEach(function(ev){ tb.addEventListener(ev,stop,{passive:true}); });
+    tb.addEventListener("scroll",function(){ tabsEdges(); },{passive:true});
+    setTimeout(run,1800);
+    timer=setInterval(run,14000);
+  };
+  return api;
+})();
 function pickDefaultCat(){
   var cs=cats().filter(function(c){return dishesOf(c.id).length;});
   if(!cs.length){ S.cat=null; return; }
