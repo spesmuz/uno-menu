@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Restoran menyusi va admin panel</title>
+<title>UNO Airways Restaurante</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -1232,7 +1232,10 @@ function makeBackend(){
       if(r.error) throw r.error;
       var n={}; (r.data||[]).forEach(function(row){ n[row.path]=row.data||{}; });
       cache=n; fresh=true; save(); emit(false);
-    }).catch(function(e){ fetching=null; console.warn("fetch",e); emit(true); });
+      try{ window.dispatchEvent(new CustomEvent("uno-db-ok")); }catch(_){}
+    }).catch(function(e){ fetching=null; console.warn("fetch",e); emit(true);
+      try{ window.dispatchEvent(new CustomEvent("uno-db-error",{detail:(e&&(e.message||e.code))||String(e)})); }catch(_){}
+      setTimeout(fetchAll,15000); });
     return fetching;
   }
   sb.channel("uno-docs").on("postgres_changes",{event:"*",schema:"public",table:SB_TABLE},function(pl){
@@ -1301,6 +1304,7 @@ function renderAdmin(){
   var ro=!S.canEdit||!S.db;
   var h='<div class="a-top"><h1>Admin panel</h1><span class="tag ok">'+S.dishes.length+' ta taom</span><span class="sp"></span><a class="btn" href="#menyu">Menyuni ko\'rish</a>'+(ro?'':'<button class="btn gold" data-a="new">'+ICON.plus+' Yangi taom</button><button class="btn" data-a="logout">Chiqish</button>')+'</div><div class="a-wrap">';
   var n=adminNotice(); if(n) h+=n;
+  if(S.dbError) h+='<div class="msg err">Bazaga ulanib bo\'lmadi: '+esc(S.dbError)+'</div>';
   if(!S.loadedDishes) h+='<div class="msg">Yuklanmoqda…</div><div class="progress"><i></i></div>';
   // settings
   h+='<section class="a-sec"><h2>Restoran</h2><div class="a-row" style="align-items:center">'+
@@ -1691,7 +1695,9 @@ async function init(){
   applyStatic(); fit(); route(); buildSlides();
   var note=$("statusNote");
   var timer=setTimeout(function(){ if(!S.loadedDishes){ note.textContent="Menyu hali yuklanmadi. Internet aloqasini tekshiring."; if(S.view==="admin") renderAdmin(); } },10000);
-  var be=null; try{ if(window.supabase) be=makeBackend(); }catch(e){ console.error(e); }
+  window.addEventListener("uno-db-error",function(e){ S.dbError=String(e.detail||""); if(!S.dishes||!S.dishes.length) note.textContent="Bazaga ulanib bo'lmadi: "+S.dbError; if(S.view==="admin") renderAdmin(); });
+  window.addEventListener("uno-db-ok",function(){ if(S.dbError){ S.dbError=""; note.textContent=""; } });
+  var be=null; try{ if(window.supabase) be=makeBackend(); }catch(e){ console.error(e); note.textContent="Supabase kutubxonasi yuklanmadi."; }
   if(be){ S.sb=be.sb; S.db=be.db; S.assets=be.assets; S.canEdit=true; }
   S.sample=null; S.cred={login:""}; S.credLoaded=true;
   if(S.sb){

@@ -48,3 +48,10 @@ create policy uno_media_update on storage.objects for update to authenticated us
 create policy uno_media_delete on storage.objects for delete to authenticated using (bucket_id = 'uno-media' and public.uno_is_admin());
 
 -- Boshlang'ich menyu admin panelga birinchi kirishda o'zi yuklanadi.
+
+-- 5) Data API orqali kirish huquqlari (yangi Supabase loyihalarida avtomatik berilmaydi)
+grant usage on schema public to anon, authenticated;
+grant select on public.uno_docs to anon, authenticated;
+grant insert, update, delete on public.uno_docs to authenticated;
+grant execute on function public.uno_is_admin() to anon, authenticated;
+notify pgrst, 'reload schema';
