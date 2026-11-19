@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UNO Airways — stol QR-kodlari</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<style>
+  @page { size: A4; margin: 10mm; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Montserrat", "Inter", system-ui, sans-serif; background: #e9e6e0; color: #1a1712; }
+  .bar { position: sticky; top: 0; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 14px 18px; background: #0f0e0c; color: #f3e7cf; z-index: 2; }
+  .bar b { font-size: 16px; letter-spacing: .06em; }
+  .bar label { display: flex; gap: 6px; align-items: center; font-size: 14px; }
+  .bar input { width: 70px; padding: 8px; border-radius: 10px; border: 1px solid #5a4a2a; background: #1b1915; color: #fff; font-size: 15px; }
+  .bar button { padding: 10px 18px; border-radius: 12px; border: 0; background: #e8b04b; color: #1a1306; font-weight: 700; font-size: 15px; cursor: pointer; }
+  .bar .sp { flex: 1; }
+  .sheet { display: grid; grid-template-columns: repeat(2, 90mm); gap: 8mm; justify-content: center; padding: 10mm 0 20mm; }
+  .card { width: 90mm; height: 128mm; background: #0d0c0a; color: #f3e7cf; border-radius: 6mm; padding: 7mm 6mm; display: flex; flex-direction: column; align-items: center; text-align: center; break-inside: avoid; page-break-inside: avoid; border: .6mm solid #c9a35a; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .card img.logo { width: 22mm; height: 22mm; object-fit: contain; }
+  .card .name { margin-top: 2mm; font-size: 3.4mm; letter-spacing: .3em; color: #e8b04b; font-weight: 700; }
+  .card .tbl { margin-top: 3mm; font-size: 11mm; font-weight: 800; letter-spacing: .04em; line-height: 1; }
+  .card .tbl small { display: block; font-size: 3.2mm; letter-spacing: .35em; font-weight: 600; color: #bba77d; margin-top: 1.5mm; }
+  .card .qr { margin-top: 3.5mm; width: 50mm; height: 50mm; background: #fff; border-radius: 3mm; padding: 2.5mm; }
+  .card .qr svg { width: 100%; height: 100%; display: block; }
+  .card .txt { margin-top: auto; padding-top: 3mm; font-size: 3mm; line-height: 1.45; color: #d9ccb0; }
+  .card .txt b { color: #e8b04b; font-weight: 700; }
+  @media print { body { background: #fff; } .bar { display: none; } .sheet { padding: 0; } }
+</style>
+</head>
+<body>
+<div class="bar">
+  <b>STOL QR-KODLARI</b>
+  <label>dan <input id="from" type="number" min="1"></label>
+  <label>gacha <input id="to" type="number" min="1"></label>
+  <button id="go" type="button">Yangilash</button>
+  <span class="sp"></span>
+  <button id="print" type="button">Chop etish</button>
+</div>
+<div class="sheet" id="sheet"></div>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var from = Math.max(1, parseInt(q.get("from")) || 1);
+  var to = Math.max(from, parseInt(q.get("to")) || from + 19);
+  to = Math.min(to, from + 199);
+  document.getElementById("from").value = from;
+  document.getElementById("to").value = to;
+  var base = location.origin + location.pathname.replace(/[^\/]*$/, "");
+  var sheet = document.getElementById("sheet");
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function qrSvg(text) {
+    if (typeof qrcode !== "function") return '<div style="color:#000;font-size:3mm;padding:4mm">QR kutubxonasi yuklanmadi. Internetni tekshiring.</div>';
+    var qr = qrcode(0, "M"); qr.addData(text); qr.make();
+    return qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+  }
+  var html = "";
+  for (var n = from; n <= to; n++) {
+    var url = base + "?stol=" + n;
+    html += '<div class="card">' +
+      '<img class="logo" src="media/logo.png" alt="">' +
+      '<div class="name">UNO AIRWAYS</div>' +
+      '<div class="tbl">' + n + '<small>STOL · СТОЛ · TABLE</small></div>' +
+      '<div class="qr" title="' + esc(url) + '">' + qrSvg(url) + '</div>' +
+      '<div class="txt"><b>Menyuni ko\'rish uchun skanerlang</b><br>Сканируйте, чтобы открыть меню<br>Scan to open the menu</div>' +
+      '</div>';
+  }
+  sheet.innerHTML = html;
+
+  document.getElementById("go").onclick = function () {
+    var a = Math.max(1, parseInt(document.getElementById("from").value) || 1);
+    var b = Math.max(a, parseInt(document.getElementById("to").value) || a);
+    location.search = "?from=" + a + "&to=" + b;
+  };
+  document.getElementById("print").onclick = function () { window.print(); };
+})();
+</script>
+</body>
+</html>

@@ -275,6 +275,12 @@ input,select,textarea{font-family:inherit}
 .toast{position:absolute;top:100px;left:50%;width:360px;margin-left:-180px;height:48px;border-radius:24px;background:var(--text);color:#17130A;display:flex;align-items:center;justify-content:center;gap:10px;font-size:14px;font-weight:700;box-shadow:0 14px 40px rgba(0,0,0,.5);z-index:400;animation:fadeUp .4s both}
 .overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;justify-content:flex-end;z-index:500}
 .drawer{width:420px;height:100%;padding:28px 28px 24px;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;gap:18px}
+.sumrow{display:flex;justify-content:space-between;align-items:baseline;color:var(--muted);font-size:14px}
+.sumrow b{color:var(--text);font-weight:600}
+.bill-btn{display:flex;align-items:center;justify-content:center;gap:10px}
+.bill-btn.pending{opacity:.75;animation:pulseGold 1.6s ease-in-out infinite}
+#waiterBtn.pending{color:var(--gold);border-color:var(--gold);animation:pulseGold 1.6s ease-in-out infinite}
+@keyframes pulseGold{0%,100%{box-shadow:0 0 0 0 rgba(232,176,75,.0)}50%{box-shadow:0 0 0 6px rgba(232,176,75,.25)}}
 .ask-waiter{display:flex;align-items:center;justify-content:center;gap:10px;min-height:56px;padding:12px 16px;border-radius:16px;border:1px solid rgba(232,176,75,.35);background:rgba(232,176,75,.08);color:var(--gold);font-weight:600;font-size:15px;text-align:center}
 .ask-waiter svg{width:20px;height:20px;flex:0 0 auto}
 .clr-btn{height:38px;padding:0 14px;border-radius:19px;border:1px solid rgba(255,120,120,.35);background:transparent;color:#FF9C9C;font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px}
@@ -372,6 +378,7 @@ input,select,textarea{font-family:inherit}
         <label class="search-box hidden" id="searchBox"><span class="sr" id="searchLbl">Taom qidirish</span><input type="search" id="searchInput" placeholder="Taom nomi yoki tarkibi…"><button class="icon-btn" style="width:36px;height:36px;border:0;background:#26282F" id="searchClose" aria-label="Qidiruvni yopish"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></label>
       </div>
       <button class="icon-btn" id="searchBtn" aria-label="Qidirish"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+      <button class="icon-btn hidden" id="waiterBtn" aria-label="Ofitsiantni chaqirish"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></button>
       <button class="cart-btn" id="cartBtn" aria-label="Savatchani ochish"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3h2.6l2.4 12.2a1.6 1.6 0 0 0 1.6 1.3h8.7a1.6 1.6 0 0 0 1.6-1.2L21 7H6"/></svg><span class="t"><b id="cartTotal">0 so'm</b><small id="cartCount">0 ta taom</small></span></button>
     </header>
 
@@ -427,6 +434,8 @@ var ICON = {
   flame:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22c4 0 7-3 7-7 0-4-3-6-4-10-2 2-3 4-3 6-1-1-2-2-2-4-3 3-5 5-5 8 0 4 3 7 7 7z"/></svg>',
   info:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>',
   sound:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>',
+  receipt:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>',
+  bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>',
   down:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>'
 };
 
@@ -587,9 +596,9 @@ var SFX=(function(){
 
 /* ---------- i18n ---------- */
 var T={
-uz:{askWaiter:"Tanlagan taomlaringizni ofitsiantga ayting",search:"Taom qidirish",searchPh:"Taom nomi yoki tarkibi…",add:"Savatchaga qo'shish",more:"Batafsil",items:"ta taom",loading:"Menyu yuklanmoqda…",empty:"Menyu hali bo'sh.",results:"Qidiruv natijalari",none:"Hech narsa topilmadi.",order:"Buyurtmangiz",cartEmpty:"Savatcha bo'sh. Menyudan taom tanlang.",note:"Oshpazga izoh (ixtiyoriy)",notePh:"Masalan: achchiq bo'lmasin",total:"Jami",place:"Buyurtma berish",accepted:"Buyurtma qabul qilindi",preparing:"Taomlaringiz tayyorlanmoqda. Yoqimli ishtaha!",back:"Menyuga qaytish",waiter:"Ofitsiant chaqirildi, tez orada keladi",ingr:"Tarkibi",weight:"Og'irligi",time:"Tayyorlanish vaqti",min:"daq",sound:"Ovoz",close:"Yopish",prev:"Oldingi taom",next:"Keyingi taom",cur:"so'm",cart:"Savatchani ochish",waiterBtn:"Ofitsiantni chaqirish",dec:"Kamaytirish",inc:"Ko'paytirish",restaurant:"Restoran",clearAll:"Hammasini o'chirish",clearQ:"Hammasi o'chirilsinmi?",yes:"Ha",no:"Yo'q",kcal:"kkal",approx:"taxminan",cal:"Kaloriya",prot:"Oqsil",fat:"Yog'",carb:"Uglevod",g:"g",totalKcal:"Jami kaloriya",partKcal:"ba'zi taomlarda ma'lumot yo'q",toCenter:"markazga olib kelish",video:"videosi",cats:"Kategoriyalar",lang:"Til"},
-ru:{askWaiter:"Назовите выбранные блюда официанту",search:"Поиск блюда",searchPh:"Название или состав…",add:"В корзину",more:"Подробнее",items:"блюд",loading:"Меню загружается…",empty:"Меню пока пусто.",results:"Результаты поиска",none:"Ничего не найдено.",order:"Ваш заказ",cartEmpty:"Корзина пуста. Выберите блюдо в меню.",note:"Комментарий для повара (необязательно)",notePh:"Например: не острое",total:"Итого",place:"Оформить заказ",accepted:"Заказ принят",preparing:"Ваши блюда готовятся. Приятного аппетита!",back:"Вернуться в меню",waiter:"Официант вызван и скоро подойдёт",ingr:"Состав",weight:"Вес",time:"Время приготовления",min:"мин",sound:"Звук",close:"Закрыть",prev:"Предыдущее блюдо",next:"Следующее блюдо",cur:"сум",cart:"Открыть корзину",waiterBtn:"Вызвать официанта",dec:"Уменьшить",inc:"Увеличить",restaurant:"Ресторан",clearAll:"Очистить всё",clearQ:"Удалить всё?",yes:"Да",no:"Нет",kcal:"ккал",approx:"примерно",cal:"Калорийность",prot:"Белки",fat:"Жиры",carb:"Углеводы",g:"г",totalKcal:"Всего калорий",partKcal:"не для всех блюд есть данные",toCenter:"показать в центре",video:"видео",cats:"Категории",lang:"Язык"},
-en:{askWaiter:"Tell your waiter the dishes you have chosen",search:"Search dishes",searchPh:"Dish name or ingredients…",add:"Add to order",more:"Details",items:"items",loading:"Loading menu…",empty:"The menu is empty for now.",results:"Search results",none:"Nothing found.",order:"Your order",cartEmpty:"Your order is empty. Pick a dish from the menu.",note:"Note for the chef (optional)",notePh:"For example: not spicy",total:"Total",place:"Place order",accepted:"Order received",preparing:"Your dishes are being prepared. Enjoy your meal!",back:"Back to menu",waiter:"A waiter is on the way",ingr:"Ingredients",weight:"Weight",time:"Cooking time",min:"min",sound:"Sound",close:"Close",prev:"Previous dish",next:"Next dish",cur:"UZS",cart:"Open order",waiterBtn:"Call a waiter",dec:"Decrease",inc:"Increase",restaurant:"Restaurant",clearAll:"Clear all",clearQ:"Remove everything?",yes:"Yes",no:"No",kcal:"kcal",approx:"approx.",cal:"Calories",prot:"Protein",fat:"Fat",carb:"Carbs",g:"g",totalKcal:"Total calories",partKcal:"some dishes have no data",toCenter:"bring to centre",video:"video",cats:"Categories",lang:"Language"}
+uz:{askWaiter:"Tanlagan taomlaringizni ofitsiantga ayting",subtotal:"Taomlar",service:"Xizmat haqi",askBill:"Hisobni so'rash",waiterSent:"Ofitsiant chaqirildi",billSent:"Hisob so'raldi, ofitsiant olib keladi",waiterComing:"Ofitsiant kelmoqda",waitPlease:"Ofitsiant allaqachon chaqirilgan, biroz kuting",sendFail:"Yuborilmadi. Internetni tekshirib, qayta urinib ko'ring",tableL:"stol",search:"Taom qidirish",searchPh:"Taom nomi yoki tarkibi…",add:"Savatchaga qo'shish",more:"Batafsil",items:"ta taom",loading:"Menyu yuklanmoqda…",empty:"Menyu hali bo'sh.",results:"Qidiruv natijalari",none:"Hech narsa topilmadi.",order:"Buyurtmangiz",cartEmpty:"Savatcha bo'sh. Menyudan taom tanlang.",note:"Oshpazga izoh (ixtiyoriy)",notePh:"Masalan: achchiq bo'lmasin",total:"Jami",place:"Buyurtma berish",accepted:"Buyurtma qabul qilindi",preparing:"Taomlaringiz tayyorlanmoqda. Yoqimli ishtaha!",back:"Menyuga qaytish",waiter:"Ofitsiant chaqirildi, tez orada keladi",ingr:"Tarkibi",weight:"Og'irligi",time:"Tayyorlanish vaqti",min:"daq",sound:"Ovoz",close:"Yopish",prev:"Oldingi taom",next:"Keyingi taom",cur:"so'm",cart:"Savatchani ochish",waiterBtn:"Ofitsiantni chaqirish",dec:"Kamaytirish",inc:"Ko'paytirish",restaurant:"Restoran",clearAll:"Hammasini o'chirish",clearQ:"Hammasi o'chirilsinmi?",yes:"Ha",no:"Yo'q",kcal:"kkal",approx:"taxminan",cal:"Kaloriya",prot:"Oqsil",fat:"Yog'",carb:"Uglevod",g:"g",totalKcal:"Jami kaloriya",partKcal:"ba'zi taomlarda ma'lumot yo'q",toCenter:"markazga olib kelish",video:"videosi",cats:"Kategoriyalar",lang:"Til"},
+ru:{askWaiter:"Назовите выбранные блюда официанту",subtotal:"Блюда",service:"Обслуживание",askBill:"Попросить счёт",waiterSent:"Официант вызван",billSent:"Счёт запрошен, официант принесёт",waiterComing:"Официант идёт",waitPlease:"Официант уже вызван, немного подождите",sendFail:"Не отправлено. Проверьте интернет и попробуйте снова",tableL:"стол",search:"Поиск блюда",searchPh:"Название или состав…",add:"В корзину",more:"Подробнее",items:"блюд",loading:"Меню загружается…",empty:"Меню пока пусто.",results:"Результаты поиска",none:"Ничего не найдено.",order:"Ваш заказ",cartEmpty:"Корзина пуста. Выберите блюдо в меню.",note:"Комментарий для повара (необязательно)",notePh:"Например: не острое",total:"Итого",place:"Оформить заказ",accepted:"Заказ принят",preparing:"Ваши блюда готовятся. Приятного аппетита!",back:"Вернуться в меню",waiter:"Официант вызван и скоро подойдёт",ingr:"Состав",weight:"Вес",time:"Время приготовления",min:"мин",sound:"Звук",close:"Закрыть",prev:"Предыдущее блюдо",next:"Следующее блюдо",cur:"сум",cart:"Открыть корзину",waiterBtn:"Вызвать официанта",dec:"Уменьшить",inc:"Увеличить",restaurant:"Ресторан",clearAll:"Очистить всё",clearQ:"Удалить всё?",yes:"Да",no:"Нет",kcal:"ккал",approx:"примерно",cal:"Калорийность",prot:"Белки",fat:"Жиры",carb:"Углеводы",g:"г",totalKcal:"Всего калорий",partKcal:"не для всех блюд есть данные",toCenter:"показать в центре",video:"видео",cats:"Категории",lang:"Язык"},
+en:{askWaiter:"Tell your waiter the dishes you have chosen",subtotal:"Dishes",service:"Service charge",askBill:"Ask for the bill",waiterSent:"Waiter called",billSent:"Bill requested, the waiter will bring it",waiterComing:"The waiter is on the way",waitPlease:"The waiter has already been called, please wait",sendFail:"Not sent. Check the internet and try again",tableL:"table",search:"Search dishes",searchPh:"Dish name or ingredients…",add:"Add to order",more:"Details",items:"items",loading:"Loading menu…",empty:"The menu is empty for now.",results:"Search results",none:"Nothing found.",order:"Your order",cartEmpty:"Your order is empty. Pick a dish from the menu.",note:"Note for the chef (optional)",notePh:"For example: not spicy",total:"Total",place:"Place order",accepted:"Order received",preparing:"Your dishes are being prepared. Enjoy your meal!",back:"Back to menu",waiter:"A waiter is on the way",ingr:"Ingredients",weight:"Weight",time:"Cooking time",min:"min",sound:"Sound",close:"Close",prev:"Previous dish",next:"Next dish",cur:"UZS",cart:"Open order",waiterBtn:"Call a waiter",dec:"Decrease",inc:"Increase",restaurant:"Restaurant",clearAll:"Clear all",clearQ:"Remove everything?",yes:"Yes",no:"No",kcal:"kcal",approx:"approx.",cal:"Calories",prot:"Protein",fat:"Fat",carb:"Carbs",g:"g",totalKcal:"Total calories",partKcal:"some dishes have no data",toCenter:"bring to centre",video:"video",cats:"Categories",lang:"Language"}
 };
 function t(k){ return (T[S.lang]||T.uz)[k]||T.uz[k]||k; }
 function L(d,f){ var v = S.lang==="uz" ? d[f] : (d[f+"_"+S.lang]||d[f]); return v||""; }
@@ -605,6 +614,7 @@ function applyStatic(){
   $("searchInput").placeholder=t("searchPh");
   $("searchLbl").textContent=t("search");
   $("cartBtn").setAttribute("aria-label",t("cart"));
+  $("waiterBtn").setAttribute("aria-label",t("waiterBtn"));
   $("prevBtn").setAttribute("aria-label",t("prev"));
   $("nextBtn").setAttribute("aria-label",t("next"));
   $("tabs").setAttribute("aria-label",t("cats"));
@@ -985,7 +995,8 @@ function kcalLine(items){
 function renderCart(){
   var host=$("cartHost");
   if(!S.cartOpen){ host.innerHTML=""; return; }
-  var items=cartItems(), total=0; items.forEach(function(it){total+=it.q*(Number(it.d.price)||0);});
+  var items=cartItems(), sub=0; items.forEach(function(it){sub+=it.q*(Number(it.d.price)||0);});
+  var pct=svcPct(), svc=Math.round(sub*pct/100), total=sub+svc;
   var h='<div class="overlay"><aside class="drawer" role="dialog" aria-label="'+esc(t("order"))+'">';
   if(S.ordered){
     h+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px"><div style="width:84px;height:84px;border-radius:42px;border:2px solid var(--gold);color:var(--gold);display:flex;align-items:center;justify-content:center">'+ICON.check+'</div><h2 class="mont" style="margin:0;font-size:22px;text-transform:uppercase">'+esc(t("accepted"))+'</h2><p style="margin:0;color:var(--muted);font-size:14px">'+esc(t("preparing"))+'</p><button class="ghost-btn" data-c="back">'+esc(t("back"))+'</button></div>';
@@ -1004,8 +1015,15 @@ function renderCart(){
     h+='</div>';
     if(items.length){
       h+=kcalLine(items)+
-         '<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="color:var(--muted)">'+esc(t("total"))+'</span><b style="font-size:26px;color:var(--gold)">'+fmtL(total)+'</b></div>'+
-         '<div class="ask-waiter">'+ICON.check+'<span>'+esc(t("askWaiter"))+'</span></div>';
+         (pct>0?'<div class="sumrow"><span>'+esc(t("subtotal"))+'</span><b>'+fmtL(sub)+'</b></div>'+
+           '<div class="sumrow"><span>'+esc(t("service"))+' '+pct+'%</span><b>'+fmtL(svc)+'</b></div>':'')+
+         '<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="color:var(--muted)">'+esc(t("total"))+'</span><b style="font-size:26px;color:var(--gold)">'+fmtL(total)+'</b></div>';
+    }
+    if(tableNo() && S.sb){
+      var pend=S.calls.bill;
+      h+='<button class="gold-btn bill-btn'+(pend?' pending':'')+'" data-c="bill" '+(pend?'disabled':'')+'>'+ICON.receipt+'<span>'+esc(pend?t("billSent"):t("askBill"))+'</span></button>';
+    } else if(items.length){
+      h+='<div class="ask-waiter">'+ICON.check+'<span>'+esc(t("askWaiter"))+'</span></div>';
     }
   }
   h+='</aside></div>';
@@ -1016,9 +1034,72 @@ $("cartHost").addEventListener("click",function(e){
   var c=e.target.closest("[data-c]"); if(!c) return;
   if(c.dataset.c==="close"){ S.cartOpen=false; S.confirmClear=false; renderCart(); }
   if(c.dataset.c==="clear"){ S.cart={}; SFX.remove(); refreshCartUI(); renderCart(); }
+  if(c.dataset.c==="bill"){ sendCall("bill"); }
   if(c.dataset.c==="back"){ S.ordered=false; S.cartOpen=false; S.cart={}; refreshCartUI(); renderCart(); }
 });
 $("cartBtn").onclick=function(){ SFX.tick(); S.cartOpen=true; renderCart(); };
+/* ---------- table number, waiter call, bill request ---------- */
+function svcPct(st){ st=st||S.settings||{}; var v=st.service; if(v===undefined||v===null||v==="") return 15; v=Math.round(Number(v)); return isFinite(v)?Math.max(0,Math.min(50,v)):15; }
+var TABLE_KEY="uno_table";
+(function(){
+  try{ var q=new URLSearchParams(location.search).get("stol"); if(q){ q=String(q).trim().slice(0,12); if(q) localStorage.setItem(TABLE_KEY,q); } }catch(_){}
+})();
+function tableNo(){ try{ return (localStorage.getItem(TABLE_KEY)||"").trim(); }catch(_){ return ""; } }
+function setTableNo(v){ try{ v=String(v||"").trim().slice(0,12); if(v) localStorage.setItem(TABLE_KEY,v); else localStorage.removeItem(TABLE_KEY); }catch(_){} refreshCallUI(); }
+S.calls={waiter:null,bill:null};
+function refreshCallUI(){
+  var b=$("waiterBtn"); if(!b) return;
+  var on=!!(tableNo() && S.sb);
+  b.classList.toggle("hidden",!on);
+  b.classList.toggle("pending",!!S.calls.waiter);
+  if(typeof fitTabs==="function") try{ fitTabs(); }catch(_){}
+}
+function toast(text){
+  $("toastHost").innerHTML='<div class="toast" role="status">'+ICON.check+' '+esc(text)+'</div>';
+  clearTimeout(S.toastT); S.toastT=setTimeout(function(){ $("toastHost").innerHTML=""; },3200);
+}
+function callDone(kind, by){
+  if(!S.calls[kind]) return;
+  clearInterval(S.calls[kind].poll); try{ S.sb.removeChannel(S.calls[kind].ch); }catch(_){}
+  S.calls[kind]=null; refreshCallUI(); if(S.cartOpen) renderCart();
+  SFX.select(); toast(t("waiterComing")+(by?" — "+by:""));
+}
+function watchCall(kind, id){
+  var c={id:id};
+  try{
+    c.ch=S.sb.channel("call-"+id).on("postgres_changes",{event:"UPDATE",schema:"public",table:"uno_calls",filter:"id=eq."+id},function(pl){
+      if(pl.new && pl.new.status==="accepted") callDone(kind, pl.new.accepted_by);
+    }).subscribe();
+  }catch(_){}
+  c.poll=setInterval(async function(){
+    try{ var r=await S.sb.from("uno_calls").select("status,accepted_by").eq("id",id).maybeSingle();
+      if(r.data && r.data.status==="accepted") callDone(kind, r.data.accepted_by);
+      if(!r.error && !r.data) callDone(kind,""); /* older than 12 h */
+    }catch(_){}
+  },6000);
+  /* give up waiting after 15 minutes so the button can be used again */
+  c.expire=setTimeout(function(){ if(S.calls[kind]&&S.calls[kind].id===id){ clearInterval(c.poll); try{ S.sb.removeChannel(c.ch); }catch(_){} S.calls[kind]=null; refreshCallUI(); if(S.cartOpen) renderCart(); } },15*60000);
+  S.calls[kind]=c;
+}
+async function sendCall(kind){
+  var tn=tableNo(); if(!tn||!S.sb) return;
+  if(S.calls[kind]){ toast(kind==="bill"?t("billSent"):t("waitPlease")); return; }
+  var row={table_no:tn, kind:kind};
+  if(kind==="bill"){
+    var items=cartItems(), sub=0; items.forEach(function(it){ sub+=it.q*(Number(it.d.price)||0); });
+    if(items.length){ row.total=sub+Math.round(sub*svcPct()/100); row.items=items.map(function(it){ return {n:it.d.name, q:it.q, p:Number(it.d.price)||0}; }); }
+  }
+  S.calls[kind]={id:0,poll:null}; refreshCallUI(); if(S.cartOpen) renderCart();
+  var r=await S.sb.from("uno_calls").insert(row).select("id").single();
+  if(r.error){
+    S.calls[kind]=null; refreshCallUI(); if(S.cartOpen) renderCart();
+    toast(/too_soon/.test(r.error.message||"")?t("waitPlease"):t("sendFail")); return;
+  }
+  SFX.waiter(); toast(kind==="bill"?t("billSent"):t("waiterSent"));
+  watchCall(kind, r.data.id); refreshCallUI(); if(S.cartOpen) renderCart();
+}
+$("waiterBtn").onclick=function(){ sendCall("waiter"); };
+
 // search
 function setSearch(open){
   $("searchBox").classList.toggle("hidden",!open); $("tabs").classList.toggle("hidden",open);
@@ -1280,6 +1361,18 @@ function renderAdmin(){
      (ro?'':'<div class="a-row"><label class="btn">Logotip tanlash<input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" class="sr"></label>'+(S.settings.logoId?'<button class="btn danger" data-a="rmLogo">Olib tashlash</button>':'')+'</div>')+'</div></div>'+
      '<div class="a-row" style="margin-top:14px"><label class="fld"><span>Restoran nomi (birinchi so\'z katta, qolgani kichik yoziladi)</span><input id="setName" maxlength="40" value="'+esc(S.settings.name||"")+'" '+(ro?"disabled":"")+'></label><button class="btn gold" data-a="saveName" '+(ro?"disabled":"")+'>Saqlash</button></div>'+
      '<div class="a-row" style="margin-top:14px;align-items:center"><label class="chk" style="font-size:14px;color:var(--text)"><input type="checkbox" id="setSound" '+(S.settings.soundOn!==false?"checked":"")+' '+(ro?"disabled":"")+'> Menyu ovozlari (taom tanlanganda, savatchaga qo\'shilganda, buyurtmada)</label>'+(ro?'':'<button class="btn sm" data-a="testSound">Ovozni sinash</button>')+'</div><div id="setMsg"></div></section>';
+  // tables, service charge, QR codes
+  var base=location.origin+location.pathname.replace(/[^\/]*$/,"");
+  h+='<section class="a-sec"><h2>Stollar, xizmat haqi va QR-kodlar</h2>'+
+     '<div class="a-row"><label class="fld" style="max-width:220px"><span>Xizmat haqi (%)</span><input id="setSvc" type="number" min="0" max="50" step="1" value="'+svcPct()+'" '+(ro?"disabled":"")+'></label>'+(ro?'':'<button class="btn gold" data-a="saveSvc">Saqlash</button>')+'</div>'+
+     '<p class="help" style="margin-top:6px">Savatchada taomlar summasiga qo\'shib hisoblanadi. 0 qo\'yilsa ko\'rsatilmaydi.</p>'+
+     '<div class="a-row" style="margin-top:16px"><label class="fld" style="max-width:220px"><span>Shu planshetning stol raqami</span><input id="setTable" maxlength="12" placeholder="Masalan: 5" value="'+esc(tableNo())+'"></label><button class="btn gold" data-a="saveTable">Saqlash</button></div>'+
+     '<p class="help" style="margin-top:6px">Faqat shu qurilmada saqlanadi. Stol raqami bo\'lsa, menyuda "Ofitsiantni chaqirish" va savatchada "Hisobni so\'rash" tugmalari chiqadi.</p>'+
+     '<div class="a-row" style="margin-top:16px"><label class="fld" style="max-width:140px"><span>Stollar: dan</span><input id="qrFrom" type="number" min="1" value="1"></label><label class="fld" style="max-width:140px"><span>gacha</span><input id="qrTo" type="number" min="1" value="20"></label>'+
+     '<a class="btn" id="qrLink" target="_blank" rel="noopener" href="'+esc(base)+'qr.html?from=1&amp;to=20">QR-kodlarni chop etish</a></div>'+
+     '<p class="help" style="margin-top:6px">Har stol uchun QR-kod: mijoz o\'z telefoni bilan skanerlasa, menyu shu stol raqami bilan ochiladi. Chop etishni kompyuter yoki telefondan qiling.</p>'+
+     '<div class="a-row" style="margin-top:16px"><a class="btn" target="_blank" rel="noopener" href="'+esc(base)+'ofitsiant.html">Ofitsiant ekranini ochish</a></div>'+
+     '<div id="tblMsg"></div></section>';
   // categories
   h+='<section class="a-sec"><h2>Kategoriyalar</h2><p class="help" style="margin-bottom:10px">Har bir kategoriya nomini o\'zbek, rus va ingliz tilida yozing. Rus/ingliz bo\'sh qolsa, o\'zbekchasi ko\'rsatiladi.</p>';
   cats().forEach(function(c,i){
@@ -1333,6 +1426,8 @@ function renderAdmin(){
   var y=window.scrollY; A.innerHTML=h; window.scrollTo(0,y);
   var lf=$("logoFile"); if(lf) lf.onchange=function(){ var f=this.files[0]; this.value=""; if(f) uploadLogo(f); };
   if(S.aiBulk && $("aiBulkBox")) renderAiBulk();
+  var qf=$("qrFrom"), qt=$("qrTo"), ql=$("qrLink");
+  if(qf&&qt&&ql){ var upd=function(){ var a=Math.max(1,parseInt(qf.value)||1), b=Math.max(a,parseInt(qt.value)||a); ql.href=ql.href.replace(/\?.*$/,"")+"?from="+a+"&to="+Math.min(b,a+199); }; qf.oninput=upd; qt.oninput=upd; }
   var ss=$("setSound"); if(ss) ss.onchange=async function(){ var on=this.checked; try{ await saveSettings({soundOn:on}); msg($("setMsg"), on?"Ovozlar yoqildi.":"Ovozlar o'chirildi.","ok"); }catch(err){ msg($("setMsg"),errText(err),"err"); } };
   if(S.editing) renderEditor();
 }
@@ -1346,7 +1441,7 @@ function errText(e){
 }
 async function saveSettings(patch){
   var next=Object.assign({}, S.settings, patch);
-  await S.db.doc("settings/main").set({name:next.name||"", cats:next.cats||[], logoId:next.logoId||"", soundOn:next.soundOn!==false});
+  await S.db.doc("settings/main").set({name:next.name||"", cats:next.cats||[], logoId:next.logoId||"", soundOn:next.soundOn!==false, service:svcPct(next)});
 }
 A.addEventListener("click", async function(e){
   var b=e.target.closest("[data-a]"); if(!b||b.disabled) return;
@@ -1378,6 +1473,8 @@ A.addEventListener("click", async function(e){
       for(var k=0;k<list.length;k++){ if((list[k].order||0)!==k*10){ await S.db.doc("dishes/"+list[k].id).update({order:k*10}); } }
     }
     else if(act==="saveName"){ await saveSettings({name:$("setName").value.trim()}); msg($("setMsg"),"Restoran nomi saqlandi.","ok"); }
+    else if(act==="saveTable"){ setTableNo($("setTable").value); msg($("tblMsg"), tableNo()?("Bu planshet: "+tableNo()+"-stol."):"Stol raqami olib tashlandi.","ok"); }
+    else if(act==="saveSvc"){ var v=Math.round(Number($("setSvc").value)); if(!isFinite(v)||v<0||v>50){ msg($("tblMsg"),"0 dan 50 gacha son kiriting.","err"); return; } try{ await saveSettings({service:v}); msg($("tblMsg"),"Xizmat haqi: "+v+"%.","ok"); }catch(err){ msg($("tblMsg"),errText(err),"err"); } }
     else if(act==="testSound"){ var was=S.settings.soundOn; S.settings.soundOn=true; SFX.dish(); setTimeout(function(){ SFX.add(); },700); setTimeout(function(){ SFX.order(); S.settings.soundOn=was; },1400); }
     else if(act==="rmLogo"){ var old=S.settings.logoId; await saveSettings({logoId:""}); if(old&&S.assets) S.assets.delete(old).catch(function(){}); }
     else if(act==="addCat"){
@@ -1679,6 +1776,7 @@ async function init(){
   window.addEventListener("uno-db-ok",function(){ if(S.dbError){ S.dbError=""; note.textContent=""; } });
   var be=null; try{ if(window.supabase) be=makeBackend(); }catch(e){ console.error(e); note.textContent="Supabase kutubxonasi yuklanmadi."; }
   if(be){ S.sb=be.sb; S.db=be.db; S.assets=be.assets; S.canEdit=true; }
+  refreshCallUI();
   S.sample=null; S.cred={login:""}; S.credLoaded=true;
   if(S.sb){
     try{ var gs=await S.sb.auth.getSession(); S.sbSession=gs.data&&gs.data.session||null; }catch(_){}
@@ -1687,14 +1785,14 @@ async function init(){
   if(!S.db){
     var cc=null; try{ cc=JSON.parse(localStorage.getItem(CACHE_KEY)||"null"); }catch(_){}
     clearTimeout(timer);
-    if(cc){ var sm=cc["settings/main"]||{}; S.settings={name:sm.name||"",logoId:String(sm.logoId||""),soundOn:sm.soundOn!==false,cats:Array.isArray(sm.cats)?sm.cats:[]};
+    if(cc){ var sm=cc["settings/main"]||{}; S.settings={name:sm.name||"",logoId:String(sm.logoId||""),soundOn:sm.soundOn!==false,service:sm.service,cats:Array.isArray(sm.cats)?sm.cats:[]};
       S.dishes=Object.keys(cc).filter(function(k){return k.indexOf("dishes/")===0;}).map(function(k){ var d=cc[k]||{}; var o={id:k.slice(7),name:String(d.name||""),desc:String(d.desc||""),price:Number(d.price)||0,cat:String(d.cat||""),order:Number(d.order)||0,imgId:String(d.imgId||""),videoId:String(d.videoId||""),weight:String(d.weight||""),time:Number(d.time)||0,kcal:Number(d.kcal)||0,prot:Number(d.prot)||0,fat:Number(d.fat)||0,carb:Number(d.carb)||0,kcalEst:!!d.kcalEst}; ["ingr","name_ru","desc_ru","ingr_ru","name_en","desc_en","ingr_en"].forEach(function(x){ o[x]=String(d[x]||""); }); return o; });
       S.loadedSettings=true; }
     else note.textContent="Menyu ma'lumotlarini olib bo'lmadi. Internetni tekshiring.";
     S.loadedDishes=true; onData(); setTimeout(function(){ location.reload(); },30000); return;
   }
   S.db.doc("settings/main").onSnapshot(function(snap){
-    var d=snap.exists?snap.data():{}; S.settings={name:(d&&d.name)||"", logoId:String((d&&d.logoId)||""), soundOn:!(d&&d.soundOn===false), cats:Array.isArray(d&&d.cats)?d.cats.filter(function(c){return c&&c.id&&c.label;}):[]};
+    var d=snap.exists?snap.data():{}; S.settings={name:(d&&d.name)||"", logoId:String((d&&d.logoId)||""), soundOn:!(d&&d.soundOn===false), service:d&&d.service, cats:Array.isArray(d&&d.cats)?d.cats.filter(function(c){return c&&c.id&&c.label;}):[]};
     S.loadedSettings=true; onData();
   });
   S.db.collection("dishes").onSnapshot(function(snap){

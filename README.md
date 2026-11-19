@@ -48,3 +48,14 @@ Restoran planshetlari uchun menyu va admin panel. Bitta APK ichida ishlaydi.
 **Yashirin chiqish:** logotipni 3 soniya bosib turing yoki 7 marta bosing → admin login → *Planshet (kiosk rejimi)*:
 - **Ilovadan chiqish (vaqtincha)** — ilova yopiladi. Uy tugmasi bosilsa yoki planshet qayta yoqilsa, menyu yana ochiladi.
 - **Kiosk rejimini butunlay o'chirish** — ikki marta bosiladi. Ilova oddiy ilovaga aylanadi va uni o'chirib tashlash mumkin bo'ladi.
+
+## Ofitsiant chaqiruvi va hisob so'rash
+
+1. **Supabase → SQL Editor:** `calls.sql` faylini ishga tushiring (bir marta).
+2. **Stol raqami:**
+   - mijoz telefoni uchun stoldagi QR-kod (admin panel → *Stollar, xizmat haqi va QR-kodlar* → *QR-kodlarni chop etish*);
+   - planshet uchun admin panelda *Shu planshetning stol raqami*.
+3. **Ofitsiant telefoni:** https://github.com/spesmuz/uno-menu/releases/download/apk/UNO-Ofitsiant.apk
+   - chaqiruv kelganda budilnikdek jiringlaydi va tebranadi, "Qabul qildim" bosilguncha to'xtamaydi;
+   - birinchi ochilishda "batareyani tejash" cheklovidan chiqarishga ruxsat bering, ilova fonda ishlashi uchun.
+   - iPhone yoki kompyuterda: https://spesmuz.github.io/uno-menu/ofitsiant.html (sahifa ochiq turganda ovoz chiqaradi).
