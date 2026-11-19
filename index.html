@@ -1555,7 +1555,7 @@ function renderAdmin(){
       (S.aiSql===false?'<div class="msg err">Avval ai.sql faylini Supabase SQL Editor\'da ishga tushiring.</div>':'')+
       (S.aiOn?'<div class="msg ok">AI ulangan. Taomga surat yuklaganingizda u suratni tahlil qilib, kaloriya, oqsil, yog\' va uglevodni o\'zi yozadi.</div>':
         '<ol class="help" style="margin:6px 0 12px;padding-left:20px;line-height:1.7"><li><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:var(--gold)">aistudio.google.com/apikey</a> sahifasini oching va Google hisobingiz bilan kiring.</li><li><b>Create API key</b> ni bosing va kalitni nusxalang.</li><li>Kalitni pastga joylab, <b>Saqlash</b> ni bosing. Bu bepul.</li></ol>')+
-      '<div class="a-row"><label class="fld"><span>Gemini API kaliti</span><input id="aiKey" type="password" autocomplete="off" placeholder="'+(S.aiOn?'saqlangan — almashtirish uchun yangisini kiriting':'AIza…')+'"></label><button class="btn gold" data-a="aiSaveKey">Saqlash</button>'+(S.aiOn?'<button class="btn" data-a="aiTest">Sinab ko\'rish</button>':'')+'</div>'+
+      '<div class="a-row"><label class="fld"><span>Gemini API kaliti</span><input id="aiKey" type="password" autocomplete="off" placeholder="'+(S.aiOn?'saqlangan — almashtirish uchun yangisini kiriting':'AQ.… yoki AIza…')+'"></label><button class="btn gold" data-a="aiSaveKey">Saqlash</button>'+(S.aiOn?'<button class="btn" data-a="aiTest">Sinab ko\'rish</button>':'')+'</div>'+
       (S.aiOn?'<div class="a-row" style="margin-top:14px"><button class="btn gold" data-a="aiAll">Suratli barcha taomlarni hisoblash ('+withImg+')</button></div><p class="help" style="margin-top:6px">Qo\'lda kiritilgan kaloriyalarga tegilmaydi. Har bir taom 5–10 soniya oladi.</p>':'')+
       '<div id="aiMsg"></div><div id="aiBulkBox" style="margin-top:12px"></div></section>';
   }
@@ -1649,7 +1649,7 @@ A.addEventListener("click", async function(e){
     else if(act==="saveName"){ await saveSettings({name:$("setName").value.trim()}); msg($("setMsg"),"Restoran nomi saqlandi.","ok"); }
     else if(act==="setPin"){ var pv=$("kioskPin").value.trim(); if(!/^\d{4,8}$/.test(pv)){ msg($("pinSetMsg"),"4–8 ta raqam kiriting.","err"); return; } var okp=false; try{ okp=window.UnoKiosk.setPin(pv); }catch(_){} msg($("pinSetMsg"), okp?"PIN-kod shu planshetda saqlandi. Internet bo\'lmaganda admin kirish oynasidan shu PIN bilan chiqasiz.":"Saqlanmadi.", okp?"ok":"err"); $("kioskPin").value=""; }
     else if(act==="aiSaveKey"){
-      var kv=$("aiKey").value.trim(); if(!/^[A-Za-z0-9_\-]{20,}$/.test(kv)){ msg($("aiMsg"),"Kalit noto'g'ri ko'rinadi. Google AI Studio bergan to'liq kalitni joylang.","err"); return; }
+      var kv=$("aiKey").value.trim(); if(!/^[A-Za-z0-9_\-.]{20,}$/.test(kv)){ msg($("aiMsg"),"Kalit noto'g'ri ko'rinadi. Google AI Studio bergan to'liq kalitni joylang.","err"); return; }
       msg($("aiMsg"),"Tekshirilmoqda…");
       try{ var tr=await fetch(GEM_BASE+"/models?pageSize=1",{headers:{"x-goog-api-key":kv}}); if(!tr.ok){ msg($("aiMsg"),"Google bu kalitni qabul qilmadi. Kalitni tekshiring.","err"); return; } }catch(_){ msg($("aiMsg"),"Google'ga ulanib bo'lmadi. Internetni tekshiring.","err"); return; }
       var rk=await S.sb.rpc("uno_set_ai_key",{p_key:kv});
