@@ -1320,7 +1320,7 @@ function sessionOK_old(){
   return false;
 }
 function startSession(){ try{ sessionStorage.setItem(SESSION_KEY,String(Date.now())); }catch(_){} }
-function endSession(){ S.sbSession=null; S.tg=undefined; try{ sessionStorage.removeItem(SESSION_KEY); }catch(_){} if(S.sb) S.sb.auth.signOut().catch(function(){}); }
+function endSession(){ S.sbSession=null; S.tg=undefined; S.aiOn=undefined; try{ sessionStorage.removeItem(SESSION_KEY); }catch(_){} if(S.sb) S.sb.auth.signOut().catch(function(){}); }
 function loginEmail(l){ l=String(l||"").trim().toLowerCase(); return l.indexOf("@")>=0?l:l+"@uno.local"; }
 function logoHTML(){ return S.settings.logoId?'<img alt="Logotip" src="'+blob(S.settings.logoId)+'">':''; }
 function renderAuth(mode){
@@ -1549,9 +1549,15 @@ function renderAdmin(){
   h+='<div id="catMsg"></div></section>';
   // dishes
   if(!ro && S.sample){
-    var nok=S.dishes.filter(function(d){return !d.kcal;}).length;
-    h+='<section class="a-sec"><h2>✨ Kaloriyani AI bilan hisoblash</h2><p class="help">Kaloriyasi kiritilmagan '+nok+' ta taom uchun AI nom va tavsif asosida, odatiy restoran porsiyasi va xalqaro ma\'lumotnoma (USDA) qiymatlari bilan kaloriya, oqsil, yog\' va uglevodni hisoblaydi. Saqlashdan oldin natijani ko\'rib chiqasiz. Surati bor taomni aniqroq hisoblash uchun uni tahrirlash oynasidagi AI tugmasidan foydalaning.</p>'+
-      '<div class="a-row" style="margin-top:10px"><button class="btn gold" data-a="aiBulk" '+(nok?'':'disabled')+'>Kaloriyasi yo\'q taomlarni hisoblash</button></div><div id="aiBulkBox" style="margin-top:12px"></div></section>';
+    if(S.aiOn===undefined && sessionOK()){ S.aiOn=null; S.sb.rpc("uno_ai_status").then(function(r){ S.aiOn=r.error?false:!!r.data; S.aiSql=!r.error; if(S.view==="admin") renderAdmin(); }); }
+    var withImg=S.dishes.filter(function(d){ return d.imgId; }).length;
+    h+='<section class="a-sec"><h2>✨ Sun\'iy intellekt (AI): kaloriyani suratdan hisoblash</h2>'+
+      (S.aiSql===false?'<div class="msg err">Avval ai.sql faylini Supabase SQL Editor\'da ishga tushiring.</div>':'')+
+      (S.aiOn?'<div class="msg ok">AI ulangan. Taomga surat yuklaganingizda u suratni tahlil qilib, kaloriya, oqsil, yog\' va uglevodni o\'zi yozadi.</div>':
+        '<ol class="help" style="margin:6px 0 12px;padding-left:20px;line-height:1.7"><li><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:var(--gold)">aistudio.google.com/apikey</a> sahifasini oching va Google hisobingiz bilan kiring.</li><li><b>Create API key</b> ni bosing va kalitni nusxalang.</li><li>Kalitni pastga joylab, <b>Saqlash</b> ni bosing. Bu bepul.</li></ol>')+
+      '<div class="a-row"><label class="fld"><span>Gemini API kaliti</span><input id="aiKey" type="password" autocomplete="off" placeholder="'+(S.aiOn?'saqlangan — almashtirish uchun yangisini kiriting':'AIza…')+'"></label><button class="btn gold" data-a="aiSaveKey">Saqlash</button>'+(S.aiOn?'<button class="btn" data-a="aiTest">Sinab ko\'rish</button>':'')+'</div>'+
+      (S.aiOn?'<div class="a-row" style="margin-top:14px"><button class="btn gold" data-a="aiAll">Suratli barcha taomlarni hisoblash ('+withImg+')</button></div><p class="help" style="margin-top:6px">Qo\'lda kiritilgan kaloriyalarga tegilmaydi. Har bir taom 5–10 soniya oladi.</p>':'')+
+      '<div id="aiMsg"></div><div id="aiBulkBox" style="margin-top:12px"></div></section>';
   }
   h+='<section class="a-sec"><h2>Taomlar</h2><p class="help"><b style="color:var(--gold2)">Surat o\'lchami: 1080 × 1080 piksel (kvadrat, 1:1).</b> Menyudagi surat maydoni har doim kvadrat, shuning uchun barcha suratlarni shu o\'lchamda tayyorlang. Video ham kvadrat (1080 × 1080) bo\'lsin, 20 MB dan oshmasin. Video bo\'lsa, taom markazga kelganda surat o\'rniga video o\'ynaydi.</p>';
   var groups=cats().concat([{id:"__none",label:"Kategoriyasiz"}]);
@@ -1642,6 +1648,21 @@ A.addEventListener("click", async function(e){
     }
     else if(act==="saveName"){ await saveSettings({name:$("setName").value.trim()}); msg($("setMsg"),"Restoran nomi saqlandi.","ok"); }
     else if(act==="setPin"){ var pv=$("kioskPin").value.trim(); if(!/^\d{4,8}$/.test(pv)){ msg($("pinSetMsg"),"4–8 ta raqam kiriting.","err"); return; } var okp=false; try{ okp=window.UnoKiosk.setPin(pv); }catch(_){} msg($("pinSetMsg"), okp?"PIN-kod shu planshetda saqlandi. Internet bo\'lmaganda admin kirish oynasidan shu PIN bilan chiqasiz.":"Saqlanmadi.", okp?"ok":"err"); $("kioskPin").value=""; }
+    else if(act==="aiSaveKey"){
+      var kv=$("aiKey").value.trim(); if(!/^[A-Za-z0-9_\-]{20,}$/.test(kv)){ msg($("aiMsg"),"Kalit noto'g'ri ko'rinadi. Google AI Studio bergan to'liq kalitni joylang.","err"); return; }
+      msg($("aiMsg"),"Tekshirilmoqda…");
+      try{ var tr=await fetch(GEM_BASE+"/models?pageSize=1",{headers:{"x-goog-api-key":kv}}); if(!tr.ok){ msg($("aiMsg"),"Google bu kalitni qabul qilmadi. Kalitni tekshiring.","err"); return; } }catch(_){ msg($("aiMsg"),"Google'ga ulanib bo'lmadi. Internetni tekshiring.","err"); return; }
+      var rk=await S.sb.rpc("uno_set_ai_key",{p_key:kv});
+      if(rk.error){ msg($("aiMsg"),/uno_set_ai_key|function/.test(rk.error.message)?"Avval ai.sql ni ishga tushiring.":errText(rk.error),"err"); return; }
+      try{ localStorage.removeItem("uno_gem_model"); }catch(_){} S.sample.reset(); S.aiOn=true; S.aiSql=true; renderAdmin(); setTimeout(function(){ msg($("aiMsg"),"Kalit saqlandi. AI tayyor.","ok"); },50);
+    }
+    else if(act==="aiTest"){
+      msg($("aiMsg"),"AI'dan javob kutilmoqda…");
+      try{ var tj=await S.sample.json('Reply with only JSON: {"ok":true,"kcal_osh":0} where kcal_osh is the calories of one 350 g portion of Uzbek plov.',{}); msg($("aiMsg"),"AI ishlayapti ✅ (sinov: 350 g osh ≈ "+aiNum(tj&&tj.kcal_osh)+" kkal)","ok"); }
+      catch(e){ msg($("aiMsg"),aiErr(e),"err"); }
+    }
+    else if(act==="aiAll"){ aiAllPhotos(); }
+    else if(act==="aiAllStop"){ S.aiAllStop=true; }
     else if(act==="syncMedia"){ Offline.last=0; syncMedia(); }
     else if(act==="saveTable"){ setTableNo($("setTable").value); msg($("tblMsg"), tableNo()?("Bu planshet: "+tableNo()+"-stol."):"Stol raqami olib tashlandi.","ok"); }
     else if(act==="saveSvc"){ var v=Math.round(Number($("setSvc").value)); if(!isFinite(v)||v<0||v>50){ msg($("tblMsg"),"0 dan 50 gacha son kiriting.","err"); return; } try{ await saveSettings({service:v}); msg($("tblMsg"),"Xizmat haqi: "+v+"%.","ok"); }catch(err){ msg($("tblMsg"),errText(err),"err"); } }
@@ -1706,6 +1727,82 @@ async function uploadLogo(file){
 }
 
 /* ---------- AI nutrition estimate ---------- */
+/* ---------- AI (Google Gemini): reads the dish photo and estimates nutrition ----------
+   The API key is kept in Supabase (admin only) and used from the admin's browser. */
+var GEM_BASE="https://generativelanguage.googleapis.com/v1beta";
+function makeGemini(){
+  var keyCache=null;
+  async function key(){
+    if(keyCache) return keyCache;
+    if(!S.sb) throw {code:"no_key"};
+    var r=await S.sb.rpc("uno_get_ai_key");
+    if(r.error) throw {code: /uno_get_ai_key|function/.test(r.error.message||"")?"no_sql":"no_key"};
+    if(!r.data) throw {code:"no_key"};
+    keyCache=String(r.data); return keyCache;
+  }
+  async function pickModel(k, skip){
+    var saved=""; try{ saved=localStorage.getItem("uno_gem_model")||""; }catch(_){}
+    if(saved && saved!==skip) return saved;
+    var list=[];
+    try{
+      var res=await fetch(GEM_BASE+"/models?pageSize=200",{headers:{"x-goog-api-key":k}});
+      if(res.status===400||res.status===403) throw {code:"bad_key"};
+      var js=await res.json();
+      list=(js.models||[]).filter(function(m){ return (m.supportedGenerationMethods||[]).indexOf("generateContent")>=0; })
+        .map(function(m){ return String(m.name||"").replace(/^models\//,""); })
+        .filter(function(n){ return /flash/.test(n) && !/image|tts|live|audio|embed|thinking|exp|preview|8b/.test(n) && n!==skip; });
+    }catch(e){ if(e&&e.code) throw e; }
+    function score(n){ var v=(n.match(/(\d+(?:\.\d+)?)/)||[0,0])[1]*1; return (/latest/.test(n)?1000:0)+v*10-(/lite/.test(n)?5:0); }
+    list.sort(function(a,b){ return score(b)-score(a); });
+    var m=list[0]||(skip==="gemini-2.5-flash"?"gemini-flash-latest":"gemini-2.5-flash");
+    try{ localStorage.setItem("uno_gem_model",m); }catch(_){}
+    return m;
+  }
+  async function toPart(b){
+    /* shrink the photo to 1024 px so the request stays small and fast */
+    var mime="image/jpeg", data;
+    try{
+      var bmp=await createImageBitmap(b), sc=Math.min(1,1024/Math.max(bmp.width,bmp.height));
+      var c=document.createElement("canvas"); c.width=Math.round(bmp.width*sc); c.height=Math.round(bmp.height*sc);
+      var x=c.getContext("2d"); x.fillStyle="#ffffff"; x.fillRect(0,0,c.width,c.height); x.drawImage(bmp,0,0,c.width,c.height);
+      data=c.toDataURL("image/jpeg",0.86).split(",")[1];
+    }catch(_){
+      mime=b.type||"image/jpeg";
+      data=await new Promise(function(res,rej){ var fr=new FileReader(); fr.onload=function(){ res(String(fr.result).split(",")[1]); }; fr.onerror=rej; fr.readAsDataURL(b); });
+    }
+    return {inline_data:{mime_type:mime,data:data}};
+  }
+  function parse(txt){
+    txt=String(txt||"").trim().replace(/^```(?:json)?/i,"").replace(/```$/,"").trim();
+    try{ return JSON.parse(txt); }catch(_){}
+    var a=txt.indexOf("{"), b=txt.lastIndexOf("}"), a2=txt.indexOf("["), b2=txt.lastIndexOf("]");
+    if(a2>=0 && (a<0||a2<a)) { try{ return JSON.parse(txt.slice(a2,b2+1)); }catch(_){} }
+    if(a>=0) { try{ return JSON.parse(txt.slice(a,b+1)); }catch(_){} }
+    throw {code:"invalid_json"};
+  }
+  async function json(prompt, opt){
+    opt=opt||{};
+    var k=await key();
+    var parts=[{text:prompt}];
+    for(var i=0;i<(opt.images||[]).length;i++) parts.push(await toPart(opt.images[i]));
+    var body={contents:[{role:"user",parts:parts}],generationConfig:{temperature:0.2,responseMimeType:"application/json"}};
+    var model=await pickModel(k), tries=0;
+    while(true){
+      var res;
+      try{ res=await fetch(GEM_BASE+"/models/"+model+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":k},body:JSON.stringify(body),signal:opt.signal}); }
+      catch(e){ if(e&&e.name==="AbortError") throw {code:"cancelled"}; throw {code:"network"}; }
+      if(res.status===404 && tries<2){ tries++; try{ localStorage.removeItem("uno_gem_model"); }catch(_){} model=await pickModel(k, model); continue; }
+      if(res.status===429) throw {code:"rate_limited"};
+      if(res.status===400||res.status===403){ var e1=""; try{ e1=(await res.json()).error.message||""; }catch(_){} if(/key/i.test(e1)){ keyCache=null; throw {code:"bad_key"}; } throw {code:"image_rejected", msg:e1}; }
+      if(!res.ok) throw {code:"network"};
+      var js=await res.json();
+      var cand=js.candidates&&js.candidates[0], txt=cand&&cand.content&&cand.content.parts&&cand.content.parts.map(function(p){return p.text||"";}).join("");
+      if(!txt) throw {code:"invalid_json"};
+      return parse(txt);
+    }
+  }
+  return {limits:async function(){ return {images:true}; }, json:json, reset:function(){ keyCache=null; }};
+}
 var AI_RULES="You are a professional nutritionist. Use standard reference values (USDA FoodData Central; for Central Asian / Uzbek dishes use typical traditional restaurant recipes and include the cooking oil, fat and broth they normally contain). Be realistic, do not undercount oil and fat. Numbers are for ONE restaurant portion. All names and the note must be in Uzbek (Latin script).";
 function aiNum(v){ v=Number(v); return isFinite(v)&&v>=0 ? Math.round(v) : 0; }
 async function blobOf(id){ try{ var r=await fetch(blob(id)); if(!r.ok) return null; var b=await r.blob(); return /^image\//.test(b.type)?b:null; }catch(_){ return null; } }
@@ -1717,6 +1814,10 @@ function aiErr(e){
   if(c==="cancelled") return "To'xtatildi.";
   if(c==="invalid_json") return "AI javobini o'qib bo'lmadi. Qayta urinib ko'ring.";
   if(c==="image_rejected") return "Suratni AI qabul qilmadi. Boshqa surat yuklab ko'ring.";
+  if(c==="no_key") return "AI kaliti kiritilmagan. Admin panel → \"Sun'iy intellekt (AI)\" bo'limida Gemini kalitini kiriting.";
+  if(c==="no_sql") return "Avval ai.sql faylini Supabase SQL Editor'da ishga tushiring.";
+  if(c==="bad_key") return "Gemini kaliti noto'g'ri yoki faol emas. Kalitni tekshiring.";
+  if(c==="network") return "Internet yoki AI xizmatiga ulanib bo'lmadi. Qayta urinib ko'ring.";
   return "AI bilan bog'lanib bo'lmadi. Qayta urinib ko'ring.";
 }
 async function aiEstimateOne(){
@@ -1725,7 +1826,7 @@ async function aiEstimateOne(){
   var gv=function(id){ var el=$(id); return el?el.value.trim():""; };
   var name=gv("edName")||gv("edName_ru")||gv("edName_en");
   if(!name && !E.imgId){ box.innerHTML='<div class="msg err">Avval taom nomini yozing yoki surat yuklang.</div>'; return; }
-  var img = E.imgId ? await blobOf(E.imgId) : null;
+  var img = (E.aiImg && /^image\//.test(E.aiImg.type||"")) ? E.aiImg : (E.imgId ? await blobOf(E.imgId) : null);
   var canImg=false; try{ var lim=await S.sample.limits(); canImg=!!(lim&&lim.images); }catch(_){}
   if(!canImg) img=null;
   var catName=(cats().find(function(c){return c.id===gv("edCat");})||{}).label||"";
@@ -1733,19 +1834,20 @@ async function aiEstimateOne(){
     "Dish name: "+(name||"(not given)")+"\nMenu category: "+(catName||"-")+"\nDescription: "+(gv("edDesc")||"-")+
     "\nIngredients listed by the restaurant: "+(gv("edIngr")||"-")+"\nPortion weight given by the restaurant: "+(gv("edWeight")||"not given")+"\n"+
     (img ? "A photo of the dish is attached. Identify every visible component (meat, garnish, sauce, bread, vegetables, oil, etc.) and estimate each component's weight in grams from the photo (assume a standard 26-30 cm plate unless something shows otherwise). If a portion weight is given, make the components add up to it.\n" : "No photo is available: base the components on the name, description and a typical restaurant portion.\n")+
-    'Reply with only JSON, no other text: {"dish":"name","components":[{"name":"component","grams":0,"kcal":0,"protein":0,"fat":0,"carbs":0}],"total":{"grams":0,"kcal":0,"protein":0,"fat":0,"carbs":0},"confidence":"high|medium|low","note":"one short sentence about the assumptions"}';
+    'Reply with only JSON, no other text: {"dish":"name","components":[{"name":"component","grams":0,"kcal":0,"protein":0,"fat":0,"carbs":0}],"total":{"grams":0,"kcal":0,"protein":0,"fat":0,"carbs":0},"ingredients_uz":"comma separated list in Uzbek (Latin)","ingredients_ru":"same list in Russian","ingredients_en":"same list in English","confidence":"high|medium|low","note":"one short sentence about the assumptions"}';
   var ctl=new AbortController(); S.aiCtl=ctl;
-  box.innerHTML='<div class="mbox" style="border-style:solid"><b style="font-size:14px">AI tahlil qilmoqda'+(img?' (surat + matn)':' (matn bo\'yicha)')+'…</b><p class="help">Odatda 20–60 soniya. Birinchi marta foydalanishda AI uchun ruxsat so\'raladi.</p><div class="progress"><i></i></div><div class="a-row"><button type="button" class="btn sm" data-e="aiStop">To\'xtatish</button></div></div>';
+  box.innerHTML='<div class="mbox" style="border-style:solid"><b style="font-size:14px">AI tahlil qilmoqda'+(img?' (surat + matn)':' (matn bo\'yicha)')+'…</b><p class="help">Odatda 5–20 soniya.</p><div class="progress"><i></i></div><div class="a-row"><button type="button" class="btn sm" data-e="aiStop">To\'xtatish</button></div></div>';
   try{
     var opt={signal:ctl.signal, modelTier:"default"}; if(img) opt.images=[img];
     var r=await S.sample.json(prompt,opt);
     if(S.editing!==E) return;
     var tot=r&&r.total||{}, comps=Array.isArray(r&&r.components)?r.components:[];
     var res={dish:String(r&&r.dish||""), comps:comps.slice(0,20).map(function(c){ return {name:String(c&&c.name||""),grams:aiNum(c&&c.grams),kcal:aiNum(c&&c.kcal),protein:aiNum(c&&c.protein),fat:aiNum(c&&c.fat),carbs:aiNum(c&&c.carbs)}; }),
-      total:{grams:aiNum(tot.grams),kcal:aiNum(tot.kcal),protein:aiNum(tot.protein),fat:aiNum(tot.fat),carbs:aiNum(tot.carbs)}, conf:String(r&&r.confidence||""), note:String(r&&r.note||""), withImg:!!img};
+      total:{grams:aiNum(tot.grams),kcal:aiNum(tot.kcal),protein:aiNum(tot.protein),fat:aiNum(tot.fat),carbs:aiNum(tot.carbs)}, conf:String(r&&r.confidence||""), note:String(r&&r.note||""), withImg:!!img,
+      ingr:{uz:String(r&&r.ingredients_uz||""),ru:String(r&&r.ingredients_ru||""),en:String(r&&r.ingredients_en||"")}};
     if(!res.total.kcal && res.comps.length){ ["grams","kcal","protein","fat","carbs"].forEach(function(k){ res.total[k]=res.comps.reduce(function(a,c){return a+c[k];},0); }); }
     if(!res.total.kcal){ box.innerHTML='<div class="msg err">AI aniq natija bermadi. Nom yoki tarkibni to\'ldirib, qayta urinib ko\'ring.</div>'; return; }
-    E.ai=res; renderAiBox();
+    E.ai=res; renderAiBox(); if(E.aiAuto){ E.aiAuto=false; aiApply(true); }
   }catch(e){ if(S.editing===E) box.innerHTML='<div class="msg err">'+esc(aiErr(e))+'</div>'; }
 }
 function renderAiBox(){
@@ -1764,9 +1866,14 @@ function aiApply(){
   var E=S.editing; if(!E||!E.ai) return; var r=E.ai, set=function(id,v){ var el=$(id); if(el) el.value=v||""; };
   set("edKcal",r.total.kcal); set("edProt",r.total.protein); set("edFat",r.total.fat); set("edCarb",r.total.carbs);
   if($("edWeight") && !$("edWeight").value.trim() && r.total.grams) set("edWeight",r.total.grams+" g");
-  if($("edIngr") && !$("edIngr").value.trim() && r.comps.length) set("edIngr", r.comps.map(function(c){return c.name;}).filter(Boolean).join(", "));
+  var ing=r.ingr||{};
+  if($("edIngr") && !$("edIngr").value.trim()) set("edIngr", ing.uz || r.comps.map(function(c){return c.name;}).filter(Boolean).join(", "));
+  if($("edIngr_ru") && !$("edIngr_ru").value.trim() && ing.ru) set("edIngr_ru", ing.ru);
+  if($("edIngr_en") && !$("edIngr_en").value.trim() && ing.en) set("edIngr_en", ing.en);
   E.kcalEst=true;
-  msg($("aiBox"),"Qiymatlar maydonlarga yozildi. Saqlash tugmasini bosing.","ok");
+  var note=document.createElement("div"); note.className="msg ok"; note.style.marginTop="10px";
+  note.textContent=(arguments[0]===true?"AI suratni tahlil qilib, qiymatlarni o'zi yozdi. ":"Qiymatlar maydonlarga yozildi. ")+"Saqlash tugmasini bosing.";
+  var bx=$("aiBox"); if(bx) bx.appendChild(note);
 }
 /* bulk: every dish without calories, one call, text only */
 async function aiBulk(){
@@ -1808,6 +1915,40 @@ async function aiBulkSave(){
   S.aiBulkSaving=null; S.aiBulk=null; var box=$("aiBulkBox"); if(box) box.innerHTML='<div class="msg ok">'+done+' ta taomga kaloriya yozildi.</div>';
 }
 
+/* every dish with a photo: analyse the photo and save the numbers (manual numbers are kept) */
+async function aiAllPhotos(){
+  var box=$("aiBulkBox"); if(!box) return;
+  var list=S.dishes.filter(function(d){ return d.imgId && !(d.kcal && !d.kcalEst); });
+  if(!list.length){ box.innerHTML='<div class="msg ok">Hisoblanadigan taom yo\'q.</div>'; return; }
+  S.aiAllStop=false; var ok=0, fail=0, lastErr="";
+  for(var i=0;i<list.length;i++){
+    if(S.aiAllStop) break;
+    var d=list[i]; box=$("aiBulkBox");
+    if(box) box.innerHTML='<div class="mbox" style="border-style:solid"><b style="font-size:14px">AI hisoblamoqda: '+(i+1)+' / '+list.length+' — '+esc(d.name)+'</b><div class="progress" style="margin-top:8px"><i style="width:'+Math.round(100*i/list.length)+'%;animation:none"></i></div><div class="a-row" style="margin-top:10px"><button class="btn" data-a="aiAllStop">To\'xtatish</button></div></div>';
+    try{
+      var img=await blobOf(d.imgId);
+      var prompt=AI_RULES+"\n\nEstimate the nutrition of this dish.\nDish name: "+d.name+"\nMenu category: "+(catLabel(d.cat)||"-")+"\nDescription: "+(d.desc||"-")+"\nIngredients listed by the restaurant: "+(d.ingr||"-")+"\nPortion weight given by the restaurant: "+(d.weight||"not given")+"\n"+
+        (img?"A photo of the dish is attached. Identify every visible component and estimate each component's weight in grams from the photo (assume a standard 26-30 cm plate unless something shows otherwise). ":"")+
+        '\nReply with only JSON: {"total":{"grams":0,"kcal":0,"protein":0,"fat":0,"carbs":0},"ingredients_uz":"","ingredients_ru":"","ingredients_en":""}';
+      var res=await S.sample.json(prompt, img?{images:[img]}:{});
+      var t=res&&res.total||{}, kc=aiNum(t.kcal);
+      if(!kc) throw {code:"invalid_json"};
+      var patch={kcal:kc,prot:aiNum(t.protein),fat:aiNum(t.fat),carb:aiNum(t.carbs),kcalEst:true};
+      if(!d.weight && aiNum(t.grams)) patch.weight=aiNum(t.grams)+" g";
+      if(!d.ingr && res.ingredients_uz) patch.ingr=String(res.ingredients_uz).slice(0,400);
+      if(!d.ingr_ru && res.ingredients_ru) patch.ingr_ru=String(res.ingredients_ru).slice(0,400);
+      if(!d.ingr_en && res.ingredients_en) patch.ingr_en=String(res.ingredients_en).slice(0,400);
+      await S.db.doc("dishes/"+d.id).update(patch); ok++;
+    }catch(e){
+      fail++; lastErr=aiErr(e);
+      if(e&&(e.code==="bad_key"||e.code==="no_key"||e.code==="no_sql")) break;
+      if(e&&e.code==="rate_limited"){ await new Promise(function(r){ setTimeout(r,30000); }); i--; fail--; continue; }
+    }
+    await new Promise(function(r){ setTimeout(r,4500); });   /* stay inside the free-tier rate limit */
+  }
+  box=$("aiBulkBox");
+  if(box) box.innerHTML='<div class="msg '+(fail?'err':'ok')+'">'+ok+' ta taom hisoblandi va saqlandi'+(fail?'. '+fail+' tasida xato: '+esc(lastErr):'.')+(S.aiAllStop?' (to\'xtatildi)':'')+'</div>';
+}
 /* ---- editor ---- */
 function langSec(l,suf,E,show){
   var lab={uz:["Taom nomi *","Qisqa tavsif","Tarkibi (batafsil oynada chiqadi)"],ru:["Название","Краткое описание","Состав"],en:["Name","Short description","Ingredients"]}[l];
@@ -1917,6 +2058,8 @@ async function handleFile(kind,file){
     }catch(_){} }
     E.tempUploads=(E.tempUploads||[]).concat([r.id]);
     if(kind==="img") E.imgId=r.id; else E.videoId=r.id;
+    if(kind==="img") E.aiImg=body;
+    if(kind==="img" && S.sample && S.aiOn){ E.aiAuto=true; setTimeout(function(){ if(S.editing===E) aiEstimateOne(); },50); }
   }catch(err){ msg(m,"Yuklab bo'lmadi: "+((err&&err.message)||"xatolik"),"err"); }
   E.uploadingImg=false; E.uploadingVid=false; updateEditorMedia();
 }
@@ -2036,6 +2179,7 @@ async function init(){
   if(be){ S.sb=be.sb; S.db=be.db; S.assets=be.assets; S.canEdit=true; }
   refreshCallUI();
   S.sample=null; S.cred={login:""}; S.credLoaded=true;
+  if(be) S.sample=makeGemini();
   if(S.sb){
     try{ var gs=await S.sb.auth.getSession(); S.sbSession=gs.data&&gs.data.session||null; }catch(_){}
     S.sb.auth.onAuthStateChange(function(ev,ses){ S.sbSession=ses||null; if(ev==="SIGNED_OUT"&&S.view==="admin") renderAdmin(); });

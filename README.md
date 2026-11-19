@@ -59,3 +59,12 @@ Restoran planshetlari uchun menyu va admin panel. Bitta APK ichida ishlaydi.
    - chaqiruv kelganda budilnikdek jiringlaydi va tebranadi, "Qabul qildim" bosilguncha to'xtamaydi;
    - birinchi ochilishda "batareyani tejash" cheklovidan chiqarishga ruxsat bering, ilova fonda ishlashi uchun.
    - iPhone yoki kompyuterda: https://spesmuz.github.io/uno-menu/ofitsiant.html (sahifa ochiq turganda ovoz chiqaradi).
+
+## Sun'iy intellekt: kaloriyani suratdan hisoblash (Gemini)
+
+1. **Supabase → SQL Editor:** `ai.sql` ni ishga tushiring (bir marta).
+2. **Kalit:** https://aistudio.google.com/apikey → **Create API key** (bepul).
+3. **Admin panel → "Sun'iy intellekt (AI)":** kalitni joylab, **Saqlash** ni bosing.
+4. **Ishlatish:**
+   - taomga surat yuklanganda AI kaloriya, oqsil, yog', uglevod va tarkibni (uch tilda) o'zi yozadi, so'ng **Saqlash** bosiladi;
+   - **"Suratli barcha taomlarni hisoblash"** hammasini ketma-ket hisoblab, saqlaydi. Qo'lda kiritilgan qiymatlarga tegilmaydi.
