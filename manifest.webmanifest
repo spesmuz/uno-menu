@@ -1,0 +1,19 @@
+{
+  "name": "UNO Airways Restaurante",
+  "short_name": "UNO Menyu",
+  "description": "UNO Airways Restaurante raqamli menyusi",
+  "lang": "uz",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "any",
+  "background_color": "#08090B",
+  "theme_color": "#08090B",
+  "icons": [
+    { "src": "icons/menu-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/menu-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/menu-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
