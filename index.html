@@ -1556,8 +1556,9 @@ function renderAdmin(){
       (S.aiOn?'<div class="msg ok">AI ulangan. Taomga surat yuklaganingizda u suratni tahlil qilib, kaloriya, oqsil, yog\' va uglevodni o\'zi yozadi.</div>':
         '<ol class="help" style="margin:6px 0 12px;padding-left:20px;line-height:1.7"><li><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:var(--gold)">aistudio.google.com/apikey</a> sahifasini oching va Google hisobingiz bilan kiring.</li><li><b>Create API key</b> ni bosing va kalitni nusxalang.</li><li>Kalitni pastga joylab, <b>Saqlash</b> ni bosing. Bu bepul.</li></ol>')+
       '<div class="a-row"><label class="fld"><span>Gemini API kaliti</span><input id="aiKey" type="password" autocomplete="off" placeholder="'+(S.aiOn?'saqlangan — almashtirish uchun yangisini kiriting':'AQ.… yoki AIza…')+'"></label><button class="btn gold" data-a="aiSaveKey">Saqlash</button>'+(S.aiOn?'<button class="btn" data-a="aiTest">Sinab ko\'rish</button>':'')+'</div>'+
-      (S.aiOn?'<div class="a-row" style="margin-top:14px"><button class="btn gold" data-a="aiAll">Suratli barcha taomlarni hisoblash ('+withImg+')</button></div><p class="help" style="margin-top:6px">Qo\'lda kiritilgan kaloriyalarga tegilmaydi. Har bir taom 5–10 soniya oladi.</p>':'')+
-      '<div id="aiMsg"></div><div id="aiBulkBox" style="margin-top:12px"></div></section>';
+      (S.aiOn?'<div class="a-row" style="margin-top:14px"><button class="btn gold" data-a="aiAll">Suratli barcha taomlarni hisoblash ('+withImg+')</button></div><p class="help" style="margin-top:6px">Qo\'lda kiritilgan kaloriyalarga tegilmaydi. Har bir taom 5–10 soniya oladi.</p>'+
+        '<div class="a-row" style="margin-top:14px"><button class="btn" data-a="trAll" style="border-color:rgba(232,176,75,.5)">🌐 Tarjimasi yo\'q taom va kategoriyalarni tarjima qilish</button></div><p class="help" style="margin-top:6px">O\'zbekcha nom, tavsif va tarkib rus va ingliz tiliga o\'giriladi. Mavjud tarjimalarga tegilmaydi.</p>':'')+
+      '<div id="aiMsg"></div><div id="aiBulkBox" style="margin-top:12px">'+(S.aiBoxHTML||'')+'</div></section>';
   }
   h+='<section class="a-sec"><h2>Taomlar</h2><p class="help"><b style="color:var(--gold2)">Surat o\'lchami: 1080 × 1080 piksel (kvadrat, 1:1).</b> Menyudagi surat maydoni har doim kvadrat, shuning uchun barcha suratlarni shu o\'lchamda tayyorlang. Video ham kvadrat (1080 × 1080) bo\'lsin, 20 MB dan oshmasin. Video bo\'lsa, taom markazga kelganda surat o\'rniga video o\'ynaydi.</p>';
   var groups=cats().concat([{id:"__none",label:"Kategoriyasiz"}]);
@@ -1662,6 +1663,7 @@ A.addEventListener("click", async function(e){
       catch(e){ msg($("aiMsg"),aiErr(e),"err"); }
     }
     else if(act==="aiAll"){ aiAllPhotos(); }
+    else if(act==="trAll"){ trAll(); }
     else if(act==="aiAllStop"){ S.aiAllStop=true; }
     else if(act==="syncMedia"){ Offline.last=0; syncMedia(); }
     else if(act==="saveTable"){ setTableNo($("setTable").value); msg($("tblMsg"), tableNo()?("Bu planshet: "+tableNo()+"-stol."):"Stol raqami olib tashlandi.","ok"); }
@@ -1944,16 +1946,17 @@ async function aiBulkSave(){
   S.aiBulkSaving=null; S.aiBulk=null; var box=$("aiBulkBox"); if(box) box.innerHTML='<div class="msg ok">'+done+' ta taomga kaloriya yozildi.</div>';
 }
 
+function setAiBox(html){ S.aiBoxHTML=html; var b=$("aiBulkBox"); if(b) b.innerHTML=html; }
 /* every dish with a photo: analyse the photo and save the numbers (manual numbers are kept) */
 async function aiAllPhotos(){
   var box=$("aiBulkBox"); if(!box) return;
   var list=S.dishes.filter(function(d){ return d.imgId && !(d.kcal && !d.kcalEst); });
-  if(!list.length){ box.innerHTML='<div class="msg ok">Hisoblanadigan taom yo\'q.</div>'; return; }
+  if(!list.length){ setAiBox('<div class="msg ok">Hisoblanadigan taom yo\'q.</div>'); return; }
   S.aiAllStop=false; var ok=0, fail=0, lastErr="";
   for(var i=0;i<list.length;i++){
     if(S.aiAllStop) break;
     var d=list[i]; box=$("aiBulkBox");
-    if(box) box.innerHTML='<div class="mbox" style="border-style:solid"><b style="font-size:14px">AI hisoblamoqda: '+(i+1)+' / '+list.length+' — '+esc(d.name)+'</b><div class="progress" style="margin-top:8px"><i style="width:'+Math.round(100*i/list.length)+'%;animation:none"></i></div><div class="a-row" style="margin-top:10px"><button class="btn" data-a="aiAllStop">To\'xtatish</button></div></div>';
+    setAiBox('<div class="mbox" style="border-style:solid"><b style="font-size:14px">AI hisoblamoqda: '+(i+1)+' / '+list.length+' — '+esc(d.name)+'</b><div class="progress" style="margin-top:8px"><i style="width:'+Math.round(100*i/list.length)+'%;animation:none"></i></div><div class="a-row" style="margin-top:10px"><button class="btn" data-a="aiAllStop">To\'xtatish</button></div></div>');
     try{
       var img=await blobOf(d.imgId);
       var prompt=AI_RULES+"\n\nEstimate the nutrition of this dish.\nDish name: "+d.name+"\nMenu category: "+(catLabel(d.cat)||"-")+"\nDescription: "+(d.desc||"-")+"\nIngredients listed by the restaurant: "+(d.ingr||"-")+"\nPortion weight given by the restaurant: "+(d.weight||"not given")+"\n"+
@@ -1976,7 +1979,76 @@ async function aiAllPhotos(){
     await new Promise(function(r){ setTimeout(r,4500); });   /* stay inside the free-tier rate limit */
   }
   box=$("aiBulkBox");
-  if(box) box.innerHTML='<div class="msg '+(fail?'err':'ok')+'">'+ok+' ta taom hisoblandi va saqlandi'+(fail?'. '+fail+' tasida xato: '+esc(lastErr):'.')+(S.aiAllStop?' (to\'xtatildi)':'')+'</div>';
+  setAiBox('<div class="msg '+(fail?'err':'ok')+'">'+ok+' ta taom hisoblandi va saqlandi'+(fail?'. '+fail+' tasida xato: '+esc(lastErr):'.')+(S.aiAllStop?' (to\'xtatildi)':'')+'</div>');
+}
+/* ---------- AI translation: Uzbek → Russian + English ---------- */
+var TR_RULES="You translate a restaurant menu (UNO Airways Restaurante, Tashkent) from Uzbek (Latin script) into Russian and English. "+
+  "Use natural, appetising menu wording. Keep well-known dish names as guests know them (e.g. Osh → Плов / Plov, Lag'mon → Лагман / Lagman, Shashlik → Шашлык / Shashlik, Manti → Манты / Manti). "+
+  "Keep numbers, units and brand names. Empty input stays empty. Reply with JSON only.";
+async function aiTranslate(items){
+  /* items: [{id, name, desc, ingr}] → {id:{name_ru,desc_ru,ingr_ru,name_en,desc_en,ingr_en}} */
+  var prompt=TR_RULES+"\n\nTranslate every item below. Reply with a JSON array, same ids: "+
+    '[{"id":"...","name_ru":"","desc_ru":"","ingr_ru":"","name_en":"","desc_en":"","ingr_en":""}]\n\n'+JSON.stringify(items);
+  var arr=await S.sample.json(prompt,{});
+  if(!Array.isArray(arr)) arr=arr&&Array.isArray(arr.items)?arr.items:[];
+  var out={}; arr.forEach(function(x){ if(x&&x.id!=null) out[String(x.id)]=x; });
+  return out;
+}
+function clip(v,n){ return String(v||"").trim().slice(0,n); }
+/* editor: fill Russian/English from Uzbek. onlyEmpty=true keeps what is already written */
+async function trEditor(onlyEmpty){
+  var E=S.editing, box=$("trMsg"); if(!E) return false;
+  var gv=function(id){ var el=$(id); return el?el.value.trim():""; };
+  var src={id:"x", name:gv("edName"), desc:gv("edDesc"), ingr:gv("edIngr")};
+  if(!src.name){ if(box) msg(box,"Avval o'zbekcha nomini yozing.","err"); return false; }
+  var fields=[["name","edName",60],["desc","edDesc",160],["ingr","edIngr",400]];
+  var need=fields.some(function(f){ return src[f[0]] && ["_ru","_en"].some(function(l){ return !gv(f[1]+l); }); });
+  if(onlyEmpty && !need) return true;
+  if(box) msg(box,"Tarjima qilinmoqda…");
+  try{
+    var res=(await aiTranslate([src]))["x"]; if(!res) throw {code:"invalid_json"};
+    var n=0;
+    fields.forEach(function(f){ ["_ru","_en"].forEach(function(l){
+      var el=$(f[1]+l), v=clip(res[f[0]+l],f[2]); if(!el||!v||!src[f[0]]) return;
+      if(onlyEmpty && el.value.trim()) return;
+      el.value=v; n++;
+    }); });
+    if(box) msg(box, n?"Rus va ingliz tiliga tarjima qilindi. Tekshirib, kerak bo'lsa tuzating.":"Tarjima kerak emas: maydonlar to'ldirilgan.","ok");
+    return true;
+  }catch(e){ if(box) msg(box,"Tarjima qilinmadi: "+aiErr(e),"err"); return false; }
+}
+/* every dish and category still missing Russian or English */
+async function trAll(){
+  var box=$("aiBulkBox"); if(!box) return;
+  var todo=S.dishes.filter(function(d){ return d.name && (!d.name_ru||!d.name_en||(d.desc&&(!d.desc_ru||!d.desc_en))||(d.ingr&&(!d.ingr_ru||!d.ingr_en))); });
+  var cs=cats().filter(function(c){ return c.label && (!c.label_ru||!c.label_en); });
+  if(!todo.length && !cs.length){ setAiBox('<div class="msg ok">Barcha taom va kategoriyalar uch tilda.</div>'); return; }
+  var done=0, fail=0, lastErr="";
+  try{
+    if(cs.length){
+      setAiBox('<div class="mbox" style="border-style:solid"><b style="font-size:14px">Kategoriyalar tarjima qilinmoqda…</b><div class="progress"><i></i></div></div>');
+      var cr=await aiTranslate(cs.map(function(c){ return {id:"c:"+c.id,name:c.label,desc:"",ingr:""}; }));
+      var next=cats().map(function(c){ var t=cr["c:"+c.id]; if(!t) return c; return Object.assign({},c,{label_ru:c.label_ru||clip(t.name_ru,30),label_en:c.label_en||clip(t.name_en,30)}); });
+      await saveSettings({cats:next});
+    }
+    for(var i=0;i<todo.length;i+=8){
+      var chunk=todo.slice(i,i+8);
+      setAiBox('<div class="mbox" style="border-style:solid"><b style="font-size:14px">Taomlar tarjima qilinmoqda: '+Math.min(i+8,todo.length)+' / '+todo.length+'</b><div class="progress" style="margin-top:8px"><i style="width:'+Math.round(100*i/todo.length)+'%;animation:none"></i></div></div>');
+      var res;
+      try{ res=await aiTranslate(chunk.map(function(d){ return {id:d.id,name:d.name,desc:d.desc||"",ingr:d.ingr||""}; })); }
+      catch(e){ if(e&&e.code==="rate_limited"){ await new Promise(function(r){ setTimeout(r,30000); }); i-=8; continue; } throw e; }
+      for(var j=0;j<chunk.length;j++){
+        var d=chunk[j], t=res[d.id]; if(!t){ fail++; continue; }
+        var patch={};
+        [["name",60],["desc",160],["ingr",400]].forEach(function(f){ ["_ru","_en"].forEach(function(l){
+          var k=f[0]+l; if(!d[k] && d[f[0]] && t[k]) patch[k]=clip(t[k],f[1]); }); });
+        if(Object.keys(patch).length){ await S.db.doc("dishes/"+d.id).update(patch); done++; }
+      }
+      await new Promise(function(r){ setTimeout(r,4000); });
+    }
+  }catch(e){ lastErr=aiErr(e); fail++; }
+  box=$("aiBulkBox");
+  setAiBox('<div class="msg '+(lastErr?'err':'ok')+'">'+done+' ta taom'+(cs.length?' va kategoriyalar':'')+' tarjima qilindi'+(lastErr?'. Xato: '+esc(lastErr):'.')+'</div>');
 }
 /* ---- editor ---- */
 function langSec(l,suf,E,show){
@@ -2003,6 +2075,7 @@ function renderEditor(){
     '<label class="fld"><span>Yog\', g</span><input id="edFat" inputmode="numeric" maxlength="4" value="'+esc(E.fat||"")+'"></label>'+
     '<label class="fld"><span>Uglevod, g</span><input id="edCarb" inputmode="numeric" maxlength="4" value="'+esc(E.carb||"")+'"></label></div>'+
     (S.sample?'<div class="a-row" style="align-items:center"><button type="button" class="btn" data-e="aiRun" style="border-color:rgba(232,176,75,.5)">✨ Kaloriyani AI bilan hisoblash</button><span class="help" style="flex:1;min-width:200px">Surat yuklangan bo\'lsa, AI suratdagi har bir tarkibiy qismni aniqlab, og\'irligini baholaydi va xalqaro ma\'lumotnoma (USDA) qiymatlari bilan hisoblaydi.</span></div><div id="aiBox"></div>':'')+
+    (S.sample&&S.aiOn?'<div class="a-row" style="align-items:center;margin-top:4px"><button type="button" class="btn" data-e="trRun" style="border-color:rgba(232,176,75,.5)">🌐 Rus va ingliz tiliga tarjima qilish</button><span class="help" style="flex:1;min-width:200px">O\'zbekcha yozing — saqlashda bo\'sh qolgan ruscha va inglizcha maydonlarni AI o\'zi to\'ldiradi.</span></div><div id="trMsg"></div>':'')+
     '<div class="ltabs" role="tablist" aria-label="Til"><button type="button" role="tab" data-lt="uz" aria-selected="true">O\'zbekcha *</button><button type="button" role="tab" data-lt="ru" aria-selected="false">Русский</button><button type="button" role="tab" data-lt="en" aria-selected="false">English</button></div>'+
     langSec("uz","",E,true)+langSec("ru","_ru",E,false)+langSec("en","_en",E,false)+
     '<div class="media-grid">'+
@@ -2036,6 +2109,7 @@ function renderEditor(){
     if(b.dataset.e==="rmImg"){ S.editing.imgId=""; updateEditorMedia(); }
     if(b.dataset.e==="rmVid"){ S.editing.videoId=""; updateEditorMedia(); }
     if(b.dataset.e==="aiRun") aiEstimateOne();
+    if(b.dataset.e==="trRun") trEditor(false);
     if(b.dataset.e==="aiStop" && S.aiCtl) S.aiCtl.abort();
     if(b.dataset.e==="aiApply") aiApply();
   });
@@ -2100,6 +2174,11 @@ async function saveDish(){
   if(!name){ msg(m,"Taom nomini (o'zbekcha) kiriting.","err"); var tb=document.querySelector('[data-lt="uz"]'); if(tb) tb.click(); $("edName").focus(); return; }
   if(!price){ msg(m,"Narxni kiriting (faqat raqam).","err"); $("edPrice").focus(); return; }
   if(!cat){ msg(m,"Avval kategoriya qo'shing.","err"); return; }
+  if(S.sample && S.aiOn && !E.trTried){
+    E.trTried=true; $("edSave").disabled=true; msg(m,"Ruscha va inglizcha tarjima qilinmoqda…");
+    await Promise.race([trEditor(true), new Promise(function(r){ setTimeout(r,25000); })]);
+    $("edSave").disabled=false;
+  }
   var order = E.id ? (E.order||0) : (dishesOf(cat).reduce(function(mx,d){return Math.max(mx,d.order||0);},0)+10);
   if(E.id && E.cat!==cat) order = dishesOf(cat).reduce(function(mx,d){return Math.max(mx,d.order||0);},0)+10;
   var data={name:name, price:price, cat:cat, desc:desc, ingr:gv("edIngr"),
