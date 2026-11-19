@@ -1786,20 +1786,48 @@ function makeGemini(){
     var parts=[{text:prompt}];
     for(var i=0;i<(opt.images||[]).length;i++) parts.push(await toPart(opt.images[i]));
     var body={contents:[{role:"user",parts:parts}],generationConfig:{temperature:0.2,responseMimeType:"application/json"}};
-    var model=await pickModel(k), tries=0;
+    var model=await pickModel(k), tried=[model], retry5xx=0, last=null;
     while(true){
-      var res;
+      var res, info="";
       try{ res=await fetch(GEM_BASE+"/models/"+model+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":k},body:JSON.stringify(body),signal:opt.signal}); }
-      catch(e){ if(e&&e.name==="AbortError") throw {code:"cancelled"}; throw {code:"network"}; }
-      if(res.status===404 && tries<2){ tries++; try{ localStorage.removeItem("uno_gem_model"); }catch(_){} model=await pickModel(k, model); continue; }
-      if(res.status===429) throw {code:"rate_limited"};
-      if(res.status===400||res.status===403){ var e1=""; try{ e1=(await res.json()).error.message||""; }catch(_){} if(/key/i.test(e1)){ keyCache=null; throw {code:"bad_key"}; } throw {code:"image_rejected", msg:e1}; }
-      if(!res.ok) throw {code:"network"};
+      catch(e){
+        if(e&&e.name==="AbortError") throw {code:"cancelled"};
+        last={code:"network", msg:"so'rov yuborilmadi ("+(e&&e.message||"tarmoq")+")"};
+        if(retry5xx<1){ retry5xx++; await new Promise(function(r){ setTimeout(r,1500); }); continue; }
+        throw last;
+      }
+      if(!res.ok){ try{ var ej=await res.json(); info=(ej.error&&(ej.error.status+": "+ej.error.message))||""; }catch(_){ } }
+      /* model gone, not allowed, overloaded or without free quota: try the next model */
+      var switchModel = res.status===404 || (res.status===429 && /limit: ?0|free_tier/i.test(info)) || res.status>=500 || (res.status===403 && !/key/i.test(info)) || (res.status===400 && /model/i.test(info) && !/key/i.test(info));
+      if(res.status>=500 && retry5xx<1){ retry5xx++; await new Promise(function(r){ setTimeout(r,2000); }); continue; }
+      if(switchModel && tried.length<4){
+        try{ localStorage.removeItem("uno_gem_model"); }catch(_){}
+        var next=await nextModel(k, tried); if(next){ tried.push(next); model=next; retry5xx=0; continue; }
+      }
+      if(res.status===429) throw {code:"rate_limited", msg:info};
+      if(res.status===400||res.status===403){ if(/key|API_KEY|PERMISSION/i.test(info)){ keyCache=null; throw {code:"bad_key", msg:info}; } if(/location|region|country/i.test(info)) throw {code:"region", msg:info}; throw {code:"image_rejected", msg:info}; }
+      if(!res.ok) throw {code:"network", msg:"HTTP "+res.status+(info?" — "+info:"")};
       var js=await res.json();
       var cand=js.candidates&&js.candidates[0], txt=cand&&cand.content&&cand.content.parts&&cand.content.parts.map(function(p){return p.text||"";}).join("");
-      if(!txt) throw {code:"invalid_json"};
+      if(!txt) throw {code:"invalid_json", msg:(cand&&cand.finishReason)||(js.promptFeedback&&js.promptFeedback.blockReason)||""};
+      try{ localStorage.setItem("uno_gem_model",model); }catch(_){}
       return parse(txt);
     }
+  }
+  async function nextModel(k, tried){
+    var list=[];
+    try{
+      var res=await fetch(GEM_BASE+"/models?pageSize=200",{headers:{"x-goog-api-key":k}});
+      var js=await res.json();
+      list=(js.models||[]).filter(function(m){ return (m.supportedGenerationMethods||[]).indexOf("generateContent")>=0; })
+        .map(function(m){ return String(m.name||"").replace(/^models\//,""); })
+        .filter(function(n){ return /flash/.test(n) && !/image|tts|live|audio|embed|thinking|exp|8b/.test(n); });
+    }catch(_){}
+    list=list.concat(["gemini-flash-latest","gemini-2.5-flash","gemini-flash-lite-latest","gemini-2.5-flash-lite","gemini-2.0-flash"]);
+    function score(n){ var v=(n.match(/(\d+(?:\.\d+)?)/)||[0,0])[1]*1; return (/latest/.test(n)?1000:0)+v*10-(/lite/.test(n)?5:0)-(/preview/.test(n)?50:0); }
+    list.sort(function(a,b){ return score(b)-score(a); });
+    for(var i=0;i<list.length;i++) if(tried.indexOf(list[i])<0) return list[i];
+    return null;
   }
   return {limits:async function(){ return {images:true}; }, json:json, reset:function(){ keyCache=null; }};
 }
@@ -1809,15 +1837,16 @@ async function blobOf(id){ try{ var r=await fetch(blob(id)); if(!r.ok) return nu
 function aiErr(e){
   var c=e&&e.code;
   if(c==="not_granted") return "AI ishlatishga ruxsat berilmadi. Qayta urinib, chiqqan oynada ruxsat bering.";
-  if(c==="rate_limited") return "Hozir AI so'rovlari ko'p. Birozdan keyin qayta urinib ko'ring.";
+  if(c==="rate_limited") return "Hozir AI so'rovlari ko'p. Birozdan keyin qayta urinib ko'ring."+(e.msg?" ("+String(e.msg).slice(0,160)+")":"");
   if(c==="sampling_disabled"||c==="capability_disabled"||c==="not_declared") return "Bu hisobda AI mavjud emas.";
   if(c==="cancelled") return "To'xtatildi.";
   if(c==="invalid_json") return "AI javobini o'qib bo'lmadi. Qayta urinib ko'ring.";
-  if(c==="image_rejected") return "Suratni AI qabul qilmadi. Boshqa surat yuklab ko'ring.";
+  if(c==="image_rejected") return "AI so'rovni qabul qilmadi"+(e.msg?": "+String(e.msg).slice(0,200):". Boshqa surat yuklab ko'ring.");
   if(c==="no_key") return "AI kaliti kiritilmagan. Admin panel → \"Sun'iy intellekt (AI)\" bo'limida Gemini kalitini kiriting.";
   if(c==="no_sql") return "Avval ai.sql faylini Supabase SQL Editor'da ishga tushiring.";
-  if(c==="bad_key") return "Gemini kaliti noto'g'ri yoki faol emas. Kalitni tekshiring.";
-  if(c==="network") return "Internet yoki AI xizmatiga ulanib bo'lmadi. Qayta urinib ko'ring.";
+  if(c==="bad_key") return "Gemini kaliti qabul qilinmadi"+(e.msg?": "+String(e.msg).slice(0,200):". Kalitni tekshiring.");
+  if(c==="region") return "Google bu hududda Gemini API'ni cheklagan."+(e.msg?" ("+e.msg+")":"");
+  if(c==="network") return "AI xizmatiga ulanib bo'lmadi"+(e.msg?": "+e.msg:"")+". Qayta urinib ko'ring.";
   return "AI bilan bog'lanib bo'lmadi. Qayta urinib ko'ring.";
 }
 async function aiEstimateOne(){
