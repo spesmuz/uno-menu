@@ -262,6 +262,19 @@ input,select,textarea{font-family:inherit}
 .badge.vid{opacity:0;transition:opacity .4s}
 .media.has-vid .badge.vid{opacity:1}
 .vidwrap video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#111}
+/* photo → video: the photo softly blurs away while the video comes into focus */
+.slide.center .media .thumb{transition:transform .55s cubic-bezier(.2,.9,.3,1.25),opacity 1.1s ease,filter 1.1s ease}
+.slide.center .media.has-vid .thumb{opacity:0;filter:blur(14px) brightness(.8)}
+.slide.center .media .vidwrap{opacity:0;filter:blur(16px) saturate(1.15);transition:transform .55s cubic-bezier(.2,.9,.3,1.25),opacity 1.1s ease,filter 1.25s cubic-bezier(.3,.7,.3,1)}
+.slide.center .media .vidwrap.show{opacity:1;filter:blur(0) saturate(1)}
+.slide.center .media .vidwrap.show.done{filter:none}
+.slide.center .card.tilting .media .vidwrap{transition:transform .09s linear,opacity 1.1s ease,filter 1.25s cubic-bezier(.3,.7,.3,1)}
+.d-media img.big{transition:opacity .25s,filter 1.1s ease}
+.d-layer.has-vid img.big,.d-layer.has-vid img.big.cover{opacity:0;filter:blur(14px) brightness(.8)}
+.d-media video{filter:blur(16px);transition:opacity 1.1s ease,filter 1.25s cubic-bezier(.3,.7,.3,1)}
+.d-media video.show{filter:blur(0)}
+.d-media video.show.done{filter:none}
+
 @keyframes dishIn{0%{opacity:0;transform:translateY(70px) scale(.12);filter:blur(8px) brightness(2)}55%{opacity:1;transform:translateY(-8px) scale(1.05);filter:blur(0) brightness(1.15)}100%{opacity:1;transform:none;filter:none}}
 @keyframes ringIn{0%{opacity:0;transform:scale(.15)}60%{opacity:1;transform:scale(1.08)}100%{opacity:1;transform:none}}
 @keyframes beamIn{0%{opacity:0}35%{opacity:.95}100%{opacity:.16}}
@@ -815,7 +828,7 @@ function scheduleVideo(m, id){
   clearTimeout(_vidT);
   var v=m.querySelector("video"), w=m.querySelector(".vidwrap"); if(!v) return;
   v.muted=true;
-  v.addEventListener("playing",function(){ w.classList.add("show"); m.classList.add("has-vid"); },{once:true});
+  v.addEventListener("playing",function(){ w.classList.add("show"); m.classList.add("has-vid"); setTimeout(function(){ w.classList.add("done"); },1400); },{once:true});
   _vidT=setTimeout(function(){
     var c=curList[S.idx];
     if(!c || c.id!==id || S.detail || !m.isConnected || S.view!=="menu") return;
@@ -972,7 +985,7 @@ function setupLayer(layer, d){
   layer.querySelectorAll("img[data-fit]").forEach(fitImg);
   var v=layer.querySelector("video"); if(!v) return;
   v.muted=true; var id=d.id;
-  v.addEventListener("playing",function(){ v.classList.add("show"); layer.classList.add("has-vid"); },{once:true});
+  v.addEventListener("playing",function(){ v.classList.add("show"); layer.classList.add("has-vid"); setTimeout(function(){ v.classList.add("done"); },1400); },{once:true});
   clearTimeout(S.dVidT);
   S.dVidT=setTimeout(function(){ if(S.detail!==id || !v.isConnected) return; var pr=v.play(); if(pr&&pr.catch) pr.catch(function(){}); }, VIDEO_DELAY);
 }
