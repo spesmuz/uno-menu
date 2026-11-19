@@ -275,6 +275,8 @@ input,select,textarea{font-family:inherit}
 .toast{position:absolute;top:100px;left:50%;width:360px;margin-left:-180px;height:48px;border-radius:24px;background:var(--text);color:#17130A;display:flex;align-items:center;justify-content:center;gap:10px;font-size:14px;font-weight:700;box-shadow:0 14px 40px rgba(0,0,0,.5);z-index:400;animation:fadeUp .4s both}
 .overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;justify-content:flex-end;z-index:500}
 .drawer{width:420px;height:100%;padding:28px 28px 24px;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;gap:18px}
+.ask-waiter{display:flex;align-items:center;justify-content:center;gap:10px;min-height:56px;padding:12px 16px;border-radius:16px;border:1px solid rgba(232,176,75,.35);background:rgba(232,176,75,.08);color:var(--gold);font-weight:600;font-size:15px;text-align:center}
+.ask-waiter svg{width:20px;height:20px;flex:0 0 auto}
 .clr-btn{height:38px;padding:0 14px;border-radius:19px;border:1px solid rgba(255,120,120,.35);background:transparent;color:#FF9C9C;font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px}
 .clr-btn:hover{background:rgba(229,72,77,.12)}
 .clr-q{display:flex;align-items:center;gap:8px;padding:4px 4px 4px 14px;border-radius:22px;background:rgba(229,72,77,.12);border:1px solid rgba(255,120,120,.35);font-size:13px;font-weight:700;color:#FFC2C2;animation:fadeUp .2s both}
@@ -370,7 +372,6 @@ input,select,textarea{font-family:inherit}
         <label class="search-box hidden" id="searchBox"><span class="sr" id="searchLbl">Taom qidirish</span><input type="search" id="searchInput" placeholder="Taom nomi yoki tarkibi…"><button class="icon-btn" style="width:36px;height:36px;border:0;background:#26282F" id="searchClose" aria-label="Qidiruvni yopish"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></label>
       </div>
       <button class="icon-btn" id="searchBtn" aria-label="Qidirish"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
-      <button class="icon-btn" id="waiterBtn" aria-label="Ofitsiantni chaqirish"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></button>
       <button class="cart-btn" id="cartBtn" aria-label="Savatchani ochish"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3h2.6l2.4 12.2a1.6 1.6 0 0 0 1.6 1.3h8.7a1.6 1.6 0 0 0 1.6-1.2L21 7H6"/></svg><span class="t"><b id="cartTotal">0 so'm</b><small id="cartCount">0 ta taom</small></span></button>
     </header>
 
@@ -586,9 +587,9 @@ var SFX=(function(){
 
 /* ---------- i18n ---------- */
 var T={
-uz:{search:"Taom qidirish",searchPh:"Taom nomi yoki tarkibi…",add:"Savatchaga qo'shish",more:"Batafsil",items:"ta taom",loading:"Menyu yuklanmoqda…",empty:"Menyu hali bo'sh.",results:"Qidiruv natijalari",none:"Hech narsa topilmadi.",order:"Buyurtmangiz",cartEmpty:"Savatcha bo'sh. Menyudan taom tanlang.",note:"Oshpazga izoh (ixtiyoriy)",notePh:"Masalan: achchiq bo'lmasin",total:"Jami",place:"Buyurtma berish",accepted:"Buyurtma qabul qilindi",preparing:"Taomlaringiz tayyorlanmoqda. Yoqimli ishtaha!",back:"Menyuga qaytish",waiter:"Ofitsiant chaqirildi, tez orada keladi",ingr:"Tarkibi",weight:"Og'irligi",time:"Tayyorlanish vaqti",min:"daq",sound:"Ovoz",close:"Yopish",prev:"Oldingi taom",next:"Keyingi taom",cur:"so'm",cart:"Savatchani ochish",waiterBtn:"Ofitsiantni chaqirish",dec:"Kamaytirish",inc:"Ko'paytirish",restaurant:"Restoran",clearAll:"Hammasini o'chirish",clearQ:"Hammasi o'chirilsinmi?",yes:"Ha",no:"Yo'q",kcal:"kkal",approx:"taxminan",cal:"Kaloriya",prot:"Oqsil",fat:"Yog'",carb:"Uglevod",g:"g",totalKcal:"Jami kaloriya",partKcal:"ba'zi taomlarda ma'lumot yo'q",toCenter:"markazga olib kelish",video:"videosi",cats:"Kategoriyalar",lang:"Til"},
-ru:{search:"Поиск блюда",searchPh:"Название или состав…",add:"В корзину",more:"Подробнее",items:"блюд",loading:"Меню загружается…",empty:"Меню пока пусто.",results:"Результаты поиска",none:"Ничего не найдено.",order:"Ваш заказ",cartEmpty:"Корзина пуста. Выберите блюдо в меню.",note:"Комментарий для повара (необязательно)",notePh:"Например: не острое",total:"Итого",place:"Оформить заказ",accepted:"Заказ принят",preparing:"Ваши блюда готовятся. Приятного аппетита!",back:"Вернуться в меню",waiter:"Официант вызван и скоро подойдёт",ingr:"Состав",weight:"Вес",time:"Время приготовления",min:"мин",sound:"Звук",close:"Закрыть",prev:"Предыдущее блюдо",next:"Следующее блюдо",cur:"сум",cart:"Открыть корзину",waiterBtn:"Вызвать официанта",dec:"Уменьшить",inc:"Увеличить",restaurant:"Ресторан",clearAll:"Очистить всё",clearQ:"Удалить всё?",yes:"Да",no:"Нет",kcal:"ккал",approx:"примерно",cal:"Калорийность",prot:"Белки",fat:"Жиры",carb:"Углеводы",g:"г",totalKcal:"Всего калорий",partKcal:"не для всех блюд есть данные",toCenter:"показать в центре",video:"видео",cats:"Категории",lang:"Язык"},
-en:{search:"Search dishes",searchPh:"Dish name or ingredients…",add:"Add to order",more:"Details",items:"items",loading:"Loading menu…",empty:"The menu is empty for now.",results:"Search results",none:"Nothing found.",order:"Your order",cartEmpty:"Your order is empty. Pick a dish from the menu.",note:"Note for the chef (optional)",notePh:"For example: not spicy",total:"Total",place:"Place order",accepted:"Order received",preparing:"Your dishes are being prepared. Enjoy your meal!",back:"Back to menu",waiter:"A waiter is on the way",ingr:"Ingredients",weight:"Weight",time:"Cooking time",min:"min",sound:"Sound",close:"Close",prev:"Previous dish",next:"Next dish",cur:"UZS",cart:"Open order",waiterBtn:"Call a waiter",dec:"Decrease",inc:"Increase",restaurant:"Restaurant",clearAll:"Clear all",clearQ:"Remove everything?",yes:"Yes",no:"No",kcal:"kcal",approx:"approx.",cal:"Calories",prot:"Protein",fat:"Fat",carb:"Carbs",g:"g",totalKcal:"Total calories",partKcal:"some dishes have no data",toCenter:"bring to centre",video:"video",cats:"Categories",lang:"Language"}
+uz:{askWaiter:"Tanlagan taomlaringizni ofitsiantga ayting",search:"Taom qidirish",searchPh:"Taom nomi yoki tarkibi…",add:"Savatchaga qo'shish",more:"Batafsil",items:"ta taom",loading:"Menyu yuklanmoqda…",empty:"Menyu hali bo'sh.",results:"Qidiruv natijalari",none:"Hech narsa topilmadi.",order:"Buyurtmangiz",cartEmpty:"Savatcha bo'sh. Menyudan taom tanlang.",note:"Oshpazga izoh (ixtiyoriy)",notePh:"Masalan: achchiq bo'lmasin",total:"Jami",place:"Buyurtma berish",accepted:"Buyurtma qabul qilindi",preparing:"Taomlaringiz tayyorlanmoqda. Yoqimli ishtaha!",back:"Menyuga qaytish",waiter:"Ofitsiant chaqirildi, tez orada keladi",ingr:"Tarkibi",weight:"Og'irligi",time:"Tayyorlanish vaqti",min:"daq",sound:"Ovoz",close:"Yopish",prev:"Oldingi taom",next:"Keyingi taom",cur:"so'm",cart:"Savatchani ochish",waiterBtn:"Ofitsiantni chaqirish",dec:"Kamaytirish",inc:"Ko'paytirish",restaurant:"Restoran",clearAll:"Hammasini o'chirish",clearQ:"Hammasi o'chirilsinmi?",yes:"Ha",no:"Yo'q",kcal:"kkal",approx:"taxminan",cal:"Kaloriya",prot:"Oqsil",fat:"Yog'",carb:"Uglevod",g:"g",totalKcal:"Jami kaloriya",partKcal:"ba'zi taomlarda ma'lumot yo'q",toCenter:"markazga olib kelish",video:"videosi",cats:"Kategoriyalar",lang:"Til"},
+ru:{askWaiter:"Назовите выбранные блюда официанту",search:"Поиск блюда",searchPh:"Название или состав…",add:"В корзину",more:"Подробнее",items:"блюд",loading:"Меню загружается…",empty:"Меню пока пусто.",results:"Результаты поиска",none:"Ничего не найдено.",order:"Ваш заказ",cartEmpty:"Корзина пуста. Выберите блюдо в меню.",note:"Комментарий для повара (необязательно)",notePh:"Например: не острое",total:"Итого",place:"Оформить заказ",accepted:"Заказ принят",preparing:"Ваши блюда готовятся. Приятного аппетита!",back:"Вернуться в меню",waiter:"Официант вызван и скоро подойдёт",ingr:"Состав",weight:"Вес",time:"Время приготовления",min:"мин",sound:"Звук",close:"Закрыть",prev:"Предыдущее блюдо",next:"Следующее блюдо",cur:"сум",cart:"Открыть корзину",waiterBtn:"Вызвать официанта",dec:"Уменьшить",inc:"Увеличить",restaurant:"Ресторан",clearAll:"Очистить всё",clearQ:"Удалить всё?",yes:"Да",no:"Нет",kcal:"ккал",approx:"примерно",cal:"Калорийность",prot:"Белки",fat:"Жиры",carb:"Углеводы",g:"г",totalKcal:"Всего калорий",partKcal:"не для всех блюд есть данные",toCenter:"показать в центре",video:"видео",cats:"Категории",lang:"Язык"},
+en:{askWaiter:"Tell your waiter the dishes you have chosen",search:"Search dishes",searchPh:"Dish name or ingredients…",add:"Add to order",more:"Details",items:"items",loading:"Loading menu…",empty:"The menu is empty for now.",results:"Search results",none:"Nothing found.",order:"Your order",cartEmpty:"Your order is empty. Pick a dish from the menu.",note:"Note for the chef (optional)",notePh:"For example: not spicy",total:"Total",place:"Place order",accepted:"Order received",preparing:"Your dishes are being prepared. Enjoy your meal!",back:"Back to menu",waiter:"A waiter is on the way",ingr:"Ingredients",weight:"Weight",time:"Cooking time",min:"min",sound:"Sound",close:"Close",prev:"Previous dish",next:"Next dish",cur:"UZS",cart:"Open order",waiterBtn:"Call a waiter",dec:"Decrease",inc:"Increase",restaurant:"Restaurant",clearAll:"Clear all",clearQ:"Remove everything?",yes:"Yes",no:"No",kcal:"kcal",approx:"approx.",cal:"Calories",prot:"Protein",fat:"Fat",carb:"Carbs",g:"g",totalKcal:"Total calories",partKcal:"some dishes have no data",toCenter:"bring to centre",video:"video",cats:"Categories",lang:"Language"}
 };
 function t(k){ return (T[S.lang]||T.uz)[k]||T.uz[k]||k; }
 function L(d,f){ var v = S.lang==="uz" ? d[f] : (d[f+"_"+S.lang]||d[f]); return v||""; }
@@ -603,7 +604,6 @@ function applyStatic(){
   $("searchBtn").setAttribute("aria-label",t("search"));
   $("searchInput").placeholder=t("searchPh");
   $("searchLbl").textContent=t("search");
-  $("waiterBtn").setAttribute("aria-label",t("waiterBtn"));
   $("cartBtn").setAttribute("aria-label",t("cart"));
   $("prevBtn").setAttribute("aria-label",t("prev"));
   $("nextBtn").setAttribute("aria-label",t("next"));
@@ -1003,10 +1003,9 @@ function renderCart(){
     });
     h+='</div>';
     if(items.length){
-      h+='<label class="fld" style="min-width:0"><span>'+esc(t("note"))+'</span><input type="text" placeholder="'+esc(t("notePh"))+'"></label>'+
-         kcalLine(items)+
+      h+=kcalLine(items)+
          '<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="color:var(--muted)">'+esc(t("total"))+'</span><b style="font-size:26px;color:var(--gold)">'+fmtL(total)+'</b></div>'+
-         '<button class="gold-btn" data-c="order">'+esc(t("place"))+'</button>';
+         '<div class="ask-waiter">'+ICON.check+'<span>'+esc(t("askWaiter"))+'</span></div>';
     }
   }
   h+='</aside></div>';
@@ -1017,15 +1016,9 @@ $("cartHost").addEventListener("click",function(e){
   var c=e.target.closest("[data-c]"); if(!c) return;
   if(c.dataset.c==="close"){ S.cartOpen=false; S.confirmClear=false; renderCart(); }
   if(c.dataset.c==="clear"){ S.cart={}; SFX.remove(); refreshCartUI(); renderCart(); }
-  if(c.dataset.c==="order"){ SFX.order(); S.ordered=true; renderCart(); }
   if(c.dataset.c==="back"){ S.ordered=false; S.cartOpen=false; S.cart={}; refreshCartUI(); renderCart(); }
 });
 $("cartBtn").onclick=function(){ SFX.tick(); S.cartOpen=true; renderCart(); };
-$("waiterBtn").onclick=function(){
-  SFX.waiter();
-  $("toastHost").innerHTML='<div class="toast" role="status">'+ICON.check+' '+esc(t("waiter"))+'</div>';
-  clearTimeout(S.toastT); S.toastT=setTimeout(function(){ $("toastHost").innerHTML=""; },2600);
-};
 // search
 function setSearch(open){
   $("searchBox").classList.toggle("hidden",!open); $("tabs").classList.toggle("hidden",open);
