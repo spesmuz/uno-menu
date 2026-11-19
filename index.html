@@ -1188,7 +1188,9 @@ async function doLogin(){
   msg(m,"Tekshirilmoqda…");
   var r=await S.sb.auth.signInWithPassword({email:loginEmail(l),password:p});
   var ok=!r.error && r.data && r.data.session;
-  if(ok){ S.fails=0; S.sbSession=r.data.session; S.cred.login=l; startSession(); renderAdmin(); return; }
+  if(ok){ S.fails=0; S.sbSession=r.data.session; S.cred.login=l; startSession(); renderAdmin();
+    try{ if(S.db.seedIfEmpty && await S.db.seedIfEmpty()) renderAdmin(); }catch(e){ console.warn("seed",e); }
+    return; }
   if(r.error && !/invalid|credential/i.test(r.error.message||"")){ msg(m,errText(r.error),"err"); return; }
   S.fails=(S.fails||0)+1;
   if(S.fails>=5){ S.lockUntil=Date.now()+60000; S.fails=0; msg(m,"5 marta xato kiritildi. 1 daqiqadan keyin qayta urinib ko'ring.","err"); }
@@ -1268,6 +1270,14 @@ function makeBackend(){
       return {id:name};
     },
     delete:async function(id){ if(!id||/[\/:]/.test(id)) return; await sb.storage.from(SB_BUCKET).remove([id]); }
+  };
+  db.seedIfEmpty=async function(){
+    var c=await sb.from(SB_TABLE).select("path",{count:"exact",head:true});
+    if(c.error || (c.count||0)>0) return false;
+    var res=await fetch("seed.json",{cache:"no-store"}); if(!res.ok) return false;
+    var obj=await res.json(), rows=Object.keys(obj).map(function(k){ return {path:k,data:obj[k]}; });
+    var r=await sb.from(SB_TABLE).upsert(rows,{onConflict:"path",ignoreDuplicates:true});
+    if(r.error) throw r.error; await fetchAll(); return true;
   };
   return {sb:sb, db:db, assets:assets};
 }
