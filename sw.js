@@ -4,7 +4,7 @@
    - dish photos and videos: the page downloads them all in advance into "uno-media";
      videos are served from it with byte ranges, so they play without internet
    - menu data and calls (Supabase API) are never cached here: the app keeps its own copy */
-var VERSION = "uno-v2";
+var VERSION = "uno-v3";
 var MEDIA = "uno-media-v1";
 var CORE = ["./", "index.html", "manifest.webmanifest", "media/logo.png", "media/emblem.png", "icons/menu-192.png", "icons/menu-512.png", "icons/menu-180.png"];
 
@@ -22,7 +22,9 @@ function timeout(ms) { return new Promise(function (_, rej) { setTimeout(functio
 
 function networkFirst(req, ms) {
   return caches.open(VERSION).then(function (cache) {
-    return Promise.race([fetch(req), timeout(ms)]).then(function (res) {
+    /* bypass the browser's HTTP cache for pages, so a new version shows up on the next open */
+    var fresh = new Request(req.url, { cache: "no-store", credentials: "same-origin" });
+    return Promise.race([fetch(fresh), timeout(ms)]).then(function (res) {
       if (res && res.ok) cache.put(req, res.clone());
       return res;
     }).catch(function () {
