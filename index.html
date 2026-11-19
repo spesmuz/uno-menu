@@ -261,20 +261,15 @@ input,select,textarea{font-family:inherit}
 .badge.vid{opacity:0;transition:opacity .4s}
 .media.has-vid .badge.vid{opacity:1}
 .vidwrap video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#111}
-/* photo → video: the photo softly blurs away while the video comes into focus */
+/* photo → video: frosted-glass cross-fade done with pre-blurred snapshots (opacity only, smooth on phones) */
 .slide.center .media .thumb{transition:opacity .25s}
-.slide.center .media.has-vid .thumb{transition:filter .6s ease-out,opacity .7s ease .55s}
-.slide.center .media.has-vid .thumb{opacity:0;filter:blur(20px) brightness(1.1) saturate(.85)}
-.slide.center .media .vidwrap{opacity:0;filter:blur(20px) brightness(1.1);transition:opacity .5s ease .5s,filter .9s ease-out .6s}
-.slide.center .media .vidwrap.show{opacity:1;filter:blur(0) brightness(1)}
-.slide.center .media .vidwrap.show.done{filter:none}
-.slide.center .card.tilting .media .vidwrap{transition:opacity .5s ease .5s,filter .9s ease-out .6s}
-.d-media img.big{transition:opacity .25s,filter .6s ease-out}
-.d-layer.has-vid img.big{transition:filter .6s ease-out,opacity .7s ease .55s}
-.d-layer.has-vid img.big,.d-layer.has-vid img.big.cover{opacity:0;filter:blur(20px) brightness(1.1) saturate(.85)}
-.d-media video{filter:blur(20px) brightness(1.1);transition:opacity .5s ease .5s,filter .9s ease-out .6s}
-.d-media video.show{filter:blur(0) brightness(1)}
-.d-media video.show.done{filter:none}
+.slide.center .media.has-vid .thumb{opacity:0;transition:none}
+.slide.center .media .vidwrap{opacity:0;transition:none}
+.slide.center .media .vidwrap.show{opacity:1}
+.d-layer.has-vid img.big,.d-layer.has-vid img.big.cover{opacity:0;transition:none}
+.d-media video{transition:none}
+canvas.frost{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;opacity:0;transition:opacity .45s ease;border-radius:inherit}
+.d-layer canvas.frost{z-index:3}
 
 @keyframes dishIn{0%{opacity:0;transform:translateY(70px) scale(.12);filter:blur(8px) brightness(2)}55%{opacity:1;transform:translateY(-8px) scale(1.05);filter:blur(0) brightness(1.15)}100%{opacity:1;transform:none;filter:none}}
 @keyframes ringIn{0%{opacity:0;transform:scale(.15)}60%{opacity:1;transform:scale(1.08)}100%{opacity:1;transform:none}}
@@ -839,12 +834,48 @@ function playWhenReady(v, ok, onShown){
   if(v.readyState>=3) start();
   else { v.addEventListener("canplay",function(){ start(); },{once:true}); try{ if(v.preload!=="auto") v.preload="auto"; v.load&&v.networkState===0&&v.load(); }catch(_){} }
 }
+/* frosted cross-fade from the photo to the playing video.
+   Blurred looks come from tiny snapshots scaled up (no live CSS blur), so only opacity is animated. */
+function frostShot(box, draw){
+  var r=box.getBoundingClientRect(); if(!r.width) return null;
+  var W=44, H=Math.max(8,Math.round(W*r.height/r.width));
+  var c=document.createElement("canvas"); c.width=W; c.height=H; c.className="frost";
+  var x=c.getContext("2d"); try{ x.filter="blur(1.5px)"; }catch(_){}
+  var bg=getComputedStyle(box).backgroundColor; x.fillStyle=(!bg||bg==="rgba(0, 0, 0, 0)"||bg==="transparent")?"#15161a":bg; x.fillRect(0,0,W,H);
+  try{ draw(x,W,H,r); }catch(_){}
+  return c;
+}
+function drawPhoto(img){ return function(x,W,H,r){
+  if(!img || !img.naturalWidth) return; var ir=img.getBoundingClientRect();
+  if(img.classList.contains("cover")){ var s=Math.max(r.width/img.naturalWidth,r.height/img.naturalHeight), sw=r.width/s, sh=r.height/s;
+    x.drawImage(img,(img.naturalWidth-sw)/2,(img.naturalHeight-sh)/2,sw,sh,0,0,W,H); }
+  else x.drawImage(img,(ir.left-r.left)*W/r.width,(ir.top-r.top)*H/r.height,ir.width*W/r.width,ir.height*H/r.height);
+}; }
+function drawVideo(v){ return function(x,W,H,r){
+  var vw=v.videoWidth, vh=v.videoHeight; if(!vw) return;
+  var s=Math.max(r.width/vw,r.height/vh), sw=r.width/s, sh=r.height/s;
+  x.drawImage(v,(vw-sw)/2,(vh-sh)/2,sw,sh,0,0,W,H);
+}; }
+function frostSwap(box, img, v, reveal){
+  var a=frostShot(box, drawPhoto(img));
+  if(!a){ reveal(); return; }
+  box.appendChild(a); a.offsetWidth; a.style.opacity="1";                 /* 1: the glass frosts over */
+  setTimeout(function(){
+    reveal();                                                              /* photo off, video on — hidden under the glass */
+    var b=frostShot(box, drawVideo(v));
+    if(b){ b.style.transition="opacity .3s ease"; box.appendChild(b); b.offsetWidth; b.style.opacity="1"; }
+    setTimeout(function(){
+      a.remove();
+      if(b){ b.style.transition="opacity .8s ease"; b.style.opacity="0"; setTimeout(function(){ b.remove(); },850); }  /* 3: video comes into focus */
+    }, b?300:0);
+  }, 460);
+}
 var VIDEO_DELAY=2000, _vidT=null;
 function scheduleVideo(m, id){
   clearTimeout(_vidT);
   var v=m.querySelector("video"), w=m.querySelector(".vidwrap"); if(!v) return;
   v.muted=true;
-  var shown=function(){ w.classList.add("show"); m.classList.add("has-vid"); setTimeout(function(){ w.classList.add("done"); },1700); };
+  var shown=function(){ frostSwap(m, m.querySelector("img.thumb"), v, function(){ w.classList.add("show"); m.classList.add("has-vid"); }); };
   var ok=function(){ var c=curList[S.idx]; return !!(c && c.id===id && !S.detail && m.isConnected && S.view==="menu"); };
   _vidT=setTimeout(function(){ if(ok()) playWhenReady(v, ok, shown); }, VIDEO_DELAY);
 }
@@ -999,7 +1030,7 @@ function setupLayer(layer, d){
   layer.querySelectorAll("img[data-fit]").forEach(fitImg);
   var v=layer.querySelector("video"); if(!v) return;
   v.muted=true; var id=d.id;
-  var shown=function(){ v.classList.add("show"); layer.classList.add("has-vid"); setTimeout(function(){ v.classList.add("done"); },1700); };
+  var shown=function(){ frostSwap(layer, layer.querySelector("img.big"), v, function(){ v.classList.add("show"); layer.classList.add("has-vid"); }); };
   clearTimeout(S.dVidT);
   var ok=function(){ return S.detail===id && v.isConnected; };
   S.dVidT=setTimeout(function(){ if(ok()) playWhenReady(v, ok, shown); }, VIDEO_DELAY);
