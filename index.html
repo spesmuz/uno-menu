@@ -1263,7 +1263,7 @@ function renderAdmin(){
   }
   A.dataset.mode="panel";
   var ro=!S.canEdit||!S.db;
-  var h='<div class="a-top"><h1>Admin panel</h1><span class="tag ok">'+S.dishes.length+' ta taom</span><span class="sp"></span><a class="btn" href="#menyu">Menyuni ko\'rish</a>'+(ro?'':'<button class="btn gold" data-a="new">'+ICON.plus+' Yangi taom</button><button class="btn" data-a="logout">Chiqish</button>')+'</div><div class="a-wrap">';
+  var h='<div class="a-top"><h1>Admin panel</h1><span class="tag ok">'+S.dishes.length+' ta taom</span><span class="sp"></span><a class="btn" href="#menyu">Menyuni ko\'rish</a>'+(ro?'':'<button class="btn gold" data-a="new">'+ICON.plus+' Yangi taom</button><button class="btn" data-a="logout">Chiqish</button>')+(!ro&&window.UnoKiosk?'<button class="btn danger" data-a="exitApp">Ilovadan chiqish</button>':'')+'</div><div class="a-wrap">';
   var n=adminNotice(); if(n) h+=n;
   if(S.dbError) h+='<div class="msg err">Bazaga ulanib bo\'lmadi: '+esc(S.dbError)+'</div>';
   if(!S.loadedDishes) h+='<div class="msg">Yuklanmoqda…</div><div class="progress"><i></i></div>';
@@ -1341,6 +1341,7 @@ A.addEventListener("click", async function(e){
     if(act==="aiBulkSave"){ b.disabled=true; await aiBulkSave(); return; }
     if(act==="aiBulkCancel"){ S.aiBulk=null; $("aiBulkBox").innerHTML=""; return; }
     if(act==="logout"){ endSession(); closeEditor(); location.hash="#menyu"; return; }
+    if(act==="exitApp"){ endSession(); closeEditor(); location.hash="#menyu"; try{ window.UnoKiosk.exitApp(); }catch(_){} return; }
     if(act==="changePw"){ await changeCred(); return; }
     if(S.canEdit && S.cred && !sessionOK()){ renderAdmin(); return; }
     if(act==="new"){ S.editing={id:null,name:"",desc:"",price:"",cat:(cats()[0]||{}).id||"",imgId:"",videoId:"",enhance:true}; renderEditor(); }

@@ -59,6 +59,8 @@ jobs:
           package uz.uno.airways;
 
           import android.app.Activity;
+          import android.app.ActivityManager;
+          import android.content.Context;
           import android.content.Intent;
           import android.graphics.Color;
           import android.net.Uri;
@@ -76,6 +78,28 @@ jobs:
             ValueCallback<Uri[]> fileCb;
             final Handler h = new Handler();
             boolean failed = false;
+            boolean exiting = false;
+
+            /* kiosk: pin the app so customers cannot leave it */
+            void pin() {
+              if (exiting) return;
+              try {
+                ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+                if (am.getLockTaskModeState() == ActivityManager.LOCK_TASK_MODE_NONE) startLockTask();
+              } catch (Exception e) { }
+            }
+
+            /* called from the admin panel (after login) */
+            public class Kiosk {
+              @JavascriptInterface public boolean isApp() { return true; }
+              @JavascriptInterface public void exitApp() {
+                runOnUiThread(new Runnable() { public void run() {
+                  exiting = true;
+                  try { stopLockTask(); } catch (Exception e) { }
+                  finishAndRemoveTask();
+                }});
+              }
+            }
 
             void immersive() {
               getWindow().getDecorView().setSystemUiVisibility(
@@ -130,6 +154,7 @@ jobs:
                 @Override public void onPermissionRequest(PermissionRequest r) { r.deny(); }
               });
 
+              web.addJavascriptInterface(new Kiosk(), "UnoKiosk");
               web.loadUrl(URL);
             }
 
@@ -149,8 +174,8 @@ jobs:
               } else super.onActivityResult(rq, rc, data);
             }
 
-            @Override public void onWindowFocusChanged(boolean f) { super.onWindowFocusChanged(f); if (f) immersive(); }
-            @Override protected void onResume() { super.onResume(); web.onResume(); immersive(); }
+            @Override public void onWindowFocusChanged(boolean f) { super.onWindowFocusChanged(f); if (f) { immersive(); pin(); } }
+            @Override protected void onResume() { super.onResume(); web.onResume(); immersive(); pin(); }
             @Override protected void onPause() { web.onPause(); super.onPause(); }
 
             @Override public void onBackPressed() {
