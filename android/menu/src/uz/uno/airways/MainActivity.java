@@ -180,11 +180,42 @@ public class MainActivity extends Activity {
         catch (Exception e) { fileCb = null; return false; }
         return true;
       }
-      @Override public void onPermissionRequest(PermissionRequest r) { r.deny(); }
+      @Override public void onPermissionRequest(final PermissionRequest r) {
+        runOnUiThread(new Runnable() { public void run() { askCamera(r); } });
+      }
     });
 
     web.addJavascriptInterface(new Kiosk(), "UnoKiosk");
     web.loadUrl(URL);
+  }
+
+  /* camera for the staff attendance screen (davomat.html): only our own site, only video */
+  PermissionRequest camReq;
+  static final int CAM = 9;
+  void askCamera(PermissionRequest r) {
+    boolean video = false;
+    for (String res : r.getResources()) if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(res)) video = true;
+    String origin = r.getOrigin() == null ? "" : r.getOrigin().toString();
+    if (!video || !URL.startsWith(origin.endsWith("/") ? origin : origin + "/")) { r.deny(); return; }
+    String[] grant = new String[] { PermissionRequest.RESOURCE_VIDEO_CAPTURE };
+    if (Build.VERSION.SDK_INT < 23 || checkSelfPermission(android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED) { r.grant(grant); return; }
+    try {
+      if (dpm != null && dpm.isDeviceOwnerApp(getPackageName())) {
+        dpm.setPermissionGrantState(admin, getPackageName(), android.Manifest.permission.CAMERA, DevicePolicyManager.PERMISSION_GRANT_STATE_GRANTED);
+        if (checkSelfPermission(android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED) { r.grant(grant); return; }
+      }
+    } catch (Exception e) { }
+    if (camReq != null) camReq.deny();
+    camReq = r;
+    requestPermissions(new String[] { android.Manifest.permission.CAMERA }, CAM);
+  }
+
+  @Override public void onRequestPermissionsResult(int rq, String[] perms, int[] res) {
+    if (rq == CAM && camReq != null) {
+      if (res.length > 0 && res[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) camReq.grant(new String[] { PermissionRequest.RESOURCE_VIDEO_CAPTURE });
+      else camReq.deny();
+      camReq = null;
+    } else super.onRequestPermissionsResult(rq, perms, res);
   }
 
   void showOffline() {

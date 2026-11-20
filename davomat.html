@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#08090B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/menu-192.png">
+<title>UNO Airways — Davomat</title>
+<style>
+:root{--gold:#E8B04B;--gold2:#F3C76E;--text:#F2EEE6;--muted:#9A968E;--line:rgba(255,255,255,.09);--panel:#15161A;--ok:#3BC27A;--late:#F08A3C;--bad:#E5544B;--out:#4B9BE8}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#08090B;color:var(--text);font-family:Manrope,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+body{background:radial-gradient(120% 70% at 50% 0%,#1d1810 0%,#0b0b0d 55%,#08090B 100%)}
+button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer}
+#app{position:fixed;inset:0;display:grid;grid-template-rows:auto auto 1fr;padding:max(14px,env(safe-area-inset-top)) 18px max(14px,env(safe-area-inset-bottom));gap:10px}
+.top{display:flex;align-items:center;gap:12px}
+.logo{width:46px;height:46px;border-radius:50%;object-fit:cover;flex:none}
+.brand b{display:block;font-size:19px;letter-spacing:.18em;font-weight:800}
+.brand small{display:block;font-size:10px;letter-spacing:.22em;color:var(--gold);font-weight:700}
+.dev{margin-left:auto;text-align:right;font-size:12px;color:var(--muted)}
+.dev .net{display:inline-flex;align-items:center;gap:6px}
+.dev .net i{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block}
+.dev .net.off i{background:var(--bad)}
+.clock{text-align:center;padding:6px 0 0}
+.clock .t{font-size:clamp(54px,17vw,92px);font-weight:800;letter-spacing:.02em;line-height:1;font-variant-numeric:tabular-nums}
+.clock .t small{font-size:.38em;color:var(--muted);font-weight:700;margin-left:4px}
+.clock .d{color:var(--gold2);font-size:15px;font-weight:700;margin-top:6px;letter-spacing:.03em}
+.main{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;min-height:0}
+.cam{width:clamp(90px,26vw,128px);aspect-ratio:1;border-radius:50%;overflow:hidden;border:2px solid rgba(232,176,75,.55);background:#111;position:relative;flex:none;box-shadow:0 0 0 6px rgba(232,176,75,.08)}
+.cam video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.cam .no{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;color:var(--muted);padding:10px}
+.hint{font-size:16px;color:var(--muted);font-weight:600;text-align:center;min-height:22px}
+.hint.err{color:#ff8a80}
+.dots{display:flex;gap:16px}
+.dots i{width:18px;height:18px;border-radius:50%;border:2px solid rgba(232,176,75,.6);transition:background .12s,transform .12s}
+.dots i.on{background:var(--gold);transform:scale(1.08)}
+.dots.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:min(100%,360px)}
+.pad button{height:clamp(58px,9.5vh,78px);border-radius:22px;background:#1A1B20;border:1px solid var(--line);font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;transition:background .08s,transform .08s}
+.pad button:active{background:#2a2b31;transform:scale(.96)}
+.pad button.fn{font-size:16px;color:var(--muted);background:transparent;border-color:transparent}
+.pad button.fn svg{width:30px;height:30px}
+.q{font-size:12px;color:var(--late);text-align:center;min-height:16px}
+/* result */
+#res{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;gap:14px;z-index:5;background:#0b0c0e}
+#res.show{display:flex;animation:pop .25s ease}
+@keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+#res .ic{width:120px;height:120px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:62px;color:#fff;overflow:hidden;border:4px solid currentColor}
+#res .ic img{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+#res h1{margin:6px 0 0;font-size:clamp(28px,8vw,44px);font-weight:800}
+#res .tm{font-size:clamp(40px,13vw,70px);font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+#res .st{font-size:20px;font-weight:800;padding:10px 20px;border-radius:16px}
+#res .sub{color:var(--muted);font-size:15px;max-width:420px;line-height:1.5}
+#res.ok{color:var(--ok)} #res.late{color:var(--late)} #res.out{color:var(--out)} #res.bad{color:var(--bad)} #res.queued{color:var(--gold)}
+#res h1,#res .tm{color:var(--text)}
+#res .st{background:color-mix(in srgb,currentColor 18%,transparent)}
+/* setup / blocked */
+#msg{position:fixed;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:30px;z-index:6;background:#08090B}
+#msg.show{display:flex}
+#msg h2{color:var(--gold);margin:0 0 10px}
+#msg p{color:var(--muted);line-height:1.55;margin:0 0 18px}
+#msg a{display:inline-block;height:50px;line-height:50px;padding:0 26px;border-radius:16px;background:var(--gold);color:#1a1306;font-weight:800;text-decoration:none}
+@media (orientation:landscape) and (max-height:600px){
+  #app{grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr;column-gap:24px}
+  .top{grid-column:1/3}
+  .clock{align-self:center}
+  .main{grid-row:2;grid-column:2}
+  .clock{grid-row:2;grid-column:1;display:flex;flex-direction:column;align-items:center;gap:14px}
+  .main{gap:8px;justify-content:center}
+  .cam{width:56px;box-shadow:none}
+  .hint{font-size:14px;min-height:18px}
+  .dots i{width:14px;height:14px}
+  .pad{gap:8px;width:min(100%,330px)}
+  .pad button{height:max(36px,calc((100vh - 200px) / 4));border-radius:16px;font-size:24px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top">
+    <img class="logo" id="logo" src="media/logo.png" alt="UNO">
+    <div class="brand"><b>UNO</b><small>DAVOMAT</small></div>
+    <div class="dev"><div class="net" id="net"><i></i><span>onlayn</span></div><div id="devName"></div></div>
+  </div>
+  <div class="clock"><div class="t" id="clk">--:--</div><div class="d" id="date"></div></div>
+  <div class="main">
+    <div class="cam"><video id="vid" autoplay playsinline muted></video><div class="no" id="camNo">Kamera yoqilmoqda…</div></div>
+    <div class="hint" id="hint">Shaxsiy PIN-kodingizni tering</div>
+    <div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>
+    <div class="pad" id="pad">
+      <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+      <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+      <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+      <button class="fn" data-k="c">Tozalash</button><button data-k="0">0</button>
+      <button class="fn" data-k="b" aria-label="O'chirish"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H9l-6 7 6 7h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1z"/><path d="M17 9l-6 6M11 9l6 6"/></svg></button>
+    </div>
+    <div class="q" id="q"></div>
+  </div>
+</div>
+<div id="res"><div class="ic" id="rIc"></div><h1 id="rName"></h1><div class="tm" id="rTime"></div><div class="st" id="rSt"></div><div class="sub" id="rSub"></div></div>
+<div id="msg"><div><h2 id="mT"></h2><p id="mP"></p><a href="index.html#admin" id="mA">Admin panelga kirish</a></div></div>
+<canvas id="cv" width="240" height="240" style="display:none"></canvas>
+<script>
+"use strict";
+var SB_URL="https://eaxavnixuqgwashplnhz.supabase.co", SB_KEY="sb_publishable_gILXDU_L8vepyEbsF87Tcg_hYyMpril";
+var PIN_LEN=4, QKEY="uno_att_q";
+var $=function(id){ return document.getElementById(id); };
+var token=""; try{ token=localStorage.getItem("uno_att_token")||""; }catch(_){}
+var offset=0, pin="", busy=false, online=true, resT=null;
+var DAYS=["Yakshanba","Dushanba","Seshanba","Chorshanba","Payshanba","Juma","Shanba"];
+var MON=["yanvar","fevral","mart","aprel","may","iyun","iyul","avgust","sentabr","oktabr","noyabr","dekabr"];
+function now(){ return new Date(Date.now()+offset); }
+function p2(n){ return (n<10?"0":"")+n; }
+function hm(d){ return p2(d.getHours())+":"+p2(d.getMinutes()); }
+function dur(m){ m=Math.max(0,m|0); if(m<60) return m+" daqiqa"; var h=Math.floor(m/60), r=m%60; return h+" soat"+(r?" "+r+" daqiqa":""); }
+function tick(){ var d=now(); $("clk").innerHTML=hm(d)+"<small>"+p2(d.getSeconds())+"</small>"; $("date").textContent=DAYS[d.getDay()]+", "+d.getDate()+"-"+MON[d.getMonth()]+" "+d.getFullYear(); }
+setInterval(tick,1000); tick();
+window.unoBack=function(){ return 1; };
+
+/* ---- server ---- */
+function rpc(fn, body, ms){
+  var ctl=window.AbortController?new AbortController():null, t=setTimeout(function(){ if(ctl) ctl.abort(); }, ms||8000);
+  return fetch(SB_URL+"/rest/v1/rpc/"+fn,{method:"POST",headers:{"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"application/json"},body:JSON.stringify(body),signal:ctl?ctl.signal:undefined,cache:"no-store"})
+    .then(function(r){ clearTimeout(t); return r.json().then(function(j){ if(!r.ok){ var e=new Error((j&&j.message)||("HTTP "+r.status)); e.server=true; throw e; } return j; }); },
+          function(e){ clearTimeout(t); e.net=true; throw e; });
+}
+function setNet(on){ online=on; var n=$("net"); n.classList.toggle("off",!on); n.querySelector("span").textContent=on?"onlayn":"internet yo'q"; }
+function block(title, text){ $("mT").textContent=title; $("mP").innerHTML=text; $("msg").classList.add("show"); }
+
+function hello(){
+  if(!token){ block("Qurilma sozlanmagan","Bu telefon hali davomat terminali qilinmagan.<br>Admin panel → «Xodimlar davomati» bo'limida «Shu telefonni eshik terminali qilish» tugmasini bosing."); return; }
+  var t0=Date.now();
+  rpc("uno_att_hello",{p_token:token},8000).then(function(r){
+    setNet(true);
+    if(!r||!r.ok){ block("Qurilma o'chirilgan","Admin bu telefonni davomat terminallari ro'yxatidan o'chirgan. Qayta yoqish uchun admin panelga kiring."); return; }
+    $("msg").classList.remove("show");
+    if(r.now){ var srv=new Date(r.now).getTime(), rtt=Date.now()-t0; offset=srv+rtt/2-Date.now(); if(Math.abs(offset)<1500) offset=0; try{ localStorage.setItem("uno_att_off",String(offset)); }catch(_){} }
+    $("devName").textContent=r.name||"";
+    try{ localStorage.setItem("uno_att_name",r.name||""); }catch(_){}
+    flush();
+  }).catch(function(e){ if(e.net) setNet(false); else if(/uno_att_hello|function/.test(e.message)) block("Baza tayyor emas","Supabase'da <b>attendance.sql</b> faylini ishga tushiring."); });
+}
+try{ offset=Number(localStorage.getItem("uno_att_off"))||0; $("devName").textContent=localStorage.getItem("uno_att_name")||""; }catch(_){}
+hello(); setInterval(hello, 5*60*1000);
+window.addEventListener("online",function(){ setNet(true); hello(); });
+window.addEventListener("offline",function(){ setNet(false); });
+
+/* ---- offline queue ---- */
+function qGet(){ try{ return JSON.parse(localStorage.getItem(QKEY)||"[]")||[]; }catch(_){ return []; } }
+function qSet(a){ try{ localStorage.setItem(QKEY,JSON.stringify(a)); }catch(_){ try{ a.forEach(function(x){ x.photo=null; }); localStorage.setItem(QKEY,JSON.stringify(a)); }catch(__){} } qUI(); }
+function qUI(){ var n=qGet().length; $("q").textContent=n?(n+" ta belgi internet kelganda yuboriladi"):""; }
+var flushing=false;
+async function flush(){
+  if(flushing) return; var a=qGet(); if(!a.length) return; flushing=true;
+  try{
+    while(a.length){
+      var x=a[0];
+      try{ await rpc("uno_att_punch",{p_token:token,p_pin:x.pin,p_photo:x.photo||null,p_at:x.at},10000); }
+      catch(e){ if(e.net){ setNet(false); break; } }   /* server rejected it (e.g. wrong PIN): drop it */
+      a.shift(); qSet(a);
+    }
+  } finally { flushing=false; qUI(); }
+}
+setInterval(flush, 30000); qUI();
+
+/* ---- camera ---- */
+var vid=$("vid"), camOK=false;
+function startCam(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ $("camNo").textContent="Kamera yo'q"; return; }
+  navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:{ideal:480},height:{ideal:480}},audio:false}).then(function(s){
+    vid.srcObject=s; camOK=true; $("camNo").style.display="none"; var p=vid.play(); if(p&&p.catch) p.catch(function(){});
+    s.getVideoTracks().forEach(function(t){ t.onended=function(){ camOK=false; setTimeout(startCam,2000); }; });
+  }).catch(function(){ $("camNo").textContent="Kameraga ruxsat berilmagan"; setTimeout(startCam,15000); });
+}
+startCam();
+function snap(){
+  if(!camOK||!vid.videoWidth) return null;
+  try{ var c=$("cv"), x=c.getContext("2d"), w=vid.videoWidth, h=vid.videoHeight, s=Math.min(w,h);
+    x.drawImage(vid,(w-s)/2,(h-s)/2,s,s,0,0,240,240); return c.toDataURL("image/jpeg",0.62); }catch(_){ return null; }
+}
+
+/* ---- sound ---- */
+var AC=null;
+function beep(kind){
+  try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)(); if(AC.state!=="running") AC.resume();
+    var seq=kind==="bad"?[[220,.18],[180,.25]]:kind==="late"?[[660,.12],[520,.2]]:[[740,.1],[990,.18]], t=AC.currentTime;
+    seq.forEach(function(s){ var o=AC.createOscillator(), g=AC.createGain(); o.type="sine"; o.frequency.value=s[0]; g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.35,t+.02); g.gain.exponentialRampToValueAtTime(.0001,t+s[1]); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+s[1]+.02); t+=s[1]+.04; });
+  }catch(_){}
+}
+
+/* ---- PIN pad ---- */
+function dots(){ var d=$("dots").children; for(var i=0;i<d.length;i++) d[i].classList.toggle("on",i<pin.length); }
+function hint(t,err){ var h=$("hint"); h.textContent=t; h.classList.toggle("err",!!err); }
+function wrong(t){ beep("bad"); hint(t,true); var d=$("dots"); d.classList.remove("shake"); d.offsetWidth; d.classList.add("shake"); pin=""; dots(); setTimeout(function(){ if(!pin) hint("Shaxsiy PIN-kodingizni tering"); },3500); }
+$("pad").addEventListener("click",function(e){
+  var b=e.target.closest("button"); if(!b||busy) return; var k=b.dataset.k;
+  if(AC&&AC.state!=="running") try{ AC.resume(); }catch(_){}
+  if(k==="b") pin=pin.slice(0,-1); else if(k==="c") pin=""; else if(pin.length<PIN_LEN) pin+=k;
+  dots(); hint("Shaxsiy PIN-kodingizni tering");
+  if(pin.length===PIN_LEN) submit();
+});
+document.addEventListener("keydown",function(e){ if(busy) return; if(/^\d$/.test(e.key)&&pin.length<PIN_LEN){ pin+=e.key; dots(); if(pin.length===PIN_LEN) submit(); } else if(e.key==="Backspace"){ pin=pin.slice(0,-1); dots(); } });
+
+function show(cls, ic, name, time, st, sub){
+  var r=$("res"); r.className="show "+cls;
+  $("rIc").innerHTML=ic; $("rName").textContent=name; $("rTime").textContent=time; $("rSt").textContent=st; $("rSub").textContent=sub||"";
+  $("rSt").style.display=st?"":"none";
+  clearTimeout(resT); resT=setTimeout(function(){ r.className=""; busy=false; hint("Shaxsiy PIN-kodingizni tering"); },4200);
+}
+$("res").addEventListener("click",function(){ clearTimeout(resT); this.className=""; busy=false; });
+
+function submit(){
+  var code=pin, photo=snap(), at=now(); busy=true; hint("Tekshirilmoqda…");
+  var face=photo?'<img src="'+photo+'" alt="">':"";
+  rpc("uno_att_punch",{p_token:token,p_pin:code,p_photo:photo},7000).then(function(r){
+    setNet(true); pin=""; dots();
+    if(!r||!r.ok){
+      busy=false;
+      if(r&&r.err==="bad_pin") wrong("PIN-kod noto'g'ri");
+      else if(r&&r.err==="too_many") wrong("Ko'p xato urinish. 5 daqiqadan keyin qayta urining");
+      else if(r&&r.err==="bad_device"){ block("Qurilma o'chirilgan","Admin bu telefonni davomat terminallari ro'yxatidan o'chirgan."); }
+      else wrong("Xatolik. Qayta urining");
+      return;
+    }
+    var t=hm(new Date(new Date(r.at).getTime())), first=String(r.name||"").split(" ")[0];
+    if(r.kind==="in"){
+      var late=(r.late||0)>(r.grace||0);
+      beep(late?"late":"ok");
+      show(late?"late":"ok", face||(late?"⏰":"✓"), "Xush kelibsiz, "+first+"!", t,
+        late?("Kechikdingiz: "+dur(r.late)):"Vaqtida keldingiz", r.dup?"Siz allaqachon belgilangansiz.":"Ish kuningiz xayrli o'tsin!");
+    } else {
+      beep("ok");
+      show("out", face||"👋", "Xayr, "+first+"!", t, r.worked!=null?("Bugun ishladingiz: "+dur(r.worked)):"Ketish belgilandi", r.dup?"Siz allaqachon belgilangansiz.":"Yaxshi dam oling!");
+    }
+  }).catch(function(e){
+    pin=""; dots();
+    if(e.net){
+      setNet(false);
+      var a=qGet(); a.push({pin:code,photo:photo,at:at.toISOString()}); if(a.length>300) a=a.slice(-300); qSet(a);
+      beep("ok");
+      show("queued", face||"✓", "Qabul qilindi", hm(at), "Internet yo'q", "Belgi telefonda saqlandi va internet kelganda avtomatik yuboriladi. PIN-kod o'shanda tekshiriladi.");
+    } else { busy=false; wrong(/uno_att_punch|function/.test(e.message)?"Baza tayyor emas (attendance.sql)":"Xatolik. Qayta urining"); }
+  });
+}
+
+/* ---- hidden admin entry: hold the logo 3 s or tap it 7 times ---- */
+(function(){
+  var lg=$("logo"), holdT=null, taps=0, tapT=null;
+  function open(){ clearTimeout(holdT); taps=0; location.href="index.html#admin"; }
+  function down(e){ if(e.cancelable) e.preventDefault(); clearTimeout(holdT); holdT=setTimeout(open,3000); taps++; clearTimeout(tapT); tapT=setTimeout(function(){ taps=0; },1500); if(taps>=7) open(); }
+  function up(){ clearTimeout(holdT); }
+  lg.addEventListener("touchstart",down,{passive:false}); lg.addEventListener("touchend",up); lg.addEventListener("touchcancel",up);
+  lg.addEventListener("mousedown",function(e){ if(e.sourceCapabilities&&e.sourceCapabilities.firesTouchEvents) return; down(e); }); lg.addEventListener("mouseup",up); lg.addEventListener("mouseleave",up);
+  lg.addEventListener("contextmenu",function(e){ e.preventDefault(); });
+})();
+if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").catch(function(){});
+</script>
+</body>
+</html>

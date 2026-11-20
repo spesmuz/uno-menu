@@ -1333,7 +1333,7 @@ function sessionOK_old(){
   return false;
 }
 function startSession(){ try{ sessionStorage.setItem(SESSION_KEY,String(Date.now())); }catch(_){} }
-function endSession(){ S.sbSession=null; S.tg=undefined; S.aiOn=undefined; try{ sessionStorage.removeItem(SESSION_KEY); }catch(_){} if(S.sb) S.sb.auth.signOut().catch(function(){}); }
+function endSession(){ S.sbSession=null; if(typeof Att!=="undefined"){ if(Att.el&&Att.el.parentNode) Att.el.remove(); Att.el=null; Att.staff=null; Att.edit=null; } S.tg=undefined; S.aiOn=undefined; try{ sessionStorage.removeItem(SESSION_KEY); }catch(_){} if(S.sb) S.sb.auth.signOut().catch(function(){}); }
 function loginEmail(l){ l=String(l||"").trim().toLowerCase(); return l.indexOf("@")>=0?l:l+"@uno.local"; }
 function logoHTML(){ return S.settings.logoId?'<img alt="Logotip" src="'+blob(S.settings.logoId)+'">':''; }
 function renderAuth(mode){
@@ -1552,6 +1552,7 @@ function renderAdmin(){
       '<button class="btn gold" data-a="tgSave">Saqlash</button>'+(tg.configured?'<button class="btn" data-a="tgTest">Sinov xabari</button>':'')+'</div>'+
       '<div id="tgMsg"></div></section>';
   }
+  if(!ro && S.sb && sessionOK()) h+='<div id="attSlot"></div>';
   // categories
   h+='<section class="a-sec"><h2>Kategoriyalar</h2><p class="help" style="margin-bottom:10px">Har bir kategoriya nomini o\'zbek, rus va ingliz tilida yozing. Rus/ingliz bo\'sh qolsa, o\'zbekchasi ko\'rsatiladi.</p>';
   cats().forEach(function(c,i){
@@ -1610,7 +1611,7 @@ function renderAdmin(){
       '<p class="help" style="margin-top:10px">"Vaqtincha chiqish" ilovani yopadi, uy tugmasi bosilsa yoki planshet qayta yoqilsa menyu yana ochiladi. "Butunlay o\'chirish" ilovani oddiy ilovaga aylantiradi, keyin uni o\'chirib tashlash ham mumkin.</p></section>';
   }
   h+='</div>';
-  var y=window.scrollY; A.innerHTML=h; window.scrollTo(0,y);
+  var y=window.scrollY; if(Att.el && Att.el.parentNode) Att.el.remove(); A.innerHTML=h; Att.mount(); window.scrollTo(0,y);
   var lf=$("logoFile"); if(lf) lf.onchange=function(){ var f=this.files[0]; this.value=""; if(f) uploadLogo(f); };
   if(S.aiBulk && $("aiBulkBox")) renderAiBulk();
   offlineUI(); if(!Offline.last && !Offline.busy) syncMedia();
@@ -2215,9 +2216,254 @@ async function saveDish(){
   }catch(err){ msg(m, errText(err), "err"); $("edSave").disabled=false; }
 }
 
+/* ================= XODIMLAR DAVOMATI (admin) ================= */
+var TZ_OFF=5*3600e3; /* Toshkent: UTC+5, yozgi vaqt yo'q */
+function attDay(d){ return new Date(new Date(d).getTime()+TZ_OFF).toISOString().slice(0,10); }
+function attHM(d){ return new Date(new Date(d).getTime()+TZ_OFF).toISOString().slice(11,16); }
+function attDayStart(key){ return new Date(Date.parse(key+"T00:00:00Z")-TZ_OFF); }
+function attDow(key){ var w=new Date(key+"T00:00:00Z").getUTCDay(); return w===0?7:w; }
+function attAddDays(key,n){ return new Date(Date.parse(key+"T00:00:00Z")+n*864e5).toISOString().slice(0,10); }
+function attMin(t){ var m=String(t||"").match(/^(\d{1,2}):(\d{2})/); return m?(+m[1])*60+(+m[2]):0; }
+function attDur(m){ m=Math.max(0,Math.round(m||0)); if(m<60) return m+" daq"; var h=Math.floor(m/60), r=m%60; return h+" soat"+(r?" "+r+" daq":""); }
+var ATT_DN=["Du","Se","Ch","Pa","Ju","Sh","Ya"];
+var Att={el:null, tab:"today", staff:null, devs:null, cfg:null, rows:null, rep:null, edit:null, err:"", msgs:{}, open:null};
+Att.isTerminal=function(){ try{ return localStorage.getItem("uno_device_mode")==="att"; }catch(_){ return false; } };
+Att.mount=function(){
+  var slot=$("attSlot"); if(!slot) return;
+  if(!Att.el){ Att.el=document.createElement("section"); Att.el.className="a-sec"; Att.el.addEventListener("click",Att.click); Att.el.addEventListener("change",Att.change); Att.render(); Att.load(); }
+  slot.replaceWith(Att.el);
+};
+Att.q=function(p){ return p.then(function(r){ if(r.error) throw r.error; return r.data; }); };
+Att.load=async function(what){
+  try{
+    if(!what||what==="staff") Att.staff=await Att.q(S.sb.from("uno_staff").select("*").order("name"));
+    if(!what||what==="today"){
+      var k=attDay(Date.now());
+      Att.rows=await Att.q(S.sb.from("uno_att").select("id,staff_id,kind,at,late_min,early_min,worked_min,offline,manual").gte("at",new Date(attDayStart(k).getTime()-6*3600e3).toISOString()).order("at",{ascending:false}).limit(500));
+      S.sb.rpc("uno_att_check_absent").then(function(){},function(){});
+    }
+    if(!what||what==="cfg"){ Att.cfg=await Att.q(S.sb.rpc("uno_att_settings")); Att.devs=await Att.q(S.sb.from("uno_att_devices").select("id,name,revoked,created_at,last_seen").order("created_at")); }
+    Att.err="";
+  }catch(e){ Att.err=String(e&&e.message||e); }
+  Att.render();
+};
+Att.sched=function(s,key){ return (s.days||[]).indexOf(attDow(key))>=0; };
+Att.grace=function(){ return Att.cfg?Number(Att.cfg.grace)||0:10; };
+Att.render=function(){
+  if(!Att.el) return;
+  var h='<h2>👥 Xodimlar davomati</h2>';
+  if(Att.err){
+    h+='<div class="msg err">'+(/uno_staff|uno_att|relation|function|schema cache/.test(Att.err)?'Avval <b>attendance.sql</b> faylini Supabase SQL Editor\'da ishga tushiring (<a style="color:var(--gold)" href="https://raw.githubusercontent.com/spesmuz/uno-menu/main/attendance.sql" target="_blank" rel="noopener">faylni ochish</a>), keyin «Yangilash» ni bosing.':esc(Att.err))+'</div><div class="a-row" style="margin-top:10px"><button class="btn" data-att="reload">Yangilash</button></div>';
+    Att.el.innerHTML=h; return;
+  }
+  if(Att.isTerminal()) h+='<div class="msg ok" style="margin-bottom:12px">Bu telefon — <b>eshik terminali</b>. Admin paneldan chiqsangiz, davomat ekrani ochiladi.</div>';
+  var tabs=[["today","Bugun"],["staff","Xodimlar"+(Att.staff?" ("+Att.staff.filter(function(s){return s.active;}).length+")":"")],["rep","Hisobot"],["cfg","Sozlamalar va terminal"]];
+  h+='<div class="a-row" style="gap:8px;margin-bottom:14px">'+tabs.map(function(t){ return '<button class="btn sm'+(Att.tab===t[0]?' gold':'')+'" data-att="tab" data-v="'+t[0]+'">'+t[1]+'</button>'; }).join("")+'</div>';
+  if(!Att.staff){ h+='<div class="msg">Yuklanmoqda…</div>'; Att.el.innerHTML=h; return; }
+  if(Att.tab==="today") h+=Att.todayHTML();
+  else if(Att.tab==="staff") h+=Att.staffHTML();
+  else if(Att.tab==="rep") h+=Att.repHTML();
+  else h+=Att.cfgHTML();
+  Att.el.innerHTML=h;
+};
+Att.msg=function(k){ var m=Att.msgs[k]; return m?'<div class="msg '+(m.k||"")+'" style="margin-top:10px">'+esc(m.t)+'</div>':''; };
+Att.say=function(k,t,kind){ Att.msgs[k]=t?{t:t,k:kind}:null; Att.render(); };
+Att.chip=function(t,c){ return '<span class="tag" style="background:'+c+'22;color:'+c+';font-size:12px">'+t+'</span>'; };
+Att.todayHTML=function(){
+  var k=attDay(Date.now()), nowM=attMin(attHM(Date.now())), g=Att.grace(), absentAfter=Att.cfg?Number(Att.cfg.absent)||30:30;
+  var rows=Att.rows||[], act=Att.staff.filter(function(s){ return s.active; });
+  if(!act.length) return '<p class="help">Hali xodim qo\'shilmagan. «Xodimlar» bo\'limida xodim qo\'shing, so\'ng «Sozlamalar va terminal» bo\'limida eshik telefonini ulang.</p>';
+  var cnt={ok:0,late:0,abs:0,wait:0,off:0};
+  var list=act.map(function(s){
+    var mine=rows.filter(function(r){ return r.staff_id===s.id; });
+    var ins=mine.filter(function(r){ return r.kind==="in" && attDay(r.at)===k; });
+    var firstIn=ins[ins.length-1], lastP=mine[0], st, sort;
+    var start=attMin(s.shift_start), work=Att.sched(s,k);
+    if(firstIn){
+      var late=firstIn.late_min>g;
+      st=Att.chip((late?'Kechikdi '+attDur(firstIn.late_min):'Vaqtida')+' · '+attHM(firstIn.at), late?'#F08A3C':'#3BC27A');
+      if(lastP && lastP.kind==="out" && attDay(lastP.at)===k) st+=' '+Att.chip('Ketdi '+attHM(lastP.at)+(lastP.worked_min!=null?' · '+attDur(lastP.worked_min):''),'#4B9BE8');
+      if(late) cnt.late++; else cnt.ok++; sort=late?1:2;
+    } else if(!work){ st=Att.chip('Dam olish kuni','#9A968E'); cnt.off++; sort=4; }
+    else if(nowM>=start+absentAfter){ st=Att.chip('Kelmadi','#E5544B'); cnt.abs++; sort=0; }
+    else if(nowM>=start){ st=Att.chip('Hali kelmadi · '+(nowM-start)+' daq','#F08A3C'); cnt.wait++; sort=0.5; }
+    else { st=Att.chip('Smena '+String(s.shift_start).slice(0,5)+' da','#9A968E'); cnt.wait++; sort=3; }
+    return {s:s,st:st,sort:sort,ph:firstIn};
+  }).sort(function(a,b){ return a.sort-b.sort || a.s.name.localeCompare(b.s.name); });
+  var h='<div class="a-row" style="gap:8px;margin-bottom:12px">'+Att.chip('🟢 Vaqtida: '+cnt.ok,'#3BC27A')+Att.chip('🔴 Kechikdi: '+cnt.late,'#F08A3C')+Att.chip('⚠️ Kelmadi: '+cnt.abs,'#E5544B')+Att.chip('Kutilmoqda: '+cnt.wait,'#9A968E')+'<span style="flex:1"></span><button class="btn sm" data-att="reload">Yangilash</button></div>';
+  h+='<div style="display:flex;flex-direction:column;gap:8px">'+list.map(function(x){
+    return '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:#191A1F">'+
+      '<div style="flex:1;min-width:0"><b>'+esc(x.s.name)+'</b> <small style="color:var(--muted)">'+esc(x.s.role||"")+' · '+String(x.s.shift_start).slice(0,5)+'–'+String(x.s.shift_end).slice(0,5)+'</small><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">'+x.st+'</div></div>'+
+      (x.ph?'<button class="btn sm" data-att="photo" data-id="'+x.ph.id+'">Surat</button>':'')+'</div>';
+  }).join("")+'</div>';
+  var today=rows.filter(function(r){ return attDay(r.at)===k; });
+  if(today.length){
+    var by={}; Att.staff.forEach(function(s){ by[s.id]=s; });
+    h+='<h3 style="font-size:14px;margin:18px 0 8px">Bugungi belgilar</h3><div style="overflow-x:auto"><table class="aitab"><thead><tr><th>Xodim</th><th>Vaqt</th><th>Belgi</th><th>Izoh</th><th></th></tr></thead><tbody>'+
+      today.map(function(r){ var s=by[r.staff_id]||{name:"?"}; var note=r.kind==="in"?(r.late_min>g?'kechikdi '+attDur(r.late_min):'vaqtida'):((r.worked_min!=null?'ishladi '+attDur(r.worked_min):'')+(r.early_min>g?', '+attDur(r.early_min)+' erta':''));
+        return '<tr><td>'+esc(s.name)+'</td><td>'+attHM(r.at)+'</td><td>'+(r.kind==="in"?'Keldi':'Ketdi')+'</td><td>'+esc(note)+(r.offline?' · internetsiz':'')+'</td><td><button class="btn sm" data-att="photo" data-id="'+r.id+'">Surat</button> <button class="btn sm danger" data-att="delRow" data-id="'+r.id+'">'+(Att.confirmRow===r.id?'Tasdiqlang':'O\'chirish')+'</button></td></tr>'; }).join("")+'</tbody></table></div>';
+  }
+  h+='<div id="attPhoto">'+(Att.photo?'<div style="margin-top:14px;display:flex;gap:12px;align-items:center"><img src="'+Att.photo.src+'" style="width:160px;height:160px;border-radius:16px;object-fit:cover;transform:scaleX(-1)"><div><b>'+esc(Att.photo.name)+'</b><br><small style="color:var(--muted)">'+esc(Att.photo.when)+'</small><br><button class="btn sm" style="margin-top:8px" data-att="photoClose">Yopish</button></div></div>':'')+'</div>'+Att.msg("today");
+  return h;
+};
+Att.staffHTML=function(){
+  var h='';
+  var e=Att.edit;
+  if(e){
+    h+='<div style="border:1px solid rgba(232,176,75,.35);border-radius:16px;padding:16px;margin-bottom:16px;background:#1a1914">'+
+      '<b style="display:block;margin-bottom:12px">'+(e.id?'Xodimni tahrirlash':'Yangi xodim')+'</b>'+
+      '<div class="a-row"><label class="fld"><span>Ism familiya</span><input id="stName" maxlength="60" value="'+esc(e.name||"")+'" placeholder="Masalan: Aziz Karimov"></label>'+
+      '<label class="fld"><span>Lavozim</span><input id="stRole" maxlength="40" value="'+esc(e.role||"")+'" placeholder="Ofitsiant, oshpaz…"></label></div>'+
+      '<div class="a-row" style="margin-top:12px"><label class="fld" style="max-width:150px;min-width:120px"><span>PIN-kod (4 raqam)</span><input id="stPin" inputmode="numeric" maxlength="4" value="'+esc(e.pin||"")+'"></label>'+
+      '<button class="btn sm" data-att="genPin" style="margin-bottom:4px">Tasodifiy</button>'+
+      '<label class="fld" style="max-width:150px;min-width:120px"><span>Smena boshlanishi</span><input id="stStart" type="time" value="'+esc(String(e.shift_start||"10:00").slice(0,5))+'"></label>'+
+      '<label class="fld" style="max-width:150px;min-width:120px"><span>Smena tugashi</span><input id="stEnd" type="time" value="'+esc(String(e.shift_end||"23:00").slice(0,5))+'"></label></div>'+
+      '<div style="margin-top:12px"><span class="help">Ish kunlari</span><div class="a-row" style="gap:6px;margin-top:6px">'+ATT_DN.map(function(n,i){ var on=(e.days||[]).indexOf(i+1)>=0; return '<button class="btn sm'+(on?' gold':'')+'" data-att="day" data-v="'+(i+1)+'" style="min-width:44px">'+n+'</button>'; }).join("")+'</div></div>'+
+      '<label style="display:flex;gap:8px;align-items:center;margin-top:12px"><input type="checkbox" id="stActive" '+(e.active!==false?'checked':'')+'> Faol (ishda)</label>'+
+      '<div class="a-row" style="margin-top:14px"><button class="btn gold" data-att="saveStaff">Saqlash</button><button class="btn" data-att="cancelStaff">Bekor qilish</button>'+(e.id?'<span style="flex:1"></span><button class="btn danger" data-att="delStaff">'+(Att.confirmDel?'Tasdiqlash uchun yana bosing':'O\'chirish')+'</button>':'')+'</div>'+Att.msg("staff")+'</div>';
+  } else h+='<div class="a-row" style="margin-bottom:12px"><button class="btn gold" data-att="newStaff">'+ICON.plus+' Xodim qo\'shish</button></div>'+Att.msg("staff");
+  if(!Att.staff.length) return h+'<p class="help">Hali xodim yo\'q.</p>';
+  h+='<div style="overflow-x:auto"><table class="aitab"><thead><tr><th>Xodim</th><th>PIN</th><th>Smena</th><th>Ish kunlari</th><th>Holat</th><th></th></tr></thead><tbody>'+
+    Att.staff.map(function(s){ return '<tr style="'+(s.active?'':'opacity:.5')+'"><td><b>'+esc(s.name)+'</b><br><small style="color:var(--muted)">'+esc(s.role||"")+'</small></td><td>'+esc(s.pin)+'</td><td>'+String(s.shift_start).slice(0,5)+'–'+String(s.shift_end).slice(0,5)+'</td><td>'+(s.days||[]).slice().sort().map(function(d){ return ATT_DN[d-1]; }).join(" ")+'</td><td>'+(s.active?'Faol':'Faol emas')+'</td><td><button class="btn sm" data-att="editStaff" data-id="'+s.id+'">Tahrirlash</button></td></tr>'; }).join("")+'</tbody></table></div>'+
+    '<p class="help" style="margin-top:10px">Har bir xodimga PIN-kodini shaxsan ayting. Xodim eshikdagi telefonda kodini tersa, kelgan yoki ketgan vaqti surati bilan yoziladi: birinchi terganda «keldi», keyingisida «ketdi».</p>';
+  return h;
+};
+Att.repHTML=function(){
+  var today=attDay(Date.now());
+  var r=Att.rep||{from:today.slice(0,8)+"01",to:today};
+  var h='<div class="a-row"><label class="fld" style="max-width:180px;min-width:150px"><span>Boshlanish</span><input id="repFrom" type="date" value="'+r.from+'"></label><label class="fld" style="max-width:180px;min-width:150px"><span>Tugash</span><input id="repTo" type="date" value="'+r.to+'"></label>'+
+    '<button class="btn gold" data-att="repRun">Hisoblash</button>'+(r.data?'<button class="btn" data-att="repCsv">Excel (jami)</button><button class="btn" data-att="repCsvAll">Excel (har bir belgi)</button>':'')+'</div>'+
+    '<div class="a-row" style="gap:6px;margin-top:8px"><button class="btn sm" data-att="repQuick" data-v="today">Bugun</button><button class="btn sm" data-att="repQuick" data-v="week">Shu hafta</button><button class="btn sm" data-att="repQuick" data-v="month">Shu oy</button><button class="btn sm" data-att="repQuick" data-v="prev">O\'tgan oy</button></div>'+Att.msg("rep");
+  if(r.busy) h+='<div class="msg" style="margin-top:12px">Hisoblanmoqda…</div>';
+  if(r.data){
+    var rows=r.data;
+    h+='<div style="overflow-x:auto;margin-top:14px"><table class="aitab"><thead><tr><th>Xodim</th><th>Ish kuni</th><th>Keldi</th><th>Kelmadi</th><th>Kechikdi</th><th>Jami kechikish</th><th>Erta ketdi</th><th>Ishlagan</th></tr></thead><tbody>'+
+      rows.map(function(x){ return '<tr style="cursor:pointer" data-att="repOpen" data-id="'+x.s.id+'"><td><b>'+esc(x.s.name)+'</b> <small style="color:var(--muted)">'+(Att.open===x.s.id?'▲':'▼')+'</small><br><small style="color:var(--muted)">'+esc(x.s.role||"")+'</small></td><td>'+x.sched+'</td><td>'+x.came+'</td><td style="color:'+(x.absent?'#E5544B':'inherit')+'">'+x.absent+'</td><td style="color:'+(x.lateN?'#F08A3C':'inherit')+'">'+x.lateN+'</td><td>'+(x.lateSum?attDur(x.lateSum):'—')+'</td><td>'+x.earlyN+'</td><td>'+attDur(x.worked)+'</td></tr>'+
+        (Att.open===x.s.id?'<tr><td colspan="8" style="background:#141519;text-align:left"><table class="aitab" style="font-size:12px"><thead><tr><th>Sana</th><th>Keldi</th><th>Ketdi</th><th>Kechikish</th><th>Ishladi</th></tr></thead><tbody>'+
+          x.days.map(function(d){ return '<tr><td>'+d.key+' '+ATT_DN[attDow(d.key)-1]+'</td><td>'+(d.inAt||(d.sched?'<span style="color:#E5544B">kelmadi</span>':'dam olish'))+'</td><td>'+(d.outAt||'—')+'</td><td>'+(d.late>Att.grace()?'<span style="color:#F08A3C">'+attDur(d.late)+'</span>':'—')+'</td><td>'+(d.worked?attDur(d.worked):'—')+'</td></tr>'; }).join("")+'</tbody></table></td></tr>':''); }).join("")+'</tbody></table></div>'+
+      '<p class="help" style="margin-top:8px">Kechikish chegarasi: '+Att.grace()+' daqiqa (undan kam kechikish hisobga olinmaydi). Qatorni bossangiz, kunma-kun ko\'rinadi.</p>';
+  }
+  return h;
+};
+Att.runRep=async function(){
+  var f=($("repFrom")||{}).value, t=($("repTo")||{}).value; if(!f||!t||f>t){ Att.say("rep","Sanalarni to'g'ri tanlang.","err"); return; }
+  Att.rep={from:f,to:t,busy:true}; Att.msgs.rep=null; Att.render();
+  try{
+    var all=[], from=new Date(attDayStart(f).getTime()-6*3600e3).toISOString(), to=new Date(attDayStart(attAddDays(t,1)).getTime()+18*3600e3).toISOString();
+    for(var off=0;;off+=1000){ var part=await Att.q(S.sb.from("uno_att").select("id,staff_id,kind,at,late_min,early_min,worked_min,offline").gte("at",from).lt("at",to).order("at").range(off,off+999)); all=all.concat(part); if(part.length<1000) break; }
+    Att.rep.raw=all; Att.rep.data=Att.calc(f,t,all); Att.rep.busy=false;
+  }catch(e){ Att.rep.busy=false; Att.say("rep",String(e&&e.message||e),"err"); return; }
+  Att.render();
+};
+Att.calc=function(f,t,all){
+  var today=attDay(Date.now()), nowM=attMin(attHM(Date.now())), g=Att.grace(), absentAfter=Att.cfg?Number(Att.cfg.absent)||30:30;
+  return Att.staff.filter(function(s){ return s.active || all.some(function(r){ return r.staff_id===s.id; }); }).map(function(s){
+    var mine=all.filter(function(r){ return r.staff_id===s.id; }), night=attMin(s.shift_start)>=12*60;
+    var byDay={};
+    mine.forEach(function(r){
+      var key=attDay(r.at); if(r.kind==="in" && night && attMin(attHM(r.at))<6*60) key=attAddDays(key,-1);
+      if(r.kind==="in"){ if(!byDay[key]) byDay[key]={ins:[],outs:[]}; byDay[key].ins.push(r); r._day=key; }
+    });
+    /* each "out" belongs to the day of the "in" before it */
+    var cur=null; mine.forEach(function(r){ if(r.kind==="in") cur=r; else if(cur && byDay[cur._day]) byDay[cur._day].outs.push(r); });
+    var res={s:s,sched:0,came:0,absent:0,lateN:0,lateSum:0,earlyN:0,worked:0,days:[]};
+    var created=attDay(s.created_at||Date.now());
+    for(var k=f;k<=t && k<=today;k=attAddDays(k,1)){
+      var sc=Att.sched(s,k) && k>=created, d=byDay[k], row={key:k,sched:sc};
+      if(sc) res.sched++;
+      if(d && d.ins.length){
+        res.came++; var fi=d.ins[0]; row.inAt=attHM(fi.at); row.late=fi.late_min;
+        if(fi.late_min>g){ res.lateN++; res.lateSum+=fi.late_min; }
+        var w=0; d.outs.forEach(function(o){ w+=o.worked_min||0; if(o.early_min>g) res.earlyN++; }); row.worked=w; res.worked+=w;
+        if(d.outs.length) row.outAt=attHM(d.outs[d.outs.length-1].at);
+      } else if(sc && (k<today || nowM>=attMin(s.shift_start)+absentAfter)) res.absent++;
+      if(sc || d) res.days.push(row);
+    }
+    return res;
+  });
+};
+Att.csv=function(rows){ return "﻿sep=;\r\n"+rows.map(function(r){ return r.map(function(c){ c=String(c==null?"":c); return /[;"\r\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c; }).join(";"); }).join("\r\n"); };
+Att.download=function(name,text){ var a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type:"text/csv;charset=utf-8"})); a.download=name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1000); };
+Att.cfgHTML=function(){
+  var c=Att.cfg||{}, term=Att.isTerminal(), myDev=""; try{ myDev=localStorage.getItem("uno_att_dev")||""; }catch(_){}
+  var h='<h3 style="font-size:14px;margin:0 0 8px">Eshik terminali (shu telefon)</h3>';
+  h+=term?'<p class="help">Bu telefon davomat terminali sifatida ishlayapti. Ilova ochilganda menyu emas, PIN-kod ekrani chiqadi. Admin panelga kirish: logotipni 3 soniya bosib turing yoki 7 marta bosing.</p><div class="a-row" style="margin-top:10px"><a class="btn gold" href="davomat.html">Davomat ekranini ochish</a><button class="btn danger" data-att="unsetTerm">Menyu rejimiga qaytarish</button></div>'
+    :'<p class="help">Eshik yoniga qo\'yiladigan telefonda shu admin panelga kiring va pastdagi tugmani bosing. Shundan keyin o\'sha telefon faqat davomat ekranini ko\'rsatadi (menyu chiqmaydi). Boshqa planshetlar menyu bo\'lib qolaveradi.</p>'+
+     '<div class="a-row" style="margin-top:10px"><label class="fld" style="max-width:260px"><span>Terminal nomi</span><input id="devNameIn" maxlength="30" value="Asosiy eshik"></label><button class="btn gold" data-att="setTerm">Shu telefonni eshik terminali qilish</button></div>';
+  h+=Att.msg("term");
+  if(Att.devs&&Att.devs.length){
+    h+='<div style="overflow-x:auto;margin-top:12px"><table class="aitab"><thead><tr><th>Terminal</th><th>Oxirgi aloqa</th><th>Holat</th><th></th></tr></thead><tbody>'+
+      Att.devs.map(function(d){ return '<tr style="'+(d.revoked?'opacity:.5':'')+'"><td>'+esc(d.name)+(d.id===myDev?' <small style="color:var(--gold)">(shu telefon)</small>':'')+'</td><td>'+(d.last_seen?attDay(d.last_seen)+' '+attHM(d.last_seen):'—')+'</td><td>'+(d.revoked?'O\'chirilgan':'Faol')+'</td><td>'+(d.revoked?'':'<button class="btn sm danger" data-att="revoke" data-id="'+d.id+'">'+(Att.confirmRev===d.id?'Tasdiqlang':'O\'chirish')+'</button>')+'</td></tr>'; }).join("")+'</tbody></table></div>';
+  }
+  h+='<h3 style="font-size:14px;margin:20px 0 8px">Qoidalar va Telegram</h3>'+
+    '<div class="a-row"><label class="fld" style="max-width:220px;min-width:170px"><span>Kechikish chegarasi, daqiqa</span><input id="cfgGrace" inputmode="numeric" maxlength="3" value="'+esc(c.grace!=null?c.grace:10)+'"></label>'+
+    '<label class="fld" style="max-width:260px;min-width:190px"><span>«Kelmadi» xabari, smenadan keyin (daq)</span><input id="cfgAbsent" inputmode="numeric" maxlength="3" value="'+esc(c.absent!=null?c.absent:30)+'"></label></div>'+
+    '<div class="a-row" style="margin-top:12px"><label class="fld" style="max-width:300px"><span>Rahbarlar guruhi ID (ixtiyoriy)</span><input id="cfgChat" placeholder="bo\'sh — ofitsiantlar guruhiga" value="'+esc(c.chat||"")+'"></label>'+
+    '<label style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><input type="checkbox" id="cfgTg" '+(c.tg!=="off"?'checked':'')+'> Telegram\'ga xabar yuborish</label></div>'+
+    '<div class="a-row" style="margin-top:12px"><button class="btn gold" data-att="saveCfg">Saqlash</button></div>'+
+    (c.tg_ready===false?'<p class="help" style="margin-top:8px">Telegram bot hali ulanmagan: yuqoridagi «Telegram bot» bo\'limida ulang.</p>':'<p class="help" style="margin-top:8px">Xabarlar: kim keldi va ketdi, kim kechikdi, smena boshlanib '+esc(c.absent!=null?c.absent:30)+' daqiqa o\'tsa ham kim kelmadi. Alohida guruh uchun botni o\'sha guruhga qo\'shing va ID sini yuqoridagi «Guruhni topish» orqali bilib oling.</p>')+
+    Att.msg("cfg");
+  return h;
+};
+Att.change=function(e){ if(e.target.id==="stPin"){ e.target.value=e.target.value.replace(/\D/g,"").slice(0,4); } };
+Att.genPin=function(){ var used={}; (Att.staff||[]).forEach(function(s){ if(s.active && (!Att.edit||s.id!==Att.edit.id)) used[s.pin]=1; }); for(var i=0;i<200;i++){ var p=String(Math.floor(1000+Math.random()*9000)); if(!used[p] && !/^(\d)\1{3}$/.test(p) && "0123456789".indexOf(p)<0) return p; } return ""; };
+Att.readEdit=function(){ var e=Att.edit; if(!e) return; e.name=$("stName").value; e.role=$("stRole").value; e.pin=$("stPin").value; e.shift_start=$("stStart").value; e.shift_end=$("stEnd").value; e.active=$("stActive").checked; };
+Att.click=async function(ev){
+  var b=ev.target.closest("[data-att]"); if(!b||b.disabled) return;
+  var a=b.dataset.att, id=b.dataset.id, v=b.dataset.v;
+  try{
+    if(a==="reload"){ Att.err=""; Att.staff=Att.staff||null; Att.render(); await Att.load(); return; }
+    if(a==="tab"){ Att.tab=v; Att.photo=null; Att.render(); if(v==="today") Att.load("today"); if(v==="cfg") Att.load("cfg"); return; }
+    if(a==="photo"){ var rr=await Att.q(S.sb.from("uno_att").select("photo,at,kind,staff_id").eq("id",id).single()); var st=(Att.staff||[]).find(function(s){ return s.id===rr.staff_id; })||{};
+      if(!rr.photo){ Att.say("today","Bu belgida surat yo'q (kamera yoqilmagan bo'lgan).",""); return; }
+      Att.photo={src:rr.photo,name:st.name||"",when:attDay(rr.at)+" "+attHM(rr.at)+" · "+(rr.kind==="in"?"keldi":"ketdi")}; Att.render(); var ph=$("attPhoto"); if(ph) ph.scrollIntoView({block:"nearest",behavior:"smooth"}); return; }
+    if(a==="photoClose"){ Att.photo=null; Att.render(); return; }
+    if(a==="delRow"){ if(Att.confirmRow!==Number(id)){ Att.confirmRow=Number(id); Att.render(); setTimeout(function(){ Att.confirmRow=null; Att.render(); },4000); return; }
+      Att.confirmRow=null; await Att.q(S.sb.from("uno_att").delete().eq("id",id)); await Att.load("today"); return; }
+    if(a==="newStaff"){ Att.edit={name:"",role:"",pin:"",shift_start:"10:00",shift_end:"23:00",days:[1,2,3,4,5,6,7],active:true}; Att.edit.pin=Att.genPin(); Att.msgs.staff=null; Att.render(); var n=$("stName"); if(n) n.focus(); return; }
+    if(a==="editStaff"){ var s0=Att.staff.find(function(s){ return s.id===id; }); Att.edit=Object.assign({},s0,{days:(s0.days||[]).slice()}); Att.confirmDel=false; Att.msgs.staff=null; Att.render(); Att.el.scrollIntoView({block:"start",behavior:"smooth"}); return; }
+    if(a==="cancelStaff"){ Att.edit=null; Att.msgs.staff=null; Att.render(); return; }
+    if(a==="genPin"){ Att.readEdit(); Att.edit.pin=Att.genPin(); Att.render(); return; }
+    if(a==="day"){ Att.readEdit(); var dn=Number(v), ds=Att.edit.days, i=ds.indexOf(dn); if(i>=0) ds.splice(i,1); else ds.push(dn); Att.render(); return; }
+    if(a==="saveStaff"){
+      Att.readEdit(); var e=Att.edit, row={name:e.name.trim(),role:e.role.trim(),pin:e.pin,shift_start:e.shift_start||"10:00",shift_end:e.shift_end||"23:00",days:e.days.slice().sort(),active:e.active};
+      if(!row.name){ Att.say("staff","Ismni yozing.","err"); return; }
+      if(!/^\d{4}$/.test(row.pin)){ Att.say("staff","PIN-kod 4 ta raqam bo'lishi kerak.","err"); return; }
+      if(!row.days.length){ Att.say("staff","Kamida bitta ish kunini tanlang.","err"); return; }
+      if(row.active && Att.staff.some(function(s){ return s.active && s.pin===row.pin && s.id!==e.id; })){ Att.say("staff","Bu PIN-kod boshqa xodimda bor. «Tasodifiy» ni bosing.","err"); return; }
+      b.disabled=true;
+      if(e.id) await Att.q(S.sb.from("uno_staff").update(row).eq("id",e.id)); else await Att.q(S.sb.from("uno_staff").insert(row));
+      Att.edit=null; Att.msgs.staff={t:"Saqlandi: "+row.name+" (PIN "+row.pin+")",k:"ok"}; await Att.load("staff"); return; }
+    if(a==="delStaff"){ if(!Att.confirmDel){ Att.confirmDel=true; Att.render(); return; }
+      await Att.q(S.sb.from("uno_staff").delete().eq("id",Att.edit.id)); Att.edit=null; Att.confirmDel=false; Att.msgs.staff={t:"Xodim va uning barcha belgilari o'chirildi.",k:"ok"}; await Att.load("staff"); return; }
+    if(a==="repRun"){ await Att.runRep(); return; }
+    if(a==="repQuick"){ var td=attDay(Date.now()), f=td, t=td;
+      if(v==="week"){ f=attAddDays(td,1-attDow(td)); } else if(v==="month"){ f=td.slice(0,8)+"01"; } else if(v==="prev"){ var first=td.slice(0,8)+"01"; t=attAddDays(first,-1); f=t.slice(0,8)+"01"; }
+      $("repFrom").value=f; $("repTo").value=t; await Att.runRep(); return; }
+    if(a==="repOpen"){ Att.open=Att.open===id?null:id; Att.render(); return; }
+    if(a==="repCsv"){ var R=Att.rep; Att.download("davomat_"+R.from+"_"+R.to+".csv", Att.csv([["Xodim","Lavozim","Ish kuni","Keldi","Kelmadi","Kechikdi (marta)","Jami kechikish (daq)","Erta ketdi (marta)","Ishlagan (soat)"]].concat(R.data.map(function(x){ return [x.s.name,x.s.role,x.sched,x.came,x.absent,x.lateN,x.lateSum,x.earlyN,(x.worked/60).toFixed(1).replace(".",",")]; })))); return; }
+    if(a==="repCsvAll"){ var R2=Att.rep, by={}; Att.staff.forEach(function(s){ by[s.id]=s; });
+      Att.download("davomat_belgilar_"+R2.from+"_"+R2.to+".csv", Att.csv([["Sana","Vaqt","Xodim","Lavozim","Belgi","Kechikish (daq)","Erta ketish (daq)","Ishlagan (daq)","Internetsiz"]].concat(R2.raw.filter(function(r){ var k=attDay(r.at); return k>=R2.from && k<=R2.to; }).map(function(r){ var s=by[r.staff_id]||{}; return [attDay(r.at),attHM(r.at),s.name||"",s.role||"",r.kind==="in"?"Keldi":"Ketdi",r.kind==="in"?r.late_min:"",r.kind==="out"?r.early_min:"",r.worked_min==null?"":r.worked_min,r.offline?"ha":""]; })))); return; }
+    if(a==="setTerm"){
+      var nm=($("devNameIn")||{}).value||"Eshik"; b.disabled=true;
+      var reg=await Att.q(S.sb.rpc("uno_att_register",{p_name:nm}));
+      localStorage.setItem("uno_att_token",reg.token); localStorage.setItem("uno_att_dev",reg.id); localStorage.setItem("uno_att_name",reg.name); localStorage.setItem("uno_device_mode","att");
+      Att.say("term","Tayyor! Bu telefon endi eshik terminali. Davomat ekrani ochilmoqda…","ok");
+      setTimeout(function(){ try{ endSession(); }catch(_){} location.href="davomat.html"; },1500); return; }
+    if(a==="unsetTerm"){ ["uno_device_mode","uno_att_token","uno_att_dev","uno_att_name"].forEach(function(k){ localStorage.removeItem(k); }); Att.say("term","Bu telefon yana menyu rejimida. Terminalni ro'yxatdan ham o'chirib qo'ying.","ok"); await Att.load("cfg"); return; }
+    if(a==="revoke"){ if(Att.confirmRev!==id){ Att.confirmRev=id; Att.render(); return; } Att.confirmRev=null;
+      await Att.q(S.sb.from("uno_att_devices").update({revoked:true}).eq("id",id)); await Att.load("cfg"); return; }
+    if(a==="saveCfg"){ b.disabled=true;
+      await Att.q(S.sb.rpc("uno_att_set",{p_grace:parseInt($("cfgGrace").value)||0,p_absent:parseInt($("cfgAbsent").value)||30,p_chat:$("cfgChat").value.trim(),p_tg:$("cfgTg").checked?"on":"off"}));
+      Att.msgs.cfg={t:"Saqlandi.",k:"ok"}; await Att.load("cfg"); return; }
+  }catch(err){ var k=Att.tab==="cfg"?(a==="setTerm"||a==="revoke"?"term":"cfg"):Att.tab==="staff"?"staff":Att.tab==="rep"?"rep":"today";
+    var m=String(err&&err.message||err); if(/duplicate key|uno_staff_pin_active/.test(m)) m="Bu PIN-kod boshqa xodimda bor."; Att.say(k,"Xatolik: "+m,"err"); }
+};
+
 /* ================= ROUTING & DATA ================= */
 function route(){
   var h=location.hash.replace("#","");
+  if(h!=="admin" && Att.isTerminal()){ location.replace("davomat.html"); return; }
   S.view = h==="admin" ? "admin" : "menu";
   $("menuView").classList.toggle("hidden", S.view!=="menu");
   A.classList.toggle("hidden", S.view!=="admin");

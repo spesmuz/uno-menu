@@ -68,3 +68,10 @@ Restoran planshetlari uchun menyu va admin panel. Bitta APK ichida ishlaydi.
 4. **Ishlatish:**
    - taomga surat yuklanganda AI kaloriya, oqsil, yog', uglevod va tarkibni (uch tilda) o'zi yozadi, so'ng **Saqlash** bosiladi;
    - **"Suratli barcha taomlarni hisoblash"** hammasini ketma-ket hisoblab, saqlaydi. Qo'lda kiritilgan qiymatlarga tegilmaydi.
+
+## Xodimlar davomati
+1. Supabase → SQL Editor: `attendance.sql` ni ishga tushiring.
+2. Admin panel → «Xodimlar davomati» → «Xodimlar»: xodim, PIN-kod (4 raqam), smena va ish kunlarini kiriting.
+3. Eshik yonidagi telefonda ilovani oching → admin panel → «Sozlamalar va terminal» → «Shu telefonni eshik terminali qilish».
+   O'sha telefon endi faqat `davomat.html` (PIN klaviatura + old kamera surati) ni ko'rsatadi. Admin panelga kirish: logotipni 3 soniya bosib turish yoki 7 marta bosish.
+4. Kelish/ketish, kechikish va «hali kelmadi» xabarlari Telegram guruhga boradi. Hisobot va Excel — «Hisobot» bo'limida.
