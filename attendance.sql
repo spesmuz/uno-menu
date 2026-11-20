@@ -27,6 +27,7 @@ create table if not exists public.uno_staff (
   created_at timestamptz not null default now()
 );
 create unique index if not exists uno_staff_pin_active on public.uno_staff(pin) where active;
+alter table public.uno_staff add column if not exists team text not null default '';
 
 create table if not exists public.uno_att_devices (
   id uuid primary key default gen_random_uuid(),
@@ -252,7 +253,9 @@ begin
     txt := '🔵 <b>' || uno_esc2(s.name) || '</b> ' || to_char(loc,'HH24:MI') || ' da ketdi · ishladi: ' || uno_dur(worked)
            || case when early > grace then ' · <b>' || uno_dur(early) || ' erta ketdi</b>' else '' end;
   end if;
-  if s.role <> '' then txt := txt || E'\n<i>' || uno_esc2(s.role) || '</i>'; end if;
+  if s.team <> '' or s.role <> '' then
+    txt := txt || E'\n<i>' || uno_esc2(concat_ws(' · ', nullif(s.team,''), nullif(s.role,''))) || '</i>';
+  end if;
   txt := txt || E'\n📅 ' || to_char(loc,'DD.MM.YYYY HH24:MI');
   if offline then txt := txt || E'\n(internetsiz belgilangan, keyin yuborildi)'; end if;
 
@@ -296,7 +299,7 @@ begin
     exception when unique_violation then continue;
     end;
     n := n + 1;
-    txt := txt || E'\n• <b>' || uno_esc2(r.name) || '</b>' || case when r.role <> '' then ' (' || uno_esc2(r.role) || ')' else '' end
+    txt := txt || E'\n• <b>' || uno_esc2(r.name) || '</b>' || case when coalesce(nullif(r.team,''), nullif(r.role,'')) is not null then ' (' || uno_esc2(coalesce(nullif(r.team,''), r.role)) || ')' else '' end
                || ' — smena ' || to_char(r.shift_start,'HH24:MI') || ' da boshlangan';
   end loop;
   if n > 0 then perform public.uno_att_tg('⚠️ <b>Hali ishga kelmadi:</b>' || txt); end if;
