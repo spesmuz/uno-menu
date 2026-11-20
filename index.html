@@ -2316,8 +2316,8 @@ Att.staffHTML=function(){
       '<label class="fld"><span>Lavozim</span><input id="stRole" maxlength="40" value="'+esc(e.role||"")+'" placeholder="Ofitsiant, oshpaz…"></label></div>'+
       '<div class="a-row" style="margin-top:12px"><label class="fld" style="max-width:150px;min-width:120px"><span>PIN-kod (4 raqam)</span><input id="stPin" inputmode="numeric" maxlength="4" value="'+esc(e.pin||"")+'"></label>'+
       '<button class="btn sm" data-att="genPin" style="margin-bottom:4px">Tasodifiy</button>'+
-      '<label class="fld" style="max-width:150px;min-width:120px"><span>Smena boshlanishi</span><input id="stStart" type="time" value="'+esc(String(e.shift_start||"10:00").slice(0,5))+'"></label>'+
-      '<label class="fld" style="max-width:150px;min-width:120px"><span>Smena tugashi</span><input id="stEnd" type="time" value="'+esc(String(e.shift_end||"23:00").slice(0,5))+'"></label></div>'+
+      Att.timeSel("stStart","Smena boshlanishi",e.shift_start||"10:00")+Att.timeSel("stEnd","Smena tugashi",e.shift_end||"23:00")+'</div>'+
+      '<p class="help" style="margin-top:6px">Vaqt 24 soatlik: masalan 08:00 — ertalab, 20:00 — kechqurun. Tungi smena bo\'lsa (masalan 22:00 – 06:00), tugash vaqti ertasi kunga o\'tgan deb hisoblanadi.</p>'+
       '<div style="margin-top:12px"><span class="help">Ish kunlari</span><div class="a-row" style="gap:6px;margin-top:6px">'+ATT_DN.map(function(n,i){ var on=(e.days||[]).indexOf(i+1)>=0; return '<button class="btn sm'+(on?' gold':'')+'" data-att="day" data-v="'+(i+1)+'" style="min-width:44px">'+n+'</button>'; }).join("")+'</div></div>'+
       '<label style="display:flex;gap:8px;align-items:center;margin-top:12px"><input type="checkbox" id="stActive" '+(e.active!==false?'checked':'')+'> Faol (ishda)</label>'+
       '<div class="a-row" style="margin-top:14px"><button class="btn gold" data-att="saveStaff">Saqlash</button><button class="btn" data-att="cancelStaff">Bekor qilish</button>'+(e.id?'<span style="flex:1"></span><button class="btn danger" data-att="delStaff">'+(Att.confirmDel?'Tasdiqlash uchun yana bosing':'O\'chirish')+'</button>':'')+'</div>'+Att.msg("staff")+'</div>';
@@ -2407,9 +2407,17 @@ Att.cfgHTML=function(){
     Att.msg("cfg");
   return h;
 };
+Att.timeSel=function(id,label,val){
+  var m=String(val).match(/^(\d{1,2}):(\d{2})/)||[0,"10","00"], hh=("0"+(+m[1])).slice(-2), mm=m[2];
+  var hs="", ms="", mins=[]; for(var i=0;i<60;i+=5) mins.push(("0"+i).slice(-2)); if(mins.indexOf(mm)<0){ mins.push(mm); mins.sort(); }
+  for(var h=0;h<24;h++){ var x=("0"+h).slice(-2); hs+='<option'+(x===hh?' selected':'')+'>'+x+'</option>'; }
+  mins.forEach(function(x){ ms+='<option'+(x===mm?' selected':'')+'>'+x+'</option>'; });
+  return '<label class="fld" style="max-width:190px;min-width:160px"><span>'+label+'</span><span style="display:flex;align-items:center;gap:6px"><select id="'+id+'H" style="flex:1">'+hs+'</select><b>:</b><select id="'+id+'M" style="flex:1">'+ms+'</select></span></label>';
+};
+Att.timeVal=function(id){ var h=$(id+"H"), m=$(id+"M"); return h&&m?h.value+":"+m.value:""; };
 Att.change=function(e){ if(e.target.id==="stPin"){ e.target.value=e.target.value.replace(/\D/g,"").slice(0,4); } };
 Att.genPin=function(){ var used={}; (Att.staff||[]).forEach(function(s){ if(s.active && (!Att.edit||s.id!==Att.edit.id)) used[s.pin]=1; }); for(var i=0;i<200;i++){ var p=String(Math.floor(1000+Math.random()*9000)); if(!used[p] && !/^(\d)\1{3}$/.test(p) && "0123456789".indexOf(p)<0) return p; } return ""; };
-Att.readEdit=function(){ var e=Att.edit; if(!e) return; e.name=$("stName").value; e.role=$("stRole").value; e.pin=$("stPin").value; e.shift_start=$("stStart").value; e.shift_end=$("stEnd").value; e.active=$("stActive").checked; };
+Att.readEdit=function(){ var e=Att.edit; if(!e) return; e.name=$("stName").value; e.role=$("stRole").value; e.pin=$("stPin").value; e.shift_start=Att.timeVal("stStart"); e.shift_end=Att.timeVal("stEnd"); e.active=$("stActive").checked; };
 Att.click=async function(ev){
   var b=ev.target.closest("[data-att]"); if(!b||b.disabled) return;
   var a=b.dataset.att, id=b.dataset.id, v=b.dataset.v;
