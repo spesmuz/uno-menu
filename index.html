@@ -268,7 +268,7 @@ input,select,textarea{font-family:inherit}
 .slide.center .media .vidwrap.show{opacity:1}
 .d-layer.has-vid img.big,.d-layer.has-vid img.big.cover{opacity:0;transition:none}
 .d-media video{transition:none}
-canvas.frost{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;opacity:0;transition:opacity .45s ease;border-radius:inherit}
+canvas.frost{position:absolute;inset:0;image-rendering:auto;width:100%;height:100%;z-index:2;pointer-events:none;opacity:0;transition:opacity .45s ease;border-radius:inherit}
 .d-layer canvas.frost{z-index:3}
 
 @keyframes dishIn{0%{opacity:0;transform:translateY(70px) scale(.12);filter:blur(8px) brightness(2)}55%{opacity:1;transform:translateY(-8px) scale(1.05);filter:blur(0) brightness(1.15)}100%{opacity:1;transform:none;filter:none}}
@@ -838,12 +838,23 @@ function playWhenReady(v, ok, onShown){
    Blurred looks come from tiny snapshots scaled up (no live CSS blur), so only opacity is animated. */
 function frostShot(box, draw){
   var r=box.getBoundingClientRect(); if(!r.width) return null;
-  var W=44, H=Math.max(8,Math.round(W*r.height/r.width));
-  var c=document.createElement("canvas"); c.width=W; c.height=H; c.className="frost";
-  var x=c.getContext("2d"); try{ x.filter="blur(1.5px)"; }catch(_){}
+  /* tiny sample -> stepwise smooth upscale; works the same in Safari/WebView (no ctx.filter, no pixel blocks) */
+  var asp=r.height/r.width, W=28, H=Math.max(8,Math.round(W*asp));
+  var t=document.createElement("canvas"); t.width=W; t.height=H;
+  var x=t.getContext("2d"); x.imageSmoothingEnabled=true; try{ x.imageSmoothingQuality="high"; }catch(_){}
   var bg=getComputedStyle(box).backgroundColor; x.fillStyle=(!bg||bg==="rgba(0, 0, 0, 0)"||bg==="transparent")?"#15161a":bg; x.fillRect(0,0,W,H);
   try{ draw(x,W,H,r); }catch(_){}
-  return c;
+  var src=t, w=W;
+  while(w<224){
+    var n=document.createElement("canvas"), nw=Math.min(224,w*2); n.width=nw; n.height=Math.max(8,Math.round(nw*asp));
+    var nx=n.getContext("2d"); nx.imageSmoothingEnabled=true; try{ nx.imageSmoothingQuality="high"; }catch(_){}
+    nx.drawImage(src,0,0,n.width,n.height);
+    /* soften a little more at each step: overlay slightly shifted copies */
+    if(w<=56){ nx.globalAlpha=.5; nx.drawImage(src,-1,-1,n.width+2,n.height+2); nx.drawImage(src,1,1,n.width-2,n.height-2); nx.globalAlpha=1; }
+    src=n; w=nw;
+  }
+  src.className="frost";
+  return src;
 }
 function drawPhoto(img){ return function(x,W,H,r){
   if(!img || !img.naturalWidth) return; var ir=img.getBoundingClientRect();
