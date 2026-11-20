@@ -141,6 +141,15 @@ async function tgPhoto(key, photo){
   }
   try{ await rpc("uno_att_notify",{p_token:token,p_key:key,p_has_photo:ok},10000); }catch(_){}
 }
+/* new punch (with p_wait); if the database still has the old function, call it the old way */
+var oldDb=false;
+function punch(body, ms){
+  if(oldDb){ var b0=Object.assign({},body); delete b0.p_wait; return rpc("uno_att_punch",b0,ms); }
+  return rpc("uno_att_punch",body,ms).catch(function(e){
+    if(e.server && /p_wait|schema cache|Could not find|uno_att_punch/i.test(e.message)){ oldDb=true; var b1=Object.assign({},body); delete b1.p_wait; return rpc("uno_att_punch",b1,ms); }
+    throw e;
+  });
+}
 function setNet(on){ online=on; var n=$("net"); n.classList.toggle("off",!on); n.querySelector("span").textContent=on?"onlayn":"internet yo'q"; }
 function block(title, text){ $("mT").textContent=title; $("mP").innerHTML=text; $("msg").classList.add("show"); }
 
@@ -172,7 +181,7 @@ async function flush(){
   try{
     while(a.length){
       var x=a[0];
-      try{ var fr=await rpc("uno_att_punch",{p_token:token,p_pin:x.pin,p_photo:x.photo||null,p_at:x.at,p_wait:!!x.photo},10000); if(fr&&fr.key) await tgPhoto(fr.key,x.photo); }
+      try{ var fr=await punch({p_token:token,p_pin:x.pin,p_photo:x.photo||null,p_at:x.at,p_wait:!!x.photo},10000); if(fr&&fr.key) await tgPhoto(fr.key,x.photo); }
       catch(e){ if(e.net){ setNet(false); break; } }   /* server rejected it (e.g. wrong PIN): drop it */
       a.shift(); qSet(a);
     }
@@ -229,7 +238,7 @@ $("res").addEventListener("click",function(){ clearTimeout(resT); this.className
 function submit(){
   var code=pin, photo=snap(), at=now(); busy=true; hint("Tekshirilmoqda…");
   var face=photo?'<img src="'+photo+'" alt="">':"";
-  rpc("uno_att_punch",{p_token:token,p_pin:code,p_photo:photo,p_wait:!!photo},7000).then(function(r){
+  punch({p_token:token,p_pin:code,p_photo:photo,p_wait:!!photo},7000).then(function(r){
     setNet(true); pin=""; dots();
     if(r&&r.ok&&r.key) tgPhoto(r.key,photo);
     if(!r||!r.ok){
