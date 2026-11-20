@@ -102,7 +102,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer
 </div>
 <div id="res"><div class="ic" id="rIc"></div><h1 id="rName"></h1><div class="tm" id="rTime"></div><div class="st" id="rSt"></div><div class="sub" id="rSub"></div></div>
 <div id="msg"><div><h2 id="mT"></h2><p id="mP"></p><a href="index.html#admin" id="mA">Admin panelga kirish</a></div></div>
-<canvas id="cv" width="240" height="240" style="display:none"></canvas>
+<canvas id="cv" width="480" height="480" style="display:none"></canvas>
 <script>
 "use strict";
 var SB_URL="https://eaxavnixuqgwashplnhz.supabase.co", SB_KEY="sb_publishable_gILXDU_L8vepyEbsF87Tcg_hYyMpril";
@@ -126,6 +126,20 @@ function rpc(fn, body, ms){
   return fetch(SB_URL+"/rest/v1/rpc/"+fn,{method:"POST",headers:{"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"application/json"},body:JSON.stringify(body),signal:ctl?ctl.signal:undefined,cache:"no-store"})
     .then(function(r){ clearTimeout(t); return r.json().then(function(j){ if(!r.ok){ var e=new Error((j&&j.message)||("HTTP "+r.status)); e.server=true; throw e; } return j; }); },
           function(e){ clearTimeout(t); e.net=true; throw e; });
+}
+/* selfi -> storage, then ask the server to post it to Telegram with the caption */
+function dataBlob(u){ var b=atob(u.split(",")[1]), a=new Uint8Array(b.length); for(var i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return new Blob([a],{type:"image/jpeg"}); }
+async function tgPhoto(key, photo){
+  if(!key) return;
+  var ok=false;
+  if(photo){
+    try{
+      var ctl=window.AbortController?new AbortController():null, t=setTimeout(function(){ if(ctl) ctl.abort(); },15000);
+      var r=await fetch(SB_URL+"/storage/v1/object/uno-att/"+key+".jpg",{method:"POST",headers:{"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"image/jpeg","x-upsert":"false"},body:dataBlob(photo),signal:ctl?ctl.signal:undefined});
+      clearTimeout(t); ok=r.ok;
+    }catch(_){}
+  }
+  try{ await rpc("uno_att_notify",{p_token:token,p_key:key,p_has_photo:ok},10000); }catch(_){}
 }
 function setNet(on){ online=on; var n=$("net"); n.classList.toggle("off",!on); n.querySelector("span").textContent=on?"onlayn":"internet yo'q"; }
 function block(title, text){ $("mT").textContent=title; $("mP").innerHTML=text; $("msg").classList.add("show"); }
@@ -158,7 +172,7 @@ async function flush(){
   try{
     while(a.length){
       var x=a[0];
-      try{ await rpc("uno_att_punch",{p_token:token,p_pin:x.pin,p_photo:x.photo||null,p_at:x.at},10000); }
+      try{ var fr=await rpc("uno_att_punch",{p_token:token,p_pin:x.pin,p_photo:x.photo||null,p_at:x.at,p_wait:!!x.photo},10000); if(fr&&fr.key) await tgPhoto(fr.key,x.photo); }
       catch(e){ if(e.net){ setNet(false); break; } }   /* server rejected it (e.g. wrong PIN): drop it */
       a.shift(); qSet(a);
     }
@@ -179,7 +193,7 @@ startCam();
 function snap(){
   if(!camOK||!vid.videoWidth) return null;
   try{ var c=$("cv"), x=c.getContext("2d"), w=vid.videoWidth, h=vid.videoHeight, s=Math.min(w,h);
-    x.drawImage(vid,(w-s)/2,(h-s)/2,s,s,0,0,240,240); return c.toDataURL("image/jpeg",0.62); }catch(_){ return null; }
+    x.drawImage(vid,(w-s)/2,(h-s)/2,s,s,0,0,480,480); return c.toDataURL("image/jpeg",0.7); }catch(_){ return null; }
 }
 
 /* ---- sound ---- */
@@ -215,8 +229,9 @@ $("res").addEventListener("click",function(){ clearTimeout(resT); this.className
 function submit(){
   var code=pin, photo=snap(), at=now(); busy=true; hint("Tekshirilmoqda…");
   var face=photo?'<img src="'+photo+'" alt="">':"";
-  rpc("uno_att_punch",{p_token:token,p_pin:code,p_photo:photo},7000).then(function(r){
+  rpc("uno_att_punch",{p_token:token,p_pin:code,p_photo:photo,p_wait:!!photo},7000).then(function(r){
     setNet(true); pin=""; dots();
+    if(r&&r.ok&&r.key) tgPhoto(r.key,photo);
     if(!r||!r.ok){
       busy=false;
       if(r&&r.err==="bad_pin") wrong("PIN-kod noto'g'ri");

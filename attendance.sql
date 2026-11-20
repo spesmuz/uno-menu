@@ -51,7 +51,11 @@ create table if not exists public.uno_att (
   manual boolean not null default false,
   created_at timestamptz not null default now()
 );
+alter table public.uno_att add column if not exists photo_key uuid not null default gen_random_uuid();
+alter table public.uno_att add column if not exists tg_text text;
+alter table public.uno_att add column if not exists notified boolean not null default true;
 create index if not exists uno_att_staff_at on public.uno_att(staff_id, at desc);
+create index if not exists uno_att_pending on public.uno_att(created_at) where not notified;
 create index if not exists uno_att_at on public.uno_att(at desc);
 
 create table if not exists public.uno_att_alerts (staff_id uuid not null references public.uno_staff(id) on delete cascade, day date not null, kind text not null, primary key (staff_id, day, kind));
@@ -109,6 +113,39 @@ exception when others then
 end $$;
 revoke all on function public.uno_att_tg(text) from public, anon, authenticated;
 
+-- suratli xabar (Telegram suratni ochiq havoladan yuklab oladi)
+create or replace function public.uno_att_tg_photo(p_url text, p_caption text) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare tok text := public.uno_priv('tg_token'); chat text := coalesce(nullif(public.uno_priv('att_chat'),''), public.uno_priv('tg_chat'));
+begin
+  if coalesce(public.uno_priv('att_tg'), 'on') = 'off' then return; end if;
+  if coalesce(tok,'') = '' or coalesce(chat,'') = '' then return; end if;
+  perform net.http_post(url := 'https://api.telegram.org/bot' || tok || '/sendPhoto',
+    body := jsonb_build_object('chat_id', chat, 'photo', p_url, 'caption', left(p_caption, 1000), 'parse_mode', 'HTML'),
+    headers := '{"Content-Type":"application/json"}'::jsonb);
+exception when others then
+  raise warning 'telegram: %', sqlerrm;
+end $$;
+revoke all on function public.uno_att_tg_photo(text, text) from public, anon, authenticated;
+
+-- selfi suratlar uchun papka: eshik telefoni faqat yangi belgining bir martalik kaliti bilan, 10 daqiqa ichida yuklay oladi
+insert into storage.buckets (id, name, public, file_size_limit)
+values ('uno-att', 'uno-att', true, 400000)
+on conflict (id) do update set public = true, file_size_limit = 400000;
+
+create or replace function public.uno_att_can_upload(p_name text) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.uno_att
+                 where photo_key::text = regexp_replace(coalesce(p_name,''), '\.jpg$', '')
+                   and created_at > now() - interval '10 minutes');
+$$;
+grant execute on function public.uno_att_can_upload(text) to anon, authenticated;
+drop policy if exists uno_att_photo_insert on storage.objects;
+create policy uno_att_photo_insert on storage.objects for insert to anon, authenticated
+  with check (bucket_id = 'uno-att' and public.uno_att_can_upload(name));
+drop policy if exists uno_att_photo_delete on storage.objects;
+create policy uno_att_photo_delete on storage.objects for delete to authenticated using (bucket_id = 'uno-att' and public.uno_is_admin());
+
 -- ===== admin: shu telefonni eshik terminali qilish =====
 create or replace function public.uno_att_register(p_name text) returns jsonb
 language plpgsql security definer set search_path = public as $$
@@ -156,9 +193,11 @@ begin
 end $$;
 
 -- ===== eshik telefoni: PIN bilan kelish/ketishni belgilash =====
-create or replace function public.uno_att_punch(p_token text, p_pin text, p_photo text default null, p_at timestamptz default null)
+drop function if exists public.uno_att_punch(text, text, text, timestamptz);
+create or replace function public.uno_att_punch(p_token text, p_pin text, p_photo text default null, p_at timestamptz default null, p_wait boolean default false)
 returns jsonb language plpgsql security definer set search_path = public as $$
 declare
+  newid bigint; pkey uuid;
   d public.uno_att_devices; s public.uno_staff; last public.uno_att;
   ts timestamptz := now(); tz text := public.uno_tz(); loc timestamp; sched timestamp; send timestamp;
   k text; late int := 0; early int := 0; worked int; grace int := public.uno_att_cfg('grace','10')::int;
@@ -204,8 +243,6 @@ begin
     if early > 12 * 60 then early := 0; end if;
   end if;
 
-  insert into public.uno_att(staff_id, kind, at, late_min, early_min, worked_min, photo, device_id, offline)
-  values (s.id, k, ts, late, early, worked, left(p_photo, 120000), d.id, offline);
   update public.uno_att_devices set last_seen = now() where id = d.id;
 
   if k = 'in' then
@@ -216,10 +253,31 @@ begin
            || case when early > grace then ' · <b>' || uno_dur(early) || ' erta ketdi</b>' else '' end;
   end if;
   if s.role <> '' then txt := txt || E'\n<i>' || uno_esc2(s.role) || '</i>'; end if;
+  txt := txt || E'\n📅 ' || to_char(loc,'DD.MM.YYYY HH24:MI');
   if offline then txt := txt || E'\n(internetsiz belgilangan, keyin yuborildi)'; end if;
-  perform public.uno_att_tg(txt);
 
-  return jsonb_build_object('ok', true, 'kind', k, 'name', s.name, 'at', ts, 'late', late, 'grace', grace, 'worked', worked, 'early', early);
+  insert into public.uno_att(staff_id, kind, at, late_min, early_min, worked_min, photo, device_id, offline, tg_text, notified)
+  values (s.id, k, ts, late, early, worked, left(p_photo, 120000), d.id, offline, txt, not p_wait)
+  returning id, photo_key into newid, pkey;
+  -- surat yuklanishi kutilsa, xabar uno_att_notify da (surat bilan) yuboriladi
+  if not p_wait then perform public.uno_att_tg(txt); end if;
+
+  return jsonb_build_object('ok', true, 'kind', k, 'name', s.name, 'at', ts, 'late', late, 'grace', grace, 'worked', worked, 'early', early,
+                            'key', case when p_wait then pkey end);
+end $$;
+
+-- ===== eshik telefoni: surat yuklandi (yoki yuklanmadi) — Telegram'ga xabar =====
+create or replace function public.uno_att_notify(p_token text, p_key uuid, p_has_photo boolean)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare d public.uno_att_devices; r public.uno_att; base text := coalesce(nullif(public.uno_priv('sb_url'),''), 'https://eaxavnixuqgwashplnhz.supabase.co');
+begin
+  select * into d from public.uno_att_devices where token = p_token and not revoked;
+  if d.id is null then return jsonb_build_object('ok', false); end if;
+  update public.uno_att set notified = true where photo_key = p_key and device_id = d.id and not notified returning * into r;
+  if r.id is null then return jsonb_build_object('ok', true, 'already', true); end if;
+  if p_has_photo then perform public.uno_att_tg_photo(base || '/storage/v1/object/public/uno-att/' || p_key::text || '.jpg', r.tg_text);
+  else perform public.uno_att_tg(r.tg_text); end if;
+  return jsonb_build_object('ok', true);
 end $$;
 
 -- ===== kelmaganlarni tekshirish (har 5 daqiqada; eshik telefoni va admin panel ham chaqiradi) =====
@@ -242,6 +300,10 @@ begin
                || ' — smena ' || to_char(r.shift_start,'HH24:MI') || ' da boshlangan';
   end loop;
   if n > 0 then perform public.uno_att_tg('⚠️ <b>Hali ishga kelmadi:</b>' || txt); end if;
+  -- surati kelmay qolgan belgilar: 2 daqiqadan keyin suratsiz yuboriladi
+  for r in update public.uno_att set notified = true where not notified and created_at < now() - interval '2 minutes' returning tg_text loop
+    perform public.uno_att_tg(r.tg_text);
+  end loop;
   delete from public.uno_att_alerts where day < (loc::date - 40);
   return n;
 end $$;
@@ -264,7 +326,8 @@ exception when others then raise notice 'cron: %', sqlerrm;
 end $$;
 
 grant execute on function public.uno_att_hello(text) to anon, authenticated;
-grant execute on function public.uno_att_punch(text, text, text, timestamptz) to anon, authenticated;
+grant execute on function public.uno_att_punch(text, text, text, timestamptz, boolean) to anon, authenticated;
+grant execute on function public.uno_att_notify(text, uuid, boolean) to anon, authenticated;
 grant execute on function public.uno_att_register(text) to authenticated;
 grant execute on function public.uno_att_settings() to authenticated;
 grant execute on function public.uno_att_set(int, int, text, text) to authenticated;
