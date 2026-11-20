@@ -118,6 +118,36 @@ public class MainActivity extends Activity {
       runOnUiThread(new Runnable() { public void run() { leave(false); } });
       return true;
     }
+    /* save a PNG (base64) into the phone gallery: Pictures/UNO. Returns "ok", "perm" (permission asked) or "err" */
+    @JavascriptInterface public String saveImage(String name, String b64) {
+      try {
+        if (name == null || !name.matches("[A-Za-z0-9_.-]{1,80}")) return "err";
+        int c = b64.indexOf(','); if (c >= 0) b64 = b64.substring(c + 1);
+        byte[] data = android.util.Base64.decode(b64, android.util.Base64.DEFAULT);
+        if (Build.VERSION.SDK_INT >= 29) {
+          android.content.ContentValues v = new android.content.ContentValues();
+          v.put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, name);
+          v.put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "image/png");
+          v.put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/UNO");
+          Uri u = getContentResolver().insert(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, v);
+          if (u == null) return "err";
+          java.io.OutputStream o = getContentResolver().openOutputStream(u);
+          o.write(data); o.close();
+          return "ok";
+        }
+        if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+          runOnUiThread(new Runnable() { public void run() { requestPermissions(new String[] { android.Manifest.permission.WRITE_EXTERNAL_STORAGE }, 11); } });
+          return "perm";
+        }
+        java.io.File dir = new java.io.File(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_PICTURES), "UNO");
+        dir.mkdirs();
+        java.io.File f = new java.io.File(dir, name);
+        java.io.FileOutputStream o = new java.io.FileOutputStream(f);
+        o.write(data); o.close();
+        android.media.MediaScannerConnection.scanFile(MainActivity.this, new String[] { f.getAbsolutePath() }, new String[] { "image/png" }, null);
+        return "ok";
+      } catch (Exception e) { return "err"; }
+    }
     @JavascriptInterface public void retry() { runOnUiThread(new Runnable() { public void run() { failed = false; web.loadUrl(URL); } }); }
   }
 

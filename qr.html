@@ -15,7 +15,14 @@
   .bar input { width: 70px; padding: 8px; border-radius: 10px; border: 1px solid #5a4a2a; background: #1b1915; color: #fff; font-size: 15px; }
   .bar button { padding: 10px 18px; border-radius: 12px; border: 0; background: #e8b04b; color: #1a1306; font-weight: 700; font-size: 15px; cursor: pointer; }
   .bar .sp { flex: 1; }
-  .sheet { display: grid; grid-template-columns: repeat(2, 90mm); gap: 8mm; justify-content: center; padding: 10mm 0 20mm; }
+  .sheet { display: grid; grid-template-columns: repeat(auto-fit, 90mm); gap: 8mm; justify-content: center; padding: 10mm 12px 20mm; }
+  .cell { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .cell .save1 { padding: 9px 16px; border-radius: 12px; border: 1px solid #c9a35a; background: #fff; color: #1a1306; font-weight: 700; font-size: 14px; cursor: pointer; }
+  .bar button.alt { background: #2a261e; color: #f3e7cf; border: 1px solid #5a4a2a; }
+  .bar button:disabled { opacity: .5; }
+  #status { width: 100%; font-size: 13px; color: #e8b04b; min-height: 0; }
+  #status:empty { display: none; }
+  @media screen and (max-width: 380px) { .sheet { zoom: .9; } }
   .card { width: 90mm; height: 128mm; background: #0d0c0a; color: #f3e7cf; border-radius: 6mm; padding: 7mm 6mm; display: flex; flex-direction: column; align-items: center; text-align: center; break-inside: avoid; page-break-inside: avoid; border: .6mm solid #c9a35a; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .card img.logo { width: 22mm; height: 22mm; object-fit: contain; }
   .card .name { margin-top: 2mm; font-size: 3.4mm; letter-spacing: .3em; color: #e8b04b; font-weight: 700; }
@@ -25,7 +32,7 @@
   .card .qr svg { width: 100%; height: 100%; display: block; }
   .card .txt { margin-top: auto; padding-top: 3mm; font-size: 3mm; line-height: 1.45; color: #d9ccb0; }
   .card .txt b { color: #e8b04b; font-weight: 700; }
-  @media print { body { background: #fff; } .bar { display: none; } .sheet { padding: 0; } }
+  @media print { body { background: #fff; } .bar, .save1 { display: none !important; } .sheet { padding: 0; grid-template-columns: repeat(2, 90mm); } }
 </style>
 </head>
 <body>
@@ -35,7 +42,10 @@
   <label>gacha <input id="to" type="number" min="1"></label>
   <button id="go" type="button">Yangilash</button>
   <span class="sp"></span>
-  <button id="print" type="button">Chop etish</button>
+  <button id="saveAll" type="button">Hammasini saqlash</button>
+  <button id="zip" type="button" class="alt">ZIP fayl</button>
+  <button id="print" type="button" class="alt">Chop etish</button>
+  <div id="status"></div>
 </div>
 <div class="sheet" id="sheet"></div>
 <script>
@@ -58,13 +68,13 @@
   var html = "";
   for (var n = from; n <= to; n++) {
     var url = base + "?stol=" + n;
-    html += '<div class="card">' +
+    html += '<div class="cell"><div class="card">' +
       '<img class="logo" src="media/logo.png" alt="">' +
       '<div class="name">UNO AIRWAYS</div>' +
       '<div class="tbl">' + n + '<small>STOL · СТОЛ · TABLE</small></div>' +
       '<div class="qr" title="' + esc(url) + '">' + qrSvg(url) + '</div>' +
       '<div class="txt"><b>Menyuni ko\'rish uchun skanerlang</b><br>Сканируйте, чтобы открыть меню<br>Scan to open the menu</div>' +
-      '</div>';
+      '</div><button class="save1" type="button" data-n="' + n + '">Rasm qilib saqlash</button></div>';
   }
   sheet.innerHTML = html;
 
@@ -74,6 +84,133 @@
     location.search = "?from=" + a + "&to=" + b;
   };
   document.getElementById("print").onclick = function () { window.print(); };
+
+  /* ---------- each card as a PNG (300 dpi: 90 × 128 mm) ---------- */
+  var MM = 300 / 25.4, W = Math.round(90 * MM), H = Math.round(128 * MM);
+  var logo = new Image(), logoReady = new Promise(function (ok) { logo.onload = ok; logo.onerror = ok; });
+  logo.src = "media/logo.png";
+  var statusEl = document.getElementById("status");
+  function status(t) { statusEl.textContent = t || ""; }
+  function rr(x, cx, cy, w, h, r) { x.beginPath(); x.moveTo(cx + r, cy); x.arcTo(cx + w, cy, cx + w, cy + h, r); x.arcTo(cx + w, cy + h, cx, cy + h, r); x.arcTo(cx, cy + h, cx, cy, r); x.arcTo(cx, cy, cx + w, cy, r); x.closePath(); }
+  function spaced(x, t, cx, y, sp) {
+    var ws = [], tot = 0; for (var i = 0; i < t.length; i++) { var w = x.measureText(t[i]).width; ws.push(w); tot += w + (i < t.length - 1 ? sp : 0); }
+    var px = cx - tot / 2; x.textAlign = "left";
+    for (var j = 0; j < t.length; j++) { x.fillText(t[j], px, y); px += ws[j] + sp; }
+    x.textAlign = "center";
+  }
+  var FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+  function drawCard(n) {
+    var c = document.createElement("canvas"); c.width = W; c.height = H;
+    var x = c.getContext("2d"), m = function (v) { return v * MM; };
+    x.fillStyle = "#ffffff"; x.fillRect(0, 0, W, H);
+    rr(x, m(.3), m(.3), W - m(.6), H - m(.6), m(6)); x.fillStyle = "#0d0c0a"; x.fill();
+    x.lineWidth = m(.6); x.strokeStyle = "#c9a35a"; x.stroke();
+    var y = m(6);
+    if (logo.naturalWidth) { var s = m(20), r = Math.min(s / logo.naturalWidth, s / logo.naturalHeight), lw = logo.naturalWidth * r, lh = logo.naturalHeight * r; x.drawImage(logo, (W - lw) / 2, y + (s - lh) / 2, lw, lh); }
+    y += m(20) + m(2);
+    x.textAlign = "center"; x.textBaseline = "top";
+    x.fillStyle = "#e8b04b"; x.font = "700 " + m(3.4) + "px " + FONT; spaced(x, "UNO AIRWAYS", W / 2, y, m(3.4) * .3);
+    y += m(3.4) * 1.3 + m(3);
+    x.fillStyle = "#f3e7cf"; x.font = "800 " + m(11) + "px " + FONT; x.fillText(String(n), W / 2, y);
+    y += m(11) + m(1.5);
+    x.fillStyle = "#bba77d"; x.font = "600 " + m(3.2) + "px " + FONT; spaced(x, "STOL · СТОЛ · TABLE", W / 2, y, m(3.2) * .35);
+    y += m(3.2) * 1.3 + m(3.5);
+    var qs = m(50), qx = (W - qs) / 2;
+    rr(x, qx, y, qs, qs, m(3)); x.fillStyle = "#ffffff"; x.fill();
+    if (typeof qrcode === "function") {
+      var qr = qrcode(0, "M"); qr.addData(base + "?stol=" + n); qr.make();
+      var cnt = qr.getModuleCount(), inner = qs - m(5), cell = inner / cnt, ox = qx + m(2.5), oy = y + m(2.5);
+      x.fillStyle = "#000000";
+      for (var r2 = 0; r2 < cnt; r2++) for (var c2 = 0; c2 < cnt; c2++) if (qr.isDark(r2, c2)) x.fillRect(Math.floor(ox + c2 * cell), Math.floor(oy + r2 * cell), Math.ceil(cell) + 1, Math.ceil(cell) + 1);
+    }
+    var lines = [["700", "#e8b04b", "Menyuni ko'rish uchun skanerlang"], ["400", "#d9ccb0", "Сканируйте, чтобы открыть меню"], ["400", "#d9ccb0", "Scan to open the menu"]];
+    var lh2 = m(3) * 1.45, ty = H - m(5.5) - lh2 * 3;
+    lines.forEach(function (l, i) { x.font = l[0] + " " + m(3) + "px " + FONT; x.fillStyle = l[1]; x.fillText(l[2], W / 2, ty + i * lh2); });
+    return c;
+  }
+  function fname(n) { return "UNO_stol_" + (n < 10 ? "0" : "") + n + ".png"; }
+  function toBlob(c) { return new Promise(function (ok) { c.toBlob(function (b) { ok(b); }, "image/png"); }); }
+  function download(blob, name) { var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
+  var app = window.UnoKiosk && window.UnoKiosk.saveImage ? window.UnoKiosk : null;
+
+  /* minimal ZIP (stored, no compression — PNGs are already compressed) */
+  var CRC = (function () { var t = []; for (var i = 0; i < 256; i++) { var c = i; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[i] = c >>> 0; } return t; })();
+  function crc32(u) { var c = 0xFFFFFFFF; for (var i = 0; i < u.length; i++) c = CRC[(c ^ u[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+  function makeZip(files) {
+    var parts = [], central = [], off = 0, enc = new TextEncoder();
+    files.forEach(function (f) {
+      var nm = enc.encode(f.name), d = f.data, crc = crc32(d);
+      var h = new DataView(new ArrayBuffer(30)); h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(8, 0, true); h.setUint32(14, crc, true); h.setUint32(18, d.length, true); h.setUint32(22, d.length, true); h.setUint16(26, nm.length, true);
+      parts.push(h.buffer, nm, d);
+      var cd = new DataView(new ArrayBuffer(46)); cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true); cd.setUint32(16, crc, true); cd.setUint32(20, d.length, true); cd.setUint32(24, d.length, true); cd.setUint16(28, nm.length, true); cd.setUint32(42, off, true);
+      central.push(cd.buffer, nm);
+      off += 30 + nm.length + d.length;
+    });
+    var csize = central.reduce(function (a, b) { return a + b.byteLength; }, 0);
+    var e = new DataView(new ArrayBuffer(22)); e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, csize, true); e.setUint32(16, off, true);
+    return new Blob(parts.concat(central, [e.buffer]), { type: "application/zip" });
+  }
+  async function buildAll(asData) {
+    await logoReady; var out = [];
+    for (var n = from; n <= to; n++) {
+      status("Tayyorlanmoqda: " + (n - from + 1) + " / " + (to - from + 1));
+      var c = drawCard(n);
+      if (asData === "dataurl") out.push({ n: n, name: fname(n), url: c.toDataURL("image/png") });
+      else { var b = await toBlob(c); out.push({ n: n, name: fname(n), blob: b }); }
+      await new Promise(function (ok) { setTimeout(ok, 0); });
+    }
+    return out;
+  }
+  function busy(on) { ["saveAll", "zip", "print"].forEach(function (id) { document.getElementById(id).disabled = on; }); }
+
+  async function saveViaApp(items) {
+    var ok = 0;
+    for (var i = 0; i < items.length; i++) {
+      var r = app.saveImage(items[i].name, items[i].url);
+      if (r === "perm") { status("Telefon xotirasiga yozish uchun ruxsat bering, so'ng tugmani qayta bosing."); return; }
+      if (r === "ok") ok++;
+      status("Saqlanmoqda: " + (i + 1) + " / " + items.length);
+    }
+    status(ok === items.length ? "✅ " + ok + " ta rasm galereyaga saqlandi (Rasmlar → UNO papkasi)." : "Saqlandi: " + ok + " / " + items.length);
+  }
+  async function zipAll() {
+    busy(true);
+    try {
+      var items = await buildAll();
+      status("ZIP tayyorlanmoqda…");
+      var files = []; for (var i = 0; i < items.length; i++) files.push({ name: items[i].name, data: new Uint8Array(await items[i].blob.arrayBuffer()) });
+      download(makeZip(files), "UNO_stol_QR_" + from + "-" + to + ".zip");
+      status("✅ ZIP fayl yuklab olindi: " + items.length + " ta rasm.");
+    } catch (e) { status("Xatolik: " + (e && e.message || e)); }
+    busy(false);
+  }
+  document.getElementById("zip").onclick = function () {
+    if (app) { status("Ilova ichida ZIP yuklab bo'lmaydi — «Hammasini saqlash» rasmlarni galereyaga yozadi."); return; }
+    zipAll();
+  };
+  document.getElementById("saveAll").onclick = async function () {
+    busy(true);
+    try {
+      if (app) { await saveViaApp(await buildAll("dataurl")); busy(false); return; }
+      var items = await buildAll();
+      var files = items.map(function (it) { return new File([it.blob], it.name, { type: "image/png" }); });
+      if (navigator.canShare && navigator.canShare({ files: files })) {
+        status("Ochilgan oynada «Rasmlarni saqlash» (Save images) ni tanlang.");
+        try { await navigator.share({ files: files, title: "UNO stol QR-kodlari" }); status("✅ Tayyor."); busy(false); return; }
+        catch (e) { if (e && e.name === "AbortError") { status(""); busy(false); return; } }
+      }
+      busy(false); await zipAll(); return;
+    } catch (e) { status("Xatolik: " + (e && e.message || e)); }
+    busy(false);
+  };
+  sheet.addEventListener("click", async function (e) {
+    var b = e.target.closest(".save1"); if (!b) return;
+    var n = Number(b.dataset.n); await logoReady; var c = drawCard(n);
+    if (app) { var r = app.saveImage(fname(n), c.toDataURL("image/png")); status(r === "ok" ? "✅ " + n + "-stol rasmi galereyaga saqlandi." : r === "perm" ? "Xotiraga yozish uchun ruxsat bering va qayta bosing." : "Saqlab bo'lmadi."); return; }
+    var blob = await toBlob(c), f = new File([blob], fname(n), { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f] }); return; } catch (err) { if (err && err.name === "AbortError") return; } }
+    download(blob, fname(n));
+  });
 })();
 </script>
 </body>
