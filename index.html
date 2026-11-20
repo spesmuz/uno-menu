@@ -1193,12 +1193,34 @@ $("cartHost").addEventListener("click",function(e){
 $("cartBtn").onclick=function(){ SFX.tick(); S.cartOpen=true; renderCart(); };
 /* ---------- table number, waiter call, bill request ---------- */
 function svcPct(st){ st=st||S.settings||{}; var v=st.service; if(v===undefined||v===null||v==="") return 15; v=Math.round(Number(v)); return isFinite(v)?Math.max(0,Math.min(50,v)):15; }
-var TABLE_KEY="uno_table";
+var TABLE_KEY="uno_table", TABLE_QR_KEY="uno_table_qr", TABLE_QR_HOURS=4;
+/* Two sources:
+   - tablet: the admin sets the table once, it stays (uno_table + uno_table_src=admin);
+   - customer's phone: the table comes from the QR code and is valid only for this visit (4 hours),
+     so next time the customer can sit anywhere. */
 (function(){
-  try{ var q=new URLSearchParams(location.search).get("stol"); if(q){ q=String(q).trim().slice(0,12); if(q) localStorage.setItem(TABLE_KEY,q); } }catch(_){}
+  try{
+    /* old builds stored QR tables permanently: drop those (admin-set tables are marked) */
+    if(localStorage.getItem(TABLE_KEY) && localStorage.getItem("uno_table_src")!=="admin") localStorage.removeItem(TABLE_KEY);
+    var u=new URL(location.href), q=u.searchParams.get("stol");
+    if(q!==null){
+      q=String(q).trim().slice(0,12);
+      if(q && q!=="0") localStorage.setItem(TABLE_QR_KEY, JSON.stringify({t:q, at:Date.now()}));
+      else localStorage.removeItem(TABLE_QR_KEY);
+      /* remove ?stol= from the address, so a bookmark or home-screen icon does not bring the old table back */
+      u.searchParams.delete("stol"); history.replaceState(null, "", u.pathname+(u.search||"")+u.hash);
+    }
+  }catch(_){}
 })();
-function tableNo(){ try{ return (localStorage.getItem(TABLE_KEY)||"").trim(); }catch(_){ return ""; } }
-function setTableNo(v){ try{ v=String(v||"").trim().slice(0,12); if(v) localStorage.setItem(TABLE_KEY,v); else localStorage.removeItem(TABLE_KEY); }catch(_){} refreshCallUI(); }
+function qrTable(){
+  try{ var o=JSON.parse(localStorage.getItem(TABLE_QR_KEY)||"null"); if(!o||!o.t) return "";
+    if(Date.now()-Number(o.at||0) > TABLE_QR_HOURS*3600e3){ localStorage.removeItem(TABLE_QR_KEY); return ""; }
+    return String(o.t).trim(); }catch(_){ return ""; }
+}
+function tableNo(){ var q=qrTable(); if(q) return q; try{ return (localStorage.getItem(TABLE_KEY)||"").trim(); }catch(_){ return ""; } }
+function setTableNo(v){ try{ v=String(v||"").trim().slice(0,12); if(v){ localStorage.setItem(TABLE_KEY,v); localStorage.setItem("uno_table_src","admin"); } else { localStorage.removeItem(TABLE_KEY); localStorage.removeItem("uno_table_src"); } }catch(_){} refreshCallUI(); }
+/* the visit ends on its own: hide the call buttons once the QR table expires */
+setInterval(function(){ try{ if(localStorage.getItem(TABLE_QR_KEY) && !qrTable()) refreshCallUI(); }catch(_){} }, 60000);
 S.calls={waiter:null,bill:null};
 function refreshCallUI(){
   var b=$("waiterBtn"); if(!b) return;
