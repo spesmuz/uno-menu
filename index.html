@@ -755,7 +755,7 @@ function buildSlides(){
     $("prevBtn").classList.add("hidden"); $("nextBtn").classList.add("hidden"); $("dots").innerHTML=""; return;
   }
   empty.classList.add("hidden");
-  var many=curList.length>1;
+  var many=curList.length>1 || catSeq().length>1;
   $("prevBtn").classList.toggle("hidden",!many); $("nextBtn").classList.toggle("hidden",!many);
   if(S.idx>=curList.length) S.idx=0;
   curList.forEach(function(d,i){
@@ -779,7 +779,9 @@ function renderDots(){
   var h=""; curList.forEach(function(d,i){ h+='<button data-dot="'+i+'" aria-label="'+esc(dn(d))+'" aria-current="'+(i===S.idx)+'"><span></span></button>'; });
   $("dots").innerHTML = curList.length>1 ? h : "";
 }
-function offOf(i){ var n=curList.length; var o=((i-S.idx)%n+n)%n; if(o>n/2) o-=n; return o; }
+function catSeq(){ return cats().filter(function(c){ return dishesOf(c.id).length; }).map(function(c){ return c.id; }); }
+/* with several categories the row does not wrap: after the last dish comes the next category */
+function offOf(i){ var n=curList.length; if(catSeq().length>1) return i-S.idx; var o=((i-S.idx)%n+n)%n; if(o>n/2) o-=n; return o; }
 function layout(initial){
   var n=curList.length; if(!n) return;
   var drag=S.drag/SLOT, half=n/2;
@@ -886,12 +888,12 @@ function frostSwap(box, img, v, reveal){
     }, 300);
   }, 300);
 }
-var VIDEO_DELAY=2000, _vidT=null;
+var VIDEO_DELAY=1500, _vidT=null;
 function scheduleVideo(m, id){
   clearTimeout(_vidT);
   var v=m.querySelector("video"), w=m.querySelector(".vidwrap"); if(!v) return;
   v.muted=true;
-  var shown=function(){ frostSwap(m, m.querySelector("img.thumb"), v, function(){ w.classList.add("show"); m.classList.add("has-vid"); }); };
+  var shown=function(){ w.classList.add("show"); m.classList.add("has-vid"); };   /* no effect: photo is replaced by the playing video */
   var ok=function(){ var c=curList[S.idx]; return !!(c && c.id===id && !S.detail && m.isConnected && S.view==="menu"); };
   _vidT=setTimeout(function(){ if(ok()) playWhenReady(v, ok, shown); }, VIDEO_DELAY);
 }
@@ -923,7 +925,15 @@ function updateMedia(){
     m.querySelectorAll("img[data-fit]").forEach(fitImg);
   });
 }
-function go(n){ if(!curList.length) return; untilt(centreCard()); S.idx=((n%curList.length)+curList.length)%curList.length; layout(); }
+function go(n){
+  if(!curList.length) return;
+  var len=curList.length, seq=catSeq(), ci=seq.indexOf(S.cat);
+  if((n>=len || n<0) && seq.length>1 && ci>=0){
+    var nc = n>=len ? seq[(ci+1)%seq.length] : seq[(ci-1+seq.length)%seq.length];
+    untilt(centreCard()); try{ SFX.tick(); }catch(_){}
+    S.cat=nc; S.idx = n>=len ? 0 : dishesOf(nc).length-1; prevOff={}; renderTabs(); buildSlides(); return;
+  }
+  untilt(centreCard()); S.idx=((n%curList.length)+curList.length)%curList.length; layout(); }
 $("prevBtn").onclick=function(){ SFX.swipe(); go(S.idx-1); };
 $("nextBtn").onclick=function(){ SFX.swipe(); go(S.idx+1); };
 $("dots").addEventListener("click",function(e){ var b=e.target.closest("[data-dot]"); if(b) go(+b.dataset.dot); });
@@ -987,7 +997,7 @@ function endDrag(e){
   var dx=Math.max(-SLOT*2,Math.min(SLOT*2,(e.clientX-sx)/(S.scale||1))), dt=Math.max(1,Date.now()-st), flick=Math.abs(dx)/dt>.5;
   S.dragging=false; track.classList.remove("dragging"); S.drag=0;
   var steps=0; if(Math.abs(dx)>60||(flick&&Math.abs(dx)>20)) steps=Math.max(1,Math.round(Math.abs(dx)/SLOT));
-  if(steps && curList.length>1) go(S.idx+(dx<0?steps:-steps)); else layout();
+  if(steps && (curList.length>1 || catSeq().length>1)) go(S.idx+(dx<0?steps:-steps)); else layout();
   setTimeout(function(){ swiped=false; },0);
 }
 track.addEventListener("pointerup",endDrag); track.addEventListener("pointercancel",endDrag); track.addEventListener("pointerleave",endDrag);
@@ -1046,7 +1056,7 @@ function setupLayer(layer, d){
   layer.querySelectorAll("img[data-fit]").forEach(fitImg);
   var v=layer.querySelector("video"); if(!v) return;
   v.muted=true; var id=d.id;
-  var shown=function(){ frostSwap(layer, layer.querySelector("img.big"), v, function(){ v.classList.add("show"); layer.classList.add("has-vid"); }); };
+  var shown=function(){ v.classList.add("show"); layer.classList.add("has-vid"); };
   clearTimeout(S.dVidT);
   var ok=function(){ return S.detail===id && v.isConnected; };
   S.dVidT=setTimeout(function(){ if(ok()) playWhenReady(v, ok, shown); }, VIDEO_DELAY);
