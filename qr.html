@@ -131,7 +131,9 @@
   function fname(n) { return "UNO_stol_" + (n < 10 ? "0" : "") + n + ".png"; }
   function toBlob(c) { return new Promise(function (ok) { c.toBlob(function (b) { ok(b); }, "image/png"); }); }
   function download(blob, name) { var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
-  var app = window.UnoKiosk && window.UnoKiosk.saveImage ? window.UnoKiosk : null;
+  var inApp = !!window.UnoKiosk, app = inApp && window.UnoKiosk.saveImage ? window.UnoKiosk : null;
+  var OLD_APP = "Bu ilova versiyasi rasm saqlay olmaydi. Yangi UNO ilovasini o'rnating (admin paneldagi havola yoki github.com/spesmuz/uno-menu/releases) yoki shu sahifani Chrome brauzerida oching.";
+  function dataUrl(blob) { return new Promise(function (ok, no) { var r = new FileReader(); r.onload = function () { ok(r.result); }; r.onerror = no; r.readAsDataURL(blob); }); }
 
   /* minimal ZIP (stored, no compression — PNGs are already compressed) */
   var CRC = (function () { var t = []; for (var i = 0; i < 256; i++) { var c = i; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[i] = c >>> 0; } return t; })();
@@ -179,19 +181,26 @@
       var items = await buildAll();
       status("ZIP tayyorlanmoqda…");
       var files = []; for (var i = 0; i < items.length; i++) files.push({ name: items[i].name, data: new Uint8Array(await items[i].blob.arrayBuffer()) });
-      download(makeZip(files), "UNO_stol_QR_" + from + "-" + to + ".zip");
-      status("✅ ZIP fayl yuklab olindi: " + items.length + " ta rasm.");
+      var zip = makeZip(files), zname = "UNO_stol_QR_" + from + "-" + to + ".zip";
+      if (inApp && window.UnoKiosk.saveFile) {
+        var r = window.UnoKiosk.saveFile(zname, await dataUrl(zip), "application/zip");
+        status(r === "ok" ? "✅ ZIP saqlandi: Fayllar → Yuklanmalar (Download) → UNO → " + zname : r === "perm" ? "Xotiraga yozish uchun ruxsat bering va qayta bosing." : "Saqlab bo'lmadi.");
+      } else {
+        download(zip, zname);
+        status("✅ " + zname + " — telefonning «Yuklanmalar» (Downloads) papkasiga tushdi: Fayllar ilovasi → Yuklanmalar.");
+      }
     } catch (e) { status("Xatolik: " + (e && e.message || e)); }
     busy(false);
   }
   document.getElementById("zip").onclick = function () {
-    if (app) { status("Ilova ichida ZIP yuklab bo'lmaydi — «Hammasini saqlash» rasmlarni galereyaga yozadi."); return; }
+    if (inApp && !window.UnoKiosk.saveFile) { status(OLD_APP); return; }
     zipAll();
   };
   document.getElementById("saveAll").onclick = async function () {
     busy(true);
     try {
       if (app) { await saveViaApp(await buildAll("dataurl")); busy(false); return; }
+      if (inApp) { status(OLD_APP); busy(false); return; }
       var items = await buildAll();
       var files = items.map(function (it) { return new File([it.blob], it.name, { type: "image/png" }); });
       if (navigator.canShare && navigator.canShare({ files: files })) {
@@ -205,11 +214,14 @@
   };
   sheet.addEventListener("click", async function (e) {
     var b = e.target.closest(".save1"); if (!b) return;
-    var n = Number(b.dataset.n); await logoReady; var c = drawCard(n);
+    var n = Number(b.dataset.n);
+    if (inApp && !app) { status(OLD_APP); statusEl.scrollIntoView({ block: "nearest" }); return; }
+    status(n + "-stol rasmi tayyorlanmoqda…"); await logoReady; var c = drawCard(n);
     if (app) { var r = app.saveImage(fname(n), c.toDataURL("image/png")); status(r === "ok" ? "✅ " + n + "-stol rasmi galereyaga saqlandi." : r === "perm" ? "Xotiraga yozish uchun ruxsat bering va qayta bosing." : "Saqlab bo'lmadi."); return; }
     var blob = await toBlob(c), f = new File([blob], fname(n), { type: "image/png" });
-    if (navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f] }); return; } catch (err) { if (err && err.name === "AbortError") return; } }
+    if (navigator.canShare && navigator.canShare({ files: [f] })) { status("Ochilgan oynada «Rasmni saqlash» ni tanlang."); try { await navigator.share({ files: [f] }); status("✅ Tayyor."); return; } catch (err) { if (err && err.name === "AbortError") { status(""); return; } } }
     download(blob, fname(n));
+    status("✅ " + fname(n) + " — «Yuklanmalar» (Downloads) papkasiga tushdi.");
   });
 })();
 </script>
