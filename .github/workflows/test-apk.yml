@@ -1,4 +1,4 @@
-name: Test APK install
+name: Test APK install (sdk35)
 on:
   workflow_dispatch:
   push:
