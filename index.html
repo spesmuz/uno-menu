@@ -269,7 +269,7 @@ input,select,textarea{font-family:inherit}
 .slide.center .media .vidwrap.show{opacity:1}
 .d-layer.has-vid img.big,.d-layer.has-vid img.big.cover{opacity:0;transition:none}
 .d-media video{transition:none}
-canvas.frost{position:absolute;inset:0;image-rendering:auto;width:100%;height:100%;z-index:2;pointer-events:none;opacity:0;transition:opacity .45s ease;border-radius:inherit}
+canvas.frost{position:absolute;inset:0;image-rendering:auto;width:100%;height:100%;z-index:2;pointer-events:none;will-change:opacity;transform:translateZ(0);opacity:0;transition:opacity .45s ease;border-radius:inherit}
 .d-layer canvas.frost{z-index:3}
 
 @keyframes dishIn{0%{opacity:0;transform:translateY(70px) scale(.12);filter:blur(8px) brightness(2)}55%{opacity:1;transform:translateY(-8px) scale(1.05);filter:blur(0) brightness(1.15)}100%{opacity:1;transform:none;filter:none}}
@@ -870,18 +870,21 @@ function drawVideo(v){ return function(x,W,H,r){
   x.drawImage(v,(vw-sw)/2,(vh-sh)/2,sw,sh,0,0,W,H);
 }; }
 function frostSwap(box, img, v, reveal){
+  /* one continuous move, no pause: sharp photo -> frosted photo -> frosted video -> sharp video */
   var a=frostShot(box, drawPhoto(img));
   if(!a){ reveal(); return; }
-  box.appendChild(a); a.offsetWidth; a.style.opacity="1";                 /* 1: the glass frosts over */
+  a.style.transition="opacity .3s cubic-bezier(.4,0,.6,1)";
+  box.appendChild(a); a.offsetWidth; a.style.opacity="1";
   setTimeout(function(){
-    reveal();                                                              /* photo off, video on — hidden under the glass */
+    reveal();                                                   /* photo off, video on: hidden under the glass */
     var b=frostShot(box, drawVideo(v));
-    if(b){ b.style.transition="opacity .3s ease"; box.appendChild(b); b.offsetWidth; b.style.opacity="1"; }
+    if(b){ b.style.transition="none"; b.style.opacity="1"; box.insertBefore(b, a); }
+    a.style.transition="opacity .32s linear"; a.style.opacity="0";        /* frosted photo melts into frosted video */
     setTimeout(function(){
       a.remove();
-      if(b){ b.style.transition="opacity .8s ease"; b.style.opacity="0"; setTimeout(function(){ b.remove(); },850); }  /* 3: video comes into focus */
-    }, b?300:0);
-  }, 460);
+      if(b){ b.style.transition="opacity .75s cubic-bezier(.25,.1,.25,1)"; b.style.opacity="0"; setTimeout(function(){ b.remove(); },800); }  /* video comes into focus */
+    }, 300);
+  }, 300);
 }
 var VIDEO_DELAY=2000, _vidT=null;
 function scheduleVideo(m, id){
