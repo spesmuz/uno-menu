@@ -94,6 +94,7 @@ input,select,textarea{font-family:inherit}
 .actions{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:0 4px;height:44px;flex:0 0 auto}
 .more-btn{height:44px;padding:0 16px;border-radius:22px;border:1px solid rgba(255,255,255,.16);background:#23252B;font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px}
 .more-btn:hover{border-color:rgba(232,176,75,.5)}
+.more-btn.kc{border-color:rgba(232,176,75,.45);white-space:nowrap}.more-btn.kc svg{color:var(--gold)}.more-btn.kc .kc-v{color:#fff}
 .media>button.sel.open{z-index:7;cursor:zoom-in}
 .langs{display:flex;gap:2px;padding:3px;border-radius:22px;background:#1A1C21;border:1px solid var(--line)}
 .langs.float{position:absolute;right:32px;bottom:17px;z-index:260;background:rgba(26,28,33,.92);box-shadow:0 8px 24px rgba(0,0,0,.45)}
@@ -740,7 +741,8 @@ function stepHTML(d){
   return '<div class="stepper"><button data-act="dec" data-id="'+esc(d.id)+'" aria-label="'+esc(t("dec"))+'">'+ICON.minus+'</button><span>'+q+'</span><button class="plus" data-act="inc" data-id="'+esc(d.id)+'" aria-label="'+esc(t("inc"))+'">'+ICON.plus+'</button></div>';
 }
 function actionsHTML(d){
-  return '<button class="more-btn" data-more="'+esc(d.id)+'">'+ICON.info+esc(t("more"))+'</button>'+stepHTML(d);
+  var lbl=d.kcal ? ICON.flame+'<span class="kc-v">'+(d.kcalEst?'≈ ':'')+num(d.kcal)+' '+esc(t("kcal"))+'</span>' : ICON.info+esc(t("more"));
+  return '<button class="more-btn'+(d.kcal?' kc':'')+'" data-more="'+esc(d.id)+'" aria-label="'+esc(dn(d))+' — '+esc(t("more"))+'">'+lbl+'</button>'+stepHTML(d);
 }
 function buildSlides(){
   curList = S.cat ? dishesOf(S.cat) : [];
@@ -903,7 +905,7 @@ function updateMedia(){
     if(m.dataset.k===want) return;
     m.dataset.k=want;
     m.classList.remove("has-vid");   /* new content: show the photo again until its video starts */
-    var cl='<span class="badge cat">'+esc(catL(d.cat))+'</span>'+(d.kcal?'<span class="badge kc">'+ICON.flame+(d.kcalEst?'≈ ':'')+num(d.kcal)+' '+esc(t("kcal"))+'</span>':'');
+    var cl='<span class="badge cat">'+esc(catL(d.cat))+'</span>';
     if(center){
       var open='<button class="sel open" data-more="'+esc(d.id)+'" aria-label="'+esc(dn(d))+' — '+esc(t("more"))+'"></button>';
       if(d.videoId){
