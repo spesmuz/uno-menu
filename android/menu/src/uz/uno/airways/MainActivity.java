@@ -198,7 +198,20 @@ public class MainActivity extends Activity {
     immersive();
     web = new WebView(this);
     web.setBackgroundColor(Color.parseColor("#0A0908"));
-    setContentView(web);
+    final android.widget.FrameLayout root = new android.widget.FrameLayout(this);
+    root.setBackgroundColor(Color.parseColor("#0A0908"));
+    root.addView(web, new android.widget.FrameLayout.LayoutParams(-1, -1));
+    setContentView(root);
+    /* Android 15+ draws apps edge-to-edge: keep the page clear of the keyboard */
+    if (Build.VERSION.SDK_INT >= 30) {
+      root.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+        public android.view.WindowInsets onApplyWindowInsets(View v, android.view.WindowInsets in) {
+          android.graphics.Insets i = in.getInsets(android.view.WindowInsets.Type.ime());
+          v.setPadding(i.left, i.top, i.right, i.bottom);
+          return android.view.WindowInsets.CONSUMED;
+        }
+      });
+    }
     WebSettings s = web.getSettings();
     s.setJavaScriptEnabled(true);
     s.setDomStorageEnabled(true);

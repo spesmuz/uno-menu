@@ -1,8 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="uz.uno.ofitsiant" android:versionCode="__VERSION__" android:versionName="1.__VERSION__">
-  <uses-sdk android:minSdkVersion="23" android:targetSdkVersion="32"/>
+  <uses-sdk android:minSdkVersion="23" android:targetSdkVersion="35"/>
   <uses-permission android:name="android.permission.INTERNET"/>
   <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
   <uses-permission android:name="android.permission.WAKE_LOCK"/>
   <uses-permission android:name="android.permission.VIBRATE"/>
   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
@@ -17,7 +18,9 @@
         <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>
     </activity>
-    <service android:name=".WatchService" android:exported="false"/>
+    <service android:name=".WatchService" android:exported="false" android:foregroundServiceType="specialUse">
+      <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="Restoran ofitsianti uchun mijoz chaqiruvlarini real vaqtda kutish va signal berish"/>
+    </service>
     <receiver android:name=".BootReceiver" android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.BOOT_COMPLETED"/>

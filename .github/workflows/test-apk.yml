@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        api: [26, 30, 34]
+        api: [30, 34, 35]
     steps:
       - name: KVM
         run: |
