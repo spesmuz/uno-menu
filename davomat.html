@@ -135,7 +135,7 @@ function hello(){
   var t0=Date.now();
   rpc("uno_att_hello",{p_token:token},8000).then(function(r){
     setNet(true);
-    if(!r||!r.ok){ block("Qurilma o'chirilgan","Admin bu telefonni davomat terminallari ro'yxatidan o'chirgan. Qayta yoqish uchun admin panelga kiring."); return; }
+    if(!r||!r.ok){ block("Terminal ulanmagan","Bu telefon davomat terminallari ro'yxatida topilmadi yoki o'chirilgan.<br><b>Admin panelga kirish</b> → «Xodimlar davomati» → «Sozlamalar va terminal» → <b>«Terminalni qayta ulash»</b>."); return; }
     $("msg").classList.remove("show");
     if(r.now){ var srv=new Date(r.now).getTime(), rtt=Date.now()-t0; offset=srv+rtt/2-Date.now(); if(Math.abs(offset)<1500) offset=0; try{ localStorage.setItem("uno_att_off",String(offset)); }catch(_){} }
     $("devName").textContent=r.name||"";
@@ -221,7 +221,7 @@ function submit(){
       busy=false;
       if(r&&r.err==="bad_pin") wrong("PIN-kod noto'g'ri");
       else if(r&&r.err==="too_many") wrong("Ko'p xato urinish. 5 daqiqadan keyin qayta urining");
-      else if(r&&r.err==="bad_device"){ block("Qurilma o'chirilgan","Admin bu telefonni davomat terminallari ro'yxatidan o'chirgan."); }
+      else if(r&&r.err==="bad_device"){ block("Terminal ulanmagan","Bu telefon davomat terminallari ro'yxatida topilmadi yoki o'chirilgan.<br><b>Admin panelga kirish</b> → «Xodimlar davomati» → «Sozlamalar va terminal» → <b>«Terminalni qayta ulash»</b>."); }
       else wrong("Xatolik. Qayta urining");
       return;
     }
