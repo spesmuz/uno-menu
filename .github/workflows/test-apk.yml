@@ -1,0 +1,44 @@
+name: Test APK install
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/test-apk.yml']
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [26, 30, 34]
+    steps:
+      - name: KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+      - uses: android-actions/setup-android@v3
+        with: { packages: 'platform-tools' }
+      - name: Inspect
+        run: |
+          curl -sL -o menu.apk https://github.com/${{ github.repository }}/releases/download/apk/UNO-Airways.apk
+          sdkmanager 'build-tools;35.0.0' >/dev/null
+          B=$ANDROID_HOME/build-tools/35.0.0
+          $B/apksigner verify -v menu.apk | tee v.txt
+          $B/aapt2 dump badging menu.apk | head -20 | tee b.txt
+          echo "::notice title=verify::$(tr '\n' ' ' < v.txt)"
+          echo "::notice title=badging::$(head -3 b.txt | tr '\n' ' ')"
+      - name: Emulator install
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          arch: x86_64
+          target: default
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: |
+            adb install -r menu.apk > out.txt 2>&1 || true; cat out.txt; echo "::notice title=install api${{ matrix.api }}::$(tr '\n' ' ' < out.txt)"
+            adb shell pm list packages | grep uno || true
+            adb shell am start -n uz.uno.airways/.MainActivity || true
+            sleep 8
+            adb logcat -d | grep -iE "uno|AndroidRuntime|FATAL" | tail -30 > log.txt || true; cat log.txt
+            echo "::notice title=run api${{ matrix.api }}::$(grep -iE 'FATAL|Exception' log.txt | head -3 | tr '\n' ' ') done"
