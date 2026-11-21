@@ -37,6 +37,7 @@
 </head>
 <body>
 <div class="bar">
+  <button id="back" type="button" class="alt" aria-label="Admin panelga qaytish">‹ Orqaga</button>
   <b>STOL QR-KODLARI</b>
   <label>dan <input id="from" type="number" min="1"></label>
   <label>gacha <input id="to" type="number" min="1"></label>
@@ -84,6 +85,12 @@
     location.search = "?from=" + a + "&to=" + b;
   };
   document.getElementById("print").onclick = function () { window.print(); };
+  /* back to the admin panel: close this tab if the panel opened it, otherwise go there */
+  document.getElementById("back").onclick = function () {
+    try { if (window.opener && !window.opener.closed) { window.close(); return; } } catch (_) {}
+    try { if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) { history.back(); return; } } catch (_) {}
+    location.href = "index.html#admin";
+  };
 
   /* ---------- each card as a PNG (300 dpi: 90 × 128 mm) ---------- */
   var MM = 600 / 25.4, W = Math.round(90 * MM), H = Math.round(128 * MM);
