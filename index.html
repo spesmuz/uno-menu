@@ -285,6 +285,22 @@ canvas.frost{position:absolute;inset:0;image-rendering:auto;width:100%;height:10
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
 #toastHost,#detailHost,#cartHost{display:contents}
+#zonePick{position:fixed;inset:0;z-index:9000;background:rgba(8,9,11,.97);display:none;align-items:center;justify-content:center;padding:24px;overflow:auto}
+#zonePick.show{display:flex}
+#zonePick .zp-box{width:min(100%,900px);display:flex;flex-direction:column;gap:18px;align-items:stretch}
+#zonePick h2{margin:0;font-family:Montserrat,sans-serif;font-size:clamp(20px,3.2vw,30px);font-weight:800;text-align:center;color:var(--text)}
+#zonePick .zp-prev{align-self:center;font-size:13px;font-weight:700;color:#17130A;background:var(--gold);padding:6px 14px;border-radius:10px}
+#zonePick .zp-grid{display:grid;gap:14px}
+#zonePick .zp-grid.zones{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+#zonePick .zp-grid.zones button{height:clamp(96px,16vh,140px);border-radius:22px;border:1px solid rgba(232,176,75,.45);background:linear-gradient(160deg,#22201a,#141518);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+#zonePick .zp-grid.zones b{font-family:Montserrat,sans-serif;font-size:clamp(20px,2.8vw,28px);letter-spacing:.12em;color:var(--gold2)}
+#zonePick .zp-grid.zones small{color:var(--muted);font-size:13px}
+#zonePick .zp-grid.tables{grid-template-columns:repeat(auto-fill,minmax(84px,1fr))}
+#zonePick .zp-grid.tables button{height:84px;border-radius:18px;border:1px solid var(--line);background:#1A1B20;font-size:28px;font-weight:800;color:var(--text)}
+#zonePick button:active{transform:scale(.97)}
+#zonePick .zp-head{display:flex;align-items:center;gap:14px;justify-content:center;flex-wrap:wrap}
+#zonePick .zp-back{height:46px;padding:0 18px;border-radius:14px;border:1px solid var(--line);background:#1A1B20;font-size:16px;font-weight:700;color:var(--text)}
+#zonePick .zp-skip{align-self:center;background:none;border:0;color:var(--muted);font-size:15px;text-decoration:underline;padding:10px}
 #results{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
 .rgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
 .rcard{height:290px;display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:22px;background:linear-gradient(180deg,#24262D,#1A1C21);border:1px solid rgba(255,255,255,.08)}
@@ -1217,8 +1233,71 @@ function qrTable(){
     if(Date.now()-Number(o.at||0) > TABLE_QR_HOURS*3600e3){ localStorage.removeItem(TABLE_QR_KEY); return ""; }
     return String(o.t).trim(); }catch(_){ return ""; }
 }
-function tableNo(){ var q=qrTable(); if(q) return q; try{ return (localStorage.getItem(TABLE_KEY)||"").trim(); }catch(_){ return ""; } }
+function tableNo(){ var q=qrTable(); if(q) return q; var pk=pickedTable(); if(pk) return pk; try{ return (localStorage.getItem(TABLE_KEY)||"").trim(); }catch(_){ return ""; } }
 function setTableNo(v){ try{ v=String(v||"").trim().slice(0,12); if(v){ localStorage.setItem(TABLE_KEY,v); localStorage.setItem("uno_table_src","admin"); } else { localStorage.removeItem(TABLE_KEY); localStorage.removeItem("uno_table_src"); } }catch(_){} refreshCallUI(); }
+/* ---------- waiter picks the zone and table every time the tablet is unlocked (switch: admin panel) ---------- */
+var ZONES_DEFAULT=[{id:"business",name:"BUSINESS",tables:"1-10"},{id:"comfort",name:"COMFORT",tables:"1-10"},{id:"family",name:"FAMILY",tables:"1-10"},{id:"conf",name:"CONFERENSIYA",tables:"1-5"},{id:"balkon",name:"BALKON",tables:"1-10"},{id:"vip",name:"VIP",tables:"1-6"}];
+var PICK_KEY="uno_table_pick";
+function zonesCfg(){ var z=S.settings&&S.settings.zones; return Array.isArray(z)&&z.length?z:ZONES_DEFAULT; }
+function zonePickOn(){ return !!(S.settings&&S.settings.zonePick); }
+function parseTables(spec){
+  var out=[], seen={}; String(spec||"").split(/[,\s]+/).forEach(function(p){
+    var m=p.match(/^(\d{1,4})(?:-(\d{1,4}))?$/); if(!m) return; var a=+m[1], b=m[2]?+m[2]:a; if(b<a){ var t=a; a=b; b=t; }
+    for(var i=a;i<=b && out.length<300;i++) if(!seen[i]){ seen[i]=1; out.push(i); }
+  }); return out;
+}
+function pickedTable(){
+  if(!zonePickOn()) return "";
+  try{ var o=JSON.parse(localStorage.getItem(PICK_KEY)||"null"); if(!o||!o.t) return "";
+    if(Date.now()-Number(o.at||0)>12*3600e3){ localStorage.removeItem(PICK_KEY); return ""; }
+    return (o.zone?o.zone+" ":"")+o.t; }catch(_){ return ""; }
+}
+var ZP={el:null, zone:null, preview:false};
+function zpCanRun(){ return zonePickOn() && !!window.UnoKiosk && !(typeof Att!=="undefined" && Att.isTerminal()) && S.view==="menu"; }
+function openZonePicker(preview){
+  if(!preview && !zpCanRun()) return;
+  ZP.preview=!!preview; ZP.zone=null;
+  if(!preview){ try{ localStorage.removeItem(PICK_KEY); }catch(_){} refreshCallUI(); }
+  if(!ZP.el){
+    ZP.el=document.createElement("div"); ZP.el.id="zonePick";
+    ZP.el.addEventListener("click",function(e){
+      var b=e.target.closest("[data-zp]"); if(!b) return; var a=b.dataset.zp;
+      if(a==="zone"){ ZP.zone=zonesCfg()[+b.dataset.i]||null; zpRender(); }
+      else if(a==="back"){ ZP.zone=null; zpRender(); }
+      else if(a==="skip"){ zpClose(); }
+      else if(a==="table"){
+        var z=ZP.zone, t=b.dataset.t;
+        if(!ZP.preview){ try{ localStorage.setItem(PICK_KEY, JSON.stringify({zone:z.name, t:t, at:Date.now()})); }catch(_){} refreshCallUI(); }
+        try{ toast((ZP.preview?"Sinov: ":"")+z.name+" · "+t+"-stol"); }catch(_){}
+        zpClose();
+      }
+    });
+    document.body.appendChild(ZP.el);
+  }
+  zpRender(); ZP.el.classList.add("show");
+}
+function zpClose(){ if(ZP.el) ZP.el.classList.remove("show"); }
+function zpRender(){
+  var h='<div class="zp-box">'+(ZP.preview?'<div class="zp-prev">Sinov ko\'rinishi: tanlov saqlanmaydi</div>':'');
+  if(!ZP.zone){
+    h+='<h2>Mijoz qaysi zonaga o\'tirdi?</h2><div class="zp-grid zones">'+zonesCfg().map(function(z,i){ return '<button data-zp="zone" data-i="'+i+'"><b>'+esc(z.name)+'</b><small>'+parseTables(z.tables).length+' ta stol</small></button>'; }).join("")+'</div>';
+  } else {
+    var ts=parseTables(ZP.zone.tables);
+    h+='<div class="zp-head"><button class="zp-back" data-zp="back">‹ Zonalar</button><h2>'+esc(ZP.zone.name)+': stol raqami</h2></div>'+
+      '<div class="zp-grid tables">'+(ts.length?ts.map(function(t){ return '<button data-zp="table" data-t="'+t+'">'+t+'</button>'; }).join(""):'<p class="help">Bu zonaga stol raqamlari kiritilmagan (admin panel).</p>')+'</div>';
+  }
+  h+='<button class="zp-skip" data-zp="skip">'+(ZP.preview?'Yopish':'O\'tkazib yuborish')+'</button></div>';
+  ZP.el.innerHTML=h;
+}
+/* unlock = the page becomes visible again after the screen was off */
+(function(){
+  var hiddenAt=0;
+  document.addEventListener("visibilitychange",function(){
+    if(document.hidden){ hiddenAt=Date.now(); return; }
+    if(hiddenAt && Date.now()-hiddenAt>1500) setTimeout(function(){ openZonePicker(false); },150);
+  });
+})();
+
 /* the visit ends on its own: hide the call buttons once the QR table expires */
 setInterval(function(){ try{ if(localStorage.getItem(TABLE_QR_KEY) && !qrTable()) refreshCallUI(); }catch(_){} }, 60000);
 S.calls={waiter:null,bill:null};
@@ -1568,7 +1647,13 @@ function renderAdmin(){
      '<a class="btn" id="qrLink" target="_blank" rel="noopener" href="'+esc(base)+'qr.html?from=1&amp;to=20">QR-kodlarni chop etish</a></div>'+
      '<p class="help" style="margin-top:6px">Har stol uchun QR-kod: mijoz o\'z telefoni bilan skanerlasa, menyu shu stol raqami bilan ochiladi. Chop etishni kompyuter yoki telefondan qiling.</p>'+
      '<div class="a-row" style="margin-top:16px"><a class="btn" target="_blank" rel="noopener" href="'+esc(base)+'ofitsiant.html">Ofitsiant ekranini ochish</a></div>'+
-     '<div id="tblMsg"></div></section>';
+     '<div id="tblMsg"></div>'+
+     '<h3 style="font-size:15px;margin:22px 0 6px">Planshet ochilganda zona va stol tanlash</h3>'+
+     '<p class="help">Yoqilsa: ofitsiant planshetni blokdan ochganda ekranda zonalar chiqadi, u zonani va mijoz o\'tirgan stol raqamini tanlaydi. Planshet keyingi safar blokdan ochilgunicha shu stolga bog\'lanadi. Faqat UNO ilovasidagi planshetlarda ishlaydi. <b style="color:var(--gold2)">Hozircha o\'chirilgan: ofitsiant va stol bosqichiga o\'tganda yoqiladi.</b></p>'+
+     '<label style="display:flex;gap:8px;align-items:center;margin:10px 0"><input type="checkbox" id="zpOn" '+(zonePickOn()?'checked':'')+(ro?' disabled':'')+'> Yoqilgan</label>'+
+     '<div style="display:flex;flex-direction:column;gap:8px" id="zpRows">'+zonesCfg().map(function(z,i){ return '<div class="a-row" style="gap:8px"><label class="fld" style="max-width:220px;min-width:150px"><span>Zona</span><input data-zn="'+i+'" maxlength="24" value="'+esc(z.name)+'"></label><label class="fld" style="min-width:180px"><span>Stol raqamlari (masalan: 1-10, 15)</span><input data-zt="'+i+'" maxlength="80" value="'+esc(z.tables||"")+'"></label>'+(ro?'':'<button class="btn sm danger" data-a="zpDel" data-id="'+i+'" style="margin-bottom:4px">O\'chirish</button>')+'</div>'; }).join("")+'</div>'+
+     (ro?'':'<div class="a-row" style="margin-top:10px"><button class="btn sm" data-a="zpAdd">'+ICON.plus+' Zona qo\'shish</button><button class="btn gold" data-a="zpSave">Saqlash</button><button class="btn" data-a="zpPreview">Sinov: qanday ko\'rinishini ko\'rish</button></div>')+
+     '<div id="zpMsg"></div></section>';
   // telegram bot
   if(!ro && S.sb){
     if(S.tg===undefined && sessionOK()){ S.tg=null; S.sb.rpc("uno_telegram_status").then(function(r){ S.tg=r.error?{err:r.error.message}:(r.data||{}); if(S.view==="admin") renderAdmin(); }); }
@@ -1665,7 +1750,7 @@ function errText(e){
 }
 async function saveSettings(patch){
   var next=Object.assign({}, S.settings, patch);
-  await S.db.doc("settings/main").set({name:next.name||"", cats:next.cats||[], logoId:next.logoId||"", soundOn:next.soundOn!==false, service:svcPct(next)});
+  await S.db.doc("settings/main").set({name:next.name||"", cats:next.cats||[], logoId:next.logoId||"", soundOn:next.soundOn!==false, service:svcPct(next), zones:Array.isArray(next.zones)?next.zones:[], zonePick:!!next.zonePick});
 }
 A.addEventListener("click", async function(e){
   var b=e.target.closest("[data-a]"); if(!b||b.disabled) return;
@@ -1715,6 +1800,15 @@ A.addEventListener("click", async function(e){
     else if(act==="trAll"){ trAll(); }
     else if(act==="aiAllStop"){ S.aiAllStop=true; }
     else if(act==="syncMedia"){ Offline.last=0; syncMedia(); }
+    else if(act==="zpPreview"){ openZonePicker(true); }
+    else if(act==="zpAdd"||act==="zpDel"||act==="zpSave"){
+      var zs=[]; document.querySelectorAll("#zpRows [data-zn]").forEach(function(inp){ var i=inp.dataset.zn; zs.push({id:"z"+i, name:inp.value.trim().toUpperCase(), tables:(document.querySelector('#zpRows [data-zt="'+i+'"]')||{}).value||""}); });
+      if(act==="zpAdd") zs.push({id:"z"+zs.length, name:"YANGI ZONA", tables:"1-5"});
+      if(act==="zpDel") zs.splice(+id,1);
+      zs=zs.filter(function(z){ return z.name; }).map(function(z,i){ return {id:"z"+i, name:z.name.slice(0,24), tables:String(z.tables).slice(0,80)}; });
+      var on=$("zpOn")&&$("zpOn").checked;
+      try{ await saveSettings({zones:zs, zonePick:on}); msg($("zpMsg"), act==="zpSave"?("Saqlandi. Zona tanlash: "+(on?"yoqilgan":"o'chirilgan")+"."):"", "ok"); }catch(err){ msg($("zpMsg"),errText(err),"err"); }
+    }
     else if(act==="saveTable"){ setTableNo($("setTable").value); msg($("tblMsg"), tableNo()?("Bu planshet: "+tableNo()+"-stol."):"Stol raqami olib tashlandi.","ok"); }
     else if(act==="saveSvc"){ var v=Math.round(Number($("setSvc").value)); if(!isFinite(v)||v<0||v>50){ msg($("tblMsg"),"0 dan 50 gacha son kiriting.","err"); return; } try{ await saveSettings({service:v}); msg($("tblMsg"),"Xizmat haqi: "+v+"%.","ok"); }catch(err){ msg($("tblMsg"),errText(err),"err"); } }
     else if(act==="tgFind"){
@@ -2633,14 +2727,14 @@ async function init(){
   if(!S.db){
     var cc=null; try{ cc=JSON.parse(localStorage.getItem(CACHE_KEY)||"null"); }catch(_){}
     clearTimeout(timer);
-    if(cc){ var sm=cc["settings/main"]||{}; S.settings={name:sm.name||"",logoId:String(sm.logoId||""),soundOn:sm.soundOn!==false,service:sm.service,cats:Array.isArray(sm.cats)?sm.cats:[]};
+    if(cc){ var sm=cc["settings/main"]||{}; S.settings={name:sm.name||"",logoId:String(sm.logoId||""),soundOn:sm.soundOn!==false,service:sm.service,cats:Array.isArray(sm.cats)?sm.cats:[],zones:Array.isArray(sm.zones)?sm.zones:[],zonePick:!!sm.zonePick};
       S.dishes=Object.keys(cc).filter(function(k){return k.indexOf("dishes/")===0;}).map(function(k){ var d=cc[k]||{}; var o={id:k.slice(7),name:String(d.name||""),desc:String(d.desc||""),price:Number(d.price)||0,cat:String(d.cat||""),order:Number(d.order)||0,imgId:String(d.imgId||""),videoId:String(d.videoId||""),weight:String(d.weight||""),time:Number(d.time)||0,kcal:Number(d.kcal)||0,prot:Number(d.prot)||0,fat:Number(d.fat)||0,carb:Number(d.carb)||0,kcalEst:!!d.kcalEst}; ["ingr","name_ru","desc_ru","ingr_ru","name_en","desc_en","ingr_en"].forEach(function(x){ o[x]=String(d[x]||""); }); return o; });
       S.loadedSettings=true; }
     else note.textContent="Menyu ma'lumotlarini olib bo'lmadi. Internetni tekshiring.";
     S.loadedDishes=true; onData(); if(!cc) setTimeout(function(){ location.reload(); },30000); return;
   }
   S.db.doc("settings/main").onSnapshot(function(snap){
-    var d=snap.exists?snap.data():{}; S.settings={name:(d&&d.name)||"", logoId:String((d&&d.logoId)||""), soundOn:!(d&&d.soundOn===false), service:d&&d.service, cats:Array.isArray(d&&d.cats)?d.cats.filter(function(c){return c&&c.id&&c.label;}):[]};
+    var d=snap.exists?snap.data():{}; S.settings={name:(d&&d.name)||"", logoId:String((d&&d.logoId)||""), soundOn:!(d&&d.soundOn===false), service:d&&d.service, cats:Array.isArray(d&&d.cats)?d.cats.filter(function(c){return c&&c.id&&c.label;}):[], zones:Array.isArray(d&&d.zones)?d.zones:[], zonePick:!!(d&&d.zonePick)};
     S.loadedSettings=true; onData();
   });
   S.db.collection("dishes").onSnapshot(function(snap){
