@@ -8,7 +8,7 @@ struct MenuView: View {
     var body: some View {
         ZStack {
             Config.bg.ignoresSafeArea()
-            WebView(model: model).ignoresSafeArea(.container, edges: .top)
+            WebView(model: model)   /* below the status bar, so the menu header never sits under the clock */
             if model.loading && !model.failed {
                 VStack(spacing: 18) {
                     Image("Logo").resizable().scaledToFit().frame(width: 140, height: 140)

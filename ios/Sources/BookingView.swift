@@ -72,12 +72,16 @@ struct BookingView: View {
     struct AlertInfo: Identifiable { let id = UUID(); let title: String; let text: String; let ok: Bool }
 
     static func defaultDate() -> Date {
-        /* next round half hour, at least one hour from now, during the evening if it's morning */
-        var d = Date().addingTimeInterval(3600)
+        /* next round half hour, at least one hour from now */
         let cal = Calendar.current
-        let m = cal.component(.minute, from: d)
-        d = cal.date(byAdding: .minute, value: m == 0 || m == 30 ? 0 : (m < 30 ? 30 - m : 60 - m), to: d) ?? d
-        return cal.date(bySetting: .second, value: 0, of: d) ?? d
+        let d = Date().addingTimeInterval(3600)
+        var c = cal.dateComponents([.year, .month, .day, .hour, .minute], from: d)
+        let m = c.minute ?? 0
+        c.minute = m == 0 ? 0 : (m <= 30 ? 30 : 0)
+        c.second = 0
+        var r = cal.date(from: c) ?? d
+        if m > 30 { r = r.addingTimeInterval(3600) }
+        return r
     }
 
     var body: some View {

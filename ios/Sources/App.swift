@@ -29,16 +29,6 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         if #available(iOS 15.0, *) { UITabBar.appearance().scrollEdgeAppearance = tab }
         UITabBar.appearance().tintColor = Config.uiGold
         UITabBar.appearance().unselectedItemTintColor = UIColor.white.withAlphaComponent(0.55)
-        let nav = UINavigationBarAppearance()
-        nav.configureWithOpaqueBackground()
-        nav.backgroundColor = Config.uiBg
-        nav.shadowColor = .clear
-        nav.titleTextAttributes = [.foregroundColor: UIColor.white]
-        nav.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
-        UINavigationBar.appearance().standardAppearance = nav
-        UINavigationBar.appearance().scrollEdgeAppearance = nav
-        UINavigationBar.appearance().compactAppearance = nav
-        UINavigationBar.appearance().tintColor = Config.uiGold
         return true
     }
     /* show the booking reminder even while the app is open */
