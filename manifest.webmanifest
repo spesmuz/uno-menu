@@ -39,5 +39,11 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://spesmuz.github.io/uno-menu/manifest.webmanifest"
+    }
   ]
 }

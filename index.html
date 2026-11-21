@@ -1403,14 +1403,20 @@ function setTableNo(v){ try{ v=String(v||"").trim().slice(0,12); if(v){ localSto
   function skip(){
     if(standalone || window.UnoKiosk) return true;                          /* already an app / restaurant tablet */
     try{ if(localStorage.getItem("uno_device_mode")==="att") return true;
-         /* "Later" waits a day; a fresh QR scan (a new visit) asks again after 2 hours */
-         var t=Number(localStorage.getItem(KEY)||0), wait=window.__fromQR ? 2*3600e3 : 864e5;
-         if(/[?&]install=1/.test(location.search)) return false;
+         /* every QR scan offers the app again (unless it is installed); otherwise "Later" waits a day */
+         if(window.__fromQR || /[?&]install=1/.test(location.search)) return false;
+         var t=Number(localStorage.getItem(KEY)||0), wait=864e5;
          if(t && Date.now()-t < wait) return true; }catch(_){}
     return false;
   }
   function show(){
     if(bar || skip() || S.view!=="menu") return;
+    /* Android can tell whether our app is already installed */
+    if(navigator.getInstalledRelatedApps && !show._checked){
+      show._checked=true;
+      navigator.getInstalledRelatedApps().then(function(l){ if(!(l&&l.length)) show(); },function(){ show(); });
+      return;
+    }
     if(!deferred && !iosAny) return;                                         /* browser cannot install: say nothing */
     bar=document.createElement("div"); bar.id="instBar"; bar.setAttribute("role","dialog");
     bar.innerHTML='<img src="icons/menu-192.png" alt=""><div class="tx"><b>'+esc(t("instTitle"))+'</b><small>'+esc(t("instText"))+'</small>'+
