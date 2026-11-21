@@ -889,15 +889,46 @@ function playWhenReady(v, ok, onShown){
   /* the video is invisible until revealed, so it can start at once: iOS loads a video only after play() */
   if(!ok()) return;
   if(onShown) onFirstFrame(v, function(){ if(ok()) onShown(); });
-  var tries=0;
+  var tries=0; v._want=true;
   (function kick(){
     if(!ok() || !v.isConnected) return;
     var pr=v.play();
-    if(pr&&pr.catch) pr.catch(function(){ if(++tries<4) setTimeout(kick, 400); });
+    if(pr&&pr.catch) pr.catch(function(){
+      if(++tries<4) setTimeout(kick, 400);
+      else { var again=function(){ document.removeEventListener("touchstart",again,true); document.removeEventListener("pointerdown",again,true); tries=0; kick(); };
+             document.addEventListener("touchstart",again,true); document.addEventListener("pointerdown",again,true); }
+    });
   })();
 }
+/* One reusable player for the carousel and one for the detail view.
+   iOS lets a video element play without a touch only after that element has once played during a touch;
+   new elements would need a new touch every time, so the same two elements are reused for every dish. */
+var TINY_MP4="data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAMNbW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAA+gAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAjd0cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAA+gAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAABAAAAAQAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAPoAAAAAAABAAAAAAGvbWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAABAAAAAQABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAABWm1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAARpzdGJsAAAAtnN0c2QAAAAAAAAAAQAAAKZhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAABAAEABIAAAASAAAAAAAAAABFUxhdmM2MC4zMS4xMDIgbGlieDI2NAAAAAAAAAAAAAAAGP//AAAALGF2Y0MBQsAK/+EAFWdCwAraewEQAAADABAAAAMAIPEiagEABGjOD8gAAAAQcGFzcAAAAAEAAAABAAAAFGJ0cnQAAAAAAAAUGAAAFBgAAAAYc3R0cwAAAAAAAAABAAAAAQAAQAAAAAAcc3RzYwAAAAAAAAABAAAAAQAAAAEAAAABAAAAFHN0c3oAAAAAAAACgwAAAAEAAAAUc3RjbwAAAAAAAAABAAADPQAAAGJ1ZHRhAAAAWm1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNjAuMTYuMTAwAAAACGZyZWUAAAKLbWRhdAAAAm0GBf//adxF6b3m2Ui3lizYINkj7u94MjY0IC0gY29yZSAxNjQgcjMxMDggMzFlMTlmOSAtIEguMjY0L01QRUctNCBBVkMgY29kZWMgLSBDb3B5bGVmdCAyMDAzLTIwMjMgLSBodHRwOi8vd3d3LnZpZGVvbGFuLm9yZy94MjY0Lmh0bWwgLSBvcHRpb25zOiBjYWJhYz0wIHJlZj0xIGRlYmxvY2s9MTowOjAgYW5hbHlzZT0weDE6MHgxIG1lPWhleCBzdWJtZT0yIHBzeT0xIHBzeV9yZD0xLjAwOjAuMDAgbWl4ZWRfcmVmPTAgbWVfcmFuZ2U9MTYgY2hyb21hX21lPTEgdHJlbGxpcz0wIDh4OGRjdD0wIGNxbT0wIGRlYWR6b25lPTIxLDExIGZhc3RfcHNraXA9MSBjaHJvbWFfcXBfb2Zmc2V0PTAgdGhyZWFkcz0xIGxvb2thaGVhZF90aHJlYWRzPTEgc2xpY2VkX3RocmVhZHM9MCBucj0wIGRlY2ltYXRlPTEgaW50ZXJsYWNlZD0wIGJsdXJheV9jb21wYXQ9MCBjb25zdHJhaW5lZF9pbnRyYT0wIGJmcmFtZXM9MCB3ZWlnaHRwPTAga2V5aW50PTI1MCBrZXlpbnRfbWluPTEgc2NlbmVjdXQ9NDAgaW50cmFfcmVmcmVzaD0wIHJjX2xvb2thaGVhZD0xMCByYz1jcmYgbWJ0cmVlPTEgY3JmPTIzLjAgcWNvbXA9MC42MCBxcG1pbj0wIHFwbWF4PTY5IHFwc3RlcD00IGlwX3JhdGlvPTEuNDAgYXE9MToxLjAwAIAAAAAOZYiEBX///w9FAAFC34A=";
+var VPOOL={car:null, det:null};
+function pooledVideo(kind){
+  var v=VPOOL[kind]; if(v) return v;
+  v=document.createElement("video"); v.muted=true; v.defaultMuted=true; v.loop=true; v.playsInline=true; v.preload="auto";
+  ["muted","loop","playsinline","webkit-playsinline","disablepictureinpicture"].forEach(function(a){ v.setAttribute(a,""); });
+  VPOOL[kind]=v; return v;
+}
+function loadPooled(v, url){ v.pause(); v._want=false; if(v.getAttribute("src")!==url){ v.src=url; try{ v.load(); }catch(_){} } else { try{ v.currentTime=0; }catch(_){} } }
+function parkPooled(v){ try{ v.pause(); v._want=false; }catch(_){} if(v.parentNode) v.parentNode.removeChild(v); }
+(function(){
+  function bless(){
+    ["car","det"].forEach(function(k){
+      var v=pooledVideo(k); if(v._blessed) return;
+      var had=v.getAttribute("src"), want=v._want;
+      if(!had){ v.src=TINY_MP4; }
+      v.muted=true;
+      var pr; try{ pr=v.play(); }catch(_){}
+      var done=function(){ v._blessed=true; if(!had){ v.pause(); v.removeAttribute("src"); try{ v.load(); }catch(_){} } else if(!v._want && !want){ v.pause(); try{ v.currentTime=0; }catch(_){} } };
+      if(pr&&pr.then) pr.then(done,function(){}); else done();
+    });
+  }
+  ["touchstart","pointerdown","keydown"].forEach(function(ev){ document.addEventListener(ev,bless,{capture:true,passive:true}); });
+})();
 /* free a video completely: iOS allows only a few live players, discarded ones must let go of their source */
-function releaseVideo(v){ try{ v.pause(); v.removeAttribute("src"); v.removeAttribute("poster"); v.load(); }catch(_){} }
+function releaseVideo(v){ if(v===VPOOL.car||v===VPOOL.det){ parkPooled(v); return; } try{ v.pause(); v.removeAttribute("src"); v.removeAttribute("poster"); v.load(); }catch(_){} }
 /* frosted cross-fade from the photo to the playing video.
    Blurred looks come from tiny snapshots scaled up (no live CSS blur), so only opacity is animated. */
 function frostShot(box, draw){
@@ -998,7 +1029,9 @@ function updateMedia(){
     if(center){
       var open='<button class="sel open" data-more="'+esc(d.id)+'" aria-label="'+esc(dn(d))+' — '+esc(t("more"))+'"></button>';
       if(d.videoId){
-        m.innerHTML=photoHTML(d)+'<div class="vidwrap"><video muted loop playsinline preload="auto" disablepictureinpicture'+(d.imgId?' poster="'+blob(d.imgId)+'"':'')+' src="'+blob(d.videoId)+'" aria-label="'+esc(dn(d))+' '+esc(t("video"))+'"></video></div><span class="badge vid"><i></i>VIDEO</span>'+cl+open;
+        m.innerHTML=photoHTML(d)+'<div class="vidwrap"></div><span class="badge vid"><i></i>VIDEO</span>'+cl+open;
+        var pv=pooledVideo("car"); parkPooled(pv); loadPooled(pv, blob(d.videoId)); pv.setAttribute("aria-label", dn(d)+" "+t("video"));
+        m.querySelector(".vidwrap").appendChild(pv);
         scheduleVideo(m, d.id);
       } else {
         m.innerHTML=photoHTML(d)+cl+open;
@@ -1120,7 +1153,7 @@ function detailStep(dir){
 }
 function detailMediaHTML(d){
   var pic = d.imgId ? '<div class="d-glow"></div><img class="big" data-fit alt="'+esc(dn(d))+'" src="'+blob(d.imgId)+'">' : '<div class="d-glow"></div><span class="plate" style="transform:scale(1.6)"><i></i></span>';
-  if(d.videoId) pic+='<video class="dvid" src="'+blob(d.videoId)+'" loop playsinline muted preload="auto" disablepictureinpicture aria-label="'+esc(dn(d))+' '+esc(t("video"))+'"></video><button class="d-sound" data-d="sound" aria-pressed="false">'+ICON.sound+'<span>'+esc(t("sound"))+'</span></button>';
+  if(d.videoId) pic+='<i class="dvid-slot" hidden></i><button class="d-sound" data-d="sound" aria-pressed="false">'+ICON.sound+'<span>'+esc(t("sound"))+'</span></button>';
   return pic;
 }
 function detailInfoHTML(d){
@@ -1138,6 +1171,11 @@ function detailInfoHTML(d){
 }
 function setupLayer(layer, d){
   layer.querySelectorAll("img[data-fit]").forEach(fitImg);
+  var slot=layer.querySelector(".dvid-slot");
+  if(slot && d.videoId){
+    var pv=pooledVideo("det"); parkPooled(pv); pv.className="dvid"; pv.muted=true; loadPooled(pv, blob(d.videoId)); pv.setAttribute("aria-label", dn(d)+" "+t("video"));
+    slot.parentNode.replaceChild(pv, slot);
+  }
   var v=layer.querySelector("video"); if(!v) return;
   v.muted=true; var id=d.id;
   var t0=Date.now();
