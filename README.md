@@ -82,3 +82,9 @@ Restoran planshetlari uchun menyu va admin panel. Bitta APK ichida ishlaydi.
 - Bron uchun Supabase'da bir marta `bookings.sql` ni ishga tushiring.
 - App Store'ga yuklash uchun repo Secrets: `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8`, `APPLE_TEAM_ID`.
 - Maxfiylik siyosati: `privacy.html`.
+
+## Taom baholari va izohlar
+- Mijoz taom kartasidan "Batafsil" oynasida 1–5 yulduz qo'yadi, ixtiyoriy ism va izoh yozadi (bitta telefon — bitta taomga bitta baho, keyin o'zgartirsa bo'ladi).
+- O'rtacha baho kartada va batafsil oynada hammaga ko'rinadi. Yangi izoh va past baholar Telegram guruhga keladi.
+- Admin panel → "Baholar": reyting, filtrlar, izohni yashirish yoki o'chirish.
+- Supabase'da bir marta `reviews.sql` ni ishga tushiring.

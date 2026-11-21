@@ -87,6 +87,33 @@ input,select,textarea{font-family:inherit}
 .badge.kc{top:auto;bottom:14px;left:14px;color:var(--text);text-transform:none;letter-spacing:.02em}
 .badge.kc svg{color:var(--gold)}.badge.vid{right:14px;color:var(--text)}
 .badge.vid i{width:7px;height:7px;border-radius:4px;background:#E5484D}
+.badge.rt{top:auto;bottom:14px;left:14px;color:var(--text);text-transform:none;letter-spacing:.02em;pointer-events:none;gap:5px}
+.badge.rt svg{color:var(--gold);width:13px;height:13px}.badge.rt small{color:var(--muted);font-weight:600;font-size:11px}
+.stars{position:relative;display:inline-block;line-height:1;letter-spacing:2px;font-size:17px;white-space:nowrap}
+.stars .s-bg{color:rgba(255,255,255,.16)}.stars .s-fg{position:absolute;left:0;top:0;overflow:hidden;color:var(--gold)}
+.stars.sm{font-size:12px;letter-spacing:1px}
+.d-rev{border-top:1px solid var(--line);margin-top:4px;padding-top:16px;display:flex;flex-direction:column;gap:12px}
+.rv-cap{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-weight:800}
+.rv-sum{display:flex;align-items:center;gap:10px;margin-top:6px}.rv-sum b{font-size:30px;font-weight:800;line-height:1}.rv-sum span{color:var(--muted);font-size:13px}
+.rv-none{margin:6px 0 0;color:var(--muted);font-size:14px;line-height:1.4}
+.rv-my{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.rv-pick{display:flex;gap:6px}
+.rv-pick button{width:42px;height:42px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:rgba(255,255,255,.22);display:grid;place-items:center;cursor:pointer;padding:0;transition:transform .15s,color .2s,background .2s,border-color .2s}
+.rv-pick button.on{color:var(--gold);border-color:rgba(232,176,75,.55);background:rgba(232,176,75,.12)}
+.rv-pick button:active{transform:scale(.86)}.rv-pick svg{width:22px;height:22px}
+.rv-form{display:flex;flex-direction:column;gap:8px;animation:fadeUp .35s both}
+.rv-form input,.rv-form textarea{width:100%;box-sizing:border-box;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:13px;color:var(--text);font:inherit;font-size:16px;padding:11px 13px;resize:none;outline:0}
+.rv-form input:focus,.rv-form textarea:focus{border-color:rgba(232,176,75,.6)}
+.rv-send{align-self:flex-end;height:44px;padding:0 22px;border-radius:22px;border:0;background:var(--gold);color:#17130A;font-size:14px;font-weight:800;cursor:pointer}
+.rv-send:disabled{opacity:.55}
+.rv-msg{font-size:13px;color:var(--gold2);line-height:1.4}.rv-msg:empty{display:none}.rv-msg.err{color:#ff8f8f}
+.rv-list{display:flex;flex-direction:column;gap:8px}
+.rv-item{padding:11px 13px;border-radius:15px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.rv-item.mine{border-color:rgba(232,176,75,.35)}
+.rv-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.rv-top b{font-size:14px}.rv-top time{margin-left:auto;font-size:12px;color:var(--muted)}
+.rv-item p{margin:6px 0 0;font-size:14px;line-height:1.45;opacity:.9;white-space:pre-wrap;word-break:break-word}
+.rv-more{align-self:center;height:38px;padding:0 18px;border-radius:19px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:13px;font-weight:700;cursor:pointer}
+.rv-load{color:var(--muted);font-size:13px;margin:0}
 .info{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:0 6px;height:34px;flex:0 0 auto}
 .info h2{margin:0;font-family:Montserrat;font-size:22px;font-weight:800;text-transform:uppercase;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block!important;min-width:0}
 .info .price{flex:0 0 auto;font-size:20px;font-weight:800;color:var(--gold)}
@@ -729,9 +756,9 @@ var SFX=(function(){
 
 /* ---------- i18n ---------- */
 var T={
-uz:{instTitle:"UNO menyusini telefoningizga qo'shing",instText:"Keyingi safar bir bosishda ochiladi, internetsiz ham ishlaydi.",instBtn:"O'rnatish",instLater:"Keyinroq",instIos1:"«Ulashish» tugmasini bosing (yoki ••• menyusida)",instCr1:"Manzil qatoridagi «Ulashish» belgisini bosing (yoki ••• → Ulashish)",instIos2:"«Bosh ekranga qo'shish» ni tanlang",instDone:"Tushunarli",instApk:"Yuklab olish",instApkT:"UNO ilovasini telefoningizga o'rnating",instApkH:"Yuklangach faylni oching va «O'rnatish» ni bosing. Ogohlantirish chiqsa — «Baribir o'rnatish».",instIosT:"UNO ilovasini qo'shing",instIos3:"",instS1:"Shu yerni bosing",instS1b:"Ulashish oynasi ochiladi",instS2b:"Ro'yxatda yo'q bo'lsa: avval «Safari'da ochish» ni bosing",instS2:"Bosh ekranga qo'shish",instOk:"Ilova o'rnatildi",askWaiter:"Tanlagan taomlaringizni ofitsiantga ayting",subtotal:"Taomlar",service:"Xizmat haqi",askBill:"Hisobni so'rash",waiterSent:"Ofitsiant chaqirildi",billSent:"Hisob so'raldi, ofitsiant olib keladi",waiterComing:"Ofitsiant kelmoqda",waitPlease:"Ofitsiant allaqachon chaqirilgan, biroz kuting",sendFail:"Yuborilmadi. Internetni tekshirib, qayta urinib ko'ring",tableL:"stol",search:"Taom qidirish",searchPh:"Taom nomi yoki tarkibi…",add:"Savatchaga qo'shish",more:"Batafsil",items:"ta taom",loading:"Menyu yuklanmoqda…",empty:"Menyu hali bo'sh.",results:"Qidiruv natijalari",none:"Hech narsa topilmadi.",order:"Buyurtmangiz",cartEmpty:"Savatcha bo'sh. Menyudan taom tanlang.",note:"Oshpazga izoh (ixtiyoriy)",notePh:"Masalan: achchiq bo'lmasin",total:"Jami",place:"Buyurtma berish",accepted:"Buyurtma qabul qilindi",preparing:"Taomlaringiz tayyorlanmoqda. Yoqimli ishtaha!",back:"Menyuga qaytish",waiter:"Ofitsiant chaqirildi, tez orada keladi",ingr:"Tarkibi",weight:"Og'irligi",time:"Tayyorlanish vaqti",min:"daq",sound:"Ovoz",close:"Yopish",prev:"Oldingi taom",next:"Keyingi taom",cur:"so'm",cart:"Savatchani ochish",waiterBtn:"Ofitsiantni chaqirish",dec:"Kamaytirish",inc:"Ko'paytirish",restaurant:"Restoran",clearAll:"Hammasini o'chirish",clearQ:"Hammasi o'chirilsinmi?",yes:"Ha",no:"Yo'q",kcal:"kkal",approx:"taxminan",cal:"Kaloriya",prot:"Oqsil",fat:"Yog'",carb:"Uglevod",g:"g",totalKcal:"Jami kaloriya",partKcal:"ba'zi taomlarda ma'lumot yo'q",toCenter:"markazga olib kelish",video:"videosi",cats:"Kategoriyalar",lang:"Til"},
-ru:{instTitle:"Добавьте меню UNO на телефон",instText:"В следующий раз откроется одним касанием и работает без интернета.",instBtn:"Установить",instLater:"Позже",instIos1:"Нажмите «Поделиться» (или в меню •••)",instCr1:"Нажмите значок «Поделиться» в адресной строке (или ••• → Поделиться)",instIos2:"Выберите «На экран «Домой»»",instDone:"Понятно",instApk:"Скачать",instApkT:"Установите приложение UNO",instApkH:"Откройте скачанный файл и нажмите «Установить». Если появится предупреждение — «Всё равно установить».",instIosT:"Добавьте приложение UNO",instIos3:"",instS1:"Нажмите здесь",instS1b:"Откроется «Поделиться»",instS2b:"Нет в списке? Сначала нажмите «Открыть в Safari»",instS2:"На экран «Домой»",instOk:"Приложение установлено",askWaiter:"Назовите выбранные блюда официанту",subtotal:"Блюда",service:"Обслуживание",askBill:"Попросить счёт",waiterSent:"Официант вызван",billSent:"Счёт запрошен, официант принесёт",waiterComing:"Официант идёт",waitPlease:"Официант уже вызван, немного подождите",sendFail:"Не отправлено. Проверьте интернет и попробуйте снова",tableL:"стол",search:"Поиск блюда",searchPh:"Название или состав…",add:"В корзину",more:"Подробнее",items:"блюд",loading:"Меню загружается…",empty:"Меню пока пусто.",results:"Результаты поиска",none:"Ничего не найдено.",order:"Ваш заказ",cartEmpty:"Корзина пуста. Выберите блюдо в меню.",note:"Комментарий для повара (необязательно)",notePh:"Например: не острое",total:"Итого",place:"Оформить заказ",accepted:"Заказ принят",preparing:"Ваши блюда готовятся. Приятного аппетита!",back:"Вернуться в меню",waiter:"Официант вызван и скоро подойдёт",ingr:"Состав",weight:"Вес",time:"Время приготовления",min:"мин",sound:"Звук",close:"Закрыть",prev:"Предыдущее блюдо",next:"Следующее блюдо",cur:"сум",cart:"Открыть корзину",waiterBtn:"Вызвать официанта",dec:"Уменьшить",inc:"Увеличить",restaurant:"Ресторан",clearAll:"Очистить всё",clearQ:"Удалить всё?",yes:"Да",no:"Нет",kcal:"ккал",approx:"примерно",cal:"Калорийность",prot:"Белки",fat:"Жиры",carb:"Углеводы",g:"г",totalKcal:"Всего калорий",partKcal:"не для всех блюд есть данные",toCenter:"показать в центре",video:"видео",cats:"Категории",lang:"Язык"},
-en:{instTitle:"Add the UNO menu to your phone",instText:"Next time it opens with one tap and works offline.",instBtn:"Install",instLater:"Later",instIos1:"Tap Share (or find it in the ••• menu)",instCr1:"Tap the Share icon in the address bar (or ••• → Share)",instIos2:"Choose “Add to Home Screen”",instDone:"Got it",instApk:"Download",instApkT:"Install the UNO app",instApkH:"Open the downloaded file and tap “Install”. If a warning appears, choose “Install anyway”.",instIosT:"Add the UNO app",instIos3:"",instS1:"Tap here",instS1b:"The Share sheet opens",instS2b:"Not in the list? Tap “Open in Safari” first",instS2:"Add to Home Screen",instOk:"App installed",askWaiter:"Tell your waiter the dishes you have chosen",subtotal:"Dishes",service:"Service charge",askBill:"Ask for the bill",waiterSent:"Waiter called",billSent:"Bill requested, the waiter will bring it",waiterComing:"The waiter is on the way",waitPlease:"The waiter has already been called, please wait",sendFail:"Not sent. Check the internet and try again",tableL:"table",search:"Search dishes",searchPh:"Dish name or ingredients…",add:"Add to order",more:"Details",items:"items",loading:"Loading menu…",empty:"The menu is empty for now.",results:"Search results",none:"Nothing found.",order:"Your order",cartEmpty:"Your order is empty. Pick a dish from the menu.",note:"Note for the chef (optional)",notePh:"For example: not spicy",total:"Total",place:"Place order",accepted:"Order received",preparing:"Your dishes are being prepared. Enjoy your meal!",back:"Back to menu",waiter:"A waiter is on the way",ingr:"Ingredients",weight:"Weight",time:"Cooking time",min:"min",sound:"Sound",close:"Close",prev:"Previous dish",next:"Next dish",cur:"UZS",cart:"Open order",waiterBtn:"Call a waiter",dec:"Decrease",inc:"Increase",restaurant:"Restaurant",clearAll:"Clear all",clearQ:"Remove everything?",yes:"Yes",no:"No",kcal:"kcal",approx:"approx.",cal:"Calories",prot:"Protein",fat:"Fat",carb:"Carbs",g:"g",totalKcal:"Total calories",partKcal:"some dishes have no data",toCenter:"bring to centre",video:"video",cats:"Categories",lang:"Language"}
+uz:{rvTitle:"Baholar va fikrlar",rvCount:"ta baho",rvNone:"Hali baho yo'q. Birinchi bo'lib baholang!",rvRate:"Taomni baholang",rvMine:"Sizning bahoingiz",rvName:"Ismingiz (ixtiyoriy)",rvText:"Taom haqida fikringiz (ixtiyoriy)",rvSend:"Yuborish",rvUpd:"Yangilash",rvThanks:"Rahmat! Bahoingiz qabul qilindi.",rvGuest:"Mehmon",rvMore:"Yana ko'rsatish",rvMany:"Juda ko'p urinish. Birozdan keyin qayta urinib ko'ring.",rvOffline:"Baholash uchun internet kerak.",rvLoading:"Fikrlar yuklanmoqda…",rvStarsL:"yulduz",instTitle:"UNO menyusini telefoningizga qo'shing",instText:"Keyingi safar bir bosishda ochiladi, internetsiz ham ishlaydi.",instBtn:"O'rnatish",instLater:"Keyinroq",instIos1:"«Ulashish» tugmasini bosing (yoki ••• menyusida)",instCr1:"Manzil qatoridagi «Ulashish» belgisini bosing (yoki ••• → Ulashish)",instIos2:"«Bosh ekranga qo'shish» ni tanlang",instDone:"Tushunarli",instApk:"Yuklab olish",instApkT:"UNO ilovasini telefoningizga o'rnating",instApkH:"Yuklangach faylni oching va «O'rnatish» ni bosing. Ogohlantirish chiqsa — «Baribir o'rnatish».",instIosT:"UNO ilovasini qo'shing",instIos3:"",instS1:"Shu yerni bosing",instS1b:"Ulashish oynasi ochiladi",instS2b:"Ro'yxatda yo'q bo'lsa: avval «Safari'da ochish» ni bosing",instS2:"Bosh ekranga qo'shish",instOk:"Ilova o'rnatildi",askWaiter:"Tanlagan taomlaringizni ofitsiantga ayting",subtotal:"Taomlar",service:"Xizmat haqi",askBill:"Hisobni so'rash",waiterSent:"Ofitsiant chaqirildi",billSent:"Hisob so'raldi, ofitsiant olib keladi",waiterComing:"Ofitsiant kelmoqda",waitPlease:"Ofitsiant allaqachon chaqirilgan, biroz kuting",sendFail:"Yuborilmadi. Internetni tekshirib, qayta urinib ko'ring",tableL:"stol",search:"Taom qidirish",searchPh:"Taom nomi yoki tarkibi…",add:"Savatchaga qo'shish",more:"Batafsil",items:"ta taom",loading:"Menyu yuklanmoqda…",empty:"Menyu hali bo'sh.",results:"Qidiruv natijalari",none:"Hech narsa topilmadi.",order:"Buyurtmangiz",cartEmpty:"Savatcha bo'sh. Menyudan taom tanlang.",note:"Oshpazga izoh (ixtiyoriy)",notePh:"Masalan: achchiq bo'lmasin",total:"Jami",place:"Buyurtma berish",accepted:"Buyurtma qabul qilindi",preparing:"Taomlaringiz tayyorlanmoqda. Yoqimli ishtaha!",back:"Menyuga qaytish",waiter:"Ofitsiant chaqirildi, tez orada keladi",ingr:"Tarkibi",weight:"Og'irligi",time:"Tayyorlanish vaqti",min:"daq",sound:"Ovoz",close:"Yopish",prev:"Oldingi taom",next:"Keyingi taom",cur:"so'm",cart:"Savatchani ochish",waiterBtn:"Ofitsiantni chaqirish",dec:"Kamaytirish",inc:"Ko'paytirish",restaurant:"Restoran",clearAll:"Hammasini o'chirish",clearQ:"Hammasi o'chirilsinmi?",yes:"Ha",no:"Yo'q",kcal:"kkal",approx:"taxminan",cal:"Kaloriya",prot:"Oqsil",fat:"Yog'",carb:"Uglevod",g:"g",totalKcal:"Jami kaloriya",partKcal:"ba'zi taomlarda ma'lumot yo'q",toCenter:"markazga olib kelish",video:"videosi",cats:"Kategoriyalar",lang:"Til"},
+ru:{rvTitle:"Оценки и отзывы",rvCount:"оценок",rvNone:"Оценок пока нет. Оцените первым!",rvRate:"Оцените блюдо",rvMine:"Ваша оценка",rvName:"Ваше имя (необязательно)",rvText:"Ваш отзыв о блюде (необязательно)",rvSend:"Отправить",rvUpd:"Обновить",rvThanks:"Спасибо! Ваша оценка принята.",rvGuest:"Гость",rvMore:"Показать ещё",rvMany:"Слишком много попыток. Попробуйте чуть позже.",rvOffline:"Для оценки нужен интернет.",rvLoading:"Загружаем отзывы…",rvStarsL:"звёзд",instTitle:"Добавьте меню UNO на телефон",instText:"В следующий раз откроется одним касанием и работает без интернета.",instBtn:"Установить",instLater:"Позже",instIos1:"Нажмите «Поделиться» (или в меню •••)",instCr1:"Нажмите значок «Поделиться» в адресной строке (или ••• → Поделиться)",instIos2:"Выберите «На экран «Домой»»",instDone:"Понятно",instApk:"Скачать",instApkT:"Установите приложение UNO",instApkH:"Откройте скачанный файл и нажмите «Установить». Если появится предупреждение — «Всё равно установить».",instIosT:"Добавьте приложение UNO",instIos3:"",instS1:"Нажмите здесь",instS1b:"Откроется «Поделиться»",instS2b:"Нет в списке? Сначала нажмите «Открыть в Safari»",instS2:"На экран «Домой»",instOk:"Приложение установлено",askWaiter:"Назовите выбранные блюда официанту",subtotal:"Блюда",service:"Обслуживание",askBill:"Попросить счёт",waiterSent:"Официант вызван",billSent:"Счёт запрошен, официант принесёт",waiterComing:"Официант идёт",waitPlease:"Официант уже вызван, немного подождите",sendFail:"Не отправлено. Проверьте интернет и попробуйте снова",tableL:"стол",search:"Поиск блюда",searchPh:"Название или состав…",add:"В корзину",more:"Подробнее",items:"блюд",loading:"Меню загружается…",empty:"Меню пока пусто.",results:"Результаты поиска",none:"Ничего не найдено.",order:"Ваш заказ",cartEmpty:"Корзина пуста. Выберите блюдо в меню.",note:"Комментарий для повара (необязательно)",notePh:"Например: не острое",total:"Итого",place:"Оформить заказ",accepted:"Заказ принят",preparing:"Ваши блюда готовятся. Приятного аппетита!",back:"Вернуться в меню",waiter:"Официант вызван и скоро подойдёт",ingr:"Состав",weight:"Вес",time:"Время приготовления",min:"мин",sound:"Звук",close:"Закрыть",prev:"Предыдущее блюдо",next:"Следующее блюдо",cur:"сум",cart:"Открыть корзину",waiterBtn:"Вызвать официанта",dec:"Уменьшить",inc:"Увеличить",restaurant:"Ресторан",clearAll:"Очистить всё",clearQ:"Удалить всё?",yes:"Да",no:"Нет",kcal:"ккал",approx:"примерно",cal:"Калорийность",prot:"Белки",fat:"Жиры",carb:"Углеводы",g:"г",totalKcal:"Всего калорий",partKcal:"не для всех блюд есть данные",toCenter:"показать в центре",video:"видео",cats:"Категории",lang:"Язык"},
+en:{rvTitle:"Ratings and reviews",rvCount:"ratings",rvNone:"No ratings yet. Be the first to rate!",rvRate:"Rate this dish",rvMine:"Your rating",rvName:"Your name (optional)",rvText:"Your review of the dish (optional)",rvSend:"Send",rvUpd:"Update",rvThanks:"Thank you! Your rating was received.",rvGuest:"Guest",rvMore:"Show more",rvMany:"Too many attempts. Please try again shortly.",rvOffline:"Rating needs an internet connection.",rvLoading:"Loading reviews…",rvStarsL:"stars",instTitle:"Add the UNO menu to your phone",instText:"Next time it opens with one tap and works offline.",instBtn:"Install",instLater:"Later",instIos1:"Tap Share (or find it in the ••• menu)",instCr1:"Tap the Share icon in the address bar (or ••• → Share)",instIos2:"Choose “Add to Home Screen”",instDone:"Got it",instApk:"Download",instApkT:"Install the UNO app",instApkH:"Open the downloaded file and tap “Install”. If a warning appears, choose “Install anyway”.",instIosT:"Add the UNO app",instIos3:"",instS1:"Tap here",instS1b:"The Share sheet opens",instS2b:"Not in the list? Tap “Open in Safari” first",instS2:"Add to Home Screen",instOk:"App installed",askWaiter:"Tell your waiter the dishes you have chosen",subtotal:"Dishes",service:"Service charge",askBill:"Ask for the bill",waiterSent:"Waiter called",billSent:"Bill requested, the waiter will bring it",waiterComing:"The waiter is on the way",waitPlease:"The waiter has already been called, please wait",sendFail:"Not sent. Check the internet and try again",tableL:"table",search:"Search dishes",searchPh:"Dish name or ingredients…",add:"Add to order",more:"Details",items:"items",loading:"Loading menu…",empty:"The menu is empty for now.",results:"Search results",none:"Nothing found.",order:"Your order",cartEmpty:"Your order is empty. Pick a dish from the menu.",note:"Note for the chef (optional)",notePh:"For example: not spicy",total:"Total",place:"Place order",accepted:"Order received",preparing:"Your dishes are being prepared. Enjoy your meal!",back:"Back to menu",waiter:"A waiter is on the way",ingr:"Ingredients",weight:"Weight",time:"Cooking time",min:"min",sound:"Sound",close:"Close",prev:"Previous dish",next:"Next dish",cur:"UZS",cart:"Open order",waiterBtn:"Call a waiter",dec:"Decrease",inc:"Increase",restaurant:"Restaurant",clearAll:"Clear all",clearQ:"Remove everything?",yes:"Yes",no:"No",kcal:"kcal",approx:"approx.",cal:"Calories",prot:"Protein",fat:"Fat",carb:"Carbs",g:"g",totalKcal:"Total calories",partKcal:"some dishes have no data",toCenter:"bring to centre",video:"video",cats:"Categories",lang:"Language"}
 };
 function t(k){ return (T[S.lang]||T.uz)[k]||T.uz[k]||k; }
 function L(d,f){ var v = S.lang==="uz" ? d[f] : (d[f+"_"+S.lang]||d[f]); return v||""; }
@@ -1083,15 +1110,15 @@ function updateMedia(){
     if(center){
       var open='<button class="sel open" data-more="'+esc(d.id)+'" aria-label="'+esc(dn(d))+' — '+esc(t("more"))+'"></button>';
       if(d.videoId){
-        m.innerHTML=photoHTML(d)+'<div class="vidwrap"></div><span class="badge vid"><i></i>VIDEO</span>'+cl+open;
+        m.innerHTML=photoHTML(d)+'<div class="vidwrap"></div><span class="badge vid"><i></i>VIDEO</span>'+cl+rvBadge(d)+open;
         var pv=pooledVideo("car"); parkPooled(pv); loadPooled(pv, blob(d.videoId)); pv.setAttribute("aria-label", dn(d)+" "+t("video"));
         m.querySelector(".vidwrap").appendChild(pv);
         scheduleVideo(m, d.id);
       } else {
-        m.innerHTML=photoHTML(d)+cl+open;
+        m.innerHTML=photoHTML(d)+cl+rvBadge(d)+open;
       }
     } else {
-      m.innerHTML='<button class="sel" data-sel="'+i+'" aria-label="'+esc(dn(d))+' — '+esc(t("toCenter"))+'">'+mediaThumb(d)+'</button>'+cl;
+      m.innerHTML='<button class="sel" data-sel="'+i+'" aria-label="'+esc(dn(d))+' — '+esc(t("toCenter"))+'">'+mediaThumb(d)+'</button>'+cl+rvBadge(d);
     }
     m.querySelectorAll("img[data-fit]").forEach(fitImg);
   });
@@ -1194,6 +1221,97 @@ track.addEventListener("pointerup",endDrag); track.addEventListener("pointercanc
 })();
 
 /* ---------- detail ---------- */
+/* ---- dish ratings (1–5 stars) and reviews: one rating per phone per dish, average shown to everyone ---- */
+var RV={sum:{}, list:{}, draft:{}, pick:{}, busy:false};
+var STAR_SVG='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.6l2.85 6.03 6.62.8-4.88 4.55 1.27 6.55L12 17.3l-5.86 3.23 1.27-6.55L2.53 9.43l6.62-.8z"/></svg>';
+try{ RV.sum=JSON.parse(localStorage.getItem("uno_rv_sum")||"{}")||{}; }catch(_){}
+function rvTablet(){ return !!window.UnoKiosk; }
+function rvDevice(){
+  try{ var k=localStorage.getItem("uno_dev");
+    if(!k){ var a=new Uint8Array(12); (window.crypto||{}).getRandomValues ? crypto.getRandomValues(a) : a.forEach(function(_,i){ a[i]=Math.random()*256; });
+      k=Array.prototype.map.call(a,function(b){ return ("0"+b.toString(16)).slice(-2); }).join(""); localStorage.setItem("uno_dev",k); }
+    return k; }catch(_){ return "x"+Date.now()+Math.random().toString(16).slice(2); }
+}
+function rvStars(v,cls){ var p=Math.max(0,Math.min(100,v/5*100)); return '<span class="stars '+(cls||"")+'" role="img" aria-label="'+v+' / 5"><span class="s-bg">★★★★★</span><span class="s-fg" style="width:'+p+'%">★★★★★</span></span>'; }
+function rvBadge(d){ var s=RV.sum[d.id]; if(!s||!s.cnt) return ""; return '<span class="badge rt">'+STAR_SVG+Number(s.avg).toFixed(1)+' <small>('+s.cnt+')</small></span>'; }
+function rvPaintBadges(){
+  slideNodes.forEach(function(el,i){ var m=el.querySelector(".media"), d=curList[i]; if(!m||!d) return; var o=m.querySelector(".badge.rt"); if(o) o.remove(); var h=rvBadge(d); if(h){ var bt=m.querySelector(".sel.open"); if(bt) bt.insertAdjacentHTML("beforebegin",h); else m.insertAdjacentHTML("beforeend",h); } });
+}
+function rvLoadSum(){
+  if(!S.sb) return;
+  S.sb.rpc("uno_ratings").then(function(r){ if(r.error) return; var m={}; (r.data||[]).forEach(function(x){ m[x.dish_id]={avg:Number(x.avg),cnt:x.cnt}; }); RV.sum=m;
+    try{ localStorage.setItem("uno_rv_sum",JSON.stringify(m)); }catch(_){} rvPaintBadges(); });
+}
+function rvDate(x){ var d=new Date(x); return ("0"+d.getDate()).slice(-2)+"."+("0"+(d.getMonth()+1)).slice(-2)+"."+d.getFullYear(); }
+function rvItemHTML(r){ return '<div class="rv-item'+(r.mine?' mine':'')+'"><div class="rv-top"><b>'+esc(r.mine?t("rvMine"):(r.name||t("rvGuest")))+'</b>'+rvStars(r.stars,"sm")+'<time>'+rvDate(r.created_at)+'</time></div>'+(r.comment?'<p>'+esc(r.comment)+'</p>':'')+'</div>'; }
+function rvListHTML(id){
+  var L=RV.list[id]; if(!L) return S.sb?'<p class="rv-load">'+esc(t("rvLoading"))+'</p>':'';
+  var h=(L.mine&&L.mine.comment?rvItemHTML(L.mine):"")+L.items.map(rvItemHTML).join("");
+  if(L.more) h+='<button class="rv-more" data-rv-more="'+esc(id)+'">'+esc(t("rvMore"))+'</button>';
+  return h;
+}
+function rvSectionHTML(d){
+  var id=d.id, s=RV.sum[id], L=RV.list[id], mine=L&&L.mine, pick=RV.pick[id]||(mine?mine.stars:0);
+  var dr=RV.draft[id]; if(!dr){ var nm=""; try{ nm=rvTablet()?"":(localStorage.getItem("uno_rv_name")||""); }catch(_){} dr={name:mine&&mine.name||nm, text:mine&&mine.comment||""}; }
+  setTimeout(function(){ rvLoad(id); },0);
+  var h='<section class="d-rev" data-rv="'+esc(id)+'"><div><span class="rv-cap">'+esc(t("rvTitle"))+'</span>'+
+    (s&&s.cnt?'<div class="rv-sum"><b>'+Number(s.avg).toFixed(1)+'</b>'+rvStars(s.avg)+'<span>'+s.cnt+' '+esc(t("rvCount"))+'</span></div>':'<p class="rv-none">'+esc(t("rvNone"))+'</p>')+'</div>'+
+    '<div class="rv-my"><span class="rv-cap">'+esc(mine?t("rvMine"):t("rvRate"))+'</span><div class="rv-pick" role="radiogroup" aria-label="'+esc(t("rvRate"))+'">';
+  for(var n=1;n<=5;n++) h+='<button type="button" role="radio" aria-checked="'+(n===pick)+'" data-rv-star="'+n+'" class="'+(n<=pick?'on':'')+'" aria-label="'+n+' '+esc(t("rvStarsL"))+'">'+STAR_SVG+'</button>';
+  h+='</div></div>';
+  if(pick) h+='<div class="rv-form"><input class="rv-name" maxlength="40" autocomplete="given-name" placeholder="'+esc(t("rvName"))+'" value="'+esc(dr.name||"")+'">'+
+    '<textarea class="rv-text" maxlength="500" rows="3" placeholder="'+esc(t("rvText"))+'">'+esc(dr.text||"")+'</textarea>'+
+    '<button type="button" class="rv-send" data-rv-send="'+esc(id)+'">'+esc(mine?t("rvUpd"):t("rvSend"))+'</button></div>';
+  h+='<div class="rv-msg" role="status"></div><div class="rv-list">'+rvListHTML(id)+'</div></section>';
+  return h;
+}
+function rvSec(id){ var all=$("detailHost").querySelectorAll(".d-rev"); for(var i=0;i<all.length;i++) if(all[i].dataset.rv===id && !all[i].closest(".leaving")) return all[i]; return null; }
+function rvKeepDraft(sec){ if(!sec) return; var n=sec.querySelector(".rv-name"), x=sec.querySelector(".rv-text"); if(n||x) RV.draft[sec.dataset.rv]={name:n?n.value:"", text:x?x.value:""}; }
+function rvRepaint(id, msg, err){
+  var sec=rvSec(id), d=S.dishes.find(function(x){ return x.id===id; }); if(!sec||!d) return;
+  if(sec.contains(document.activeElement) && /INPUT|TEXTAREA/.test(document.activeElement.tagName)){ sec.querySelector(".rv-list").innerHTML=rvListHTML(id); }
+  else { rvKeepDraft(sec); var tmp=document.createElement("div"); tmp.innerHTML=rvSectionHTML(d); sec.replaceWith(tmp.firstChild); sec=rvSec(id); }
+  if(msg&&sec){ var m=sec.querySelector(".rv-msg"); m.textContent=msg; m.classList.toggle("err",!!err); }
+}
+function rvLoad(id, more){
+  if(!S.sb) return; var L=RV.list[id];
+  if(!more && L && Date.now()-L.at<60000) return;
+  if(RV["ld_"+id]) return; RV["ld_"+id]=1;
+  S.sb.rpc("uno_reviews_for",{p_dish:id,p_device:rvTablet()?null:rvDevice(),p_limit:20,p_before:more&&L?L.last:null}).then(function(r){
+    RV["ld_"+id]=0; if(r.error){ if(!RV.list[id]) RV.list[id]={items:[],mine:null,more:false,last:null,at:Date.now()}; rvRepaint(id); return; }
+    var rows=r.data||[], mine=null, items=[];
+    rows.forEach(function(x){ if(x.mine) mine=x; else items.push(x); });
+    var nl={items:(more&&L?L.items:[]).concat(items), mine:more&&L?L.mine:mine, more:items.length>=20, last:items.length?items[items.length-1].id:(L&&L.last), at:Date.now()};
+    RV.list[id]=nl; rvRepaint(id);
+  },function(){ RV["ld_"+id]=0; });
+}
+function rvSend(id){
+  var sec=rvSec(id); if(!sec||RV.busy) return;
+  var stars=RV.pick[id]||(RV.list[id]&&RV.list[id].mine?RV.list[id].mine.stars:0); if(!stars) return;
+  var name=(sec.querySelector(".rv-name")||{}).value||"", text=(sec.querySelector(".rv-text")||{}).value||"";
+  var msg=sec.querySelector(".rv-msg"), btn=sec.querySelector(".rv-send");
+  if(!S.sb||navigator.onLine===false){ msg.textContent=t("rvOffline"); msg.classList.add("err"); return; }
+  RV.busy=true; if(btn) btn.disabled=true;
+  S.sb.rpc("uno_review_add",{p_dish:id,p_device:rvDevice(),p_stars:stars,p_name:name.trim(),p_comment:text.trim(),p_lang:S.lang}).then(function(r){
+    RV.busy=false;
+    if(r.error){ if(btn) btn.disabled=false; var e=String(r.error.message||""); msg.textContent=/too_many/.test(e)?t("rvMany"):t("sendFail"); msg.classList.add("err"); return; }
+    try{ SFX.select(); }catch(_){}
+    var res=r.data||{}; RV.sum[id]={avg:Number(res.avg),cnt:res.cnt}; try{ localStorage.setItem("uno_rv_sum",JSON.stringify(RV.sum)); }catch(_){}
+    if(rvTablet()){ try{ localStorage.removeItem("uno_dev"); }catch(_){} RV.list[id]=null; RV.pick[id]=0; RV.draft[id]={name:"",text:""}; }   /* shared tablet: next guest rates separately */
+    else { try{ if(name.trim()) localStorage.setItem("uno_rv_name",name.trim()); }catch(_){} RV.list[id]=null; RV.draft[id]=null; RV.pick[id]=0; }
+    if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
+    rvRepaint(id, t("rvThanks")); rvPaintBadges();
+    rvLoad(id); setTimeout(function(){ var s2=rvSec(id); if(s2){ var m2=s2.querySelector(".rv-msg"); if(m2&&!m2.textContent){ m2.textContent=t("rvThanks"); } } },900);
+  },function(){ RV.busy=false; if(btn) btn.disabled=false; msg.textContent=t("sendFail"); msg.classList.add("err"); });
+}
+$("detailHost").addEventListener("click",function(e){
+  var st=e.target.closest("[data-rv-star]");
+  if(st){ var sec=st.closest(".d-rev"); if(!sec) return; var id=sec.dataset.rv; rvKeepDraft(sec); RV.pick[id]=+st.dataset.rvStar; try{ SFX.select(); }catch(_){}
+    rvRepaint(id); var s2=rvSec(id), f=s2&&s2.querySelector(".rv-form"); if(f&&f.scrollIntoView) setTimeout(function(){ f.scrollIntoView({block:"nearest",behavior:"smooth"}); },60); return; }
+  var sb=e.target.closest("[data-rv-send]"); if(sb){ rvSend(sb.dataset.rvSend); return; }
+  var mb=e.target.closest("[data-rv-more]"); if(mb){ mb.disabled=true; rvLoad(mb.dataset.rvMore,true); }
+});
+$("detailHost").addEventListener("input",function(e){ var sec=e.target.closest&&e.target.closest(".d-rev"); if(sec) rvKeepDraft(sec); });
 function openDetail(id){
   var i=curList.findIndex(function(d){return d.id===id;});
   if(i>=0 && i!==S.idx) go(i);
@@ -1221,7 +1339,7 @@ function detailInfoHTML(d){
     (dd(d)?'<p class="d-desc">'+esc(dd(d))+'</p>':'')+
     (di(d)?'<div class="d-ingr"><small>'+esc(t("ingr"))+'</small><p>'+esc(di(d))+'</p></div>':'')+
     (facts?'<div class="d-facts">'+facts+'</div>':'')+
-    '<div class="d-act">'+stepHTML(d)+'</div>';
+    '<div class="d-act">'+stepHTML(d)+'</div>'+rvSectionHTML(d);
 }
 function setupLayer(layer, d){
   layer.querySelectorAll("img[data-fit]").forEach(fitImg);
@@ -1710,7 +1828,7 @@ function sessionOK_old(){
   return false;
 }
 function startSession(){ try{ sessionStorage.setItem(SESSION_KEY,String(Date.now())); }catch(_){} }
-function endSession(){ S.sbSession=null; if(typeof Att!=="undefined"){ if(Att.el&&Att.el.parentNode) Att.el.remove(); Att.el=null; Att.staff=null; Att.edit=null; } S.tg=undefined; S.aiOn=undefined; try{ sessionStorage.removeItem(SESSION_KEY); }catch(_){} if(S.sb) S.sb.auth.signOut().catch(function(){}); }
+function endSession(){ S.sbSession=null; if(typeof Att!=="undefined"){ if(Att.el&&Att.el.parentNode) Att.el.remove(); Att.el=null; Att.staff=null; Att.edit=null; } if(typeof Rev!=="undefined"){ if(Rev.el&&Rev.el.parentNode) Rev.el.remove(); Rev.el=null; Rev.rows=null; } S.tg=undefined; S.aiOn=undefined; try{ sessionStorage.removeItem(SESSION_KEY); }catch(_){} if(S.sb) S.sb.auth.signOut().catch(function(){}); }
 function loginEmail(l){ l=String(l||"").trim().toLowerCase(); return l.indexOf("@")>=0?l:l+"@uno.local"; }
 function logoHTML(){ return S.settings.logoId?'<img alt="Logotip" src="'+blob(S.settings.logoId)+'">':''; }
 function renderAuth(mode){
@@ -1937,7 +2055,7 @@ function renderAdmin(){
       '<button class="btn gold" data-a="tgSave">Saqlash</button>'+(tg.configured?'<button class="btn" data-a="tgTest">Sinov xabari</button>':'')+'</div>'+
       '<div id="tgMsg"></div></section>';
   }
-  if(!ro && S.sb && sessionOK()) h+='<div id="attSlot"></div>';
+  if(!ro && S.sb && sessionOK()) h+='<div id="attSlot"></div><div id="revSlot"></div>';
   // categories
   h+='<section class="a-sec"><h2>Kategoriyalar</h2><p class="help" style="margin-bottom:10px">Har bir kategoriya nomini o\'zbek, rus va ingliz tilida yozing. Rus/ingliz bo\'sh qolsa, o\'zbekchasi ko\'rsatiladi.</p>';
   cats().forEach(function(c,i){
@@ -1967,7 +2085,7 @@ function renderAdmin(){
     h+='<div class="dgroup"><h3>'+esc(c.label)+' · '+list.length+'</h3>';
     list.forEach(function(d,i){
       h+='<div class="drow"><span class="th">'+(d.imgId?'<img alt="" src="'+blob(d.imgId)+'">':'<span style="color:var(--muted);font-size:11px">Rasm yo\'q</span>')+'</span>'+
-        '<div class="mid"><b>'+esc(d.name)+'</b><small>'+fmtUZ(d.price)+(d.desc?' · '+esc(d.desc):'')+'</small><div class="tags"><span class="tag '+(d.name_ru?'ok':'')+'">RU'+(d.name_ru?' ✓':' —')+'</span><span class="tag '+(d.name_en?'ok':'')+'">EN'+(d.name_en?' ✓':' —')+'</span><span class="tag '+(d.kcal?'ok':'')+'">'+(d.kcal?num(d.kcal)+' kkal':'kkal —')+'</span><span class="tag '+(d.imgId?'ok':'')+'">'+(d.imgId?'✓ Rasm':'Rasm yo\'q')+'</span><span class="tag '+(d.videoId?'ok':'')+'">'+(d.videoId?'✓ Video':'Video yo\'q')+'</span></div></div>';
+        '<div class="mid"><b>'+esc(d.name)+'</b><small>'+fmtUZ(d.price)+(d.desc?' · '+esc(d.desc):'')+'</small><div class="tags"><span class="tag '+(d.name_ru?'ok':'')+'">RU'+(d.name_ru?' ✓':' —')+'</span><span class="tag '+(d.name_en?'ok':'')+'">EN'+(d.name_en?' ✓':' —')+'</span><span class="tag '+(d.kcal?'ok':'')+'">'+(d.kcal?num(d.kcal)+' kkal':'kkal —')+'</span>'+(RV.sum[d.id]&&RV.sum[d.id].cnt?'<span class="tag ok">★ '+Number(RV.sum[d.id].avg).toFixed(1)+' ('+RV.sum[d.id].cnt+')</span>':'')+'<span class="tag '+(d.imgId?'ok':'')+'">'+(d.imgId?'✓ Rasm':'Rasm yo\'q')+'</span><span class="tag '+(d.videoId?'ok':'')+'">'+(d.videoId?'✓ Video':'Video yo\'q')+'</span></div></div>';
       if(!ro) h+='<div class="acts"><button class="btn sm" data-a="up" data-id="'+esc(d.id)+'" aria-label="Yuqoriga" '+(i===0?"disabled":"")+'>'+ICON.up+'</button><button class="btn sm" data-a="down" data-id="'+esc(d.id)+'" aria-label="Pastga" '+(i===list.length-1?"disabled":"")+'>'+ICON.down+'</button><button class="btn sm" data-a="edit" data-id="'+esc(d.id)+'">Tahrirlash</button><button class="btn sm danger" data-a="del" data-id="'+esc(d.id)+'">O\'chirish</button></div>';
       h+='</div>';
       if(S.confirmDel===d.id) h+='<div class="msg err" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">"'+esc(d.name)+'" o\'chirilsinmi? Rasm va videosi ham o\'chadi.<span style="flex:1"></span><button class="btn sm danger" data-a="delYes" data-id="'+esc(d.id)+'">Ha, o\'chirish</button><button class="btn sm" data-a="delNo">Bekor qilish</button></div>';
@@ -2001,7 +2119,7 @@ function renderAdmin(){
       '<p class="help" style="margin-top:10px">"Vaqtincha chiqish" ilovani yopadi, uy tugmasi bosilsa yoki planshet qayta yoqilsa menyu yana ochiladi. "Butunlay o\'chirish" ilovani oddiy ilovaga aylantiradi, keyin uni o\'chirib tashlash ham mumkin.</p>')+'</section>';
   }
   h+='</div>';
-  var y=window.scrollY, keep=admKeep(); if(Att.el && Att.el.parentNode) Att.el.remove(); A.innerHTML=h; Att.mount(); if(!admPager(keep)) window.scrollTo(0,y);
+  var y=window.scrollY, keep=admKeep(); if(Att.el && Att.el.parentNode) Att.el.remove(); if(Rev.el && Rev.el.parentNode) Rev.el.remove(); A.innerHTML=h; Att.mount(); Rev.mount(); if(!admPager(keep)) window.scrollTo(0,y);
   var lf=$("logoFile"); if(lf) lf.onchange=function(){ var f=this.files[0]; this.value=""; if(f) uploadLogo(f); };
   if(S.aiBulk && $("aiBulkBox")) renderAiBulk();
   offlineUI(); if(!Offline.last && !Offline.busy) syncMedia();
@@ -2012,7 +2130,7 @@ function renderAdmin(){
   if(S.editing) renderEditor();
 }
 /* ---------- admin sections as swipeable cards ---------- */
-var ADM_PAGES=[["Taomlar",/^Taomlar/],["Kategoriyalar",/^Kategoriyalar/],["AI",/intellekt/i],["Davomat",/davomati/i],["Stollar va QR",/^Stollar/],["Telegram",/^Telegram/],["Restoran",/^Restoran/],["Oflayn",/^Oflayn/],["Planshet",/^Planshet/],["Parol",/^Parol/]];
+var ADM_PAGES=[["Taomlar",/^Taomlar/],["Kategoriyalar",/^Kategoriyalar/],["AI",/intellekt/i],["Davomat",/davomati/i],["Baholar",/^Baholar/],["Stollar va QR",/^Stollar/],["Telegram",/^Telegram/],["Restoran",/^Restoran/],["Oflayn",/^Oflayn/],["Planshet",/^Planshet/],["Parol",/^Parol/]];
 function admKeep(){
   var pg=A.querySelector(".adm-pager"); if(!pg) return null;
   var tops={}; pg.querySelectorAll(".adm-page").forEach(function(p){ tops[p.dataset.k]=p.scrollTop; });
@@ -2673,6 +2791,71 @@ function attDur(m){ m=Math.max(0,Math.round(m||0)); if(m<60) return m+" daq"; va
 var ATT_DN=["Du","Se","Ch","Pa","Ju","Sh","Ya"];
 var ATT_TEAMS=["Oshpazlar","Ofitsiantlar","Barmenlar","Tozalik xodimalari"];
 function attTeam(s){ return String(s&&s.team||"").trim()||"Jamoasiz"; }
+/* ---- admin: customer ratings and reviews (hide / delete) ---- */
+var Rev={el:null, rows:null, err:"", f:"all", del:null, busy:false};
+Rev.mount=function(){
+  var slot=$("revSlot"); if(!slot) return;
+  if(!Rev.el){ Rev.el=document.createElement("section"); Rev.el.className="a-sec"; Rev.el.addEventListener("click",Rev.click); Rev.render(); Rev.load(); }
+  slot.replaceWith(Rev.el);
+};
+Rev.load=async function(){
+  var r=await S.sb.from("uno_reviews").select("id,dish_id,stars,name,comment,hidden,created_at,updated_at").order("updated_at",{ascending:false}).limit(300);
+  if(r.error){ Rev.err=String(r.error.message||r.error); Rev.rows=Rev.rows||[]; } else { Rev.err=""; Rev.rows=r.data||[]; }
+  Rev.render();
+};
+Rev.dish=function(id){ var d=S.dishes.find(function(x){ return x.id===id; }); return d?d.name:"(o'chirilgan taom)"; };
+Rev.render=function(){
+  if(!Rev.el) return;
+  var h='<h2>Baholar va izohlar</h2><p class="help">Mijozlar har bir taomni 1–5 yulduz bilan baholaydi va izoh qoldiradi. Menyuda o\'rtacha baho hammaga ko\'rinadi. Nojo\'ya izohni <b>yashiring</b>: u menyudan yo\'qoladi va bahosi o\'rtachaga qo\'shilmaydi. Yangi izohlar va past baholar Telegram guruhga ham keladi.</p>';
+  if(Rev.err){
+    h+= /uno_reviews|does not exist|schema cache/i.test(Rev.err)
+      ? '<div class="msg err">Baholash uchun bazani tayyorlash kerak: Supabase → SQL Editor da <b>reviews.sql</b> faylini bir marta ishga tushiring (Run), keyin "Yangilash" ni bosing.</div>'
+      : '<div class="msg err">'+esc(Rev.err)+'</div>';
+  }
+  var rows=Rev.rows;
+  if(rows===null){ Rev.el.innerHTML=h+'<div class="msg">Yuklanmoqda…</div>'; return; }
+  var vis=rows.filter(function(r){ return !r.hidden; }), by={};
+  vis.forEach(function(r){ var b=by[r.dish_id]||(by[r.dish_id]={n:0,s:0}); b.n++; b.s+=r.stars; });
+  var top=Object.keys(by).map(function(k){ return {id:k,n:by[k].n,a:by[k].s/by[k].n}; }).sort(function(a,b){ return b.a-a.a||b.n-a.n; });
+  var all=vis.length?vis.reduce(function(a,r){ return a+r.stars; },0)/vis.length:0;
+  h+='<div class="a-row" style="gap:10px;margin:4px 0 14px;flex-wrap:wrap;align-items:center">'+
+     '<span class="tag ok" style="font-size:13px">Jami: '+vis.length+' ta baho</span>'+
+     (vis.length?'<span class="tag" style="font-size:13px">O\'rtacha: ★ '+all.toFixed(1)+'</span>':'')+
+     '<span class="tag" style="font-size:13px">Izohli: '+vis.filter(function(r){ return r.comment; }).length+'</span>'+
+     '<span style="flex:1"></span><button class="btn sm" data-rv-a="reload">Yangilash</button></div>';
+  if(top.length){
+    h+='<div class="dgroup"><h3>Taomlar reytingi</h3><div style="display:grid;gap:8px">';
+    top.slice(0,12).forEach(function(x,i){ h+='<div style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="width:22px;color:var(--muted)">'+(i+1)+'.</span><b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(Rev.dish(x.id))+'</b>'+rvStars(Math.round(x.a*10)/10,"sm")+'<span style="width:68px;text-align:right">'+x.a.toFixed(1)+' <small style="color:var(--muted)">('+x.n+')</small></span></div>'; });
+    h+='</div></div>';
+  }
+  var F=[["all","Hammasi"],["text","Izohlilar"],["low","Past baho (1–3)"],["hidden","Yashirilgan"]];
+  h+='<div class="a-row" style="gap:6px;margin:16px 0 10px;flex-wrap:wrap">'+F.map(function(f){ return '<button class="btn sm'+(Rev.f===f[0]?' gold':'')+'" data-rv-a="f" data-v="'+f[0]+'">'+f[1]+'</button>'; }).join("")+'</div>';
+  var list=rows.filter(function(r){ return Rev.f==="text"?(r.comment&&!r.hidden):Rev.f==="low"?(r.stars<=3&&!r.hidden):Rev.f==="hidden"?r.hidden:true; });
+  if(!list.length) h+='<div class="msg">Bu yerda hozircha hech narsa yo\'q.</div>';
+  list.slice(0,150).forEach(function(r){
+    h+='<div class="drow" style="align-items:flex-start;'+(r.hidden?'opacity:.55':'')+'"><div class="mid"><b>'+esc(Rev.dish(r.dish_id))+'</b>'+
+       '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:4px 0">'+rvStars(r.stars,"sm")+'<small>'+esc(r.name||"Mehmon")+' · '+rvDate(r.updated_at||r.created_at)+(r.hidden?' · <b style="color:#ff8f8f">yashirilgan</b>':'')+'</small></div>'+
+       (r.comment?'<p style="margin:2px 0 0;font-size:14px;line-height:1.45;white-space:pre-wrap;word-break:break-word">'+esc(r.comment)+'</p>':'')+'</div>'+
+       '<div class="acts">'+(r.hidden?'<button class="btn sm" data-rv-a="show" data-id="'+r.id+'">Ko\'rsatish</button>':'<button class="btn sm" data-rv-a="hide" data-id="'+r.id+'">Yashirish</button>')+
+       '<button class="btn sm danger" data-rv-a="del" data-id="'+r.id+'">'+(Rev.del===r.id?'Tasdiqlang':'O\'chirish')+'</button></div></div>';
+  });
+  Rev.el.innerHTML=h;
+};
+Rev.click=async function(e){
+  var b=e.target.closest("[data-rv-a]"); if(!b||Rev.busy) return;
+  var a=b.dataset.rvA, id=+b.dataset.id;
+  if(a==="reload"){ Rev.rows=null; Rev.render(); await Rev.load(); rvLoadSum(); return; }
+  if(a==="f"){ Rev.f=b.dataset.v; Rev.render(); return; }
+  if(a==="del" && Rev.del!==id){ Rev.del=id; Rev.render(); return; }
+  Rev.busy=true; b.disabled=true;
+  var r = a==="del" ? await S.sb.from("uno_reviews").delete().eq("id",id)
+        : await S.sb.from("uno_reviews").update({hidden:a==="hide"}).eq("id",id);
+  Rev.busy=false; Rev.del=null;
+  if(r.error){ Rev.err=String(r.error.message||r.error); Rev.render(); return; }
+  if(a==="del") Rev.rows=Rev.rows.filter(function(x){ return x.id!==id; });
+  else Rev.rows.forEach(function(x){ if(x.id===id) x.hidden=(a==="hide"); });
+  Rev.render(); rvLoadSum();
+};
 var Att={el:null, tab:"today", staff:null, devs:null, cfg:null, rows:null, rep:null, edit:null, err:"", msgs:{}, open:null};
 Att.isTerminal=function(){ try{ return localStorage.getItem("uno_device_mode")==="att"; }catch(_){ return false; } };
 Att.mount=function(){
@@ -3141,6 +3324,7 @@ async function init(){
     else if(snap.docs.length){ S.loadedDishes=true; }
     onData();
   },function(err){ clearTimeout(timer); S.loadedDishes=true; note.textContent="Menyuni olib bo'lmadi."; onData(); });
+  rvLoadSum(); setInterval(rvLoadSum, 5*60*1000);
   if(S.view==="admin") renderAdmin();
 }
 window.unoBack=function(){ if(S.detail){ closeDetail(); return 1; } if(S.cartOpen){ S.cartOpen=false; S.confirmClear=false; renderCart(); return 1; } if(S.view==="admin"){ location.hash="#menyu"; return 1; } return 0; };
