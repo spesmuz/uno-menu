@@ -206,6 +206,62 @@ public class MainActivity extends Activity {
         return "ok";
       } catch (Exception e) { return "err"; }
     }
+    /* door terminal dock: open the phone, SMS or another work app (e.g. Plus) even while the kiosk is on */
+    @JavascriptInterface public String openApp(final String what) {
+      try {
+        Intent i;
+        String pkg = null;
+        if ("dial".equals(what)) i = new Intent(Intent.ACTION_DIAL);
+        else if ("sms".equals(what)) {
+          try { pkg = android.provider.Telephony.Sms.getDefaultSmsPackage(MainActivity.this); } catch (Exception e) { }
+          i = pkg != null ? getPackageManager().getLaunchIntentForPackage(pkg) : null;
+          if (i == null) { i = new Intent(Intent.ACTION_MAIN); i.addCategory(Intent.CATEGORY_APP_MESSAGING); }
+        } else {
+          if (what == null || !what.matches("[A-Za-z0-9_.]{3,120}")) return "err";
+          pkg = what; i = getPackageManager().getLaunchIntentForPackage(pkg);
+          if (i == null) return "none";
+        }
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        final Intent go = i; final String target = pkg;
+        runOnUiThread(new Runnable() { public void run() {
+          if (kioskOn()) {
+            if (owner()) {
+              /* full kiosk: let this app run inside the locked mode */
+              java.util.ArrayList<String> l = new java.util.ArrayList<String>();
+              l.add(getPackageName());
+              try { String d = ((android.telecom.TelecomManager) getSystemService(Context.TELECOM_SERVICE)).getDefaultDialerPackage(); if (d != null) l.add(d); } catch (Exception e) { }
+              try { String sm = android.provider.Telephony.Sms.getDefaultSmsPackage(MainActivity.this); if (sm != null) l.add(sm); } catch (Exception e) { }
+              if (target != null) l.add(target);
+              try { ResolveInfo ri = getPackageManager().resolveActivity(go, 0); if (ri != null && ri.activityInfo != null) l.add(ri.activityInfo.packageName); } catch (Exception e) { }
+              try { dpm.setLockTaskPackages(admin, l.toArray(new String[0])); } catch (Exception e) { }
+            } else {
+              /* screen pinning: unpin while the other app is open; it pins again when the user comes back */
+              try { stopLockTask(); } catch (Exception e) { }
+              lastPin = System.currentTimeMillis();
+            }
+          }
+          try { startActivity(go); } catch (Exception e) { }
+        } });
+        return "ok";
+      } catch (Exception e) { return "err"; }
+    }
+    /* installed apps that can be opened (for choosing the third dock button) */
+    @JavascriptInterface public String apps() {
+      try {
+        Intent m = new Intent(Intent.ACTION_MAIN); m.addCategory(Intent.CATEGORY_LAUNCHER);
+        List<ResolveInfo> l = getPackageManager().queryIntentActivities(m, 0);
+        StringBuilder b = new StringBuilder("[");
+        java.util.HashSet<String> seen = new java.util.HashSet<String>();
+        for (ResolveInfo ri : l) {
+          if (ri.activityInfo == null) continue;
+          String p = ri.activityInfo.packageName; if (p.equals(getPackageName()) || !seen.add(p)) continue;
+          String n = String.valueOf(ri.loadLabel(getPackageManager())).replace("\\", "").replace("\"", "'");
+          if (b.length() > 1) b.append(',');
+          b.append("{\"n\":\"").append(n).append("\",\"p\":\"").append(p).append("\"}");
+        }
+        return b.append(']').toString();
+      } catch (Exception e) { return "[]"; }
+    }
     @JavascriptInterface public void retry() { runOnUiThread(new Runnable() { public void run() { failed = false; web.loadUrl(URL); } }); }
   }
 
