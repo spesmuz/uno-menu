@@ -75,3 +75,10 @@ Restoran planshetlari uchun menyu va admin panel. Bitta APK ichida ishlaydi.
 3. Eshik yonidagi telefonda ilovani oching → admin panel → «Sozlamalar va terminal» → «Shu telefonni eshik terminali qilish».
    O'sha telefon endi faqat `davomat.html` (PIN klaviatura + old kamera surati) ni ko'rsatadi. Admin panelga kirish: logotipni 3 soniya bosib turish yoki 7 marta bosish.
 4. Kelish/ketish, kechikish va «hali kelmadi» xabarlari Telegram guruhga boradi. Hisobot va Excel — «Hisobot» bo'limida.
+
+## iPhone ilovasi (App Store)
+- Kod: `ios/` (Swift, SwiftUI). Menyu (sayt), Bron (Telegram guruhga boradi), UNO (biz haqimizda).
+- Yig'ish: `.github/workflows/ios.yml` — natija va skrinshotlar `ios-ci` branchida.
+- Bron uchun Supabase'da bir marta `bookings.sql` ni ishga tushiring.
+- App Store'ga yuklash uchun repo Secrets: `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8`, `APPLE_TEAM_ID`.
+- Maxfiylik siyosati: `privacy.html`.
