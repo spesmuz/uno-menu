@@ -13,12 +13,15 @@
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>
+    </activity>
+    <!-- acts as the home screen only while kiosk mode is on (switched from the admin panel) -->
+    <activity-alias android:name=".HomeAlias" android:targetActivity=".MainActivity" android:enabled="false" android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.HOME"/>
         <category android:name="android.intent.category.DEFAULT"/>
       </intent-filter>
-    </activity>
+    </activity-alias>
     <receiver android:name=".AdminReceiver" android:exported="true" android:permission="android.permission.BIND_DEVICE_ADMIN">
       <meta-data android:name="android.app.device_admin" android:resource="@xml/device_admin"/>
       <intent-filter>

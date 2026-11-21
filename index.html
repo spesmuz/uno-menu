@@ -1895,14 +1895,19 @@ function renderAdmin(){
   }
   if(!ro && window.UnoKiosk){
     var km=""; try{ km=window.UnoKiosk.mode?window.UnoKiosk.mode():"pin"; }catch(_){}
+    var canSet=!!window.UnoKiosk.setKiosk, kon=canSet?!!window.UnoKiosk.kioskOn():true;
     h+='<section class="a-sec"><h2>Planshet (kiosk rejimi)</h2>'+
-      '<p class="help">'+(km==="owner"
+      (canSet?'<div class="msg '+(kon?'ok':'')+'" style="margin-bottom:12px">Shu planshet: kiosk rejimi <b>'+(kon?'YOQILGAN':'o\'chirilgan')+'</b>. '+(kon?'Mijoz ilovadan chiqa olmaydi.':'Ilova oddiy ilovadek ishlaydi: undan chiqish mumkin.')+'</div>'+
+        '<div class="a-row" style="margin-bottom:14px">'+(kon?'<button class="btn danger" data-a="kioskOff">Shu planshetda kiosk rejimini o\'chirish</button>':'<button class="btn gold" data-a="kioskOn">Shu planshetda kiosk rejimini yoqish</button>')+'</div>'+
+        '<p class="help" style="margin-bottom:12px">Kiosk faqat restoranning o\'z planshetlarida yoqiladi. Har bir planshetda alohida yoqiladi va boshqa qurilmalarga ta\'sir qilmaydi. Mijozlar o\'z telefoniga QR-kod orqali o\'rnatgan menyuda kiosk bo\'lmaydi.</p>'
+       :'<div class="msg" style="margin-bottom:12px">Kiosk rejimini shu yerdan yoqib-o\'chirish uchun yangi UNO ilovasini o\'rnating. Hozirgi ilova har doim kiosk rejimida ishlaydi.</div>')+
+      (!kon?'':'<p class="help">'+(km==="owner"
         ? 'To\'liq kiosk yoqilgan: mijoz ilovadan hech qanday yo\'l bilan chiqa olmaydi.'
         : 'Ilova ekranga mahkamlangan va bosh ekran sifatida ishlaydi. To\'liq kiosk uchun yo\'riqnomadagi "qurilma egasi" qadamini bajaring.')+'</p>'+
       '<div class="a-row" style="margin-top:12px"><button class="btn danger" data-a="exitApp">Ilovadan chiqish (vaqtincha)</button>'+
       '<button class="btn danger" data-a="disableKiosk">'+(S.confirmKiosk?'Tasdiqlash uchun yana bosing':'Kiosk rejimini butunlay o\'chirish')+'</button></div>'+
       (window.UnoKiosk.setPin?'<div class="a-row" style="margin-top:14px"><label class="fld" style="max-width:240px"><span>Internetsiz chiqish PIN-kodi (4–8 raqam)</span><input id="kioskPin" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="'+((window.UnoKiosk.hasPin&&window.UnoKiosk.hasPin())?"o\'rnatilgan":"hozir: 0000")+'"></label><button class="btn gold" data-a="setPin">Saqlash</button></div><div id="pinSetMsg"></div>':'')+
-      '<p class="help" style="margin-top:10px">"Vaqtincha chiqish" ilovani yopadi, uy tugmasi bosilsa yoki planshet qayta yoqilsa menyu yana ochiladi. "Butunlay o\'chirish" ilovani oddiy ilovaga aylantiradi, keyin uni o\'chirib tashlash ham mumkin.</p></section>';
+      '<p class="help" style="margin-top:10px">"Vaqtincha chiqish" ilovani yopadi, uy tugmasi bosilsa yoki planshet qayta yoqilsa menyu yana ochiladi. "Butunlay o\'chirish" ilovani oddiy ilovaga aylantiradi, keyin uni o\'chirib tashlash ham mumkin.</p>')+'</section>';
   }
   h+='</div>';
   var y=window.scrollY, keep=admKeep(); if(Att.el && Att.el.parentNode) Att.el.remove(); A.innerHTML=h; Att.mount(); if(!admPager(keep)) window.scrollTo(0,y);
@@ -1982,6 +1987,7 @@ A.addEventListener("click", async function(e){
     if(act==="exitApp"){ endSession(); closeEditor(); location.hash="#menyu"; try{ window.UnoKiosk.exitApp(); }catch(_){} return; }
     if(act==="disableKiosk"){ if(!S.confirmKiosk){ S.confirmKiosk=true; renderAdmin(); setTimeout(function(){ S.confirmKiosk=false; if(S.view==="admin") renderAdmin(); },5000); return; }
       S.confirmKiosk=false; endSession(); closeEditor(); location.hash="#menyu"; try{ window.UnoKiosk.disableKiosk(); }catch(_){} return; }
+    if(act==="kioskOn"||act==="kioskOff"){ try{ window.UnoKiosk.setKiosk(act==="kioskOn"); }catch(_){} setTimeout(renderAdmin,400); return; }
     if(act==="changePw"){ await changeCred(); return; }
     if(S.canEdit && S.cred && !sessionOK()){ renderAdmin(); return; }
     if(act==="new"){ S.editing={id:null,name:"",desc:"",price:"",cat:(cats()[0]||{}).id||"",imgId:"",videoId:"",enhance:true}; renderEditor(); }

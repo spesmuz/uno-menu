@@ -30,6 +30,28 @@ public class MainActivity extends Activity {
   boolean loading = false;
   static final String DEFAULT_PIN = "0000";
 
+  /* kiosk is off by default; the admin turns it on only on the restaurant's own tablets */
+  boolean kioskOn() { return getSharedPreferences("uno", MODE_PRIVATE).getBoolean("kiosk", false); }
+  void homeAlias(boolean on) {
+    try {
+      getPackageManager().setComponentEnabledSetting(new ComponentName(this, getPackageName() + ".HomeAlias"),
+        on ? android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED : android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+        android.content.pm.PackageManager.DONT_KILL_APP);
+    } catch (Exception e) { }
+  }
+  void setKioskNow(boolean on) {
+    getSharedPreferences("uno", MODE_PRIVATE).edit().putBoolean("kiosk", on).commit();
+    homeAlias(on);
+    if (on) { exiting = false; lastPin = 0; setupOwner(); pin(); }
+    else {
+      if (owner()) {
+        try { dpm.clearPackagePersistentPreferredActivities(admin, getPackageName()); } catch (Exception e) { }
+        try { dpm.setStatusBarDisabled(admin, false); } catch (Exception e) { }
+      }
+      try { stopLockTask(); } catch (Exception e) { }
+    }
+  }
+
   String exitPin() { return getSharedPreferences("uno", MODE_PRIVATE).getString("exit_pin", DEFAULT_PIN); }
 
   /* the page did not finish in 20 s (e.g. Wi-Fi without internet): show the waiting screen */
@@ -48,7 +70,7 @@ public class MainActivity extends Activity {
 
   /* full kiosk (device owner): nothing can leave the app, status bar off, app is the home screen */
   void setupOwner() {
-    if (!owner()) return;
+    if (!owner() || !kioskOn()) return;
     try { dpm.setLockTaskPackages(admin, new String[]{ getPackageName() }); } catch (Exception e) { }
     try { if (Build.VERSION.SDK_INT >= 28) dpm.setLockTaskFeatures(admin, DevicePolicyManager.LOCK_TASK_FEATURE_NONE); } catch (Exception e) { }
     try {
@@ -61,7 +83,7 @@ public class MainActivity extends Activity {
 
   /* pin the app (screen pinning; silent and unbreakable in device-owner mode) */
   void pin() {
-    if (exiting) return;
+    if (exiting || !kioskOn()) return;
     long now = System.currentTimeMillis();
     if (now - lastPin < 4000) return;
     lastPin = now;
@@ -104,7 +126,9 @@ public class MainActivity extends Activity {
   /* called from the admin panel (only after admin login) */
   public class Kiosk {
     @JavascriptInterface public boolean isApp() { return true; }
-    @JavascriptInterface public String mode() { return owner() ? "owner" : "pin"; }
+    @JavascriptInterface public String mode() { return !kioskOn() ? "off" : owner() ? "owner" : "pin"; }
+    @JavascriptInterface public boolean kioskOn() { return MainActivity.this.kioskOn(); }
+    @JavascriptInterface public void setKiosk(final boolean on) { runOnUiThread(new Runnable() { public void run() { setKioskNow(on); } }); }
     @JavascriptInterface public void exitApp() { runOnUiThread(new Runnable() { public void run() { leave(false); } }); }
     @JavascriptInterface public void disableKiosk() { runOnUiThread(new Runnable() { public void run() { leave(true); } }); }
     /* offline exit: PIN kept on this tablet, set from the admin panel */
@@ -320,7 +344,12 @@ public class MainActivity extends Activity {
   @Override protected void onPause() { web.onPause(); super.onPause(); }
 
   @Override public void onBackPressed() {
-    if (web.canGoBack()) web.goBack();
-    else web.evaluateJavascript("window.unoBack&&window.unoBack()", null);
+    if (web.canGoBack()) { web.goBack(); return; }
+    web.evaluateJavascript("(window.unoBack&&window.unoBack())?1:0", new ValueCallback<String>() {
+      public void onReceiveValue(String r) {
+        /* nothing left to close inside the page: an ordinary (non-kiosk) app goes to the background */
+        if (!"1".equals(r) && !kioskOn()) moveTaskToBack(true);
+      }
+    });
   }
 }
