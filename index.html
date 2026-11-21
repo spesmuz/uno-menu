@@ -2174,12 +2174,22 @@ function admPager(keep){
   goTo(start,false); requestAnimationFrame(function(){ goTo(start,false); });
   return true;
 }
+/* network hiccups (phone switching Wi-Fi/mobile, Safari "Load failed") — try again quietly */
+function isNetErr(e){ var t=String((e&&e.message)||e||""); return (e&&e.name==="TypeError") || /Load failed|Failed to fetch|NetworkError|network connection was lost|ERR_NETWORK|timed out/i.test(t); }
+async function netRetry(fn, tries){
+  tries=tries||4; var last;
+  for(var i=0;i<tries;i++){
+    try{ return await fn(); }catch(e){ last=e; if(!isNetErr(e)) throw e; await new Promise(function(r){ setTimeout(r, 800*(i+1)); }); }
+  }
+  throw last;
+}
 function msg(el, text, kind){ if(el) el.innerHTML = text ? '<div class="msg '+(kind||"")+'" style="margin-top:10px">'+esc(text)+'</div>' : ""; }
 function errText(e){
   var c=e&&e.code;
   if(c==="quota_exceeded") return "Joy tugadi: ba'zi taomlar yoki fayllarni o'chiring.";
   if(c==="invalid_argument") return "Saqlab bo'lmadi: sizda o'zgartirish huquqi yo'q yoki ma'lumot noto'g'ri.";
   if(c==="resource_exhausted") return "Juda tez-tez so'rov yuborildi. Birozdan keyin qayta urinib ko'ring.";
+  if(isNetErr(e)) return "Internet aloqasi uzilib qoldi, shuning uchun saqlanmadi. Internetni tekshirib, \"Saqlash\" ni yana bir bor bosing — tanlangan rasm va video joyida qoladi.";
   return "Xatolik yuz berdi. Qayta urinib ko'ring."+(e&&e.message?" ("+e.message+")":"");
 }
 async function saveSettings(patch){
@@ -2732,7 +2742,7 @@ async function handleFile(kind,file){
   try{
     var body=file;
     if(kind==="img" && E.enhance){ try{ body=await enhanceImage(file); }catch(_){ body=file; } }
-    var r=await S.assets.upload(body);
+    var r=await netRetry(function(){ return S.assets.upload(body); }, 3);
     if(S.editing!==E){ S.assets.delete(r.id).catch(function(){}); return; }
     if(kind==="img"){ try{ var dim=await new Promise(function(res){ var im=new Image(); im.onload=function(){ res([im.naturalWidth,im.naturalHeight]); }; im.onerror=function(){ res(null); }; im.src=blob(r.id); });
       if(dim && Math.abs(dim[0]/dim[1]-1)>0.03) setTimeout(function(){ msg($("edMsg"),"Diqqat: surat kvadrat emas ("+dim[0]+" × "+dim[1]+"). Menyuda chetlari kesilib ko'rinadi. 1080 × 1080 px tavsiya etiladi."); },0);
@@ -2769,7 +2779,8 @@ async function saveDish(){
   $("edSave").disabled=true; msg(m,"Saqlanmoqda…");
   try{
     var ref = E.id ? S.db.doc("dishes/"+E.id) : S.db.collection("dishes").doc();
-    await ref.set(data);
+    if(!E.id) E.id=ref.id||(ref.path||"").split("/").pop()||E.id;   /* a retry must update the same dish, not make a second one */
+    await netRetry(function(){ return ref.set(data); });
     // remove replaced media
     if(S.assets){
       if(E.origImg && E.origImg!==data.imgId) S.assets.delete(E.origImg).catch(function(){});
