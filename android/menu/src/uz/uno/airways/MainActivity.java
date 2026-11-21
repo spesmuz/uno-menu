@@ -348,32 +348,40 @@ public class MainActivity extends Activity {
     web.loadUrl(URL);
   }
 
-  /* camera for the staff attendance screen (davomat.html): only our own site, only video */
+  /* camera (staff attendance) and microphone (UNO AI voice commands): only our own site */
   PermissionRequest camReq;
+  String[] camGrant;
   static final int CAM = 9;
+  boolean has(String p) { return Build.VERSION.SDK_INT < 23 || checkSelfPermission(p) == android.content.pm.PackageManager.PERMISSION_GRANTED; }
   void askCamera(PermissionRequest r) {
-    boolean video = false;
-    for (String res : r.getResources()) if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(res)) video = true;
     String origin = r.getOrigin() == null ? "" : r.getOrigin().toString();
-    if (!video || !URL.startsWith(origin.endsWith("/") ? origin : origin + "/")) { r.deny(); return; }
-    String[] grant = new String[] { PermissionRequest.RESOURCE_VIDEO_CAPTURE };
-    if (Build.VERSION.SDK_INT < 23 || checkSelfPermission(android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED) { r.grant(grant); return; }
+    if (!URL.startsWith(origin.endsWith("/") ? origin : origin + "/")) { r.deny(); return; }
+    java.util.ArrayList<String> grant = new java.util.ArrayList<String>(), need = new java.util.ArrayList<String>();
+    for (String res : r.getResources()) {
+      if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(res)) { grant.add(res); if (!has(android.Manifest.permission.CAMERA)) need.add(android.Manifest.permission.CAMERA); }
+      if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(res)) { grant.add(res); if (!has(android.Manifest.permission.RECORD_AUDIO)) need.add(android.Manifest.permission.RECORD_AUDIO); }
+    }
+    if (grant.isEmpty()) { r.deny(); return; }
+    String[] g = grant.toArray(new String[0]);
+    if (need.isEmpty()) { r.grant(g); return; }
     try {
       if (dpm != null && dpm.isDeviceOwnerApp(getPackageName())) {
-        dpm.setPermissionGrantState(admin, getPackageName(), android.Manifest.permission.CAMERA, DevicePolicyManager.PERMISSION_GRANT_STATE_GRANTED);
-        if (checkSelfPermission(android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED) { r.grant(grant); return; }
+        for (String p : need) dpm.setPermissionGrantState(admin, getPackageName(), p, DevicePolicyManager.PERMISSION_GRANT_STATE_GRANTED);
+        boolean all = true; for (String p : need) if (!has(p)) all = false;
+        if (all) { r.grant(g); return; }
       }
     } catch (Exception e) { }
     if (camReq != null) camReq.deny();
-    camReq = r;
-    requestPermissions(new String[] { android.Manifest.permission.CAMERA }, CAM);
+    camReq = r; camGrant = g;
+    requestPermissions(need.toArray(new String[0]), CAM);
   }
 
   @Override public void onRequestPermissionsResult(int rq, String[] perms, int[] res) {
     if (rq == CAM && camReq != null) {
-      if (res.length > 0 && res[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) camReq.grant(new String[] { PermissionRequest.RESOURCE_VIDEO_CAPTURE });
-      else camReq.deny();
-      camReq = null;
+      boolean ok = res.length > 0;
+      for (int x : res) if (x != android.content.pm.PackageManager.PERMISSION_GRANTED) ok = false;
+      if (ok) camReq.grant(camGrant); else camReq.deny();
+      camReq = null; camGrant = null;
     } else super.onRequestPermissionsResult(rq, perms, res);
   }
 

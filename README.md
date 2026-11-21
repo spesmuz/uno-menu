@@ -88,3 +88,9 @@ Restoran planshetlari uchun menyu va admin panel. Bitta APK ichida ishlaydi.
 - O'rtacha baho kartada va batafsil oynada hammaga ko'rinadi. Yangi izoh va past baholar Telegram guruhga keladi.
 - Admin panel → "Baholar": reyting, filtrlar, izohni yashirish yoki o'chirish.
 - Supabase'da bir marta `reviews.sql` ni ishga tushiring.
+
+## UNO AI yordamchisi (admin panel)
+- Admin panelning o'ng pastidagi oltin "UNO AI" tugmasi (AI kaliti saqlangan bo'lsa chiqadi).
+- Ovozli (mikrofon) yoki yozma buyruq; surat/video biriktirish mumkin.
+- Qila oladi: taom qo'shish (suratdan tarkib, og'irlik, kaloriya, tavsif — 3 tilda), taomni o'zgartirish/o'chirish, narx, kategoriya qo'shish/nomini o'zgartirish, sozlamalar, izohlarni yashirish, baholar va davomat hisoboti, bo'limni ochish.
+- Har bir o'zgarish oldidan tasdiqlash kartasi chiqadi.

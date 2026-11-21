@@ -28,6 +28,8 @@ targets:
         CFBundleLocalizations: [uz, ru, en]
         LSApplicationQueriesSchemes: [instagram, tg, tel]
         ITSAppUsesNonExemptEncryption: false
+        NSMicrophoneUsageDescription: "UNO AI yordamchisiga ovozli buyruq berish uchun mikrofon kerak."
+        NSCameraUsageDescription: "Taom suratini olish uchun kamera kerak."
         UILaunchScreen:
           UIColorName: LaunchBg
           UIImageName: Logo

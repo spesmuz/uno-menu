@@ -511,6 +511,63 @@ canvas.frost{position:absolute;inset:0;image-rendering:auto;width:100%;height:10
 .progress i{display:block;height:100%;width:40%;background:var(--gold);animation:prog 1.2s ease-in-out infinite}
 @keyframes prog{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
 @media (max-width:640px){.a-wrap{padding:14px}.drow .acts{width:100%}}
+
+/* ---------- UNO AI assistant ---------- */
+#agFab{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(18px,calc(env(safe-area-inset-bottom) + 12px));z-index:900;height:54px;padding:0 20px 0 16px;border-radius:27px;border:1px solid rgba(255,214,140,.5);
+  background:linear-gradient(135deg,#F3C66B,#C98E2B);color:#1A1306;font:800 15px/1 Manrope,system-ui,sans-serif;display:flex;align-items:center;gap:8px;cursor:pointer;
+  box-shadow:0 10px 30px rgba(0,0,0,.45),0 0 0 6px rgba(232,176,75,.12);animation:agPulse 2.8s ease-in-out infinite}
+#agFab svg{width:22px;height:22px}#agFab[hidden]{display:none}
+@keyframes agPulse{0%,100%{box-shadow:0 10px 30px rgba(0,0,0,.45),0 0 0 6px rgba(232,176,75,.12)}50%{box-shadow:0 10px 30px rgba(0,0,0,.45),0 0 0 12px rgba(232,176,75,.05)}}
+#agPanel{position:fixed;z-index:950;right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));width:min(440px,calc(100vw - 24px));height:min(720px,calc(100dvh - 24px));
+  display:flex;flex-direction:column;background:#121316;border:1px solid rgba(232,176,75,.28);border-radius:24px;box-shadow:0 30px 80px rgba(0,0,0,.6);overflow:hidden;
+  font-family:Manrope,system-ui,sans-serif;color:#EFEBE3;animation:agIn .28s cubic-bezier(.2,.8,.2,1)}
+#agPanel[hidden]{display:none}
+@keyframes agIn{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
+@media (max-width:600px){#agPanel{left:0;right:0;bottom:0;top:0;width:auto;height:auto;border-radius:0;border:0;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}}
+.ag-head{display:flex;align-items:center;gap:6px;padding:14px 12px 12px 18px;border-bottom:1px solid rgba(255,255,255,.07);background:linear-gradient(180deg,#1a1814,#121316)}
+.ag-title{flex:1;min-width:0}.ag-title b{display:block;font-size:17px;color:#F0C46A;letter-spacing:.04em}.ag-title small{display:block;font-size:12px;color:#9a968c;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ag-x{width:40px;height:40px;border-radius:20px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#ddd;display:grid;place-items:center;cursor:pointer;padding:0}.ag-x svg{width:18px;height:18px}
+.ag-log{flex:1;overflow-y:auto;padding:16px 14px 8px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch}
+.ag-m{max-width:88%;padding:10px 14px;border-radius:18px;font-size:15px;line-height:1.45;word-break:break-word}
+.ag-m.ai{align-self:flex-start;background:#1d1e22;border:1px solid rgba(255,255,255,.06);border-bottom-left-radius:6px}
+.ag-m.me{align-self:flex-end;background:linear-gradient(135deg,#E8B04B,#C9922F);color:#1a1306;border-bottom-right-radius:6px;font-weight:600}
+.ag-m.card{max-width:96%;width:96%;padding:0;background:none;border:0}
+.ag-m i{opacity:.85}
+.ag-voice{display:inline-flex;align-items:center;gap:6px;font-weight:700}.ag-tr{margin-top:4px;font-weight:600;opacity:.85;font-style:italic}
+.ag-thumbs{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}.ag-thumbs img,.ag-thumbs video{width:84px;height:84px;object-fit:cover;border-radius:12px;background:#000}
+.ag-m.typing{display:flex;gap:5px;padding:14px 16px}.ag-m.typing i{width:7px;height:7px;border-radius:4px;background:#E8B04B;animation:agDot 1s infinite;opacity:.4}
+.ag-m.typing i:nth-child(2){animation-delay:.15s}.ag-m.typing i:nth-child(3){animation-delay:.3s}
+@keyframes agDot{50%{opacity:1;transform:translateY(-3px)}}
+.ag-card{background:#17181c;border:1px solid rgba(232,176,75,.35);border-radius:18px;overflow:hidden}
+.ag-act{display:flex;gap:12px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
+.ag-act img,.ag-act video{width:86px;height:86px;flex:none;object-fit:cover;border-radius:14px;background:#000}
+.ag-act em{display:block;font-style:normal;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#E8B04B;font-weight:800}
+.ag-act b{display:block;font-size:16px;margin:2px 0 4px}.ag-act p{margin:2px 0;font-size:14px}.ag-act p.sm{font-size:13px;color:#cfcac0;line-height:1.4}.ag-act .muted{color:#8f8b82}.ag-act .gold{color:#F0C46A;font-weight:800}
+.ag-act s{color:#8f8b82}.ag-act.del em{color:#ff8f8f}
+.ag-btns{display:flex;gap:8px;padding:12px}.ag-btns button{flex:1;height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:#222328;color:#eee;font:800 14px Manrope,system-ui,sans-serif;cursor:pointer}
+.ag-btns .ok{background:#E8B04B;border-color:#E8B04B;color:#1a1306;flex:1.4}.ag-btns button:disabled{opacity:.6}
+.ag-res{padding:12px 14px;font-size:14px;line-height:1.55;color:#cfcac0}.ag-res.ok{color:#9fe0a8}
+.ag-atts{display:flex;gap:8px;padding:8px 12px 0;overflow-x:auto}.ag-atts[hidden]{display:none}
+.ag-att{position:relative;width:72px;height:72px;flex:none;border-radius:14px;overflow:hidden;background:#000;border:1px solid rgba(232,176,75,.4)}
+.ag-att img,.ag-att video{width:100%;height:100%;object-fit:cover}.ag-att span{position:absolute;left:4px;bottom:4px;font-size:10px;font-weight:800;background:rgba(0,0,0,.65);color:#F0C46A;padding:2px 5px;border-radius:6px}
+.ag-att em{position:absolute;left:4px;top:4px;font-size:9px;font-style:normal;font-weight:800;background:#E5484D;color:#fff;padding:2px 4px;border-radius:5px}
+.ag-att button{position:absolute;right:3px;top:3px;width:22px;height:22px;border-radius:11px;border:0;background:rgba(0,0,0,.7);color:#fff;font-size:15px;line-height:1;cursor:pointer;padding:0}
+.ag-bar{display:flex;align-items:flex-end;gap:8px;padding:10px 12px 12px}
+.ag-bar textarea{flex:1;min-height:44px;max-height:120px;resize:none;border-radius:22px;border:1px solid rgba(255,255,255,.12);background:#1b1c20;color:#EFEBE3;font:16px/1.35 Manrope,system-ui,sans-serif;padding:11px 16px;outline:0}
+.ag-bar textarea:focus{border-color:rgba(232,176,75,.6)}
+.ag-ic{width:44px;height:44px;flex:none;border-radius:22px;border:1px solid rgba(255,255,255,.12);background:#1b1c20;color:#E8B04B;display:grid;place-items:center;cursor:pointer;padding:0}.ag-ic svg{width:22px;height:22px}
+.ag-mic{background:#E8B04B;border-color:#E8B04B;color:#1a1306;width:52px;height:52px;border-radius:26px;margin-bottom:-4px}
+.ag-send{display:none;background:#E8B04B;border-color:#E8B04B;color:#1a1306}
+#agPanel.has-text .ag-send{display:grid}#agPanel.has-text .ag-mic{display:none}
+#agPanel.busy .ag-send,#agPanel.busy .ag-mic{opacity:.45;pointer-events:none}
+.ag-rec{display:flex;align-items:center;gap:10px;padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));background:#1a1510;border-top:1px solid rgba(232,176,75,.3)}
+.ag-rec[hidden]{display:none}#agPanel.recording .ag-bar{display:none}
+.ag-rec i{width:12px;height:12px;border-radius:6px;background:#E5484D;animation:agDot 1s infinite}.ag-rec span{font-weight:800;font-variant-numeric:tabular-nums;width:40px}
+.ag-rec b{flex:1;font-size:13px;color:#cfcac0;font-weight:600}
+.ag-rec button{height:44px;padding:0 14px;border-radius:22px;border:1px solid rgba(255,255,255,.14);background:#222328;color:#eee;font:800 14px Manrope,system-ui,sans-serif;cursor:pointer}
+.ag-rec button.go{background:#E8B04B;border-color:#E8B04B;color:#1a1306;padding:0 20px}
+html.ag-open #adminView{overflow:hidden}
+html.ag-fab #adminView .adm-page,html.ag-fab #adminView .a-wrap{padding-bottom:84px}
 </style>
 </head>
 <body>
@@ -1842,7 +1899,7 @@ function sessionOK_old(){
   return false;
 }
 function startSession(){ try{ sessionStorage.setItem(SESSION_KEY,String(Date.now())); }catch(_){} }
-function endSession(){ S.sbSession=null; if(typeof Att!=="undefined"){ if(Att.el&&Att.el.parentNode) Att.el.remove(); Att.el=null; Att.staff=null; Att.edit=null; } if(typeof Rev!=="undefined"){ if(Rev.el&&Rev.el.parentNode) Rev.el.remove(); Rev.el=null; Rev.rows=null; } S.tg=undefined; S.aiOn=undefined; try{ sessionStorage.removeItem(SESSION_KEY); }catch(_){} if(S.sb) S.sb.auth.signOut().catch(function(){}); }
+function endSession(){ S.sbSession=null; try{ if(AG.open) agShow(false); var f=$("agFab"); if(f) f.hidden=true; }catch(_){} if(typeof Att!=="undefined"){ if(Att.el&&Att.el.parentNode) Att.el.remove(); Att.el=null; Att.staff=null; Att.edit=null; } if(typeof Rev!=="undefined"){ if(Rev.el&&Rev.el.parentNode) Rev.el.remove(); Rev.el=null; Rev.rows=null; } S.tg=undefined; S.aiOn=undefined; try{ sessionStorage.removeItem(SESSION_KEY); }catch(_){} if(S.sb) S.sb.auth.signOut().catch(function(){}); }
 function loginEmail(l){ l=String(l||"").trim().toLowerCase(); return l.indexOf("@")>=0?l:l+"@uno.local"; }
 function logoHTML(){ return S.settings.logoId?'<img alt="Logotip" src="'+blob(S.settings.logoId)+'">':''; }
 function renderAuth(mode){
@@ -2133,7 +2190,7 @@ function renderAdmin(){
       '<p class="help" style="margin-top:10px">"Vaqtincha chiqish" ilovani yopadi, uy tugmasi bosilsa yoki planshet qayta yoqilsa menyu yana ochiladi. "Butunlay o\'chirish" ilovani oddiy ilovaga aylantiradi, keyin uni o\'chirib tashlash ham mumkin.</p>')+'</section>';
   }
   h+='</div>';
-  var y=window.scrollY, keep=admKeep(); if(Att.el && Att.el.parentNode) Att.el.remove(); if(Rev.el && Rev.el.parentNode) Rev.el.remove(); A.innerHTML=h; Att.mount(); Rev.mount(); if(!admPager(keep)) window.scrollTo(0,y);
+  var y=window.scrollY, keep=admKeep(); if(Att.el && Att.el.parentNode) Att.el.remove(); if(Rev.el && Rev.el.parentNode) Rev.el.remove(); A.innerHTML=h; Att.mount(); Rev.mount(); if(!admPager(keep)) window.scrollTo(0,y); agSync();
   var lf=$("logoFile"); if(lf) lf.onchange=function(){ var f=this.files[0]; this.value=""; if(f) uploadLogo(f); };
   if(S.aiBulk && $("aiBulkBox")) renderAiBulk();
   offlineUI(); if(!Offline.last && !Offline.busy) syncMedia();
@@ -2385,10 +2442,18 @@ function makeGemini(){
   }
   async function json(prompt, opt){
     opt=opt||{};
-    var k=await key();
     var parts=[{text:prompt}];
     for(var i=0;i<(opt.images||[]).length;i++) parts.push(await toPart(opt.images[i]));
     var body={contents:[{role:"user",parts:parts}],generationConfig:{temperature:0.2,responseMimeType:"application/json"}};
+    var js=await call(body,opt);
+    var cand=js.candidates&&js.candidates[0], txt=cand&&cand.content&&cand.content.parts&&cand.content.parts.map(function(p){return p.text||"";}).join("");
+    if(!txt) throw {code:"invalid_json", msg:(cand&&cand.finishReason)||(js.promptFeedback&&js.promptFeedback.blockReason)||""};
+    return parse(txt);
+  }
+  /* one generateContent request with model fallback and retries; returns the raw response */
+  async function call(body, opt){
+    opt=opt||{};
+    var k=await key();
     var model=await pickModel(k), tried=[model], retry5xx=0, last=null;
     while(true){
       var res, info="";
@@ -2411,10 +2476,8 @@ function makeGemini(){
       if(res.status===400||res.status===403){ if(/key|API_KEY|PERMISSION/i.test(info)){ keyCache=null; throw {code:"bad_key", msg:info}; } if(/location|region|country/i.test(info)) throw {code:"region", msg:info}; throw {code:"image_rejected", msg:info}; }
       if(!res.ok) throw {code:"network", msg:"HTTP "+res.status+(info?" — "+info:"")};
       var js=await res.json();
-      var cand=js.candidates&&js.candidates[0], txt=cand&&cand.content&&cand.content.parts&&cand.content.parts.map(function(p){return p.text||"";}).join("");
-      if(!txt) throw {code:"invalid_json", msg:(cand&&cand.finishReason)||(js.promptFeedback&&js.promptFeedback.blockReason)||""};
       try{ localStorage.setItem("uno_gem_model",model); }catch(_){}
-      return parse(txt);
+      return js;
     }
   }
   async function nextModel(k, tried){
@@ -2432,7 +2495,7 @@ function makeGemini(){
     for(var i=0;i<list.length;i++) if(tried.indexOf(list[i])<0) return list[i];
     return null;
   }
-  return {limits:async function(){ return {images:true}; }, json:json, reset:function(){ keyCache=null; }};
+  return {limits:async function(){ return {images:true}; }, json:json, call:call, toPart:toPart, reset:function(){ keyCache=null; }};
 }
 var AI_RULES="You are a professional nutritionist. Use standard reference values (USDA FoodData Central; for Central Asian / Uzbek dishes use typical traditional restaurant recipes and include the cooking oil, fat and broth they normally contain). Be realistic, do not undercount oil and fat. Numbers are for ONE restaurant portion. All names and the note must be in Uzbek (Latin script).";
 function aiNum(v){ v=Number(v); return isFinite(v)&&v>=0 ? Math.round(v) : 0; }
@@ -3247,6 +3310,7 @@ function route(){
   A.classList.toggle("hidden", S.view!=="admin");
   document.body.style.overflow = S.view==="menu" ? "hidden" : "";
   if(S.view==="admin"){ if(S.detail) closeDetail(); pauseCarouselVideo(); renderAdmin(); } else { closeEditor(); fit(); refreshMenu(); requestAnimationFrame(function(){ sizeCards(); }); }
+  if(typeof agSync==="function") agSync();
 }
 window.addEventListener("hashchange",route);
 
@@ -3314,6 +3378,431 @@ function loadSupabase(ms){
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")){
   window.addEventListener("load",function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
 }
+/* ================= UNO AI — voice/text assistant for the admin =================
+   Talks to Gemini with function calling. Reads the live menu, sees photos/video frames,
+   hears voice messages (WAV), and changes the menu only after the admin confirms. */
+var AG={open:false, msgs:[], hist:[], atts:[], attN:0, busy:false, pending:null, rec:null, ctl:null};
+var AG_TOOLS=[
+ {name:"add_dish", description:"Add a NEW dish to the menu. Fill every field you can: translate name/desc/ingr to Russian and English, estimate portion weight, calories and macros (per portion) from the photo and the recipe. price is required (UZS, integer).",
+  parameters:{type:"OBJECT", properties:{
+   name:{type:"STRING",description:"Uzbek (Latin) name"}, name_ru:{type:"STRING"}, name_en:{type:"STRING"},
+   cat:{type:"STRING",description:"category id from the list"}, price:{type:"INTEGER",description:"price in so'm"},
+   desc:{type:"STRING",description:"1-2 appetizing sentences, Uzbek Latin, max 160 chars"}, desc_ru:{type:"STRING"}, desc_en:{type:"STRING"},
+   ingr:{type:"STRING",description:"ingredients, comma separated, Uzbek"}, ingr_ru:{type:"STRING"}, ingr_en:{type:"STRING"},
+   weight:{type:"STRING",description:"portion, e.g. '350 g' or '0.5 l'"}, time:{type:"INTEGER",description:"cooking minutes"},
+   kcal:{type:"INTEGER"}, prot:{type:"INTEGER",description:"protein g"}, fat:{type:"INTEGER",description:"fat g"}, carb:{type:"INTEGER",description:"carbs g"},
+   photo:{type:"STRING",description:"attachment id of the photo, e.g. att1"}, video:{type:"STRING",description:"attachment id of the video"}},
+   required:["name","cat","price"]}},
+ {name:"update_dish", description:"Change an existing dish. Send only the fields that change. To replace media give photo/video attachment ids; remove_photo/remove_video to delete them.",
+  parameters:{type:"OBJECT", properties:{
+   dish_id:{type:"STRING"}, name:{type:"STRING"}, name_ru:{type:"STRING"}, name_en:{type:"STRING"}, cat:{type:"STRING"}, price:{type:"INTEGER"},
+   desc:{type:"STRING"}, desc_ru:{type:"STRING"}, desc_en:{type:"STRING"}, ingr:{type:"STRING"}, ingr_ru:{type:"STRING"}, ingr_en:{type:"STRING"},
+   weight:{type:"STRING"}, time:{type:"INTEGER"}, kcal:{type:"INTEGER"}, prot:{type:"INTEGER"}, fat:{type:"INTEGER"}, carb:{type:"INTEGER"},
+   photo:{type:"STRING"}, video:{type:"STRING"}, remove_photo:{type:"BOOLEAN"}, remove_video:{type:"BOOLEAN"}}, required:["dish_id"]}},
+ {name:"delete_dish", description:"Delete a dish from the menu permanently.", parameters:{type:"OBJECT", properties:{dish_id:{type:"STRING"}}, required:["dish_id"]}},
+ {name:"add_category", description:"Create a new menu category.", parameters:{type:"OBJECT", properties:{label:{type:"STRING",description:"Uzbek"}, label_ru:{type:"STRING"}, label_en:{type:"STRING"}}, required:["label"]}},
+ {name:"rename_category", description:"Rename a category.", parameters:{type:"OBJECT", properties:{cat_id:{type:"STRING"}, label:{type:"STRING"}, label_ru:{type:"STRING"}, label_en:{type:"STRING"}}, required:["cat_id"]}},
+ {name:"update_settings", description:"Change restaurant settings.", parameters:{type:"OBJECT", properties:{
+   name:{type:"STRING",description:"restaurant name"}, service:{type:"NUMBER",description:"service charge percent"},
+   soundOn:{type:"BOOLEAN",description:"menu sound effects"}, callsOn:{type:"BOOLEAN",description:"waiter-call and bill buttons for guests"},
+   zonePick:{type:"BOOLEAN",description:"zone/table picker on restaurant tablets"}}}},
+ {name:"set_review_hidden", description:"Hide or show a customer review.", parameters:{type:"OBJECT", properties:{review_id:{type:"INTEGER"}, hidden:{type:"BOOLEAN"}}, required:["review_id","hidden"]}},
+ {name:"get_reviews", description:"Read recent customer ratings and reviews (optionally of one dish, or only low ones).", parameters:{type:"OBJECT", properties:{dish_id:{type:"STRING"}, low_only:{type:"BOOLEAN"}, limit:{type:"INTEGER"}}}},
+ {name:"get_attendance", description:"Staff attendance for a day: who came, when, who was late, who is absent.", parameters:{type:"OBJECT", properties:{date:{type:"STRING",description:"YYYY-MM-DD, default today"}}}},
+ {name:"open_section", description:"Show a section of the admin panel on screen.", parameters:{type:"OBJECT", properties:{section:{type:"STRING",description:"one of: Taomlar, Kategoriyalar, AI, Davomat, Baholar, Stollar va QR, Telegram, Restoran, Oflayn, Planshet, Parol"}}, required:["section"]}}
+];
+var AG_WRITE={add_dish:1,update_dish:1,delete_dish:1,add_category:1,rename_category:1,update_settings:1,set_review_hidden:1};
+
+function agToday(){ return new Date(Date.now()+5*3600e3).toISOString().slice(0,10); }
+function agSystem(){
+  var cs=cats().map(function(c){ return c.id+" = "+c.label+(c.label_ru?" / "+c.label_ru:""); }).join("\n");
+  var ds=S.dishes.slice().sort(function(a,b){ return String(a.cat).localeCompare(String(b.cat))||(a.order||0)-(b.order||0); }).map(function(d){
+    var r=RV.sum[d.id]; return d.id+" | "+d.name+" | "+d.cat+" | "+(d.price||0)+" so'm | "+(d.kcal?d.kcal+" kkal":"kkal yo'q")+" | "+(d.weight||"-")+(d.imgId?" | surat":"")+(d.videoId?" | video":"")+(r&&r.cnt?" | ★"+r.avg+" ("+r.cnt+")":""); }).join("\n");
+  var st=S.settings||{};
+  return "You are «UNO AI», the voice and text assistant inside the admin panel of the digital menu of UNO Airways Restaurante (Farg'ona, Uzbekistan; Turkish and European cuisine; waiters dress as pilots).\n"+
+   "The admin talks to you in Uzbek (sometimes Russian), by text or by VOICE messages (audio). Reply in the admin's language — Uzbek in Latin script by default. Keep replies short: 1–3 sentences, no markdown tables.\n"+
+   "If the admin sent a voice message, START your text reply with a line «🎤 <exactly what they said, as text>» and then answer on the next line.\n"+
+   "You can change the menu and settings ONLY by calling the tools. Never claim something was done without calling a tool — the app shows the admin a confirmation card for every change, so call the tool straight away when the request is clear (do not ask «shall I?»). Call several tools at once when asked for several changes.\n"+
+   "Ask a short question instead of calling a tool only when something required is missing or ambiguous: the price of a new dish (never invent a price), which dish is meant when several match, or which category when none fits.\n"+
+   "Prices: «45 ming» = 45000, «1 yarim mln» = 1500000. Dish names: proper Uzbek Latin spelling with an apostrophe like Lag'mon, Qo'y go'shti; capitalise the first letter.\n"+
+   "New dish from a photo or video: identify the dish and every visible component, estimate each component's weight, the portion weight, calories, protein, fat and carbs per portion, typical cooking time, write an appetizing description and the ingredients — all in Uzbek, Russian and English. "+AI_RULES+"\n"+
+   "Attachments are named att1, att2 … in the order the admin sent them; pass these ids in photo/video. For a video only, pass it as video (the app makes the cover photo from a frame).\n"+
+   "Today is "+agToday()+" (Asia/Tashkent).\n\n"+
+   "RESTAURANT SETTINGS: name="+(st.name||"UNO Airways")+"; service="+svcPct(st)+"%; soundOn="+(st.soundOn!==false)+"; callsOn="+!!st.callsOn+"; zonePick="+!!st.zonePick+"\n\n"+
+   "CATEGORIES (id = name):\n"+(cs||"(none)")+"\n\nDISHES (id | name | category id | price | kcal | weight | media | rating):\n"+(ds||"(none)");
+}
+
+/* ---------- UI ---------- */
+function agMount(){
+  if($("agFab")) return;
+  var fab=document.createElement("button"); fab.id="agFab"; fab.type="button"; fab.setAttribute("aria-label","UNO AI yordamchisi");
+  fab.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg><span>UNO AI</span>';
+  fab.addEventListener("click",function(){ agShow(true); });
+  var p=document.createElement("div"); p.id="agPanel"; p.hidden=true;
+  p.innerHTML='<div class="ag-head"><div class="ag-title"><b>UNO AI</b><small>Gapiring yoki yozing — taom qo\'shaman, narx o\'zgartiraman, hisobot beraman</small></div><button class="ag-x" data-ag="new" title="Yangi suhbat">'+
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button><button class="ag-x" data-ag="close" aria-label="Yopish">'+
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>'+
+    '<div class="ag-log" id="agLog"></div>'+
+    '<div class="ag-atts" id="agAtts"></div>'+
+    '<div class="ag-bar"><button class="ag-ic" data-ag="attach" aria-label="Surat yoki video"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5-5-8 8"/></svg></button>'+
+    '<textarea id="agIn" rows="1" placeholder="Masalan: Lag\'mon qo\'sh, narxi 45 ming"></textarea>'+
+    '<button class="ag-ic ag-mic" data-ag="mic" aria-label="Ovozli buyruq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>'+
+    '<button class="ag-ic ag-send" data-ag="send" aria-label="Yuborish"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4l17.5-7.5a1 1 0 0 0 0-1.8L3.4 3.6a.9.9 0 0 0-1.2 1.1L4.6 12l-2.4 7.3a.9.9 0 0 0 1.2 1.1z"/></svg></button></div>'+
+    '<div class="ag-rec" id="agRec" hidden><i></i><span id="agRecT">0:00</span><b>Gapiring… tugatgach yuboring</b><button data-ag="recCancel">Bekor</button><button class="go" data-ag="recSend">Yuborish</button></div>'+
+    '<input type="file" id="agFile" accept="image/*,video/*" multiple hidden>';
+  document.body.appendChild(fab); document.body.appendChild(p);
+  p.addEventListener("click",agClick);
+  $("agFile").addEventListener("change",function(e){ [].slice.call(e.target.files||[]).forEach(agAddAtt); e.target.value=""; });
+  var inp=$("agIn");
+  inp.addEventListener("input",function(){ inp.style.height="auto"; inp.style.height=Math.min(120,inp.scrollHeight)+"px"; agBarState(); });
+  inp.addEventListener("keydown",function(e){ if(e.key==="Enter"&&!e.shiftKey&&!/Mobi|Android|iPhone|iPad/.test(navigator.userAgent)){ e.preventDefault(); agSendText(); } });
+  if(!AG.msgs.length) agSay("ai",'Salom! Men UNO AI. Ovozli yoki yozma buyruq bering. Masalan:<br>• 📷 surat yuklab: <i>«Bu Qo\'y kabob, narxi 85 ming, Mangalga qo\'sh»</i><br>• <i>«Lag\'mon narxini 48 mingga o\'zgartir»</i><br>• <i>«Bugun kim ishga kechikdi?»</i><br>• <i>«Eng past baholangan taomlar qaysi?»</i>',true);
+  agBarState();
+}
+function agSync(){
+  var on=S.view==="admin" && typeof sessionOK==="function" && sessionOK() && S.aiOn===true && S.canEdit && !!S.db;
+  if(on) agMount();
+  var f=$("agFab"); if(f) f.hidden=!on||AG.open;
+  document.documentElement.classList.toggle("ag-fab",on);
+  if(!on && AG.open) agShow(false);
+}
+function agShow(v){
+  AG.open=v; var p=$("agPanel"), f=$("agFab"); if(!p) return;
+  p.hidden=!v; if(f) f.hidden=v; document.documentElement.classList.toggle("ag-open",v);
+  if(v){ agScroll(); setTimeout(function(){ if(!/Mobi|Android|iPhone|iPad/.test(navigator.userAgent)) $("agIn").focus(); },50); }
+}
+function agScroll(){ var l=$("agLog"); if(l) requestAnimationFrame(function(){ l.scrollTop=l.scrollHeight; }); }
+function agSay(who, html, raw){ AG.msgs.push({who:who,html:html}); var l=$("agLog"); if(!l) return null;
+  var d=document.createElement("div"); d.className="ag-m "+who; d.innerHTML=raw?html:esc(html).replace(/\n/g,"<br>"); l.appendChild(d); agScroll(); return d; }
+function agTyping(on){ var l=$("agLog"), t=$("agTyping"); if(on&&!t&&l){ t=document.createElement("div"); t.id="agTyping"; t.className="ag-m ai typing"; t.innerHTML="<i></i><i></i><i></i>"; l.appendChild(t); agScroll(); } if(!on&&t) t.remove(); }
+function agBarState(){ var b=$("agPanel"); if(!b) return; var has=($("agIn").value.trim()||AG.atts.some(function(a){ return !a.sent; })); b.classList.toggle("has-text",!!has); b.classList.toggle("busy",AG.busy); }
+
+/* ---------- attachments ---------- */
+function agAddAtt(file){
+  var isV=/^video\//.test(file.type), isI=/^image\//.test(file.type);
+  if(!isV&&!isI) return;
+  if(file.size>(isV?20:15)*1024*1024){ agSay("ai",(isV?"Video 20 MB dan":"Surat 15 MB dan")+" katta. Kichikroq fayl tanlang."); return; }
+  var a={id:"att"+(++AG.attN), kind:isV?"video":"image", file:file, url:URL.createObjectURL(file), frames:null, sent:false};
+  AG.atts.push(a); agAttsUI();
+  if(isV) agFrames(a).catch(function(){});
+}
+function agAttsUI(){
+  var el=$("agAtts"); if(!el) return;
+  var list=AG.atts.filter(function(a){ return !a.sent; });
+  el.innerHTML=list.map(function(a){ return '<div class="ag-att">'+(a.kind==="video"?'<video src="'+a.url+'" muted playsinline preload="metadata"></video><em>VIDEO</em>':'<img src="'+a.url+'" alt="">')+'<span>'+a.id+'</span><button data-ag="rmAtt" data-id="'+a.id+'" aria-label="Olib tashlash">×</button></div>'; }).join("");
+  el.hidden=!list.length; agBarState();
+}
+/* three still frames of a video (Gemini sees them like photos) */
+function agFrames(a){
+  if(a.frames) return Promise.resolve(a.frames);
+  if(a._fp) return a._fp;
+  a._fp=new Promise(function(res,rej){
+    var v=document.createElement("video"); v.muted=true; v.playsInline=true; v.preload="auto"; v.src=a.url; var out=[], marks=[.2,.5,.8], i=0, dur=0;
+    var to=setTimeout(function(){ a.frames=out; res(out); }, 12000);
+    function grab(){ try{ var sc=Math.min(1,960/Math.max(v.videoWidth,v.videoHeight)); var c=document.createElement("canvas"); c.width=Math.round(v.videoWidth*sc); c.height=Math.round(v.videoHeight*sc);
+      c.getContext("2d").drawImage(v,0,0,c.width,c.height); c.toBlob(function(b){ if(b) out.push(b); next(); },"image/jpeg",.86); }catch(e){ next(); } }
+    function next(){ if(i>=marks.length){ clearTimeout(to); a.frames=out; res(out); return; } v.currentTime=Math.max(.05,dur*marks[i++]); }
+    v.addEventListener("seeked",grab);
+    v.addEventListener("loadedmetadata",function(){ dur=v.duration||1; next(); },{once:true});
+    v.addEventListener("error",function(){ clearTimeout(to); rej(new Error("video")); },{once:true});
+  });
+  return a._fp;
+}
+function agAtt(id){ return AG.atts.find(function(a){ return a.id===String(id||"").trim(); }); }
+
+/* ---------- voice: record 16 kHz mono WAV (works on iPhone and Android without extra libraries) ---------- */
+async function agRecStart(){
+  if(AG.rec||AG.busy) return;
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ agSay("ai","Bu qurilmada mikrofon ishlamaydi. Yozib yuboring."); return; }
+  var stream;
+  try{ stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,channelCount:1}}); }
+  catch(e){ agSay("ai","Mikrofonga ruxsat berilmadi. Brauzer sozlamalarida shu sayt uchun mikrofonni yoqing."); return; }
+  var AC=window.AudioContext||window.webkitAudioContext, ctx=new AC(), src=ctx.createMediaStreamSource(stream), proc=ctx.createScriptProcessor(4096,1,1), chunks=[];
+  proc.onaudioprocess=function(e){ chunks.push(new Float32Array(e.inputBuffer.getChannelData(0))); };
+  src.connect(proc); proc.connect(ctx.destination);
+  if(ctx.state==="suspended") try{ await ctx.resume(); }catch(_){}
+  AG.rec={stream:stream,ctx:ctx,src:src,proc:proc,chunks:chunks,rate:ctx.sampleRate,t0:Date.now()};
+  $("agRec").hidden=false; $("agPanel").classList.add("recording");
+  AG.rec.tick=setInterval(function(){ var s=Math.floor((Date.now()-AG.rec.t0)/1000); $("agRecT").textContent=Math.floor(s/60)+":"+("0"+s%60).slice(-2); if(s>=90) agRecStop(true); },250);
+  try{ navigator.vibrate&&navigator.vibrate(15); }catch(_){}
+}
+function agRecStop(send){
+  var r=AG.rec; if(!r) return; AG.rec=null; clearInterval(r.tick);
+  try{ r.proc.disconnect(); r.src.disconnect(); }catch(_){} r.stream.getTracks().forEach(function(t){ t.stop(); }); try{ r.ctx.close(); }catch(_){}
+  $("agRec").hidden=true; $("agPanel").classList.remove("recording");
+  if(!send) return;
+  var secs=(Date.now()-r.t0)/1000; if(secs<0.7){ agSay("ai","Juda qisqa. Mikrofon tugmasini bosib, gapiring, keyin «Yuborish»."); return; }
+  var wav=agWav(r.chunks,r.rate,16000);
+  agSend({audio:wav, secs:Math.round(secs)});
+}
+function agWav(chunks, inRate, outRate){
+  var n=chunks.reduce(function(a,c){ return a+c.length; },0), all=new Float32Array(n), o=0;
+  chunks.forEach(function(c){ all.set(c,o); o+=c.length; });
+  var ratio=inRate/outRate, len=Math.floor(n/ratio), pcm=new Int16Array(len);
+  for(var i=0;i<len;i++){ var a=Math.floor(i*ratio), b=Math.min(n,Math.floor((i+1)*ratio)), s=0, k=0; for(var j=a;j<b;j++){ s+=all[j]; k++; } var v=k?s/k:0; v=Math.max(-1,Math.min(1,v*1.6)); pcm[i]=v<0?v*0x8000:v*0x7FFF; }
+  var buf=new ArrayBuffer(44+pcm.length*2), dv=new DataView(buf);
+  function w(off,str){ for(var i=0;i<str.length;i++) dv.setUint8(off+i,str.charCodeAt(i)); }
+  w(0,"RIFF"); dv.setUint32(4,36+pcm.length*2,true); w(8,"WAVE"); w(12,"fmt "); dv.setUint32(16,16,true); dv.setUint16(20,1,true); dv.setUint16(22,1,true);
+  dv.setUint32(24,outRate,true); dv.setUint32(28,outRate*2,true); dv.setUint16(32,2,true); dv.setUint16(34,16,true); w(36,"data"); dv.setUint32(40,pcm.length*2,true);
+  new Int16Array(buf,44).set(pcm);
+  return new Blob([buf],{type:"audio/wav"});
+}
+function agB64(b){ return new Promise(function(res,rej){ var fr=new FileReader(); fr.onload=function(){ res(String(fr.result).split(",")[1]); }; fr.onerror=rej; fr.readAsDataURL(b); }); }
+
+/* ---------- conversation ---------- */
+function agClick(e){
+  var b=e.target.closest("[data-ag]"); if(!b) return; var a=b.dataset.ag;
+  if(a==="close"){ agRecStop(false); agShow(false); return; }
+  if(a==="new"){ if(AG.busy) return; AG.hist=[]; AG.msgs=[]; AG.pending=null; AG.atts=[]; AG.attN=0; $("agLog").innerHTML=""; agAttsUI(); agSay("ai","Yangi suhbat. Qanday yordam beray?"); return; }
+  if(a==="attach"){ $("agFile").click(); return; }
+  if(a==="rmAtt"){ AG.atts=AG.atts.filter(function(x){ return x.id!==b.dataset.id; }); agAttsUI(); return; }
+  if(a==="mic"){ agRecStart(); return; }
+  if(a==="recCancel"){ agRecStop(false); return; }
+  if(a==="recSend"){ agRecStop(true); return; }
+  if(a==="send"){ agSendText(); return; }
+  if(a==="ok"){ agConfirm(true); return; }
+  if(a==="no"){ agConfirm(false); return; }
+}
+function agSendText(){
+  var inp=$("agIn"), txt=inp.value.trim(); var newAtts=AG.atts.filter(function(x){ return !x.sent; });
+  if(!txt&&!newAtts.length) return;
+  if(AG.pending && !newAtts.length && /^(ha|xa|ha+,? ?(tasdiq\w*)?|tasdiq\w*|ok|okey|mayli|bo'?ldi|да|ага|yes|qil|qo'?sh)\.?!?$/i.test(txt)){ inp.value=""; agBarState(); agConfirm(true); return; }
+  if(AG.pending && /^(yo'?q|bekor\w*|kerakmas|нет|no|отмена)\.?!?$/i.test(txt)){ inp.value=""; agBarState(); agConfirm(false); return; }
+  inp.value=""; inp.style.height="auto"; agSend({text:txt});
+}
+async function agSend(m){
+  if(AG.busy) return;
+  var newAtts=AG.atts.filter(function(x){ return !x.sent; });
+  /* user bubble */
+  var bub=(m.text?esc(m.text).replace(/\n/g,"<br>"):"")+(m.audio?'<span class="ag-voice">🎤 Ovozli xabar · '+m.secs+' s</span>':"");
+  if(newAtts.length) bub+='<div class="ag-thumbs">'+newAtts.map(function(a){ return a.kind==="video"?'<video src="'+a.url+'" muted playsinline></video>':'<img src="'+a.url+'" alt="">'; }).join("")+'</div>';
+  var ub=agSay("me",bub,true);
+  newAtts.forEach(function(a){ a.sent=true; }); agAttsUI();
+  AG.busy=true; agBarState(); agTyping(true);
+  try{
+    var parts=[];
+    if(m.text) parts.push({text:m.text});
+    if(m.audio){ parts.push({text:"[Voice message from the admin — listen and do what they ask]"}); parts.push({inline_data:{mime_type:"audio/wav",data:await agB64(m.audio)}}); }
+    for(var i=0;i<newAtts.length;i++){
+      var a=newAtts[i];
+      if(a.kind==="image"){ parts.push({text:"Attachment "+a.id+" (photo):"}); parts.push(await S.sample.toPart(a.file)); }
+      else { var fr=[]; try{ fr=await agFrames(a); }catch(_){}
+        parts.push({text:"Attachment "+a.id+" (video, "+fr.length+" frames below):"});
+        for(var j=0;j<fr.length;j++) parts.push(await S.sample.toPart(fr[j])); }
+    }
+    /* answer unanswered tool calls first (the admin spoke instead of confirming) */
+    if(AG.pending){ var pr=agPendingResponses(false,"The admin did not confirm; they sent a new message instead (below)."); AG.pending=null; agCardDone("Bekor qilindi"); parts=pr.concat(parts); }
+    var last=AG.hist[AG.hist.length-1];
+    if(last && last.role==="user") last.parts=last.parts.concat(parts); else AG.hist.push({role:"user",parts:parts});
+    AG._voiceTurn=m.audio?AG.hist.length-1:-1; AG._ub=ub;
+    await agLoop();
+  }catch(e){ agTyping(false); agSay("ai",typeof aiErr==="function"?aiErr(e):"Xatolik: "+((e&&e.message)||e)); AG.hist=AG.hist.slice(0,-1); }
+  AG.busy=false; agTyping(false); agBarState();
+}
+async function agLoop(){
+  for(var step=0; step<5; step++){
+    var body={system_instruction:{parts:[{text:agSystem()}]}, contents:agTrim(AG.hist), tools:[{function_declarations:AG_TOOLS}],
+              tool_config:{function_calling_config:{mode:"AUTO"}}, generationConfig:{temperature:0.3}};
+    var js=await S.sample.call(body,{});
+    var cand=js.candidates&&js.candidates[0], content=cand&&cand.content;
+    if(!content||!content.parts||!content.parts.length){ agTyping(false); agSay("ai","Javob bo'lmadi"+(cand&&cand.finishReason?" ("+cand.finishReason+")":"")+". Boshqacha aytib ko'ring."); return; }
+    content.role="model"; AG.hist.push(content);
+    var txt=content.parts.map(function(p){ return p.text&&!p.thought?p.text:""; }).join("").trim();
+    var calls=content.parts.filter(function(p){ return p.functionCall; }).map(function(p){ return p.functionCall; });
+    /* voice transcript → show it in the admin's bubble and keep text instead of audio in the history */
+    var mt=txt.match(/^\s*🎤\s*[«"]?([^\n]+?)[»"]?\s*(\n|$)/);
+    if(mt){ txt=txt.slice(mt[0].length).trim(); if(AG._ub){ var v=AG._ub.querySelector(".ag-voice"); if(v) v.insertAdjacentHTML("afterend",'<div class="ag-tr">«'+esc(mt[1])+'»</div>'); }
+      if(AG._voiceTurn>=0&&AG.hist[AG._voiceTurn]) AG.hist[AG._voiceTurn].parts=AG.hist[AG._voiceTurn].parts.map(function(p){ return p.inline_data&&/audio/.test(p.inline_data.mime_type)?{text:"(voice message transcript: «"+mt[1]+"»)"}:p; }); AG._voiceTurn=-1; }
+    agTyping(false);
+    if(txt) agSay("ai",txt);
+    if(!calls.length) return;
+    var reads=calls.filter(function(c){ return !AG_WRITE[c.name]; }), writes=calls.filter(function(c){ return AG_WRITE[c.name]; });
+    if(writes.length){
+      /* read calls in the same turn are answered now; writes wait for the admin */
+      var rr=[]; for(var i=0;i<reads.length;i++) rr.push(await agRunRead(reads[i]));
+      AG.pending={calls:writes, reads:rr};
+      agCard(writes); return;
+    }
+    var resp=[]; for(var k=0;k<reads.length;k++) resp.push(await agRunRead(reads[k]));
+    AG.hist.push({role:"user",parts:resp}); agTyping(true);
+  }
+}
+/* older photos/videos/audio are replaced by a note so each request stays small */
+function agTrim(h){
+  var lastUser=-1; for(var i=h.length-1;i>=0;i--) if(h[i].role==="user" && h[i].parts.some(function(p){ return p.inline_data; })){ lastUser=i; break; }
+  var keepFrom=Math.max(0,h.length-30);
+  return h.slice(keepFrom).map(function(c,idx){ var real=idx+keepFrom; if(c.role!=="user"||real>=lastUser-2) return c;
+    return {role:c.role, parts:c.parts.map(function(p){ return p.inline_data?{text:"(media sent earlier)"}:p; })}; });
+}
+function agFR(call, response){ var fr={name:call.name, response:response}; if(call.id) fr.id=call.id; return {functionResponse:fr}; }
+function agPendingResponses(done, note){
+  var P=AG.pending; if(!P) return [];
+  return P.reads.concat(P.calls.map(function(c){ return agFR(c, done||{ok:false, error:note||"cancelled by the admin"}); }));
+}
+
+/* ---------- confirmation card ---------- */
+function agDish(id){ return S.dishes.find(function(d){ return d.id===id; }); }
+function agCatName(id){ var c=cats().find(function(x){ return x.id===id; }); return c?c.label:id; }
+function agMoney(n){ return num(n||0)+" so'm"; }
+function agDescribe(c){
+  var a=c.args||{}, d, h="";
+  if(c.name==="add_dish"){
+    var at=agAtt(a.photo)||agAtt(a.video);
+    h='<div class="ag-act add">'+(at?(at.kind==="video"?'<video src="'+at.url+'" muted playsinline autoplay loop></video>':'<img src="'+at.url+'" alt="">'):'')+'<div><em>Yangi taom</em><b>'+esc(a.name||"")+'</b>'+
+      '<p>'+esc(agCatName(a.cat))+' · <span class="gold">'+agMoney(a.price)+'</span></p>'+
+      '<p class="sm">'+[a.weight,a.kcal?a.kcal+" kkal":"",a.prot!=null?"O "+a.prot+" g":"",a.fat!=null?"Y "+a.fat+" g":"",a.carb!=null?"U "+a.carb+" g":"",a.time?a.time+" daq":""].filter(Boolean).map(esc).join(" · ")+'</p>'+
+      (a.desc?'<p class="sm">'+esc(a.desc)+'</p>':'')+(a.ingr?'<p class="sm"><i>Tarkibi:</i> '+esc(a.ingr)+'</p>':'')+
+      ((a.name_ru||a.name_en)?'<p class="sm muted">RU: '+esc(a.name_ru||"—")+' · EN: '+esc(a.name_en||"—")+'</p>':'')+(a.video&&a.photo?'<p class="sm muted">+ video</p>':'')+'</div></div>';
+  } else if(c.name==="update_dish"){
+    d=agDish(a.dish_id); var L={name:"Nomi",name_ru:"Nomi (RU)",name_en:"Nomi (EN)",cat:"Kategoriya",price:"Narxi",desc:"Tavsif",desc_ru:"Tavsif (RU)",desc_en:"Tavsif (EN)",ingr:"Tarkibi",ingr_ru:"Tarkibi (RU)",ingr_en:"Tarkibi (EN)",weight:"Og'irligi",time:"Vaqti",kcal:"Kaloriya",prot:"Oqsil",fat:"Yog'",carb:"Uglevod"};
+    var rows=Object.keys(L).filter(function(k){ return a[k]!==undefined&&a[k]!==null&&a[k]!==""; }).map(function(k){
+      var ov=d?d[k]:"", nv=a[k]; if(k==="price"){ ov=agMoney(ov); nv=agMoney(nv); } if(k==="cat"){ ov=agCatName(ov); nv=agCatName(nv); }
+      return '<p class="sm"><i>'+L[k]+':</i> '+(ov!==undefined&&ov!==""&&ov!==0?'<s>'+esc(String(ov)).slice(0,60)+'</s> → ':'')+'<b>'+esc(String(nv))+'</b></p>'; });
+    if(a.photo) rows.push('<p class="sm"><i>Surat:</i> <b>yangisi ('+esc(a.photo)+')</b></p>'); if(a.video) rows.push('<p class="sm"><i>Video:</i> <b>yangisi ('+esc(a.video)+')</b></p>');
+    if(a.remove_photo) rows.push('<p class="sm"><i>Surat:</i> <b>o\'chiriladi</b></p>'); if(a.remove_video) rows.push('<p class="sm"><i>Video:</i> <b>o\'chiriladi</b></p>');
+    h='<div class="ag-act"><div><em>O\'zgartirish</em><b>'+esc(d?d.name:"? ("+a.dish_id+")")+'</b>'+rows.join("")+'</div></div>';
+  } else if(c.name==="delete_dish"){ d=agDish(a.dish_id); h='<div class="ag-act del"><div><em>O\'chirish</em><b>'+esc(d?d.name:a.dish_id)+'</b><p class="sm">Taom menyudan butunlay o\'chiriladi.</p></div></div>'; }
+  else if(c.name==="add_category"){ h='<div class="ag-act"><div><em>Yangi kategoriya</em><b>'+esc(a.label)+'</b><p class="sm muted">RU: '+esc(a.label_ru||"—")+' · EN: '+esc(a.label_en||"—")+'</p></div></div>'; }
+  else if(c.name==="rename_category"){ h='<div class="ag-act"><div><em>Kategoriya nomi</em><b>'+esc(agCatName(a.cat_id))+' → '+esc(a.label||agCatName(a.cat_id))+'</b>'+(a.label_ru||a.label_en?'<p class="sm muted">RU: '+esc(a.label_ru||"—")+' · EN: '+esc(a.label_en||"—")+'</p>':'')+'</div></div>'; }
+  else if(c.name==="update_settings"){ var N={name:"Restoran nomi",service:"Xizmat haqi, %",soundOn:"Menyu ovozlari",callsOn:"Ofitsiant/hisob tugmalari",zonePick:"Zona tanlash (planshet)"};
+    h='<div class="ag-act"><div><em>Sozlamalar</em>'+Object.keys(N).filter(function(k){ return a[k]!==undefined; }).map(function(k){ var v=a[k]; return '<p class="sm"><i>'+N[k]+':</i> <b>'+(typeof v==="boolean"?(v?"yoqiladi":"o'chiriladi"):esc(String(v)))+'</b></p>'; }).join("")+'</div></div>'; }
+  else if(c.name==="set_review_hidden"){ h='<div class="ag-act"><div><em>Izoh #'+esc(String(a.review_id))+'</em><b>'+(a.hidden?"Yashiriladi":"Ko'rsatiladi")+'</b></div></div>'; }
+  return h;
+}
+function agCard(calls){
+  var el=agSay("ai",'<div class="ag-card">'+calls.map(agDescribe).join("")+'<div class="ag-btns"><button class="no" data-ag="no">Bekor qilish</button><button class="ok" data-ag="ok">'+(calls.length>1?"Hammasini tasdiqlash ("+calls.length+")":"Tasdiqlash")+'</button></div></div>',true);
+  if(el) el.classList.add("card"); AG.cardEl=el;
+}
+function agCardDone(text, ok){ var el=AG.cardEl; if(!el) return; var b=el.querySelector(".ag-btns"); if(b) b.outerHTML='<div class="ag-res '+(ok?"ok":"")+'">'+text+'</div>'; AG.cardEl=null; }
+async function agConfirm(yes){
+  var P=AG.pending; if(!P||AG.busy) return;
+  AG.busy=true; agBarState();
+  var resp=P.reads.slice(), lines=[], okAll=true;
+  if(!yes){ resp=agPendingResponses(false); agCardDone("Bekor qilindi"); AG.pending=null; AG.hist.push({role:"user",parts:resp}); AG.busy=false; agBarState(); agSay("ai","Mayli, hech narsa o'zgartirilmadi."); return; }
+  var btn=AG.cardEl&&AG.cardEl.querySelector(".ok"); if(btn){ btn.disabled=true; btn.textContent="Bajarilmoqda…"; }
+  for(var i=0;i<P.calls.length;i++){
+    var c=P.calls[i], r;
+    try{ r=await agRunWrite(c); }catch(e){ r={ok:false,error:String((e&&(e.message||e.msg||e.code))||e)}; }
+    if(!r.ok) okAll=false;
+    lines.push((r.ok?"✅ ":"⚠️ ")+(r.label||c.name)+(r.ok?"":" — "+r.error));
+    resp.push(agFR(c,r));
+  }
+  AG.pending=null; agCardDone(lines.map(esc).join("<br>"), okAll);
+  AG.hist.push({role:"user",parts:resp});
+  try{ SFX.select(); }catch(_){}
+  if(S.view==="admin") try{ renderAdmin(); }catch(_){}
+  AG.busy=false; agBarState();
+}
+
+/* ---------- tools: read ---------- */
+async function agRunRead(c){
+  var a=c.args||{}, out;
+  try{
+    if(c.name==="get_reviews"){
+      var q=S.sb.from("uno_reviews").select("id,dish_id,stars,name,comment,hidden,updated_at").order("updated_at",{ascending:false}).limit(Math.min(80,a.limit||40));
+      if(a.dish_id) q=q.eq("dish_id",a.dish_id); if(a.low_only) q=q.lte("stars",3);
+      var r=await q; if(r.error) throw r.error;
+      out={ok:true, reviews:(r.data||[]).map(function(x){ var d=agDish(x.dish_id); return {id:x.id, dish:d?d.name:x.dish_id, stars:x.stars, name:x.name||"", comment:x.comment||"", hidden:x.hidden, date:String(x.updated_at).slice(0,10)}; })};
+    } else if(c.name==="get_attendance"){
+      var day=/^\d{4}-\d{2}-\d{2}$/.test(a.date||"")?a.date:agToday(), st=attDayStart(day), en=new Date(st.getTime()+864e5);
+      var s1=await S.sb.from("uno_staff").select("id,name,role,team,shift_start,shift_end,days,active").eq("active",true);
+      var s2=await S.sb.from("uno_att").select("staff_id,kind,at,late_min,early_min,worked_min").gte("at",st.toISOString()).lt("at",en.toISOString()).order("at");
+      if(s1.error) throw s1.error; if(s2.error) throw s2.error;
+      var dow=attDow(day);
+      out={ok:true, date:day, staff:(s1.data||[]).map(function(p){ var mine=(s2.data||[]).filter(function(x){ return x.staff_id===p.id; }), inn=mine.find(function(x){ return x.kind==="in"; }), outp=mine.filter(function(x){ return x.kind==="out"; }).pop();
+        return {name:p.name, team:p.team||"", role:p.role||"", works_today:(p.days||[]).indexOf(dow)>=0, shift:String(p.shift_start).slice(0,5)+"–"+String(p.shift_end).slice(0,5),
+          came:inn?attHM(inn.at):null, late_min:inn?inn.late_min||0:null, left:outp?attHM(outp.at):null, worked_min:outp?outp.worked_min:null}; })};
+    } else if(c.name==="open_section"){
+      var want=String(a.section||"").toLowerCase(), btns=[].slice.call(document.querySelectorAll("#adminView .adm-tabs button")), hit=btns.find(function(b){ return b.textContent.toLowerCase().indexOf(want)>=0||want.indexOf(b.textContent.toLowerCase())>=0; });
+      if(hit){ hit.click(); out={ok:true, opened:hit.textContent}; } else out={ok:false, error:"section not found", available:btns.map(function(b){ return b.textContent; })};
+    } else out={ok:false,error:"unknown tool"};
+  }catch(e){ out={ok:false, error:String((e&&e.message)||e)}; }
+  return agFR(c,out);
+}
+
+/* ---------- tools: write (run after the admin confirms) ---------- */
+async function agUpload(att, as){
+  if(!att) throw new Error("fayl topilmadi");
+  if(as==="video"){ if(att.upVid) return att.upVid; var r=await netRetry(function(){ return S.assets.upload(att.file); },3); att.upVid=r.id; return r.id; }
+  if(att.upImg) return att.upImg;
+  var src=att.file;
+  if(att.kind==="video"){ var fr=await agFrames(att); src=fr[1]||fr[0]; if(!src) throw new Error("videodan rasm olib bo'lmadi"); }
+  var body=src; try{ body=await enhanceImage(src); }catch(_){}
+  var r2=await netRetry(function(){ return S.assets.upload(body); },3); att.upImg=r2.id; return r2.id;
+}
+var AG_FIELDS=["name","name_ru","name_en","desc","desc_ru","desc_en","ingr","ingr_ru","ingr_en","weight"];
+var AG_NUMS=["price","time","kcal","prot","fat","carb"];
+function agCatId(v){ var cs=cats(); v=String(v||"").trim(); var c=cs.find(function(x){ return x.id===v; })||cs.find(function(x){ return [x.label,x.label_ru,x.label_en].some(function(l){ return l&&l.toLowerCase()===v.toLowerCase(); }); }); return c?c.id:""; }
+async function agRunWrite(c){
+  var a=c.args||{};
+  if(c.name==="add_dish"){
+    var cat=agCatId(a.cat); if(!cat) return {ok:false,error:"kategoriya topilmadi: "+a.cat, label:a.name};
+    var price=Math.round(Number(a.price)||0); if(!price) return {ok:false,error:"narx yo'q", label:a.name};
+    var data={cat:cat, price:price, kcalEst:true, imgId:"", videoId:"", updatedAt:new Date().toISOString(),
+      order:dishesOf(cat).reduce(function(mx,d){ return Math.max(mx,d.order||0); },0)+10};
+    AG_FIELDS.forEach(function(k){ data[k]=String(a[k]||"").trim(); });
+    AG_NUMS.forEach(function(k){ if(k!=="price") data[k]=Math.max(0,Math.round(Number(a[k])||0)); });
+    var pa=agAtt(a.photo), va=agAtt(a.video);
+    if(va&&va.kind!=="video"){ pa=pa||va; va=null; }
+    if(pa&&pa.kind==="video"&&!va) va=pa;
+    if(va) data.videoId=await agUpload(va,"video");
+    if(pa||va) data.imgId=await agUpload(pa||va,"image");
+    var ref=S.db.collection("dishes").doc();
+    await netRetry(function(){ return ref.set(data); });
+    return {ok:true, dish_id:ref.id, label:"Qo'shildi: "+data.name+" — "+agMoney(price)};
+  }
+  if(c.name==="update_dish"){
+    var d=agDish(a.dish_id); if(!d) return {ok:false,error:"taom topilmadi"};
+    var patch={updatedAt:new Date().toISOString()};
+    AG_FIELDS.forEach(function(k){ if(a[k]!==undefined&&a[k]!==null) patch[k]=String(a[k]).trim(); });
+    AG_NUMS.forEach(function(k){ if(a[k]!==undefined&&a[k]!==null) patch[k]=Math.max(0,Math.round(Number(a[k])||0)); });
+    if(["kcal","prot","fat","carb"].some(function(k){ return patch[k]!==undefined; })) patch.kcalEst=true;
+    if(a.cat){ var nc=agCatId(a.cat); if(!nc) return {ok:false,error:"kategoriya topilmadi", label:d.name}; if(nc!==d.cat){ patch.cat=nc; patch.order=dishesOf(nc).reduce(function(mx,x){ return Math.max(mx,x.order||0); },0)+10; } }
+    var oldImg=d.imgId, oldVid=d.videoId;
+    var pa2=agAtt(a.photo), va2=agAtt(a.video);
+    if(va2&&va2.kind!=="video"){ pa2=pa2||va2; va2=null; }
+    if(va2) patch.videoId=await agUpload(va2,"video");
+    if(pa2) patch.imgId=await agUpload(pa2,"image"); else if(va2&&!d.imgId) patch.imgId=await agUpload(va2,"image");
+    if(a.remove_photo) patch.imgId=""; if(a.remove_video) patch.videoId="";
+    await netRetry(function(){ return S.db.doc("dishes/"+d.id).update(patch); });
+    if(patch.imgId!==undefined&&oldImg&&oldImg!==patch.imgId) S.assets.delete(oldImg).catch(function(){});
+    if(patch.videoId!==undefined&&oldVid&&oldVid!==patch.videoId) S.assets.delete(oldVid).catch(function(){});
+    return {ok:true, label:"O'zgartirildi: "+(patch.name||d.name)+(patch.price?" — "+agMoney(patch.price):"")};
+  }
+  if(c.name==="delete_dish"){
+    var d2=agDish(a.dish_id); if(!d2) return {ok:false,error:"taom topilmadi"};
+    await netRetry(function(){ return S.db.doc("dishes/"+d2.id).delete(); });
+    if(d2.imgId) S.assets.delete(d2.imgId).catch(function(){}); if(d2.videoId) S.assets.delete(d2.videoId).catch(function(){});
+    return {ok:true, label:"O'chirildi: "+d2.name};
+  }
+  if(c.name==="add_category"){
+    var lab=String(a.label||"").trim(); if(!lab) return {ok:false,error:"nom yo'q"};
+    var cs=cats(); var nid=slug(lab); while(cs.some(function(x){ return x.id===nid; })) nid+="-2";
+    cs.push({id:nid,label:lab,label_ru:String(a.label_ru||"").trim(),label_en:String(a.label_en||"").trim()});
+    await netRetry(function(){ return saveSettings({cats:cs}); });
+    return {ok:true, cat_id:nid, label:"Kategoriya qo'shildi: "+lab};
+  }
+  if(c.name==="rename_category"){
+    var cs2=cats(), cc=cs2.find(function(x){ return x.id===a.cat_id; }); if(!cc) return {ok:false,error:"kategoriya topilmadi"};
+    if(a.label) cc.label=String(a.label).trim(); if(a.label_ru!==undefined) cc.label_ru=String(a.label_ru).trim(); if(a.label_en!==undefined) cc.label_en=String(a.label_en).trim();
+    await netRetry(function(){ return saveSettings({cats:cs2}); });
+    return {ok:true, label:"Kategoriya: "+cc.label};
+  }
+  if(c.name==="update_settings"){
+    var p={}; if(a.name!==undefined) p.name=String(a.name).trim(); if(a.service!==undefined) p.service=Math.max(0,Math.min(50,Number(a.service)||0));
+    ["soundOn","callsOn","zonePick"].forEach(function(k){ if(a[k]!==undefined) p[k]=!!a[k]; });
+    if(!Object.keys(p).length) return {ok:false,error:"o'zgarish yo'q"};
+    await netRetry(function(){ return saveSettings(p); });
+    return {ok:true, label:"Sozlamalar saqlandi"};
+  }
+  if(c.name==="set_review_hidden"){
+    var r=await S.sb.from("uno_reviews").update({hidden:!!a.hidden}).eq("id",a.review_id); if(r.error) return {ok:false,error:r.error.message};
+    try{ rvLoadSum(); if(typeof Rev!=="undefined"&&Rev.el){ Rev.rows=null; Rev.load(); } }catch(_){}
+    return {ok:true, label:"Izoh #"+a.review_id+(a.hidden?" yashirildi":" ko'rsatildi")};
+  }
+  return {ok:false,error:"noma'lum amal"};
+}
+
 async function init(){
   applyStatic(); fit(); route(); buildSlides();
   var note=$("statusNote");
