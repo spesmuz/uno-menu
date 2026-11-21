@@ -760,6 +760,7 @@ function pickDefaultCat(){
   if(!S.cat || !cs.some(function(c){return c.id===S.cat;})) { S.cat=cs[0].id; S.idx=0; }
 }
 function mediaThumb(d){
+  if(d.videoId && d.posterId) return '<img class="thumb cover ready" alt="" src="'+blob(d.posterId)+'">';
   if(d.imgId) return '<img class="thumb" data-fit alt="" src="'+blob(d.imgId)+'">';
   return '<span class="plate"><i></i></span>';
 }
@@ -840,7 +841,10 @@ function fitImg(img){
   }
   if(img.complete && img.naturalWidth) run(); else img.addEventListener("load",run,{once:true});
 }
+/* a dish with a video shows a still taken from that video, so the start of playback is invisible */
+function dispImg(d){ return d.videoId && d.posterId ? d.posterId : d.imgId; }
 function photoHTML(d){
+  if(d.videoId && d.posterId) return '<img class="thumb cover ready" alt="'+esc(dn(d))+'" src="'+blob(d.posterId)+'">';
   return d.imgId ? '<img class="thumb" data-fit alt="'+esc(dn(d))+'" src="'+blob(d.imgId)+'">' : '<span class="plate"><i></i></span>';
 }
 function holoHTML(d, nn){
@@ -862,7 +866,9 @@ function onFirstFrame(v, cb){
 }
 /* play only when enough of the video is loaded; until then the photo stays */
 function playWhenReady(v, ok, onShown){
-  function start(){ if(!ok()) return; if(onShown) onFirstFrame(v, onShown); var pr=v.play(); if(pr&&pr.catch) pr.catch(function(){}); }
+  function start(){ if(!ok()) return;
+    var at=Number(v.dataset.at)||0;
+    if(at>0 && !v._atDone){ v._atDone=true; try{ v.currentTime=at; }catch(_){} } if(onShown) onFirstFrame(v, onShown); var pr=v.play(); if(pr&&pr.catch) pr.catch(function(){}); }
   if(v.readyState>=3) start();
   else { v.addEventListener("canplay",function(){ start(); },{once:true}); try{ if(v.preload!=="auto") v.preload="auto"; v.load&&v.networkState===0&&v.load(); }catch(_){} }
 }
@@ -942,7 +948,7 @@ function updateMedia(){
     if(center){
       var open='<button class="sel open" data-more="'+esc(d.id)+'" aria-label="'+esc(dn(d))+' — '+esc(t("more"))+'"></button>';
       if(d.videoId){
-        m.innerHTML=photoHTML(d)+'<div class="vidwrap"><video muted loop playsinline preload="auto" disablepictureinpicture'+(d.imgId?' poster="'+blob(d.imgId)+'"':'')+' src="'+blob(d.videoId)+'" aria-label="'+esc(dn(d))+' '+esc(t("video"))+'"></video></div><span class="badge vid"><i></i>VIDEO</span>'+cl+open;
+        m.innerHTML=photoHTML(d)+'<div class="vidwrap"><video muted loop playsinline preload="auto" disablepictureinpicture data-at="'+(d.posterId?d.posterAt:0)+'"'+(dispImg(d)?' poster="'+blob(dispImg(d))+'"':'')+' src="'+blob(d.videoId)+'" aria-label="'+esc(dn(d))+' '+esc(t("video"))+'"></video></div><span class="badge vid"><i></i>VIDEO</span>'+cl+open;
         scheduleVideo(m, d.id);
       } else {
         m.innerHTML=photoHTML(d)+cl+open;
@@ -1063,8 +1069,8 @@ function detailStep(dir){
   if($("detailHost").querySelector(".detail")) swapDetail(dir); else renderDetail();
 }
 function detailMediaHTML(d){
-  var pic = d.imgId ? '<div class="d-glow"></div><img class="big" data-fit alt="'+esc(dn(d))+'" src="'+blob(d.imgId)+'">' : '<div class="d-glow"></div><span class="plate" style="transform:scale(1.6)"><i></i></span>';
-  if(d.videoId) pic+='<video class="dvid" src="'+blob(d.videoId)+'" loop playsinline muted preload="auto" disablepictureinpicture aria-label="'+esc(dn(d))+' '+esc(t("video"))+'"></video><button class="d-sound" data-d="sound" aria-pressed="false">'+ICON.sound+'<span>'+esc(t("sound"))+'</span></button>';
+  var pic = (d.videoId && d.posterId) ? '<img class="big cover ready" alt="'+esc(dn(d))+'" src="'+blob(d.posterId)+'">' : d.imgId ? '<div class="d-glow"></div><img class="big" data-fit alt="'+esc(dn(d))+'" src="'+blob(d.imgId)+'">' : '<div class="d-glow"></div><span class="plate" style="transform:scale(1.6)"><i></i></span>';
+  if(d.videoId) pic+='<video class="dvid" data-at="'+(d.posterId?d.posterAt:0)+'"'+(d.posterId?' poster="'+blob(d.posterId)+'"':'')+' src="'+blob(d.videoId)+'" loop playsinline muted preload="auto" disablepictureinpicture aria-label="'+esc(dn(d))+' '+esc(t("video"))+'"></video><button class="d-sound" data-d="sound" aria-pressed="false">'+ICON.sound+'<span>'+esc(t("sound"))+'</span></button>';
   return pic;
 }
 function detailInfoHTML(d){
@@ -1091,7 +1097,7 @@ function setupLayer(layer, d){
 }
 function preloadAround(){
   var n=curList.length; if(n<2) return;
-  [S.idx-1,S.idx+1].forEach(function(i){ var d=curList[(i+n)%n]; if(d&&d.imgId){ var im=new Image(); im.src=blob(d.imgId); } });
+  [S.idx-1,S.idx+1].forEach(function(i){ var d=curList[(i+n)%n]; if(d&&dispImg(d)){ var im=new Image(); im.src=blob(dispImg(d)); } });
 }
 function swapDetail(dir){
   var host=$("detailHost"), d=S.dishes.find(function(x){return x.id===S.detail;}); if(!d){ closeDetail(); return; }
@@ -1706,7 +1712,7 @@ function renderAdmin(){
         '<div class="a-row" style="margin-top:14px"><button class="btn" data-a="trAll" style="border-color:rgba(232,176,75,.5)">🌐 Tarjimasi yo\'q taom va kategoriyalarni tarjima qilish</button></div><p class="help" style="margin-top:6px">O\'zbekcha nom, tavsif va tarkib rus va ingliz tiliga o\'giriladi. Mavjud tarjimalarga tegilmaydi.</p>':'')+
       '<div id="aiMsg"></div><div id="aiBulkBox" style="margin-top:12px">'+(S.aiBoxHTML||'')+'</div></section>';
   }
-  h+='<section class="a-sec"><h2>Taomlar</h2><p class="help"><b style="color:var(--gold2)">Surat o\'lchami: 1080 × 1080 piksel (kvadrat, 1:1).</b> Menyudagi surat maydoni har doim kvadrat, shuning uchun barcha suratlarni shu o\'lchamda tayyorlang. Video ham kvadrat (1080 × 1080) bo\'lsin, 20 MB dan oshmasin. Video bo\'lsa, taom markazga kelganda surat o\'rniga video o\'ynaydi.</p>';
+  h+='<section class="a-sec"><h2>Taomlar</h2><div id="posterMsg"></div><p class="help"><b style="color:var(--gold2)">Surat o\'lchami: 1080 × 1080 piksel (kvadrat, 1:1).</b> Menyudagi surat maydoni har doim kvadrat, shuning uchun barcha suratlarni shu o\'lchamda tayyorlang. Video ham kvadrat (1080 × 1080) bo\'lsin, 20 MB dan oshmasin. Video bo\'lsa, taom markazga kelganda surat o\'rniga video o\'ynaydi.</p>';
   var groups=cats().concat([{id:"__none",label:"Kategoriyasiz"}]);
   groups.forEach(function(c){
     var list = c.id==="__none" ? S.dishes.filter(function(d){return !catLabel(d.cat);}) : dishesOf(c.id);
@@ -1747,6 +1753,7 @@ function renderAdmin(){
   var lf=$("logoFile"); if(lf) lf.onchange=function(){ var f=this.files[0]; this.value=""; if(f) uploadLogo(f); };
   if(S.aiBulk && $("aiBulkBox")) renderAiBulk();
   offlineUI(); if(!Offline.last && !Offline.busy) syncMedia();
+  posterUI(); if(!ro && !Poster.busy) setTimeout(posterBackfill, 1500);
   var qf=$("qrFrom"), qt=$("qrTo"), ql=$("qrLink");
   if(qf&&qt&&ql){ var upd=function(){ var a=Math.max(1,parseInt(qf.value)||1), b=Math.max(a,parseInt(qt.value)||a); ql.href=ql.href.replace(/\?.*$/,"")+"?from="+a+"&to="+Math.min(b,a+199); }; qf.oninput=upd; qt.oninput=upd; }
   var ss=$("setSound"); if(ss) ss.onchange=async function(){ var on=this.checked; try{ await saveSettings({soundOn:on}); msg($("setMsg"), on?"Ovozlar yoqildi.":"Ovozlar o'chirildi.","ok"); }catch(err){ msg($("setMsg"),errText(err),"err"); } };
@@ -1785,7 +1792,7 @@ A.addEventListener("click", async function(e){
     else if(act==="delYes"){
       var d2=S.dishes.find(function(x){return x.id===id;}); S.confirmDel=null; b.disabled=true;
       await S.db.doc("dishes/"+id).delete();
-      if(S.assets&&d2){ [d2.imgId,d2.videoId].forEach(function(a){ if(a) S.assets.delete(a).catch(function(){}); }); }
+      if(S.assets&&d2){ [d2.imgId,d2.videoId,d2.posterId].forEach(function(a){ if(a) S.assets.delete(a).catch(function(){}); }); }
     }
     else if(act==="up"||act==="down"){
       var d3=S.dishes.find(function(x){return x.id===id;}); var list=dishesOf(d3.cat); var i=list.findIndex(function(x){return x.id===id;});
@@ -2342,7 +2349,8 @@ async function saveDish(){
     weight:gv("edWeight"), time:Number(String(gv("edTime")).replace(/[^\d]/g,""))||0,
     kcal:Number(String(gv("edKcal")).replace(/[^\d]/g,""))||0, prot:Number(String(gv("edProt")).replace(/[^\d]/g,""))||0,
     fat:Number(String(gv("edFat")).replace(/[^\d]/g,""))||0, carb:Number(String(gv("edCarb")).replace(/[^\d]/g,""))||0, kcalEst:!!E.kcalEst,
-    imgId:E.imgId||"", videoId:E.videoId||"", order:order, updatedAt:new Date().toISOString()};
+    imgId:E.imgId||"", videoId:E.videoId||"",
+    posterId:(E.videoId && E.videoId===E.origVid)?(E.posterId||""):"", posterAt:(E.videoId && E.videoId===E.origVid)?(Number(E.posterAt)||0):0, order:order, updatedAt:new Date().toISOString()};
   $("edSave").disabled=true; msg(m,"Saqlanmoqda…");
   try{
     var ref = E.id ? S.db.doc("dishes/"+E.id) : S.db.collection("dishes").doc();
@@ -2350,11 +2358,57 @@ async function saveDish(){
     // remove replaced media
     if(S.assets){
       if(E.origImg && E.origImg!==data.imgId) S.assets.delete(E.origImg).catch(function(){});
-      if(E.origVid && E.origVid!==data.videoId) S.assets.delete(E.origVid).catch(function(){});
+      if(E.origVid && E.origVid!==data.videoId){ S.assets.delete(E.origVid).catch(function(){}); if(E.posterId) S.assets.delete(E.posterId).catch(function(){}); }
       (E.tempUploads||[]).forEach(function(a){ if(a!==data.imgId && a!==data.videoId) S.assets.delete(a).catch(function(){}); });
     }
     E.tempUploads=[]; S.editing=null; var host=$("editorHost"); host.innerHTML=""; host.dataset.open="";
   }catch(err){ msg(m, errText(err), "err"); $("edSave").disabled=false; }
+}
+
+/* ================= video stills (admin): one frame from each video, used as its card picture ================= */
+function makePoster(url){
+  return new Promise(function(ok, no){
+    var v=document.createElement("video"), done=false, to=setTimeout(function(){ fin(new Error("timeout")); },45000);
+    function fin(err, res){ if(done) return; done=true; clearTimeout(to); try{ v.removeAttribute("src"); v.load(); }catch(_){} err?no(err):ok(res); }
+    v.crossOrigin="anonymous"; v.muted=true; v.playsInline=true; v.preload="auto";
+    v.onerror=function(){ fin(new Error("video")); };
+    v.onloadedmetadata=function(){
+      var dur=v.duration, at=isFinite(dur)&&dur>0 ? Math.min(4, dur*0.5) : 0.05; at=Math.round(at*100)/100;
+      v.onseeked=function(){
+        try{
+          var w=v.videoWidth, h=v.videoHeight, k=Math.min(1, 1080/Math.max(w,h)), c=document.createElement("canvas");
+          c.width=Math.round(w*k); c.height=Math.round(h*k); c.getContext("2d").drawImage(v,0,0,c.width,c.height);
+          c.toBlob(function(b){ b?fin(null,{blob:b,at:at}):fin(new Error("toBlob")); },"image/jpeg",0.88);
+        }catch(e){ fin(e); }
+      };
+      try{ v.currentTime=at; }catch(e){ fin(e); }
+    };
+    v.src=url;
+  });
+}
+var Poster={busy:false,done:0,total:0,err:""};
+async function posterBackfill(){
+  if(Poster.busy || !S.assets || !S.db || !sessionOK() || !S.loadedDishes) return;
+  var list=(S.dishes||[]).filter(function(d){ return d.videoId && !d.posterId; });
+  if(!list.length) return;
+  Poster.busy=true; Poster.done=0; Poster.total=list.length; Poster.err=""; posterUI();
+  for(var i=0;i<list.length;i++){
+    var d=list[i];
+    try{
+      var r=await makePoster(blob(d.videoId));
+      var up=await S.assets.upload(new File([r.blob],"poster.jpg",{type:"image/jpeg"}));
+      var cur=(S.dishes||[]).find(function(x){ return x.id===d.id; });
+      if(!cur || cur.videoId!==d.videoId){ S.assets.delete(up.id).catch(function(){}); }
+      else await S.db.doc("dishes/"+d.id).update({posterId:up.id, posterAt:r.at});
+    }catch(e){ Poster.err=String(e&&e.message||e); }
+    Poster.done++; posterUI();
+  }
+  Poster.busy=false; posterUI();
+}
+function posterUI(){
+  var el=$("posterMsg"); if(!el) return;
+  el.innerHTML = Poster.busy ? '<div class="msg" style="margin-top:8px">Videolardan kadr olinmoqda: '+Poster.done+' / '+Poster.total+'…</div>'
+    : (Poster.total ? '<div class="msg '+(Poster.err?'err':'ok')+'" style="margin-top:8px">'+(Poster.err?'Ba\'zi videolardan kadr olib bo\'lmadi: '+esc(Poster.err):'Video kartalari tayyor: surat va video bir xil kadrdan boshlanadi.')+'</div>' : '');
 }
 
 /* ================= XODIMLAR DAVOMATI (admin) ================= */
@@ -2668,7 +2722,7 @@ function mediaUrls(){
   var out=[], seen={};
   function add(id){ if(!id) return; var u=new URL(blob(id),location.href).href; if(!seen[u]){ seen[u]=1; out.push(u); } }
   if(S.settings) add(S.settings.logoId);
-  (S.dishes||[]).forEach(function(d){ add(d.imgId); add(d.videoId); });
+  (S.dishes||[]).forEach(function(d){ add(d.imgId); add(d.videoId); add(d.posterId); });
   return out;
 }
 async function syncMedia(){
@@ -2740,7 +2794,7 @@ async function init(){
     var cc=null; try{ cc=JSON.parse(localStorage.getItem(CACHE_KEY)||"null"); }catch(_){}
     clearTimeout(timer);
     if(cc){ var sm=cc["settings/main"]||{}; S.settings={name:sm.name||"",logoId:String(sm.logoId||""),soundOn:sm.soundOn!==false,service:sm.service,cats:Array.isArray(sm.cats)?sm.cats:[],zones:Array.isArray(sm.zones)?sm.zones:[],zonePick:!!sm.zonePick};
-      S.dishes=Object.keys(cc).filter(function(k){return k.indexOf("dishes/")===0;}).map(function(k){ var d=cc[k]||{}; var o={id:k.slice(7),name:String(d.name||""),desc:String(d.desc||""),price:Number(d.price)||0,cat:String(d.cat||""),order:Number(d.order)||0,imgId:String(d.imgId||""),videoId:String(d.videoId||""),weight:String(d.weight||""),time:Number(d.time)||0,kcal:Number(d.kcal)||0,prot:Number(d.prot)||0,fat:Number(d.fat)||0,carb:Number(d.carb)||0,kcalEst:!!d.kcalEst}; ["ingr","name_ru","desc_ru","ingr_ru","name_en","desc_en","ingr_en"].forEach(function(x){ o[x]=String(d[x]||""); }); return o; });
+      S.dishes=Object.keys(cc).filter(function(k){return k.indexOf("dishes/")===0;}).map(function(k){ var d=cc[k]||{}; var o={id:k.slice(7),name:String(d.name||""),desc:String(d.desc||""),price:Number(d.price)||0,cat:String(d.cat||""),order:Number(d.order)||0,imgId:String(d.imgId||""),videoId:String(d.videoId||""),posterId:String(d.posterId||""),posterAt:Number(d.posterAt)||0,weight:String(d.weight||""),time:Number(d.time)||0,kcal:Number(d.kcal)||0,prot:Number(d.prot)||0,fat:Number(d.fat)||0,carb:Number(d.carb)||0,kcalEst:!!d.kcalEst}; ["ingr","name_ru","desc_ru","ingr_ru","name_en","desc_en","ingr_en"].forEach(function(x){ o[x]=String(d[x]||""); }); return o; });
       S.loadedSettings=true; }
     else note.textContent="Menyu ma'lumotlarini olib bo'lmadi. Internetni tekshiring.";
     S.loadedDishes=true; onData(); if(!cc) setTimeout(function(){ location.reload(); },30000); return;
@@ -2750,7 +2804,7 @@ async function init(){
     S.loadedSettings=true; onData();
   });
   S.db.collection("dishes").onSnapshot(function(snap){
-    S.dishes=snap.docs.map(function(doc){ var d=doc.data()||{}; var o={id:doc.id,name:String(d.name||""),desc:String(d.desc||""),price:Number(d.price)||0,cat:String(d.cat||""),order:Number(d.order)||0,imgId:String(d.imgId||""),videoId:String(d.videoId||""),weight:String(d.weight||""),time:Number(d.time)||0,kcal:Number(d.kcal)||0,prot:Number(d.prot)||0,fat:Number(d.fat)||0,carb:Number(d.carb)||0,kcalEst:!!d.kcalEst};
+    S.dishes=snap.docs.map(function(doc){ var d=doc.data()||{}; var o={id:doc.id,name:String(d.name||""),desc:String(d.desc||""),price:Number(d.price)||0,cat:String(d.cat||""),order:Number(d.order)||0,imgId:String(d.imgId||""),videoId:String(d.videoId||""),posterId:String(d.posterId||""),posterAt:Number(d.posterAt)||0,weight:String(d.weight||""),time:Number(d.time)||0,kcal:Number(d.kcal)||0,prot:Number(d.prot)||0,fat:Number(d.fat)||0,carb:Number(d.carb)||0,kcalEst:!!d.kcalEst};
       ["ingr","name_ru","desc_ru","ingr_ru","name_en","desc_en","ingr_en"].forEach(function(k){ o[k]=String(d[k]||""); }); return o; });
     if(!snap.metadata.fromCache){ S.loadedDishes=true; clearTimeout(timer); note.textContent=""; }
     else if(snap.docs.length){ S.loadedDishes=true; }
