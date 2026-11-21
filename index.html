@@ -1376,6 +1376,22 @@ function qrTable(){
 }
 function tableNo(){ var q=qrTable(); if(q) return q; var pk=pickedTable(); if(pk) return pk; try{ return (localStorage.getItem(TABLE_KEY)||"").trim(); }catch(_){ return ""; } }
 function setTableNo(v){ try{ v=String(v||"").trim().slice(0,12); if(v){ localStorage.setItem(TABLE_KEY,v); localStorage.setItem("uno_table_src","admin"); } else { localStorage.removeItem(TABLE_KEY); localStorage.removeItem("uno_table_src"); } }catch(_){} refreshCallUI(); }
+/* ---------- installed menu on Android: also paint the strip around the camera hole ----------
+   Chrome draws under the camera cutout only in "real" fullscreen (Fullscreen API + viewport-fit=cover),
+   so the installed app switches to it on the guest's first touch. Exit: swipe from the edge / back. */
+(function(){
+  var android=/Android/i.test(navigator.userAgent);
+  var app=window.matchMedia && (matchMedia("(display-mode: fullscreen)").matches || matchMedia("(display-mode: standalone)").matches);
+  if(!android || !app || window.UnoKiosk) return;
+  var de=document.documentElement;
+  function go(){
+    if(document.fullscreenElement || !de.requestFullscreen) return;
+    try{ var p=de.requestFullscreen({navigationUI:"hide"}); if(p&&p.catch) p.catch(function(){}); }catch(_){}
+  }
+  ["pointerup","touchend","click"].forEach(function(ev){ document.addEventListener(ev,go,{capture:true,passive:true}); });
+  document.addEventListener("fullscreenchange",function(){ setTimeout(function(){ try{ fit(); }catch(_){} },150); });
+})();
+
 /* ---------- offer customers to install the menu on their phone (PWA) ---------- */
 (function(){
   var KEY="uno_inst_later", deferred=null, bar=null;
