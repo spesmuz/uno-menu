@@ -1432,6 +1432,7 @@ function setTableNo(v){ try{ v=String(v||"").trim().slice(0,12); if(v){ localSto
   var APK = "https://github.com/spesmuz/uno-menu/releases/download/apk/UNO-Airways.apk";
   function skip(){
     if(standalone || window.UnoKiosk) return true;                          /* already an app / restaurant tablet */
+    if(ios) return true;                                                    /* iPhone: no install offer for now (Android keeps the APK offer) */
     try{ if(localStorage.getItem("uno_device_mode")==="att") return true;
          /* every QR scan offers the app again (unless it is installed); otherwise "Later" waits a day */
          if(window.__fromQR || /[?&]install=1/.test(location.search)) return false;
