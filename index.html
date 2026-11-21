@@ -285,22 +285,34 @@ canvas.frost{position:absolute;inset:0;image-rendering:auto;width:100%;height:10
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
 #toastHost,#detailHost,#cartHost{display:contents}
-#zonePick{position:fixed;inset:0;z-index:9000;background:rgba(8,9,11,.97);display:none;align-items:center;justify-content:center;padding:24px;overflow:auto}
-#zonePick.show{display:flex}
-#zonePick .zp-box{width:min(100%,900px);display:flex;flex-direction:column;gap:18px;align-items:stretch}
-#zonePick h2{margin:0;font-family:Montserrat,sans-serif;font-size:clamp(20px,3.2vw,30px);font-weight:800;text-align:center;color:var(--text)}
-#zonePick .zp-prev{align-self:center;font-size:13px;font-weight:700;color:#17130A;background:var(--gold);padding:6px 14px;border-radius:10px}
-#zonePick .zp-grid{display:grid;gap:14px}
-#zonePick .zp-grid.zones{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
-#zonePick .zp-grid.zones button{height:clamp(96px,16vh,140px);border-radius:22px;border:1px solid rgba(232,176,75,.45);background:linear-gradient(160deg,#22201a,#141518);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
-#zonePick .zp-grid.zones b{font-family:Montserrat,sans-serif;font-size:clamp(20px,2.8vw,28px);letter-spacing:.12em;color:var(--gold2)}
-#zonePick .zp-grid.zones small{color:var(--muted);font-size:13px}
-#zonePick .zp-grid.tables{grid-template-columns:repeat(auto-fill,minmax(84px,1fr))}
-#zonePick .zp-grid.tables button{height:84px;border-radius:18px;border:1px solid var(--line);background:#1A1B20;font-size:28px;font-weight:800;color:var(--text)}
-#zonePick button:active{transform:scale(.97)}
-#zonePick .zp-head{display:flex;align-items:center;gap:14px;justify-content:center;flex-wrap:wrap}
-#zonePick .zp-back{height:46px;padding:0 18px;border-radius:14px;border:1px solid var(--line);background:#1A1B20;font-size:16px;font-weight:700;color:var(--text)}
-#zonePick .zp-skip{align-self:center;background:none;border:0;color:var(--muted);font-size:15px;text-decoration:underline;padding:10px}
+#zonePick{position:fixed;inset:0;z-index:9000;background:radial-gradient(120% 70% at 50% 0%,rgba(70,52,22,.45),transparent 60%),#0A0B0D;display:none;padding:max(18px,env(safe-area-inset-top)) 16px max(18px,env(safe-area-inset-bottom));overflow-y:auto;-webkit-overflow-scrolling:touch}
+#zonePick.show{display:flex;animation:zpFade .28s ease both}
+@keyframes zpFade{from{opacity:0}to{opacity:1}}
+@keyframes zpIn{from{opacity:0;transform:translateY(16px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes zpGlow{0%,100%{box-shadow:0 0 0 0 rgba(232,176,75,0)}50%{box-shadow:0 0 22px 2px rgba(232,176,75,.28)}}
+@keyframes zpPick{0%{transform:scale(1)}40%{transform:scale(1.12);background:var(--gold);color:#17130A}100%{transform:scale(1);background:var(--gold);color:#17130A}}
+#zonePick .zp-box{margin:auto;width:min(100%,760px);display:flex;flex-direction:column;gap:14px;align-items:stretch}
+#zonePick .zp-anim{animation:zpIn .42s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 45ms)}
+#zonePick h2{margin:0;font-family:Montserrat,sans-serif;font-size:clamp(17px,4.6vw,26px);font-weight:800;text-align:center;color:var(--text)}
+#zonePick .zp-sub{margin:-6px 0 4px;text-align:center;color:var(--muted);font-size:13px}
+#zonePick .zp-prev{align-self:center;font-size:12px;font-weight:700;color:#17130A;background:var(--gold);padding:5px 12px;border-radius:10px}
+#zonePick .zp-grid{display:grid;gap:10px}
+#zonePick .zp-grid.zones{grid-template-columns:repeat(2,1fr)}
+@media (min-width:640px){#zonePick .zp-grid.zones{grid-template-columns:repeat(3,1fr);gap:14px}}
+#zonePick .zp-grid.zones button{position:relative;overflow:hidden;height:clamp(64px,11vh,96px);border-radius:18px;border:1px solid rgba(232,176,75,.4);background:linear-gradient(160deg,#25221b,#141518);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:transform .15s ease,border-color .2s;animation:zpIn .42s cubic-bezier(.2,.8,.2,1) both,zpGlow 3.2s ease-in-out infinite;animation-delay:calc(var(--i,0) * 55ms),calc(var(--i,0) * 400ms + .5s)}
+#zonePick .zp-grid.zones button::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,230,170,.13),transparent);transform:skewX(-18deg);animation:zpShine 4.5s ease-in-out infinite;animation-delay:calc(var(--i,0) * 300ms + 1s)}
+@keyframes zpShine{0%,70%{left:-60%}100%{left:130%}}
+#zonePick .zp-grid.zones b{font-family:Montserrat,sans-serif;font-size:clamp(13px,3.6vw,20px);letter-spacing:.12em;color:var(--gold2)}
+#zonePick .zp-grid.zones small{color:var(--muted);font-size:11px}
+#zonePick .zp-grid.tables{grid-template-columns:repeat(auto-fill,minmax(58px,1fr))}
+@media (min-width:640px){#zonePick .zp-grid.tables{grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:12px}}
+#zonePick .zp-grid.tables button{height:58px;border-radius:16px;border:1px solid rgba(255,255,255,.1);background:#1A1B20;font-size:22px;font-weight:800;color:var(--text);transition:transform .12s ease,border-color .2s}
+@media (min-width:640px){#zonePick .zp-grid.tables button{height:70px;font-size:26px}}
+#zonePick .zp-grid.tables button.picked{animation:zpPick .35s ease forwards;border-color:var(--gold)}
+#zonePick button:active{transform:scale(.95)}
+#zonePick .zp-head{display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap}
+#zonePick .zp-back{height:40px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:#1A1B20;font-size:14px;font-weight:700;color:var(--text)}
+#zonePick .zp-skip{align-self:center;background:none;border:0;color:var(--muted);font-size:14px;text-decoration:underline;padding:8px}
 #results{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
 .rgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
 .rcard{height:290px;display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:22px;background:linear-gradient(180deg,#24262D,#1A1C21);border:1px solid rgba(255,255,255,.08)}
@@ -1268,8 +1280,8 @@ function openZonePicker(preview){
       else if(a==="table"){
         var z=ZP.zone, t=b.dataset.t;
         if(!ZP.preview){ try{ localStorage.setItem(PICK_KEY, JSON.stringify({zone:z.name, t:t, at:Date.now()})); }catch(_){} refreshCallUI(); }
-        try{ toast((ZP.preview?"Sinov: ":"")+z.name+" · "+t+"-stol"); }catch(_){}
-        zpClose();
+        b.classList.add("picked");
+        setTimeout(function(){ try{ toast((ZP.preview?"Sinov: ":"")+z.name+" · "+t+"-stol"); }catch(_){} zpClose(); },380);
       }
     });
     document.body.appendChild(ZP.el);
@@ -1278,16 +1290,16 @@ function openZonePicker(preview){
 }
 function zpClose(){ if(ZP.el) ZP.el.classList.remove("show"); }
 function zpRender(){
-  var h='<div class="zp-box">'+(ZP.preview?'<div class="zp-prev">Sinov ko\'rinishi: tanlov saqlanmaydi</div>':'');
+  var h='<div class="zp-box">'+(ZP.preview?'<div class="zp-prev zp-anim">Sinov ko\'rinishi: tanlov saqlanmaydi</div>':'');
   if(!ZP.zone){
-    h+='<h2>Mijoz qaysi zonaga o\'tirdi?</h2><div class="zp-grid zones">'+zonesCfg().map(function(z,i){ return '<button data-zp="zone" data-i="'+i+'"><b>'+esc(z.name)+'</b><small>'+parseTables(z.tables).length+' ta stol</small></button>'; }).join("")+'</div>';
+    h+='<h2 class="zp-anim">Mijoz qaysi zonaga o\'tirdi?</h2><div class="zp-sub zp-anim" style="--i:1">Zonani tanlang</div><div class="zp-grid zones">'+zonesCfg().map(function(z,i){ return '<button data-zp="zone" data-i="'+i+'" style="--i:'+(i+2)+'"><b>'+esc(z.name)+'</b><small>'+parseTables(z.tables).length+' ta stol</small></button>'; }).join("")+'</div>';
   } else {
     var ts=parseTables(ZP.zone.tables);
-    h+='<div class="zp-head"><button class="zp-back" data-zp="back">‹ Zonalar</button><h2>'+esc(ZP.zone.name)+': stol raqami</h2></div>'+
-      '<div class="zp-grid tables">'+(ts.length?ts.map(function(t){ return '<button data-zp="table" data-t="'+t+'">'+t+'</button>'; }).join(""):'<p class="help">Bu zonaga stol raqamlari kiritilmagan (admin panel).</p>')+'</div>';
+    h+='<div class="zp-head zp-anim"><button class="zp-back" data-zp="back">‹ Zonalar</button><h2>'+esc(ZP.zone.name)+'</h2></div><div class="zp-sub zp-anim" style="--i:1">Mijoz o\'tirgan stol raqamini tanlang</div>'+
+      '<div class="zp-grid tables">'+(ts.length?ts.map(function(t,i){ return '<button class="zp-anim" data-zp="table" data-t="'+t+'" style="--i:'+Math.min(i+2,24)+'">'+t+'</button>'; }).join(""):'<p class="help">Bu zonaga stol raqamlari kiritilmagan (admin panel).</p>')+'</div>';
   }
-  h+='<button class="zp-skip" data-zp="skip">'+(ZP.preview?'Yopish':'O\'tkazib yuborish')+'</button></div>';
-  ZP.el.innerHTML=h;
+  h+='<button class="zp-skip zp-anim" data-zp="skip" style="--i:6">'+(ZP.preview?'Yopish':'O\'tkazib yuborish')+'</button></div>';
+  ZP.el.innerHTML=h; ZP.el.scrollTop=0;
 }
 /* unlock = the page becomes visible again after the screen was off */
 (function(){
