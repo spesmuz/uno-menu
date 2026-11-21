@@ -937,12 +937,17 @@ function layout(initial){
   updateMedia();
   var dots=$("dots").querySelectorAll("button"); dots.forEach(function(b,i){ b.setAttribute("aria-current", String(i===S.idx)); });
 }
+/* a photo fills the whole frame (like the video) unless it is a cut-out PNG with transparent corners */
 function fitImg(img){
   function run(){
-    try{ var c=document.createElement("canvas"); c.width=c.height=8; var x=c.getContext("2d"); x.drawImage(img,0,0,8,8);
-      var px=x.getImageData(0,0,8,8).data, tr=[0,7,56,63].some(function(p){ return px[p*4+3]<200; });
-      img.classList.toggle("cover",!tr);
-    }catch(_){}
+    var src=String(img.getAttribute("src")||"");
+    if(/\.jpe?g(\?|$)/i.test(src)) img.classList.add("cover");          /* JPG can't be transparent */
+    else {
+      try{ var c=document.createElement("canvas"); c.width=c.height=8; var x=c.getContext("2d"); x.drawImage(img,0,0,8,8);
+        var px=x.getImageData(0,0,8,8).data, tr=[0,7,56,63].some(function(p){ return px[p*4+3]<200; });
+        img.classList.toggle("cover",!tr);
+      }catch(_){ img.classList.add("cover"); }                            /* can't read pixels (other site) → fill */
+    }
     img.classList.add("ready");
   }
   if(img.complete && img.naturalWidth) run(); else img.addEventListener("load",run,{once:true});
