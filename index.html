@@ -271,8 +271,6 @@ input,select,textarea{font-family:inherit}
 .d-media video{transition:none}
 canvas.frost{position:absolute;inset:0;image-rendering:auto;width:100%;height:100%;z-index:2;pointer-events:none;will-change:opacity;transform:translateZ(0);opacity:0;transition:opacity .45s ease;border-radius:inherit}
 .d-layer canvas.frost{z-index:3}
-.vcover{position:absolute;inset:0;z-index:3;pointer-events:none;display:flex;align-items:center;justify-content:center}
-.media .vcover .thumb,.slide.center .media.has-vid .vcover .thumb,.d-layer.has-vid .vcover img.big{opacity:1!important;transition:none!important}
 
 @keyframes dishIn{0%{opacity:0;transform:translateY(70px) scale(.12);filter:blur(8px) brightness(2)}55%{opacity:1;transform:translateY(-8px) scale(1.05);filter:blur(0) brightness(1.15)}100%{opacity:1;transform:none;filter:none}}
 @keyframes ringIn{0%{opacity:0;transform:scale(.15)}60%{opacity:1;transform:scale(1.08)}100%{opacity:1;transform:none}}
@@ -923,24 +921,16 @@ function frostSwap(box, img, v, reveal){
    1.5 – 2.0 s the photo blurs away and the running video shows through */
 var VIDEO_DELAY=1500, VIDEO_LEAD=500, BLUR_MS=500, _vidT=null;
 function blurReveal(box, img, reveal, t0){
-  var cover=null;
-  if(img && img.naturalWidth){
-    cover=document.createElement("div"); cover.className="vcover";
-    /* the photo may be a cut-out: give the copy the card's own background so the video does not peek around it */
-    for(var el=box; el && el!==document.body; el=el.parentElement){ var cs=getComputedStyle(el); if(cs.backgroundImage!=="none" || (cs.backgroundColor && cs.backgroundColor!=="rgba(0, 0, 0, 0)" && cs.backgroundColor!=="transparent")){ cover.style.background=cs.background; break; } }
-    cover.appendChild(img.cloneNode(true)); box.appendChild(cover);
-  }
-  reveal();                                   /* video on, but still under the copy of the photo */
-  if(!cover) return;
+  /* the video is already playing but invisible; the original photo is never touched until it is covered */
   setTimeout(function(){
-    if(!cover.isConnected) return;
-    var a=frostShot(box, drawPhoto(img));
-    if(!a){ cover.remove(); return; }
+    if(!box.isConnected) return;
+    var a = img && img.naturalWidth ? frostShot(box, drawPhoto(img)) : null;
+    if(!a){ reveal(); return; }
     a.style.zIndex="4"; a.style.transition="opacity "+(BLUR_MS/2)+"ms ease-in";
-    box.appendChild(a); a.offsetWidth; a.style.opacity="1";            /* photo goes soft */
+    box.appendChild(a); a.offsetWidth; a.style.opacity="1";                     /* photo goes soft */
     setTimeout(function(){
-      cover.remove();
-      a.style.transition="opacity "+(BLUR_MS/2)+"ms ease-out"; a.style.opacity="0";   /* soft photo melts, the video is underneath */
+      reveal();                                                                  /* video on, hidden under the soft photo */
+      a.style.transition="opacity "+(BLUR_MS/2)+"ms ease-out"; a.style.opacity="0";   /* soft photo melts away */
       setTimeout(function(){ a.remove(); }, BLUR_MS/2+60);
     }, BLUR_MS/2);
   }, Math.max(0, t0+VIDEO_DELAY-Date.now()));
