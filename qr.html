@@ -9,18 +9,22 @@
   @page { size: A4; margin: 10mm; }
   * { box-sizing: border-box; }
   body { margin: 0; font-family: "Montserrat", "Inter", system-ui, sans-serif; background: #e9e6e0; color: #1a1712; }
-  .bar { position: sticky; top: 0; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 14px 18px; background: #0f0e0c; color: #f3e7cf; z-index: 2; }
-  .bar b { font-size: 16px; letter-spacing: .06em; }
-  .bar label { display: flex; gap: 6px; align-items: center; font-size: 14px; }
-  .bar input { width: 70px; padding: 8px; border-radius: 10px; border: 1px solid #5a4a2a; background: #1b1915; color: #fff; font-size: 15px; }
-  .bar button { padding: 10px 18px; border-radius: 12px; border: 0; background: #e8b04b; color: #1a1306; font-weight: 700; font-size: 15px; cursor: pointer; }
-  .bar .sp { flex: 1; }
+  .bar { position: sticky; top: 0; display: flex; flex-direction: column; gap: 10px; padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top)); background: #0f0e0c; color: #f3e7cf; z-index: 2; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+  .bar .row { display: flex; gap: 10px; align-items: center; width: 100%; max-width: 760px; margin: 0 auto; }
+  .bar .top b { font-size: 16px; letter-spacing: .08em; }
+  .bar label { display: flex; gap: 8px; align-items: center; font-size: 14px; color: #cbbd9e; flex: 1; }
+  .bar input { width: 100%; min-width: 0; height: 42px; padding: 0 12px; border-radius: 12px; border: 1px solid #5a4a2a; background: #1b1915; color: #fff; font-size: 16px; }
+  .bar .dash { color: #8a7d62; }
+  .bar button { height: 42px; padding: 0 16px; border-radius: 12px; border: 0; background: #e8b04b; color: #1a1306; font-weight: 700; font-size: 15px; cursor: pointer; white-space: nowrap; }
+  .bar button.alt { background: #2a261e; color: #f3e7cf; border: 1px solid #5a4a2a; }
+  .bar .acts { display: grid; grid-template-columns: 1fr 1fr; }
+  .bar .acts .main { grid-column: 1 / -1; height: 46px; font-size: 16px; }
+  @media (min-width: 700px) { .bar .acts { grid-template-columns: 2fr 1fr 1fr; } .bar .acts .main { grid-column: auto; height: 42px; } }
   .sheet { display: grid; grid-template-columns: repeat(auto-fit, 90mm); gap: 8mm; justify-content: center; padding: 10mm 12px 20mm; }
   .cell { display: flex; flex-direction: column; align-items: center; gap: 8px; }
   .cell .save1 { padding: 9px 16px; border-radius: 12px; border: 1px solid #c9a35a; background: #fff; color: #1a1306; font-weight: 700; font-size: 14px; cursor: pointer; }
-  .bar button.alt { background: #2a261e; color: #f3e7cf; border: 1px solid #5a4a2a; }
   .bar button:disabled { opacity: .5; }
-  #status { width: 100%; font-size: 13px; color: #e8b04b; min-height: 0; }
+  #status { width: 100%; max-width: 760px; margin: 0 auto; font-size: 13px; color: #e8b04b; min-height: 0; }
   #status:empty { display: none; }
   @media screen and (max-width: 380px) { .sheet { zoom: .9; } }
   .card { width: 90mm; height: 128mm; background: #0d0c0a; color: #f3e7cf; border-radius: 6mm; padding: 7mm 6mm; display: flex; flex-direction: column; align-items: center; text-align: center; break-inside: avoid; page-break-inside: avoid; border: .6mm solid #c9a35a; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -37,15 +41,9 @@
 </head>
 <body>
 <div class="bar">
-  <button id="back" type="button" class="alt" aria-label="Admin panelga qaytish">‹ Orqaga</button>
-  <b>STOL QR-KODLARI</b>
-  <label>dan <input id="from" type="number" min="1"></label>
-  <label>gacha <input id="to" type="number" min="1"></label>
-  <button id="go" type="button">Yangilash</button>
-  <span class="sp"></span>
-  <button id="saveAll" type="button">Hammasini saqlash</button>
-  <button id="zip" type="button" class="alt">ZIP fayl</button>
-  <button id="print" type="button" class="alt">Chop etish</button>
+  <div class="row top"><button id="back" type="button" class="alt" aria-label="Admin panelga qaytish">‹ Orqaga</button><b>STOL QR-KODLARI</b></div>
+  <div class="row range"><label>Stol: <input id="from" type="number" min="1" inputmode="numeric"></label><span class="dash">—</span><label><input id="to" type="number" min="1" inputmode="numeric"></label><button id="go" type="button" class="alt">Ko'rsatish</button></div>
+  <div class="row acts"><button id="saveAll" type="button" class="main">Hammasini saqlash</button><button id="zip" type="button" class="alt">ZIP fayl</button><button id="print" type="button" class="alt">Chop etish</button></div>
   <div id="status"></div>
 </div>
 <div class="sheet" id="sheet"></div>
