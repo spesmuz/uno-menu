@@ -2863,6 +2863,11 @@ Att.download=function(name,text){ var a=document.createElement("a"); a.href=URL.
 Att.cfgHTML=function(){
   var c=Att.cfg||{}, term=Att.isTerminal(), myDev=""; try{ myDev=localStorage.getItem("uno_att_dev")||""; }catch(_){}
   var h='<h3 style="font-size:14px;margin:0 0 8px">Eshik terminali (shu telefon)</h3>';
+  if(window.UnoKiosk && window.UnoKiosk.setKiosk){
+    var kon=!!window.UnoKiosk.kioskOn();
+    h+='<div class="msg '+(kon?'ok':'')+'" style="margin-bottom:10px">Shu telefon: kiosk rejimi <b>'+(kon?'YOQILGAN':'o\'chirilgan')+'</b>. '+(kon?'Xodimlar davomat ekranidan chiqa olmaydi.':'Ilovadan chiqish mumkin.')+'</div>'+
+       '<div class="a-row" style="margin-bottom:14px">'+(kon?'<button class="btn danger" data-att="kioskOff">Kiosk rejimini o\'chirish</button>':'<button class="btn gold" data-att="kioskOn">Kiosk rejimini yoqish</button>')+'</div>';
+  }
   h+=term?'<p class="help">Bu telefon davomat terminali sifatida ishlayapti. Ilova ochilganda menyu emas, PIN-kod ekrani chiqadi. Admin panelga kirish: logotipni 3 soniya bosib turing yoki 7 marta bosing.</p><div class="a-row" style="margin-top:10px"><a class="btn gold" href="davomat.html" onclick="location.replace(\'davomat.html\');return false;">Davomat ekranini ochish</a><button class="btn danger" data-att="unsetTerm">Menyu rejimiga qaytarish</button></div>'+
       '<div class="a-row" style="margin-top:12px"><label class="fld" style="max-width:260px"><span>Terminal nomi</span><input id="devNameIn" maxlength="30" value="'+esc((function(){ try{ return localStorage.getItem("uno_att_name")||"Asosiy eshik"; }catch(_){ return "Asosiy eshik"; } })())+'"></label><button class="btn" data-att="setTerm">Terminalni qayta ulash</button></div>'+
       '<p class="help" style="margin-top:6px">Davomat ekranida «Qurilma o\'chirilgan» chiqsa, shu tugmani bosing: telefon yangi kalit bilan qayta ulanadi.</p>'
@@ -2947,6 +2952,7 @@ Att.click=async function(ev){
       localStorage.setItem("uno_att_token",reg.token); localStorage.setItem("uno_att_dev",reg.id); localStorage.setItem("uno_att_name",reg.name); localStorage.setItem("uno_device_mode","att");
       Att.say("term","Tayyor! Bu telefon endi eshik terminali. Davomat ekrani ochilmoqda…","ok");
       setTimeout(function(){ try{ endSession(); }catch(_){} location.replace("davomat.html"); },1500); return; }
+    if(a==="kioskOn"||a==="kioskOff"){ try{ window.UnoKiosk.setKiosk(a==="kioskOn"); }catch(_){} setTimeout(function(){ Att.render(); },400); return; }
     if(a==="saveApp3"){ var sel=$("app3Sel"); if(sel){ localStorage.setItem("uno_att_app3", JSON.stringify({n:sel.options[sel.selectedIndex].text, p:sel.value})); Att.say("term","Saqlandi: "+sel.options[sel.selectedIndex].text,"ok"); } return; }
     if(a==="unsetTerm"){ ["uno_device_mode","uno_att_token","uno_att_dev","uno_att_name"].forEach(function(k){ localStorage.removeItem(k); }); Att.say("term","Bu telefon yana menyu rejimida. Terminalni ro'yxatdan ham o'chirib qo'ying.","ok"); await Att.load("cfg"); return; }
     if(a==="revoke"){ if(Att.confirmRev!==id){ Att.confirmRev=id; Att.render(); return; } Att.confirmRev=null;
