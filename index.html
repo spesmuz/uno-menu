@@ -2802,7 +2802,7 @@ Att.repHTML=function(){
   var today=attDay(Date.now());
   var r=Att.rep||{from:today.slice(0,8)+"01",to:today};
   var h='<div class="a-row"><label class="fld" style="max-width:180px;min-width:150px"><span>Boshlanish</span><input id="repFrom" type="date" value="'+r.from+'"></label><label class="fld" style="max-width:180px;min-width:150px"><span>Tugash</span><input id="repTo" type="date" value="'+r.to+'"></label>'+
-    '<button class="btn gold" data-att="repRun">Hisoblash</button>'+(r.data?'<button class="btn" data-att="repCsv">Excel (jami)</button><button class="btn" data-att="repCsvAll">Excel (har bir belgi)</button>':'')+'</div>'+
+    '<button class="btn gold" data-att="repRun">Hisoblash</button>'+(r.data?'<button class="btn" data-att="repXlsx"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg> Excel faylini yuklab olish</button>':'')+'</div>'+
     '<div class="a-row" style="gap:6px;margin-top:8px"><button class="btn sm" data-att="repQuick" data-v="today">Bugun</button><button class="btn sm" data-att="repQuick" data-v="week">Shu hafta</button><button class="btn sm" data-att="repQuick" data-v="month">Shu oy</button><button class="btn sm" data-att="repQuick" data-v="prev">O\'tgan oy</button></div>'+Att.msg("rep");
   if(r.busy) h+='<div class="msg" style="margin-top:12px">Hisoblanmoqda…</div>';
   if(r.data){
@@ -2857,6 +2857,55 @@ Att.calc=function(f,t,all){
     }
     return res;
   });
+};
+/* ---- real Excel (.xlsx) file, written in the browser (no library): one file, several sheets ---- */
+Att.xlsx=function(sheets){
+  var enc=new TextEncoder();
+  function x(v){ return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,""); }
+  function col(n){ var r=""; n++; while(n>0){ var m=(n-1)%26; r=String.fromCharCode(65+m)+r; n=Math.floor((n-1)/26); } return r; }
+  function cell(v,ref,st){
+    if(v===null||v===undefined||v==="") return '<c r="'+ref+'"'+(st?' s="'+st+'"':'')+'/>';
+    if(typeof v==="number" && isFinite(v)) return '<c r="'+ref+'"'+(st?' s="'+st+'"':'')+'><v>'+v+'</v></c>';
+    return '<c r="'+ref+'" t="inlineStr"'+(st?' s="'+st+'"':'')+'><is><t xml:space="preserve">'+x(v)+'</t></is></c>';
+  }
+  function sheetXml(sh){
+    var rows=[], r=1;
+    if(sh.title){ rows.push('<row r="1">'+cell(sh.title,"A1",3)+'</row>'); r=3; }
+    var hr=r; rows.push('<row r="'+r+'">'+sh.head.map(function(h,i){ return cell(h,col(i)+r,1); }).join("")+'</row>'); r++;
+    sh.rows.forEach(function(row){ rows.push('<row r="'+r+'">'+row.map(function(v,i){ return cell(v,col(i)+r,row._b?2:0); }).join("")+'</row>'); r++; });
+    var cols='<cols>'+sh.head.map(function(h,i){ var w=(sh.widths&&sh.widths[i])||Math.max(10,String(h).length+2); return '<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w+'" customWidth="1"/>'; }).join("")+'</cols>';
+    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="'+hr+'" topLeftCell="A'+(hr+1)+'" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'+cols+'<sheetData>'+rows.join("")+'</sheetData>'+
+      (sh.rows.length?'<autoFilter ref="A'+hr+':'+col(sh.head.length-1)+(hr+sh.rows.length)+'"/>':'')+'</worksheet>';
+  }
+  var files=[
+    ["[Content_Types].xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+sheets.map(function(_,i){ return '<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'; }).join("")+'</Types>'],
+    ["_rels/.rels",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+    ["xl/workbook.xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'+sheets.map(function(sh,i){ return '<sheet name="'+x(sh.name)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>'; }).join("")+'</sheets></workbook>'],
+    ["xl/_rels/workbook.xml.rels",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+sheets.map(function(_,i){ return '<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>'; }).join("")+'<Relationship Id="rId'+(sheets.length+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
+    ["xl/styles.xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="3"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FF1A1306"/><name val="Calibri"/></font><font><b/><sz val="14"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE8B04B"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border/><border><bottom style="thin"><color rgb="FFBBBBBB"/></bottom></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>']
+  ].concat(sheets.map(function(sh,i){ return ["xl/worksheets/sheet"+(i+1)+".xml", sheetXml(sh)]; }));
+  /* stored zip */
+  var CRC=Att._crc||(Att._crc=(function(){ var t=[]; for(var i=0;i<256;i++){ var c=i; for(var k=0;k<8;k++) c=c&1?0xEDB88320^(c>>>1):c>>>1; t[i]=c>>>0; } return t; })());
+  function crc32(u){ var c=0xFFFFFFFF; for(var i=0;i<u.length;i++) c=CRC[(c^u[i])&255]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+  var parts=[], central=[], off=0;
+  files.forEach(function(f){
+    var nm=enc.encode(f[0]), d=enc.encode(f[1]), crc=crc32(d);
+    var h=new DataView(new ArrayBuffer(30)); h.setUint32(0,0x04034b50,true); h.setUint16(4,20,true); h.setUint16(6,0x0800,true); h.setUint32(14,crc,true); h.setUint32(18,d.length,true); h.setUint32(22,d.length,true); h.setUint16(26,nm.length,true);
+    parts.push(h.buffer,nm,d);
+    var cd=new DataView(new ArrayBuffer(46)); cd.setUint32(0,0x02014b50,true); cd.setUint16(4,20,true); cd.setUint16(6,20,true); cd.setUint16(8,0x0800,true); cd.setUint32(16,crc,true); cd.setUint32(20,d.length,true); cd.setUint32(24,d.length,true); cd.setUint16(28,nm.length,true); cd.setUint32(42,off,true);
+    central.push(cd.buffer,nm); off+=30+nm.length+d.length;
+  });
+  var cs=central.reduce(function(a,b){ return a+b.byteLength; },0);
+  var e=new DataView(new ArrayBuffer(22)); e.setUint32(0,0x06054b50,true); e.setUint16(8,files.length,true); e.setUint16(10,files.length,true); e.setUint32(12,cs,true); e.setUint32(16,off,true);
+  return new Blob(parts.concat(central,[e.buffer]),{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+};
+Att.saveBlob=function(name, blob){
+  /* inside the UNO app: write into Downloads; in a browser: normal download */
+  if(window.UnoKiosk && window.UnoKiosk.saveFile){
+    var fr=new FileReader(); fr.onload=function(){ var r=window.UnoKiosk.saveFile(name, fr.result, blob.type); Att.say("rep", r==="ok"?"Saqlandi: Fayllar → Yuklanmalar (Download) → UNO → "+name : r==="perm"?"Xotiraga yozish uchun ruxsat bering va qayta bosing.":"Saqlab bo'lmadi.", r==="ok"?"ok":"err"); }; fr.readAsDataURL(blob); return;
+  }
+  var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },2000);
+  Att.say("rep","Excel fayli yuklab olindi: "+name,"ok");
 };
 Att.csv=function(rows){ return "﻿sep=;\r\n"+rows.map(function(r){ return r.map(function(c){ c=String(c==null?"":c); return /[;"\r\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c; }).join(";"); }).join("\r\n"); };
 Att.download=function(name,text){ var a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type:"text/csv;charset=utf-8"})); a.download=name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1000); };
@@ -2945,9 +2994,20 @@ Att.click=async function(ev){
       if(v==="week"){ f=attAddDays(td,1-attDow(td)); } else if(v==="month"){ f=td.slice(0,8)+"01"; } else if(v==="prev"){ var first=td.slice(0,8)+"01"; t=attAddDays(first,-1); f=t.slice(0,8)+"01"; }
       $("repFrom").value=f; $("repTo").value=t; await Att.runRep(); return; }
     if(a==="repOpen"){ Att.open=Att.open===id?null:id; Att.render(); return; }
-    if(a==="repCsv"){ var R=Att.rep; Att.download("davomat_"+R.from+"_"+R.to+".csv", Att.csv([["Jamoa","Xodim","Lavozim","Ish kuni","Keldi","Kelmadi","Kechikdi (marta)","Jami kechikish (daq)","Erta ketdi (marta)","Ishlagan (soat)"]].concat(Att.group(R.data.filter(function(x){ return Att.teamOk(x.s); }),function(x){ return x.s; }).reduce(function(a,gr){ return a.concat(gr.items); },[]).map(function(x){ return [attTeam(x.s),x.s.name,x.s.role,x.sched,x.came,x.absent,x.lateN,x.lateSum,x.earlyN,(x.worked/60).toFixed(1).replace(".",",")]; })))); return; }
-    if(a==="repCsvAll"){ var R2=Att.rep, by={}; Att.staff.forEach(function(s){ by[s.id]=s; });
-      Att.download("davomat_belgilar_"+R2.from+"_"+R2.to+".csv", Att.csv([["Sana","Vaqt","Jamoa","Xodim","Lavozim","Belgi","Kechikish (daq)","Erta ketish (daq)","Ishlagan (daq)","Internetsiz"]].concat(R2.raw.filter(function(r){ var k=attDay(r.at); return k>=R2.from && k<=R2.to && (!Att.fTeam || Att.teamOk(by[r.staff_id]||{})); }).map(function(r){ var s=by[r.staff_id]||{}; return [attDay(r.at),attHM(r.at),attTeam(s),s.name||"",s.role||"",r.kind==="in"?"Keldi":"Ketdi",r.kind==="in"?r.late_min:"",r.kind==="out"?r.early_min:"",r.worked_min==null?"":r.worked_min,r.offline?"ha":""]; })))); return; }
+    if(a==="repXlsx"){
+      var R=Att.rep, by={}; Att.staff.forEach(function(st){ by[st.id]=st; });
+      var list=Att.group(R.data.filter(function(x){ return Att.teamOk(x.s); }),function(x){ return x.s; }).reduce(function(acc,gr){ return acc.concat(gr.items); },[]);
+      var title="UNO Airways — davomat: "+R.from+" — "+R.to+(Att.fTeam?" ("+Att.fTeam+")":"");
+      var sum={name:"Jami", title:title, head:["Jamoa","Xodim","Lavozim","Ish kuni","Keldi","Kelmadi","Kechikdi (marta)","Jami kechikish (daq)","Erta ketdi (marta)","Ishlagan (soat)"], widths:[18,24,16,10,9,10,16,20,17,15],
+        rows:list.map(function(x){ return [attTeam(x.s),x.s.name,x.s.role||"",x.sched,x.came,x.absent,x.lateN,x.lateSum,x.earlyN,Math.round(x.worked/6)/10]; })};
+      var daily={name:"Kunlik", title:title, head:["Sana","Kun","Jamoa","Xodim","Keldi","Ketdi","Kechikish (daq)","Ishladi (soat)","Holat"], widths:[12,6,18,24,9,9,15,14,14], rows:[]};
+      list.forEach(function(x){ x.days.forEach(function(d){
+        var st=d.inAt?(d.late>Att.grace()?"Kechikdi":"Vaqtida"):(d.sched?"Kelmadi":"Dam olish");
+        daily.rows.push([d.key,ATT_DN[attDow(d.key)-1],attTeam(x.s),x.s.name,d.inAt||"",d.outAt||"",d.inAt&&d.late>Att.grace()?d.late:"",d.worked?Math.round(d.worked/6)/10:"",st]); }); });
+      daily.rows.sort(function(p,q){ return p[0]<q[0]?-1:p[0]>q[0]?1:String(p[3]).localeCompare(q[3]); });
+      var marks={name:"Belgilar", title:title, head:["Sana","Vaqt","Jamoa","Xodim","Lavozim","Belgi","Kechikish (daq)","Erta ketish (daq)","Ishlagan (daq)","Internetsiz"], widths:[12,8,18,24,16,8,15,16,14,11],
+        rows:R.raw.filter(function(r){ var k=attDay(r.at); return k>=R.from && k<=R.to && (!Att.fTeam || Att.teamOk(by[r.staff_id]||{})); }).map(function(r){ var st=by[r.staff_id]||{}; return [attDay(r.at),attHM(r.at),attTeam(st),st.name||"",st.role||"",r.kind==="in"?"Keldi":"Ketdi",r.kind==="in"?r.late_min:"",r.kind==="out"?r.early_min:"",r.worked_min==null?"":r.worked_min,r.offline?"ha":""]; })};
+      Att.saveBlob("UNO_davomat_"+R.from+"_"+R.to+".xlsx", Att.xlsx([sum,daily,marks])); return; }
     if(a==="setTerm"){
       var nm=($("devNameIn")||{}).value||"Eshik"; b.disabled=true;
       var reg=await Att.q(S.sb.rpc("uno_att_register",{p_name:nm}));
