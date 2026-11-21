@@ -264,7 +264,11 @@ function show(cls, ic, name, time, st, sub){
 $("res").addEventListener("click",function(){ clearTimeout(resT); this.className=""; busy=false; });
 
 function submit(){
-  var code=pin, photo=snap(), at=now(); busy=true; hint("Tekshirilmoqda…");
+  var code=pin;
+  if(window.unoShowDock && window.unoDockCode && code===window.unoDockCode()){
+    pin=""; dots(); window.unoShowDock(); beep("ok"); hint("Qo'shimcha tugmalar ochildi (2 daqiqa)"); setTimeout(function(){ if(!pin) hint("Shaxsiy PIN-kodingizni tering"); },3000); return;
+  }
+  var photo=snap(), at=now(); busy=true; hint("Tekshirilmoqda…");
   var face=photo?'<img src="'+photo+'" alt="">':"";
   punch({p_token:token,p_pin:code,p_photo:photo,p_wait:!!photo},7000).then(function(r){
     setNet(true); pin=""; dots();
@@ -311,7 +315,11 @@ function submit(){
 /* ---- work apps dock (only inside the UNO app) ---- */
 (function(){
   var K=window.UnoKiosk; if(!K || !K.openApp) return;
-  var dock=$("dock"); dock.classList.add("on");
+  var dock=$("dock"), hideT=null;
+  /* the buttons stay hidden; the secret code typed on the keypad shows them for 2 minutes */
+  window.unoDockCode=function(){ try{ return localStorage.getItem("uno_att_dock_code")||"0000"; }catch(_){ return "0000"; } };
+  window.unoShowDock=function(){ dock.classList.add("on"); clearTimeout(hideT); hideT=setTimeout(function(){ dock.classList.remove("on"); },120000); };
+  document.addEventListener("visibilitychange",function(){ if(!document.hidden && dock.classList.contains("on")) window.unoShowDock(); });
   function app3(){
     var a=null; try{ a=JSON.parse(localStorage.getItem("uno_att_app3")||"null"); }catch(_){}
     if(!a && K.apps){ try{ var l=JSON.parse(K.apps()); for(var i=0;i<l.length;i++){ if(/plus/i.test(l[i].n)){ a=l[i]; break; } } }catch(_){} }

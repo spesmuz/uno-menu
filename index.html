@@ -2878,7 +2878,9 @@ Att.cfgHTML=function(){
       l.sort(function(x,y){ return x.n.localeCompare(y.n); });
       return '<div class="a-row" style="margin-top:14px"><label class="fld" style="max-width:340px"><span>Pastdagi 3-tugma (ish ilovasi)</span><select id="app3Sel">'+
         l.map(function(x){ return '<option value="'+esc(x.p)+'"'+(cur&&cur.p===x.p?' selected':'')+'>'+esc(x.n)+'</option>'; }).join("")+'</select></label><button class="btn gold" data-att="saveApp3">Saqlash</button></div>'+
-        '<p class="help" style="margin-top:6px">Davomat ekranining pastida 3 ta tugma bor: Telefon, SMS va shu yerda tanlangan ilova (masalan Plus).</p>';
+        '<p class="help" style="margin-top:6px">Davomat ekranining pastida 3 ta tugma bor: Telefon, SMS va shu yerda tanlangan ilova (masalan Plus).</p>'+
+        '<div class="a-row" style="margin-top:12px"><label class="fld" style="max-width:220px"><span>Tugmalarni ochadigan maxfiy kod (4 raqam)</span><input id="dockCode" inputmode="numeric" maxlength="4" type="password" autocomplete="off" placeholder="'+(localStorage.getItem("uno_att_dock_code")?"o\'rnatilgan":"hozir: 0000")+'"></label><button class="btn gold" data-att="saveDockCode">Saqlash</button></div>'+
+        '<p class="help" style="margin-top:6px">Tugmalar odatda yashirin. Davomat ekranida shu kodni tersangiz, 2 daqiqaga chiqadi. Kod hech bir xodimning PIN-kodi bilan bir xil bo\'lmasin.</p>';
     })():'')
     :'<p class="help">Eshik yoniga qo\'yiladigan telefonda shu admin panelga kiring va pastdagi tugmani bosing. Shundan keyin o\'sha telefon faqat davomat ekranini ko\'rsatadi (menyu chiqmaydi). Boshqa planshetlar menyu bo\'lib qolaveradi.</p>'+
      '<div class="a-row" style="margin-top:10px"><label class="fld" style="max-width:260px"><span>Terminal nomi</span><input id="devNameIn" maxlength="30" value="Asosiy eshik"></label><button class="btn gold" data-att="setTerm">Shu telefonni eshik terminali qilish</button></div>';
@@ -2953,6 +2955,9 @@ Att.click=async function(ev){
       Att.say("term","Tayyor! Bu telefon endi eshik terminali. Davomat ekrani ochilmoqda…","ok");
       setTimeout(function(){ try{ endSession(); }catch(_){} location.replace("davomat.html"); },1500); return; }
     if(a==="kioskOn"||a==="kioskOff"){ try{ window.UnoKiosk.setKiosk(a==="kioskOn"); }catch(_){} setTimeout(function(){ Att.render(); },400); return; }
+    if(a==="saveDockCode"){ var v=($("dockCode")||{}).value||""; if(!/^\d{4}$/.test(v)){ Att.say("term","Kod 4 ta raqam bo'lishi kerak.","err"); return; }
+      if((Att.staff||[]).some(function(x){ return x.active && x.pin===v; })){ Att.say("term","Bu kod xodimlardan birining PIN-kodi. Boshqa kod tanlang.","err"); return; }
+      localStorage.setItem("uno_att_dock_code",v); Att.say("term","Maxfiy kod saqlandi.","ok"); return; }
     if(a==="saveApp3"){ var sel=$("app3Sel"); if(sel){ localStorage.setItem("uno_att_app3", JSON.stringify({n:sel.options[sel.selectedIndex].text, p:sel.value})); Att.say("term","Saqlandi: "+sel.options[sel.selectedIndex].text,"ok"); } return; }
     if(a==="unsetTerm"){ ["uno_device_mode","uno_att_token","uno_att_dev","uno_att_name"].forEach(function(k){ localStorage.removeItem(k); }); Att.say("term","Bu telefon yana menyu rejimida. Terminalni ro'yxatdan ham o'chirib qo'ying.","ok"); await Att.load("cfg"); return; }
     if(a==="revoke"){ if(Att.confirmRev!==id){ Att.confirmRev=id; Att.render(); return; } Att.confirmRev=null;
