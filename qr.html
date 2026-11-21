@@ -86,7 +86,7 @@
   document.getElementById("print").onclick = function () { window.print(); };
 
   /* ---------- each card as a PNG (300 dpi: 90 × 128 mm) ---------- */
-  var MM = 300 / 25.4, W = Math.round(90 * MM), H = Math.round(128 * MM);
+  var MM = 600 / 25.4, W = Math.round(90 * MM), H = Math.round(128 * MM);
   var logo = new Image(), logoReady = new Promise(function (ok) { logo.onload = ok; logo.onerror = ok; });
   logo.src = "media/logo.png";
   var statusEl = document.getElementById("status");
@@ -102,11 +102,12 @@
   function drawCard(n) {
     var c = document.createElement("canvas"); c.width = W; c.height = H;
     var x = c.getContext("2d"), m = function (v) { return v * MM; };
+    x.imageSmoothingEnabled = true; try { x.imageSmoothingQuality = "high"; } catch (_) {}
     x.fillStyle = "#ffffff"; x.fillRect(0, 0, W, H);
     rr(x, m(.3), m(.3), W - m(.6), H - m(.6), m(6)); x.fillStyle = "#0d0c0a"; x.fill();
     x.lineWidth = m(.6); x.strokeStyle = "#c9a35a"; x.stroke();
     var y = m(6);
-    if (logo.naturalWidth) { var s = m(20), r = Math.min(s / logo.naturalWidth, s / logo.naturalHeight), lw = logo.naturalWidth * r, lh = logo.naturalHeight * r; x.drawImage(logo, (W - lw) / 2, y + (s - lh) / 2, lw, lh); }
+    if (logo.naturalWidth) { var s = m(20), r = Math.min(s / logo.naturalWidth, s / logo.naturalHeight), lw = logo.naturalWidth * r, lh = logo.naturalHeight * r; x.drawImage(logo, Math.round((W - lw) / 2), Math.round(y + (s - lh) / 2), Math.round(lw), Math.round(lh)); }
     y += m(20) + m(2);
     x.textAlign = "center"; x.textBaseline = "top";
     x.fillStyle = "#e8b04b"; x.font = "700 " + m(3.4) + "px " + FONT; spaced(x, "UNO AIRWAYS", W / 2, y, m(3.4) * .3);
@@ -119,9 +120,11 @@
     rr(x, qx, y, qs, qs, m(3)); x.fillStyle = "#ffffff"; x.fill();
     if (typeof qrcode === "function") {
       var qr = qrcode(0, "M"); qr.addData(base + "?stol=" + n); qr.make();
-      var cnt = qr.getModuleCount(), inner = qs - m(5), cell = inner / cnt, ox = qx + m(2.5), oy = y + m(2.5);
-      x.fillStyle = "#000000";
-      for (var r2 = 0; r2 < cnt; r2++) for (var c2 = 0; c2 < cnt; c2++) if (qr.isDark(r2, c2)) x.fillRect(Math.floor(ox + c2 * cell), Math.floor(oy + r2 * cell), Math.ceil(cell) + 1, Math.ceil(cell) + 1);
+      /* whole-pixel modules: every square has razor-sharp edges, no grey seams */
+      var cnt = qr.getModuleCount(), cell = Math.floor((qs - m(5)) / cnt), inner = cell * cnt, ox = Math.round(qx + (qs - inner) / 2), oy = Math.round(y + (qs - inner) / 2);
+      x.imageSmoothingEnabled = false; x.fillStyle = "#000000";
+      for (var r2 = 0; r2 < cnt; r2++) for (var c2 = 0; c2 < cnt; c2++) if (qr.isDark(r2, c2)) x.fillRect(ox + c2 * cell, oy + r2 * cell, cell, cell);
+      x.imageSmoothingEnabled = true;
     }
     var lines = [["700", "#e8b04b", "Menyuni ko'rish uchun skanerlang"], ["400", "#d9ccb0", "Сканируйте, чтобы открыть меню"], ["400", "#d9ccb0", "Scan to open the menu"]];
     var lh2 = m(3) * 1.45, ty = H - m(5.5) - lh2 * 3;
