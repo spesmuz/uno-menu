@@ -302,6 +302,9 @@ canvas.frost{position:absolute;inset:0;image-rendering:auto;width:100%;height:10
 #instBar .ios span{display:flex;gap:8px;align-items:center}
 #instBar .ios i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:7px;background:var(--gold);color:#17130A;font-weight:800;font-size:12px;flex:none}
 #instBar.howto .ios{display:flex}
+#instBar .inst-arrow{position:absolute;left:50%;bottom:-38px;margin-left:-15px;color:var(--gold);animation:instBob 1.1s ease-in-out infinite;pointer-events:none}
+@keyframes instBob{0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
+#instBar.howto{bottom:max(56px,calc(env(safe-area-inset-bottom) + 44px))}
 #zonePick{position:fixed;inset:0;z-index:9000;background:radial-gradient(120% 70% at 50% 0%,rgba(70,52,22,.45),transparent 60%),#0A0B0D;display:none;padding:max(18px,env(safe-area-inset-top)) 16px max(18px,env(safe-area-inset-bottom));overflow-y:auto;-webkit-overflow-scrolling:touch}
 #zonePick.show{display:flex;animation:zpFade .28s ease both}
 @keyframes zpFade{from{opacity:0}to{opacity:1}}
@@ -703,9 +706,9 @@ var SFX=(function(){
 
 /* ---------- i18n ---------- */
 var T={
-uz:{instTitle:"UNO menyusini telefoningizga qo'shing",instText:"Keyingi safar bir bosishda ochiladi, internetsiz ham ishlaydi.",instBtn:"O'rnatish",instLater:"Keyinroq",instIos1:"«Ulashish» tugmasini bosing (yoki ••• menyusida)",instCr1:"Manzil qatoridagi «Ulashish» belgisini bosing (yoki ••• → Ulashish)",instIos2:"«Bosh ekranga qo'shish» ni tanlang",instDone:"Tushunarli",instOk:"Ilova o'rnatildi",askWaiter:"Tanlagan taomlaringizni ofitsiantga ayting",subtotal:"Taomlar",service:"Xizmat haqi",askBill:"Hisobni so'rash",waiterSent:"Ofitsiant chaqirildi",billSent:"Hisob so'raldi, ofitsiant olib keladi",waiterComing:"Ofitsiant kelmoqda",waitPlease:"Ofitsiant allaqachon chaqirilgan, biroz kuting",sendFail:"Yuborilmadi. Internetni tekshirib, qayta urinib ko'ring",tableL:"stol",search:"Taom qidirish",searchPh:"Taom nomi yoki tarkibi…",add:"Savatchaga qo'shish",more:"Batafsil",items:"ta taom",loading:"Menyu yuklanmoqda…",empty:"Menyu hali bo'sh.",results:"Qidiruv natijalari",none:"Hech narsa topilmadi.",order:"Buyurtmangiz",cartEmpty:"Savatcha bo'sh. Menyudan taom tanlang.",note:"Oshpazga izoh (ixtiyoriy)",notePh:"Masalan: achchiq bo'lmasin",total:"Jami",place:"Buyurtma berish",accepted:"Buyurtma qabul qilindi",preparing:"Taomlaringiz tayyorlanmoqda. Yoqimli ishtaha!",back:"Menyuga qaytish",waiter:"Ofitsiant chaqirildi, tez orada keladi",ingr:"Tarkibi",weight:"Og'irligi",time:"Tayyorlanish vaqti",min:"daq",sound:"Ovoz",close:"Yopish",prev:"Oldingi taom",next:"Keyingi taom",cur:"so'm",cart:"Savatchani ochish",waiterBtn:"Ofitsiantni chaqirish",dec:"Kamaytirish",inc:"Ko'paytirish",restaurant:"Restoran",clearAll:"Hammasini o'chirish",clearQ:"Hammasi o'chirilsinmi?",yes:"Ha",no:"Yo'q",kcal:"kkal",approx:"taxminan",cal:"Kaloriya",prot:"Oqsil",fat:"Yog'",carb:"Uglevod",g:"g",totalKcal:"Jami kaloriya",partKcal:"ba'zi taomlarda ma'lumot yo'q",toCenter:"markazga olib kelish",video:"videosi",cats:"Kategoriyalar",lang:"Til"},
-ru:{instTitle:"Добавьте меню UNO на телефон",instText:"В следующий раз откроется одним касанием и работает без интернета.",instBtn:"Установить",instLater:"Позже",instIos1:"Нажмите «Поделиться» (или в меню •••)",instCr1:"Нажмите значок «Поделиться» в адресной строке (или ••• → Поделиться)",instIos2:"Выберите «На экран «Домой»»",instDone:"Понятно",instOk:"Приложение установлено",askWaiter:"Назовите выбранные блюда официанту",subtotal:"Блюда",service:"Обслуживание",askBill:"Попросить счёт",waiterSent:"Официант вызван",billSent:"Счёт запрошен, официант принесёт",waiterComing:"Официант идёт",waitPlease:"Официант уже вызван, немного подождите",sendFail:"Не отправлено. Проверьте интернет и попробуйте снова",tableL:"стол",search:"Поиск блюда",searchPh:"Название или состав…",add:"В корзину",more:"Подробнее",items:"блюд",loading:"Меню загружается…",empty:"Меню пока пусто.",results:"Результаты поиска",none:"Ничего не найдено.",order:"Ваш заказ",cartEmpty:"Корзина пуста. Выберите блюдо в меню.",note:"Комментарий для повара (необязательно)",notePh:"Например: не острое",total:"Итого",place:"Оформить заказ",accepted:"Заказ принят",preparing:"Ваши блюда готовятся. Приятного аппетита!",back:"Вернуться в меню",waiter:"Официант вызван и скоро подойдёт",ingr:"Состав",weight:"Вес",time:"Время приготовления",min:"мин",sound:"Звук",close:"Закрыть",prev:"Предыдущее блюдо",next:"Следующее блюдо",cur:"сум",cart:"Открыть корзину",waiterBtn:"Вызвать официанта",dec:"Уменьшить",inc:"Увеличить",restaurant:"Ресторан",clearAll:"Очистить всё",clearQ:"Удалить всё?",yes:"Да",no:"Нет",kcal:"ккал",approx:"примерно",cal:"Калорийность",prot:"Белки",fat:"Жиры",carb:"Углеводы",g:"г",totalKcal:"Всего калорий",partKcal:"не для всех блюд есть данные",toCenter:"показать в центре",video:"видео",cats:"Категории",lang:"Язык"},
-en:{instTitle:"Add the UNO menu to your phone",instText:"Next time it opens with one tap and works offline.",instBtn:"Install",instLater:"Later",instIos1:"Tap Share (or find it in the ••• menu)",instCr1:"Tap the Share icon in the address bar (or ••• → Share)",instIos2:"Choose “Add to Home Screen”",instDone:"Got it",instOk:"App installed",askWaiter:"Tell your waiter the dishes you have chosen",subtotal:"Dishes",service:"Service charge",askBill:"Ask for the bill",waiterSent:"Waiter called",billSent:"Bill requested, the waiter will bring it",waiterComing:"The waiter is on the way",waitPlease:"The waiter has already been called, please wait",sendFail:"Not sent. Check the internet and try again",tableL:"table",search:"Search dishes",searchPh:"Dish name or ingredients…",add:"Add to order",more:"Details",items:"items",loading:"Loading menu…",empty:"The menu is empty for now.",results:"Search results",none:"Nothing found.",order:"Your order",cartEmpty:"Your order is empty. Pick a dish from the menu.",note:"Note for the chef (optional)",notePh:"For example: not spicy",total:"Total",place:"Place order",accepted:"Order received",preparing:"Your dishes are being prepared. Enjoy your meal!",back:"Back to menu",waiter:"A waiter is on the way",ingr:"Ingredients",weight:"Weight",time:"Cooking time",min:"min",sound:"Sound",close:"Close",prev:"Previous dish",next:"Next dish",cur:"UZS",cart:"Open order",waiterBtn:"Call a waiter",dec:"Decrease",inc:"Increase",restaurant:"Restaurant",clearAll:"Clear all",clearQ:"Remove everything?",yes:"Yes",no:"No",kcal:"kcal",approx:"approx.",cal:"Calories",prot:"Protein",fat:"Fat",carb:"Carbs",g:"g",totalKcal:"Total calories",partKcal:"some dishes have no data",toCenter:"bring to centre",video:"video",cats:"Categories",lang:"Language"}
+uz:{instTitle:"UNO menyusini telefoningizga qo'shing",instText:"Keyingi safar bir bosishda ochiladi, internetsiz ham ishlaydi.",instBtn:"O'rnatish",instLater:"Keyinroq",instIos1:"«Ulashish» tugmasini bosing (yoki ••• menyusida)",instCr1:"Manzil qatoridagi «Ulashish» belgisini bosing (yoki ••• → Ulashish)",instIos2:"«Bosh ekranga qo'shish» ni tanlang",instDone:"Tushunarli",instIosT:"UNO menyusini 3 qadamda ekranga qo'shing",instIos3:"«Qo'shish» ni bosing — ekraningizda UNO belgisi paydo bo'ladi",instOk:"Ilova o'rnatildi",askWaiter:"Tanlagan taomlaringizni ofitsiantga ayting",subtotal:"Taomlar",service:"Xizmat haqi",askBill:"Hisobni so'rash",waiterSent:"Ofitsiant chaqirildi",billSent:"Hisob so'raldi, ofitsiant olib keladi",waiterComing:"Ofitsiant kelmoqda",waitPlease:"Ofitsiant allaqachon chaqirilgan, biroz kuting",sendFail:"Yuborilmadi. Internetni tekshirib, qayta urinib ko'ring",tableL:"stol",search:"Taom qidirish",searchPh:"Taom nomi yoki tarkibi…",add:"Savatchaga qo'shish",more:"Batafsil",items:"ta taom",loading:"Menyu yuklanmoqda…",empty:"Menyu hali bo'sh.",results:"Qidiruv natijalari",none:"Hech narsa topilmadi.",order:"Buyurtmangiz",cartEmpty:"Savatcha bo'sh. Menyudan taom tanlang.",note:"Oshpazga izoh (ixtiyoriy)",notePh:"Masalan: achchiq bo'lmasin",total:"Jami",place:"Buyurtma berish",accepted:"Buyurtma qabul qilindi",preparing:"Taomlaringiz tayyorlanmoqda. Yoqimli ishtaha!",back:"Menyuga qaytish",waiter:"Ofitsiant chaqirildi, tez orada keladi",ingr:"Tarkibi",weight:"Og'irligi",time:"Tayyorlanish vaqti",min:"daq",sound:"Ovoz",close:"Yopish",prev:"Oldingi taom",next:"Keyingi taom",cur:"so'm",cart:"Savatchani ochish",waiterBtn:"Ofitsiantni chaqirish",dec:"Kamaytirish",inc:"Ko'paytirish",restaurant:"Restoran",clearAll:"Hammasini o'chirish",clearQ:"Hammasi o'chirilsinmi?",yes:"Ha",no:"Yo'q",kcal:"kkal",approx:"taxminan",cal:"Kaloriya",prot:"Oqsil",fat:"Yog'",carb:"Uglevod",g:"g",totalKcal:"Jami kaloriya",partKcal:"ba'zi taomlarda ma'lumot yo'q",toCenter:"markazga olib kelish",video:"videosi",cats:"Kategoriyalar",lang:"Til"},
+ru:{instTitle:"Добавьте меню UNO на телефон",instText:"В следующий раз откроется одним касанием и работает без интернета.",instBtn:"Установить",instLater:"Позже",instIos1:"Нажмите «Поделиться» (или в меню •••)",instCr1:"Нажмите значок «Поделиться» в адресной строке (или ••• → Поделиться)",instIos2:"Выберите «На экран «Домой»»",instDone:"Понятно",instIosT:"Добавьте меню UNO на экран за 3 шага",instIos3:"Нажмите «Добавить» — на экране появится значок UNO",instOk:"Приложение установлено",askWaiter:"Назовите выбранные блюда официанту",subtotal:"Блюда",service:"Обслуживание",askBill:"Попросить счёт",waiterSent:"Официант вызван",billSent:"Счёт запрошен, официант принесёт",waiterComing:"Официант идёт",waitPlease:"Официант уже вызван, немного подождите",sendFail:"Не отправлено. Проверьте интернет и попробуйте снова",tableL:"стол",search:"Поиск блюда",searchPh:"Название или состав…",add:"В корзину",more:"Подробнее",items:"блюд",loading:"Меню загружается…",empty:"Меню пока пусто.",results:"Результаты поиска",none:"Ничего не найдено.",order:"Ваш заказ",cartEmpty:"Корзина пуста. Выберите блюдо в меню.",note:"Комментарий для повара (необязательно)",notePh:"Например: не острое",total:"Итого",place:"Оформить заказ",accepted:"Заказ принят",preparing:"Ваши блюда готовятся. Приятного аппетита!",back:"Вернуться в меню",waiter:"Официант вызван и скоро подойдёт",ingr:"Состав",weight:"Вес",time:"Время приготовления",min:"мин",sound:"Звук",close:"Закрыть",prev:"Предыдущее блюдо",next:"Следующее блюдо",cur:"сум",cart:"Открыть корзину",waiterBtn:"Вызвать официанта",dec:"Уменьшить",inc:"Увеличить",restaurant:"Ресторан",clearAll:"Очистить всё",clearQ:"Удалить всё?",yes:"Да",no:"Нет",kcal:"ккал",approx:"примерно",cal:"Калорийность",prot:"Белки",fat:"Жиры",carb:"Углеводы",g:"г",totalKcal:"Всего калорий",partKcal:"не для всех блюд есть данные",toCenter:"показать в центре",video:"видео",cats:"Категории",lang:"Язык"},
+en:{instTitle:"Add the UNO menu to your phone",instText:"Next time it opens with one tap and works offline.",instBtn:"Install",instLater:"Later",instIos1:"Tap Share (or find it in the ••• menu)",instCr1:"Tap the Share icon in the address bar (or ••• → Share)",instIos2:"Choose “Add to Home Screen”",instDone:"Got it",instIosT:"Add the UNO menu to your screen in 3 steps",instIos3:"Tap “Add” — the UNO icon appears on your screen",instOk:"App installed",askWaiter:"Tell your waiter the dishes you have chosen",subtotal:"Dishes",service:"Service charge",askBill:"Ask for the bill",waiterSent:"Waiter called",billSent:"Bill requested, the waiter will bring it",waiterComing:"The waiter is on the way",waitPlease:"The waiter has already been called, please wait",sendFail:"Not sent. Check the internet and try again",tableL:"table",search:"Search dishes",searchPh:"Dish name or ingredients…",add:"Add to order",more:"Details",items:"items",loading:"Loading menu…",empty:"The menu is empty for now.",results:"Search results",none:"Nothing found.",order:"Your order",cartEmpty:"Your order is empty. Pick a dish from the menu.",note:"Note for the chef (optional)",notePh:"For example: not spicy",total:"Total",place:"Place order",accepted:"Order received",preparing:"Your dishes are being prepared. Enjoy your meal!",back:"Back to menu",waiter:"A waiter is on the way",ingr:"Ingredients",weight:"Weight",time:"Cooking time",min:"min",sound:"Sound",close:"Close",prev:"Previous dish",next:"Next dish",cur:"UZS",cart:"Open order",waiterBtn:"Call a waiter",dec:"Decrease",inc:"Increase",restaurant:"Restaurant",clearAll:"Clear all",clearQ:"Remove everything?",yes:"Yes",no:"No",kcal:"kcal",approx:"approx.",cal:"Calories",prot:"Protein",fat:"Fat",carb:"Carbs",g:"g",totalKcal:"Total calories",partKcal:"some dishes have no data",toCenter:"bring to centre",video:"video",cats:"Categories",lang:"Language"}
 };
 function t(k){ return (T[S.lang]||T.uz)[k]||T.uz[k]||k; }
 function L(d,f){ var v = S.lang==="uz" ? d[f] : (d[f+"_"+S.lang]||d[f]); return v||""; }
@@ -1328,7 +1331,7 @@ function renderCart(){
            '<div class="sumrow"><span>'+esc(t("service"))+' '+pct+'%</span><b>'+fmtL(svc)+'</b></div>':'')+
          '<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="color:var(--muted)">'+esc(t("total"))+'</span><b style="font-size:26px;color:var(--gold)">'+fmtL(total)+'</b></div>';
     }
-    if(tableNo() && S.sb){
+    if(tableNo() && S.sb && callsOn()){
       var pend=S.calls.bill;
       h+='<button class="gold-btn bill-btn'+(pend?' pending':'')+'" data-c="bill" '+(pend?'disabled':'')+'>'+ICON.receipt+'<span>'+esc(pend?t("billSent"):t("askBill"))+'</span></button>';
     } else if(items.length){
@@ -1374,6 +1377,8 @@ function qrTable(){
     if(Date.now()-Number(o.at||0) > TABLE_QR_HOURS*3600e3){ localStorage.removeItem(TABLE_QR_KEY); return ""; }
     return String(o.t).trim(); }catch(_){ return ""; }
 }
+/* waiter call / bill buttons stay hidden until the admin switches them on (the waiter stage is not live yet) */
+function callsOn(){ return !!(S.settings && S.settings.callsOn); }
 function tableNo(){ var q=qrTable(); if(q) return q; var pk=pickedTable(); if(pk) return pk; try{ return (localStorage.getItem(TABLE_KEY)||"").trim(); }catch(_){ return ""; } }
 function setTableNo(v){ try{ v=String(v||"").trim().slice(0,12); if(v){ localStorage.setItem(TABLE_KEY,v); localStorage.setItem("uno_table_src","admin"); } else { localStorage.removeItem(TABLE_KEY); localStorage.removeItem("uno_table_src"); } }catch(_){} refreshCallUI(); }
 /* ---------- installed menu on Android: also paint the strip around the camera hole ----------
@@ -1419,9 +1424,10 @@ function setTableNo(v){ try{ v=String(v||"").trim().slice(0,12); if(v){ localSto
     }
     if(!deferred && !iosAny) return;                                         /* browser cannot install: say nothing */
     bar=document.createElement("div"); bar.id="instBar"; bar.setAttribute("role","dialog");
-    bar.innerHTML='<img src="icons/menu-192.png" alt=""><div class="tx"><b>'+esc(t("instTitle"))+'</b><small>'+esc(t("instText"))+'</small>'+
-      '</div><div class="ios"><span><i>1</i><em>'+esc(t(iosOther?"instCr1":"instIos1"))+'</em><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></span><span><i>2</i><em>'+esc(t("instIos2"))+'</em></span></div>'+
-      '<div class="bt"><button class="go" type="button">'+esc(t("instBtn"))+'</button><button class="no" type="button">'+esc(t("instLater"))+'</button></div>';
+    bar.innerHTML='<img src="icons/menu-192.png" alt=""><div class="tx"><b>'+esc(t(iosAny&&!deferred?"instIosT":"instTitle"))+'</b><small>'+esc(t("instText"))+'</small>'+
+      '</div><div class="ios"><span><i>1</i><em>'+esc(t(iosOther?"instCr1":"instIos1"))+'</em><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></span><span><i>2</i><em>'+esc(t("instIos2"))+'</em></span><span><i>3</i><em>'+esc(t("instIos3"))+'</em></span></div>'+
+      '<div class="bt"><button class="go" type="button">'+esc(t(iosAny&&!deferred?"instDone":"instBtn"))+'</button><button class="no" type="button">'+esc(t("instLater"))+'</button></div>';
+    if(iosAny && !deferred){ bar.classList.add("howto"); var ar=document.createElement("div"); ar.className="inst-arrow"; ar.innerHTML='<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v15M6 13l6 6 6-6"/></svg>'; bar.appendChild(ar); }
     document.body.appendChild(bar);
     requestAnimationFrame(function(){ requestAnimationFrame(function(){ bar.classList.add("show"); }); });
     bar.querySelector(".no").onclick=function(){ hide(true); };
@@ -1430,10 +1436,7 @@ function setTableNo(v){ try{ v=String(v||"").trim().slice(0,12); if(v){ localSto
       if(deferred){
         deferred.prompt(); var ch=null; try{ ch=await deferred.userChoice; }catch(_){}
         deferred=null; hide(!(ch&&ch.outcome==="accepted"));
-      } else if(iosAny){
-        if(!bar.classList.contains("howto")){ bar.classList.add("howto"); this.textContent=t("instDone"); }
-        else hide(true);
-      }
+      } else if(iosAny){ hide(true); }
     };
   }
   function hide(later){
@@ -1514,7 +1517,7 @@ setInterval(function(){ try{ if(localStorage.getItem(TABLE_QR_KEY) && !qrTable()
 S.calls={waiter:null,bill:null};
 function refreshCallUI(){
   var b=$("waiterBtn"); if(!b) return;
-  var on=!!(tableNo() && S.sb);
+  var on=!!(tableNo() && S.sb && callsOn());
   b.classList.toggle("hidden",!on);
   b.classList.toggle("pending",!!S.calls.waiter);
   if(typeof fitTabs==="function") try{ fitTabs(); }catch(_){}
@@ -1547,7 +1550,7 @@ function watchCall(kind, id){
   S.calls[kind]=c;
 }
 async function sendCall(kind){
-  var tn=tableNo(); if(!tn||!S.sb) return;
+  var tn=tableNo(); if(!tn||!S.sb||!callsOn()) return;
   if(S.calls[kind]){ toast(kind==="bill"?t("billSent"):t("waitPlease")); return; }
   var row={table_no:tn, kind:kind};
   if(kind==="bill"){
@@ -1850,6 +1853,8 @@ function renderAdmin(){
   // tables, service charge, QR codes
   var base=location.origin+location.pathname.replace(/[^\/]*$/,"");
   h+='<section class="a-sec"><h2>Stollar, xizmat haqi va QR-kodlar</h2>'+
+     '<label style="display:flex;gap:10px;align-items:center;margin-bottom:6px"><input type="checkbox" id="callsOn" '+(callsOn()?'checked':'')+(ro?' disabled':'')+'> <b>Ofitsiantni chaqirish va hisobni so\'rash tugmalari</b></label>'+
+     '<p class="help" style="margin-bottom:16px">O\'chiq bo\'lsa, menyuda qo\'ng\'iroqcha va "Hisobni so\'rash" tugmalari umuman chiqmaydi (QR-kod skanerlansa ham). Ofitsiant bosqichiga o\'tganda yoqing.</p>'+
      '<div class="a-row"><label class="fld" style="max-width:220px"><span>Xizmat haqi (%)</span><input id="setSvc" type="number" min="0" max="50" step="1" value="'+svcPct()+'" '+(ro?"disabled":"")+'></label>'+(ro?'':'<button class="btn gold" data-a="saveSvc">Saqlash</button>')+'</div>'+
      '<p class="help" style="margin-top:6px">Savatchada taomlar summasiga qo\'shib hisoblanadi. 0 qo\'yilsa ko\'rsatilmaydi.</p>'+
      '<div class="a-row" style="margin-top:16px"><label class="fld" style="max-width:220px"><span>Shu planshetning stol raqami</span><input id="setTable" maxlength="12" placeholder="Masalan: 5" value="'+esc(tableNo())+'"></label><button class="btn gold" data-a="saveTable">Saqlash</button></div>'+
@@ -1953,6 +1958,7 @@ function renderAdmin(){
   offlineUI(); if(!Offline.last && !Offline.busy) syncMedia();
   var qf=$("qrFrom"), qt=$("qrTo"), ql=$("qrLink");
   if(qf&&qt&&ql){ var upd=function(){ var a=Math.max(1,parseInt(qf.value)||1), b=Math.max(a,parseInt(qt.value)||a); ql.href=ql.href.replace(/\?.*$/,"")+"?from="+a+"&to="+Math.min(b,a+199); }; qf.oninput=upd; qt.oninput=upd; }
+  var co=$("callsOn"); if(co) co.onchange=async function(){ var on=this.checked; try{ await saveSettings({callsOn:on}); msg($("tblMsg"), on?"Ofitsiant tugmalari yoqildi.":"Ofitsiant tugmalari o'chirildi.","ok"); }catch(err){ msg($("tblMsg"),errText(err),"err"); } };
   var ss=$("setSound"); if(ss) ss.onchange=async function(){ var on=this.checked; try{ await saveSettings({soundOn:on}); msg($("setMsg"), on?"Ovozlar yoqildi.":"Ovozlar o'chirildi.","ok"); }catch(err){ msg($("setMsg"),errText(err),"err"); } };
   if(S.editing) renderEditor();
 }
@@ -2010,7 +2016,7 @@ function errText(e){
 }
 async function saveSettings(patch){
   var next=Object.assign({}, S.settings, patch);
-  await S.db.doc("settings/main").set({name:next.name||"", cats:next.cats||[], logoId:next.logoId||"", soundOn:next.soundOn!==false, service:svcPct(next), zones:Array.isArray(next.zones)?next.zones:[], zonePick:!!next.zonePick});
+  await S.db.doc("settings/main").set({name:next.name||"", cats:next.cats||[], logoId:next.logoId||"", soundOn:next.soundOn!==false, service:svcPct(next), zones:Array.isArray(next.zones)?next.zones:[], zonePick:!!next.zonePick, callsOn:!!next.callsOn});
 }
 A.addEventListener("click", async function(e){
   var b=e.target.closest("[data-a]"); if(!b||b.disabled) return;
@@ -2988,15 +2994,15 @@ async function init(){
   if(!S.db){
     var cc=null; try{ cc=JSON.parse(localStorage.getItem(CACHE_KEY)||"null"); }catch(_){}
     clearTimeout(timer);
-    if(cc){ var sm=cc["settings/main"]||{}; S.settings={name:sm.name||"",logoId:String(sm.logoId||""),soundOn:sm.soundOn!==false,service:sm.service,cats:Array.isArray(sm.cats)?sm.cats:[],zones:Array.isArray(sm.zones)?sm.zones:[],zonePick:!!sm.zonePick};
+    if(cc){ var sm=cc["settings/main"]||{}; S.settings={name:sm.name||"",logoId:String(sm.logoId||""),soundOn:sm.soundOn!==false,service:sm.service,cats:Array.isArray(sm.cats)?sm.cats:[],zones:Array.isArray(sm.zones)?sm.zones:[],zonePick:!!sm.zonePick,callsOn:!!sm.callsOn};
       S.dishes=Object.keys(cc).filter(function(k){return k.indexOf("dishes/")===0;}).map(function(k){ var d=cc[k]||{}; var o={id:k.slice(7),name:String(d.name||""),desc:String(d.desc||""),price:Number(d.price)||0,cat:String(d.cat||""),order:Number(d.order)||0,imgId:String(d.imgId||""),videoId:String(d.videoId||""),weight:String(d.weight||""),time:Number(d.time)||0,kcal:Number(d.kcal)||0,prot:Number(d.prot)||0,fat:Number(d.fat)||0,carb:Number(d.carb)||0,kcalEst:!!d.kcalEst}; ["ingr","name_ru","desc_ru","ingr_ru","name_en","desc_en","ingr_en"].forEach(function(x){ o[x]=String(d[x]||""); }); return o; });
       S.loadedSettings=true; }
     else note.textContent="Menyu ma'lumotlarini olib bo'lmadi. Internetni tekshiring.";
     S.loadedDishes=true; onData(); if(!cc) setTimeout(function(){ location.reload(); },30000); return;
   }
   S.db.doc("settings/main").onSnapshot(function(snap){
-    var d=snap.exists?snap.data():{}; S.settings={name:(d&&d.name)||"", logoId:String((d&&d.logoId)||""), soundOn:!(d&&d.soundOn===false), service:d&&d.service, cats:Array.isArray(d&&d.cats)?d.cats.filter(function(c){return c&&c.id&&c.label;}):[], zones:Array.isArray(d&&d.zones)?d.zones:[], zonePick:!!(d&&d.zonePick)};
-    S.loadedSettings=true; onData();
+    var d=snap.exists?snap.data():{}; S.settings={name:(d&&d.name)||"", logoId:String((d&&d.logoId)||""), soundOn:!(d&&d.soundOn===false), service:d&&d.service, cats:Array.isArray(d&&d.cats)?d.cats.filter(function(c){return c&&c.id&&c.label;}):[], zones:Array.isArray(d&&d.zones)?d.zones:[], zonePick:!!(d&&d.zonePick), callsOn:!!(d&&d.callsOn)};
+    S.loadedSettings=true; onData(); try{ refreshCallUI(); }catch(_){}
   });
   S.db.collection("dishes").onSnapshot(function(snap){
     S.dishes=snap.docs.map(function(doc){ var d=doc.data()||{}; var o={id:doc.id,name:String(d.name||""),desc:String(d.desc||""),price:Number(d.price)||0,cat:String(d.cat||""),order:Number(d.order)||0,imgId:String(d.imgId||""),videoId:String(d.videoId||""),weight:String(d.weight||""),time:Number(d.time)||0,kcal:Number(d.kcal)||0,prot:Number(d.prot)||0,fat:Number(d.fat)||0,carb:Number(d.carb)||0,kcalEst:!!d.kcalEst};
