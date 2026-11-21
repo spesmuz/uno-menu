@@ -18,8 +18,9 @@
   .bar button { height: 42px; padding: 0 16px; border-radius: 12px; border: 0; background: #e8b04b; color: #1a1306; font-weight: 700; font-size: 15px; cursor: pointer; white-space: nowrap; }
   .bar button.alt { background: #2a261e; color: #f3e7cf; border: 1px solid #5a4a2a; }
   .bar .acts { display: grid; grid-template-columns: 1fr 1fr; }
-  .bar .acts .main { grid-column: 1 / -1; height: 46px; font-size: 16px; }
-  @media (min-width: 700px) { .bar .acts { grid-template-columns: 2fr 1fr 1fr; } .bar .acts .main { grid-column: auto; height: 42px; } }
+  .bar .acts { grid-template-columns: 2fr 1fr; }
+  .bar .acts .main { height: 46px; font-size: 16px; }
+  .bar .acts .alt { height: 46px; }
   .sheet { display: grid; grid-template-columns: repeat(auto-fit, 90mm); gap: 8mm; justify-content: center; padding: 10mm 12px 20mm; }
   .cell { display: flex; flex-direction: column; align-items: center; gap: 8px; }
   .cell .save1 { padding: 9px 16px; border-radius: 12px; border: 1px solid #c9a35a; background: #fff; color: #1a1306; font-weight: 700; font-size: 14px; cursor: pointer; }
@@ -43,7 +44,7 @@
 <div class="bar">
   <div class="row top"><button id="back" type="button" class="alt" aria-label="Admin panelga qaytish">‹ Orqaga</button><b>STOL QR-KODLARI</b></div>
   <div class="row range"><label>Stol: <input id="from" type="number" min="1" inputmode="numeric"></label><span class="dash">—</span><label><input id="to" type="number" min="1" inputmode="numeric"></label><button id="go" type="button" class="alt">Ko'rsatish</button></div>
-  <div class="row acts"><button id="saveAll" type="button" class="main">Hammasini saqlash</button><button id="zip" type="button" class="alt">ZIP fayl</button><button id="print" type="button" class="alt">Chop etish</button></div>
+  <div class="row acts"><button id="saveAll" type="button" class="main">Hammasini saqlash</button><button id="zip" type="button" class="alt">ZIP fayl</button></div>
   <div id="status"></div>
 </div>
 <div class="sheet" id="sheet"></div>
@@ -82,7 +83,6 @@
     var b = Math.max(a, parseInt(document.getElementById("to").value) || a);
     location.search = "?from=" + a + "&to=" + b;
   };
-  document.getElementById("print").onclick = function () { window.print(); };
   /* back to the admin panel: close this tab if the panel opened it, otherwise go there */
   document.getElementById("back").onclick = function () {
     try { if (window.opener && !window.opener.closed) { window.close(); return; } } catch (_) {}
@@ -171,7 +171,7 @@
     }
     return out;
   }
-  function busy(on) { ["saveAll", "zip", "print"].forEach(function (id) { document.getElementById(id).disabled = on; }); }
+  function busy(on) { ["saveAll", "zip"].forEach(function (id) { document.getElementById(id).disabled = on; }); }
 
   async function saveViaApp(items) {
     var ok = 0;
