@@ -4,7 +4,7 @@
    - dish photos and videos: the page downloads them all in advance into "uno-media";
      videos are served from it with byte ranges, so they play without internet
    - menu data and calls (Supabase API) are never cached here: the app keeps its own copy */
-var VERSION = "uno-v56";
+var VERSION = "uno-v57";
 var MEDIA = "uno-media-v1";
 var CORE = ["./", "index.html", "davomat.html", "manifest.webmanifest", "media/logo.png", "media/emblem.png", "icons/menu-192.png", "icons/menu-512.png", "icons/menu-180.png", "icons/menu-maskable-512.png", "icons/menu-maskable-192.png"];
 
@@ -89,7 +89,7 @@ self.addEventListener("fetch", function (e) {
     }
     return;
   }
-  if (url.hostname === "cdn.jsdelivr.net" || url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com") {
+  if (url.hostname === "cdn.jsdelivr.net" || url.hostname === "unpkg.com" || url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com") {
     e.respondWith(cacheFirst(req));
     return;
   }

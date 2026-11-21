@@ -1225,6 +1225,15 @@ track.addEventListener("pointerup",endDrag); track.addEventListener("pointercanc
 var RV={sum:{}, list:{}, draft:{}, pick:{}, busy:false};
 var STAR_SVG='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.6l2.85 6.03 6.62.8-4.88 4.55 1.27 6.55L12 17.3l-5.86 3.23 1.27-6.55L2.53 9.43l6.62-.8z"/></svg>';
 try{ RV.sum=JSON.parse(localStorage.getItem("uno_rv_sum")||"{}")||{}; }catch(_){}
+/* call a database function even when the Supabase library could not load (slow CDN): plain REST */
+function sbRpc(fn,args){
+  if(S.sb) return S.sb.rpc(fn,args);
+  var ctl=window.AbortController?new AbortController():null, tm=setTimeout(function(){ if(ctl) ctl.abort(); },15000);
+  return fetch(SB_URL+"/rest/v1/rpc/"+fn,{method:"POST",headers:{"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"application/json"},body:JSON.stringify(args||{}),cache:"no-store",signal:ctl?ctl.signal:undefined})
+    .then(function(r){ clearTimeout(tm); return r.text().then(function(tx){ var j=null; try{ j=tx?JSON.parse(tx):null; }catch(_){}
+      return r.ok?{data:j,error:null}:{data:null,error:{message:(j&&j.message)||("HTTP "+r.status),code:j&&j.code}}; }); },
+      function(e){ clearTimeout(tm); return {data:null,error:{message:"TypeError: "+((e&&e.message)||"Load failed")}}; });
+}
 function rvTablet(){ return !!window.UnoKiosk; }
 function rvDevice(){
   try{ var k=localStorage.getItem("uno_dev");
@@ -1238,14 +1247,13 @@ function rvPaintBadges(){
   slideNodes.forEach(function(el,i){ var m=el.querySelector(".media"), d=curList[i]; if(!m||!d) return; var o=m.querySelector(".badge.rt"); if(o) o.remove(); var h=rvBadge(d); if(h){ var bt=m.querySelector(".sel.open"); if(bt) bt.insertAdjacentHTML("beforebegin",h); else m.insertAdjacentHTML("beforeend",h); } });
 }
 function rvLoadSum(){
-  if(!S.sb) return;
-  S.sb.rpc("uno_ratings").then(function(r){ if(r.error) return; var m={}; (r.data||[]).forEach(function(x){ m[x.dish_id]={avg:Number(x.avg),cnt:x.cnt}; }); RV.sum=m;
+  sbRpc("uno_ratings").then(function(r){ if(r.error) return; var m={}; (r.data||[]).forEach(function(x){ m[x.dish_id]={avg:Number(x.avg),cnt:x.cnt}; }); RV.sum=m;
     try{ localStorage.setItem("uno_rv_sum",JSON.stringify(m)); }catch(_){} rvPaintBadges(); });
 }
 function rvDate(x){ var d=new Date(x); return ("0"+d.getDate()).slice(-2)+"."+("0"+(d.getMonth()+1)).slice(-2)+"."+d.getFullYear(); }
 function rvItemHTML(r){ return '<div class="rv-item'+(r.mine?' mine':'')+'"><div class="rv-top"><b>'+esc(r.mine?t("rvMine"):(r.name||t("rvGuest")))+'</b>'+rvStars(r.stars,"sm")+'<time>'+rvDate(r.created_at)+'</time></div>'+(r.comment?'<p>'+esc(r.comment)+'</p>':'')+'</div>'; }
 function rvListHTML(id){
-  var L=RV.list[id]; if(!L) return S.sb?'<p class="rv-load">'+esc(t("rvLoading"))+'</p>':'';
+  var L=RV.list[id]; if(!L) return '<p class="rv-load">'+esc(t("rvLoading"))+'</p>';
   var h=(L.mine&&L.mine.comment?rvItemHTML(L.mine):"")+L.items.map(rvItemHTML).join("");
   if(L.more) h+='<button class="rv-more" data-rv-more="'+esc(id)+'">'+esc(t("rvMore"))+'</button>';
   return h;
@@ -1274,10 +1282,10 @@ function rvRepaint(id, msg, err){
   if(msg&&sec){ var m=sec.querySelector(".rv-msg"); m.textContent=msg; m.classList.toggle("err",!!err); }
 }
 function rvLoad(id, more){
-  if(!S.sb) return; var L=RV.list[id];
+  var L=RV.list[id];
   if(!more && L && Date.now()-L.at<60000) return;
   if(RV["ld_"+id]) return; RV["ld_"+id]=1;
-  S.sb.rpc("uno_reviews_for",{p_dish:id,p_device:rvTablet()?null:rvDevice(),p_limit:20,p_before:more&&L?L.last:null}).then(function(r){
+  sbRpc("uno_reviews_for",{p_dish:id,p_device:rvTablet()?null:rvDevice(),p_limit:20,p_before:more&&L?L.last:null}).then(function(r){
     RV["ld_"+id]=0; if(r.error){ if(!RV.list[id]) RV.list[id]={items:[],mine:null,more:false,last:null,at:Date.now()}; rvRepaint(id); return; }
     var rows=r.data||[], mine=null, items=[];
     rows.forEach(function(x){ if(x.mine) mine=x; else items.push(x); });
@@ -1290,9 +1298,9 @@ function rvSend(id){
   var stars=RV.pick[id]||(RV.list[id]&&RV.list[id].mine?RV.list[id].mine.stars:0); if(!stars) return;
   var name=(sec.querySelector(".rv-name")||{}).value||"", text=(sec.querySelector(".rv-text")||{}).value||"";
   var msg=sec.querySelector(".rv-msg"), btn=sec.querySelector(".rv-send");
-  if(!S.sb||navigator.onLine===false){ msg.textContent=t("rvOffline"); msg.classList.add("err"); return; }
+  if(navigator.onLine===false){ msg.textContent=t("rvOffline"); msg.classList.add("err"); return; }
   RV.busy=true; if(btn) btn.disabled=true;
-  S.sb.rpc("uno_review_add",{p_dish:id,p_device:rvDevice(),p_stars:stars,p_name:name.trim(),p_comment:text.trim(),p_lang:S.lang}).then(function(r){
+  sbRpc("uno_review_add",{p_dish:id,p_device:rvDevice(),p_stars:stars,p_name:name.trim(),p_comment:text.trim(),p_lang:S.lang}).then(function(r){
     RV.busy=false;
     if(r.error){ if(btn) btn.disabled=false; var e=String((r.error.code||"")+" "+(r.error.message||"")); try{ console.warn("review:",r.error); }catch(_){}
       msg.textContent=/too_many/.test(e)?t("rvMany"):/PGRST202|Could not find the function|does not exist|schema cache/i.test(e)?t("rvSetup"):t("sendFail"); msg.classList.add("err"); return; }
@@ -3289,10 +3297,13 @@ function loadSupabase(ms){
     if(window.supabase) return done(true);
     var fin=false, t=setTimeout(function(){ if(!fin){ fin=true; done(false); } }, ms);
     var sc=document.createElement("script");
-    sc.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
-    sc.onload=function(){ if(!fin){ fin=true; clearTimeout(t); done(!!window.supabase); } };
-    sc.onerror=function(){ if(!fin){ fin=true; clearTimeout(t); done(false); } };
-    document.head.appendChild(sc);
+    function add(src){ var sc=document.createElement("script"); sc.src=src;
+      sc.onload=function(){ if(!fin && window.supabase){ fin=true; clearTimeout(t); done(true); } };
+      sc.onerror=function(){ if(src.indexOf("jsdelivr")>0) add2(); else if(!fin){ fin=true; clearTimeout(t); done(false); } };
+      document.head.appendChild(sc); }
+    var second=false; function add2(){ if(second||fin) return; second=true; add("https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"); }
+    add("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js");
+    setTimeout(add2, Math.min(3000, ms/2));   /* first CDN slow → try the second one in parallel */
   });
 }
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")){
@@ -3308,7 +3319,7 @@ async function init(){
   var be=null; try{ if(window.supabase) be=makeBackend(); }catch(e){ console.error(e); }
   /* started offline: reload once the internet is back so live updates and admin work again */
   if(!be) window.addEventListener("online",function(){ setTimeout(function(){ location.reload(); },1500); });
-  if(be){ S.sb=be.sb; S.db=be.db; S.assets=be.assets; S.canEdit=true; }
+  if(be){ S.sb=be.sb; S.db=be.db; S.assets=be.assets; S.canEdit=true; } else { setTimeout(rvLoadSum,500); }
   refreshCallUI();
   S.sample=null; S.cred={login:""}; S.credLoaded=true;
   if(be) S.sample=makeGemini();
