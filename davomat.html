@@ -119,6 +119,14 @@ function dur(m){ m=Math.max(0,m|0); if(m<60) return m+" daqiqa"; var h=Math.floo
 function tick(){ var d=now(); $("clk").innerHTML=hm(d)+"<small>"+p2(d.getSeconds())+"</small>"; $("date").textContent=DAYS[d.getDay()]+", "+d.getDate()+"-"+MON[d.getMonth()]+" "+d.getFullYear(); }
 setInterval(tick,1000); tick();
 window.unoBack=function(){ return 1; };
+/* the Back button must not leave this screen: keep an extra history entry and put it back every time */
+(function(){
+  try{
+    history.replaceState({uno:"att"}, "", location.pathname);
+    history.pushState({uno:"att-trap"}, "", location.pathname);
+    window.addEventListener("popstate", function(){ history.pushState({uno:"att-trap"}, "", location.pathname); });
+  }catch(_){}
+})();
 
 /* ---- server ---- */
 function rpc(fn, body, ms){

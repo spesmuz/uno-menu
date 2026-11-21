@@ -71,7 +71,10 @@ public class MainActivity extends Activity {
   /* full kiosk (device owner): nothing can leave the app, status bar off, app is the home screen */
   void setupOwner() {
     if (!owner() || !kioskOn()) return;
-    try { dpm.setLockTaskPackages(admin, new String[]{ getPackageName() }); } catch (Exception e) { }
+    /* incoming calls must still ring and be answerable: allow the phone app inside the locked mode */
+    String dialer = null;
+    try { dialer = ((android.telecom.TelecomManager) getSystemService(Context.TELECOM_SERVICE)).getDefaultDialerPackage(); } catch (Exception e) { }
+    try { dpm.setLockTaskPackages(admin, dialer == null ? new String[]{ getPackageName() } : new String[]{ getPackageName(), dialer }); } catch (Exception e) { }
     try { if (Build.VERSION.SDK_INT >= 28) dpm.setLockTaskFeatures(admin, DevicePolicyManager.LOCK_TASK_FEATURE_NONE); } catch (Exception e) { }
     try {
       IntentFilter f = new IntentFilter(Intent.ACTION_MAIN);
@@ -344,6 +347,9 @@ public class MainActivity extends Activity {
   @Override protected void onPause() { web.onPause(); super.onPause(); }
 
   @Override public void onBackPressed() {
+    String cur = web.getUrl();
+    /* attendance terminal: Back does nothing (no way to the admin login) */
+    if (cur != null && cur.contains("davomat.html")) return;
     if (web.canGoBack()) { web.goBack(); return; }
     web.evaluateJavascript("(window.unoBack&&window.unoBack())?1:0", new ValueCallback<String>() {
       public void onReceiveValue(String r) {
