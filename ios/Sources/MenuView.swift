@@ -51,6 +51,13 @@ final class WebModel: NSObject, ObservableObject, WKNavigationDelegate, WKUIDele
         }
     }
 
+    /* show the menu as soon as the page starts drawing, without waiting for every photo and video */
+    func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+            guard let self = self, !self.failed else { return }
+            self.loadedOnce = true; self.loading = false
+        }
+    }
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         loadedOnce = true; loading = false; failed = false
     }

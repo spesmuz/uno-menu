@@ -90,11 +90,13 @@ jobs:
         continue-on-error: true
         run: |
           xcrun simctl terminate "$DEV" uz.uno.airways || true
-          xcrun simctl io "$DEV" recordVideo --codec h264 --force out/demo.mp4 &
+          cd ios
+          xcodebuild build-for-testing -project UNOAirways.xcodeproj -scheme UNOAirways -destination "id=$DEV" \
+            -derivedDataPath ../build 2>&1 | tail -3
+          xcrun simctl io "$DEV" recordVideo --codec h264 --force ../out/demo.mp4 &
           REC=$!
           sleep 2
-          cd ios
-          xcodebuild test -project UNOAirways.xcodeproj -scheme UNOAirways -destination "id=$DEV" \
+          xcodebuild test-without-building -project UNOAirways.xcodeproj -scheme UNOAirways -destination "id=$DEV" \
             -derivedDataPath ../build -only-testing:UNOAirwaysUITests/DemoTests/testDemo 2>&1 | tee ../out/test-full.log | grep -E "error:|Test Case|TEST (SUCCEEDED|FAILED)" | tee ../out/test.log
           cd ..
           kill -INT $REC; wait $REC || true

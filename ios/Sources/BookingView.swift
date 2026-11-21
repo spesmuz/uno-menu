@@ -154,6 +154,14 @@ struct BookingView: View {
                 }
             }
             .navigationTitle(L.t("book.title"))
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button(L.t("done")) {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }.font(.body.bold()).foregroundColor(Config.gold)
+                }
+            }
             .alert(item: $alert) { a in
                 if a.ok { return Alert(title: Text(a.title), message: Text(a.text), dismissButton: .default(Text(L.t("ok")))) }
                 return Alert(title: Text(a.title), message: Text(a.text),

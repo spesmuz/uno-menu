@@ -13,7 +13,7 @@ enum L {
 
     static let d: [String: [String: String]] = [
         "uz": [
-            "tab.menu": "Menyu", "tab.book": "Bron", "tab.about": "UNO",
+            "done": "Tayyor", "tab.menu": "Menyu", "tab.book": "Bron", "tab.about": "UNO",
             "offline.title": "Internet yo'q", "offline.text": "Menyuni ochish uchun internetga ulaning.", "retry": "Qayta urinish",
             "book.title": "Stol bron qilish", "book.guest": "Mehmon", "book.name": "Ismingiz", "book.phone": "Telefon raqamingiz",
             "book.when": "Qachon", "book.date": "Sana va vaqt", "book.guests": "Mehmonlar soni", "book.zone": "Joy", "book.occasion": "Sabab",
@@ -37,7 +37,7 @@ enum L {
             "share.text": "UNO Airways Restaurante — Farg'ona. Menyu:"
         ],
         "ru": [
-            "tab.menu": "Меню", "tab.book": "Бронь", "tab.about": "UNO",
+            "done": "Готово", "tab.menu": "Меню", "tab.book": "Бронь", "tab.about": "UNO",
             "offline.title": "Нет интернета", "offline.text": "Подключитесь к интернету, чтобы открыть меню.", "retry": "Повторить",
             "book.title": "Бронь столика", "book.guest": "Гость", "book.name": "Ваше имя", "book.phone": "Ваш телефон",
             "book.when": "Когда", "book.date": "Дата и время", "book.guests": "Количество гостей", "book.zone": "Место", "book.occasion": "Повод",
@@ -61,7 +61,7 @@ enum L {
             "share.text": "UNO Airways Restaurante — Фергана. Меню:"
         ],
         "en": [
-            "tab.menu": "Menu", "tab.book": "Book", "tab.about": "UNO",
+            "done": "Done", "tab.menu": "Menu", "tab.book": "Book", "tab.about": "UNO",
             "offline.title": "No internet", "offline.text": "Connect to the internet to open the menu.", "retry": "Try again",
             "book.title": "Book a table", "book.guest": "Guest", "book.name": "Your name", "book.phone": "Your phone",
             "book.when": "When", "book.date": "Date and time", "book.guests": "Guests", "book.zone": "Seating", "book.occasion": "Occasion",
