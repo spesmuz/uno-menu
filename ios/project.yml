@@ -49,3 +49,17 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
         CODE_SIGN_STYLE: Automatic
         ENABLE_PREVIEWS: NO
+    scheme:
+      testTargets: [UNOAirwaysUITests]
+  UNOAirwaysUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: UITests
+    dependencies:
+      - target: UNOAirways
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: uz.uno.airways.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TARGETED_DEVICE_FAMILY: "1"

@@ -67,6 +67,7 @@ jobs:
                 k=(("Pro Max" in n), rt, n)
                 if best is None or k>best[0]: best=(k,x["udid"],n)
           print(best[1]); print(best[2], file=sys.stderr)')
+          echo "DEV=$DEV" >> $GITHUB_ENV
           xcrun simctl boot "$DEV"; xcrun simctl bootstatus "$DEV" -b
           xcrun simctl status_bar "$DEV" override --time "9:41" --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3 || true
           xcrun simctl install "$DEV" "$APP"
@@ -84,6 +85,20 @@ jobs:
             xcrun simctl launch "$DEV" uz.uno.airways -tab $T -AppleLanguages "(ru)" -AppleLocale ru_RU
             sleep 6; xcrun simctl io "$DEV" screenshot "out/screens/ru-$T.png"
           done
+
+      - name: Demo video
+        continue-on-error: true
+        run: |
+          xcrun simctl terminate "$DEV" uz.uno.airways || true
+          xcrun simctl io "$DEV" recordVideo --codec h264 --force out/demo.mp4 &
+          REC=$!
+          sleep 2
+          cd ios
+          xcodebuild test -project UNOAirways.xcodeproj -scheme UNOAirways -destination "id=$DEV" \
+            -derivedDataPath ../build -only-testing:UNOAirwaysUITests/DemoTests/testDemo 2>&1 | tee ../out/test-full.log | grep -E "error:|Test Case|TEST (SUCCEEDED|FAILED)" | tee ../out/test.log
+          cd ..
+          kill -INT $REC; wait $REC || true
+          ls -la out/demo.mp4
 
       - name: Release to App Store Connect (TestFlight)
         if: ${{ env.ASC_KEY_P8 != '' && env.APPLE_TEAM_ID != '' }}
