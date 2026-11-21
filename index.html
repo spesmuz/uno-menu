@@ -106,7 +106,7 @@ input,select,textarea{font-family:inherit}
 .d-media img.big{position:absolute;inset:5%;width:90%;height:90%;object-fit:contain;filter:drop-shadow(0 34px 44px rgba(0,0,0,.65));opacity:0;transition:opacity .25s}
 .d-media img.big.ready{opacity:1}
 .d-media img.big.cover{inset:0;width:100%;height:100%;object-fit:cover;filter:none}
-.d-media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .6s ease;z-index:2;background:#111}
+.d-media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.011;transition:opacity .6s ease;z-index:2;background:#111}
 .d-media video.show{opacity:1}
 .d-sound{opacity:0;pointer-events:none;transition:opacity .4s}
 .d-layer.has-vid .d-sound{opacity:1;pointer-events:auto}
@@ -265,7 +265,7 @@ input,select,textarea{font-family:inherit}
 /* photo → video: frosted-glass cross-fade done with pre-blurred snapshots (opacity only, smooth on phones) */
 .slide.center .media .thumb{transition:opacity .25s}
 .slide.center .media.has-vid .thumb{opacity:0;transition:none}
-.slide.center .media .vidwrap{opacity:0;transition:none}
+.slide.center .media .vidwrap{opacity:.011;transition:none}
 .slide.center .media .vidwrap.show{opacity:1}
 .d-layer.has-vid img.big,.d-layer.has-vid img.big.cover{opacity:0;transition:none}
 .d-media video{transition:none}
@@ -615,14 +615,17 @@ var SFX=(function(){
     return AC;
   }
   function unlock(){
-    if(unlocked) return; unlocked=true;
-    var c=ensureCtx(); if(c && c.state==="suspended"){ try{ c.resume(); }catch(_){} }
+    var c=ensureCtx();
+    if(c && c.state==="suspended"){ try{ var rp=c.resume(); if(rp&&rp.then) rp.then(function(){},function(){}); }catch(_){} }
+    if(unlocked) return;
+    unlocked = !c || c.state==="running" || !!window.UnoKiosk;   /* browser still blocking: the next touch tries again */
     // silent loop: puts iOS into media playback mode (ignores the silent switch)
-    try{
+    if(!keepAlive) try{
       keepAlive=new Audio(blobUrl(new Float32Array(SR/2)));
       keepAlive.loop=true; keepAlive.setAttribute("playsinline",""); keepAlive.volume=1;
       var p=keepAlive.play(); if(p&&p.catch) p.catch(function(){});
     }catch(_){}
+    else if(keepAlive.paused){ try{ var p2=keepAlive.play(); if(p2&&p2.catch) p2.catch(function(){}); }catch(_){} }
     // a tiny silent buffer also wakes Web Audio on older iOS
     try{ if(c){ var s=c.createBufferSource(); s.buffer=c.createBuffer(1,1,22050); s.connect(c.destination); s.start(0); } }catch(_){}
   }
@@ -633,7 +636,10 @@ var SFX=(function(){
     unlock();
     var c=AC;
     if(c){
-      if(c.state==="suspended"){ try{ c.resume(); }catch(_){} }
+      if(c.state==="suspended"){
+        /* wait for the context to wake up, so the very first sound after a touch is heard */
+        try{ var rp=c.resume(); if(rp&&rp.then){ rp.then(function(){ if(c.state==="running") play(k); },function(){}); return; } }catch(_){}
+      }
       try{
         if(!bufs[k]){ var d=data(k), ab=c.createBuffer(1,d.length,SR); ab.getChannelData(0).set(d); bufs[k]=ab; }
         var src=c.createBufferSource(); src.buffer=bufs[k]; src.connect(out); src.start(0); return;
@@ -642,6 +648,8 @@ var SFX=(function(){
     try{ if(!urls[k]) urls[k]=blobUrl(data(k)); var a=new Audio(urls[k]); a.volume=.9; var p=a.play(); if(p&&p.catch) p.catch(function(){}); }catch(_){}
   }
   setTimeout(function(){ try{ Object.keys(DEF).forEach(data); }catch(_){} },0);
+  /* inside the UNO app sound is allowed without a touch: switch it on right away */
+  if(window.UnoKiosk) setTimeout(function(){ try{ unlock(); }catch(_){} },300);
   var api={}; Object.keys(DEF).forEach(function(k){ api[k]=function(){ play(k); }; });
   api._wav=function(k){ return wav(data(k)); };
   return api;
@@ -853,12 +861,10 @@ function holoHTML(d, nn){
 }
 /* call cb once the first video frame is really on screen (not just "playing") */
 function onFirstFrame(v, cb){
-  var done=false; function go(){ if(done) return; done=true; cb(); }
-  if(v.requestVideoFrameCallback){ var f=function(){ if(!v.paused && v.currentTime>0) go(); else v.requestVideoFrameCallback(f); }; v.requestVideoFrameCallback(f); }
-  else {
-    var tu=function(){ if(v.currentTime>0.05 && v.readyState>=2){ v.removeEventListener("timeupdate",tu); go(); } };
-    v.addEventListener("timeupdate",tu);
-  }
+  var done=false; function go(){ if(done) return; done=true; v.removeEventListener("timeupdate",tu); cb(); }
+  var tu=function(){ if(v.currentTime>0.12 && v.readyState>=2) go(); };
+  v.addEventListener("timeupdate",tu);
+  if(v.requestVideoFrameCallback){ var f=function(){ if(done) return; if(!v.paused && v.currentTime>0) go(); else v.requestVideoFrameCallback(f); }; try{ v.requestVideoFrameCallback(f); }catch(_){} }
 }
 /* play only when enough of the video is loaded; until then the photo stays */
 function playWhenReady(v, ok, onShown){
