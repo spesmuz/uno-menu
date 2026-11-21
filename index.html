@@ -774,7 +774,7 @@ function actionsHTML(d){
 }
 function buildSlides(){
   curList = S.cat ? dishesOf(S.cat) : [];
-  slidesEl.innerHTML=""; slideNodes=[]; lastCenterId=null;
+  slidesEl.querySelectorAll("video").forEach(releaseVideo); slidesEl.innerHTML=""; slideNodes=[]; lastCenterId=null;
   var empty=$("emptyMsg");
   if(!curList.length){
     empty.classList.remove("hidden");
@@ -862,10 +862,18 @@ function onFirstFrame(v, cb){
 }
 /* play only when enough of the video is loaded; until then the photo stays */
 function playWhenReady(v, ok, onShown){
-  function start(){ if(!ok()) return; if(onShown) onFirstFrame(v, onShown); var pr=v.play(); if(pr&&pr.catch) pr.catch(function(){}); }
-  if(v.readyState>=3) start();
-  else { v.addEventListener("canplay",function(){ start(); },{once:true}); try{ if(v.preload!=="auto") v.preload="auto"; v.load&&v.networkState===0&&v.load(); }catch(_){} }
+  /* the video is invisible until revealed, so it can start at once: iOS loads a video only after play() */
+  if(!ok()) return;
+  if(onShown) onFirstFrame(v, function(){ if(ok()) onShown(); });
+  var tries=0;
+  (function kick(){
+    if(!ok() || !v.isConnected) return;
+    var pr=v.play();
+    if(pr&&pr.catch) pr.catch(function(){ if(++tries<4) setTimeout(kick, 400); });
+  })();
 }
+/* free a video completely: iOS allows only a few live players, discarded ones must let go of their source */
+function releaseVideo(v){ try{ v.pause(); v.removeAttribute("src"); v.removeAttribute("poster"); v.load(); }catch(_){} }
 /* frosted cross-fade from the photo to the playing video.
    Blurred looks come from tiny snapshots scaled up (no live CSS blur), so only opacity is animated. */
 function frostShot(box, draw){
@@ -920,15 +928,17 @@ function frostSwap(box, img, v, reveal){
    0 – 1.5 s  the photo stays sharp; at 1.0 s the video already starts, hidden under the photo;
    1.5 – 2.0 s the photo blurs away and the running video shows through */
 var VIDEO_DELAY=1500, VIDEO_LEAD=500, BLUR_MS=500, _vidT=null;
-function blurReveal(box, img, reveal, t0){
+function blurReveal(box, img, reveal, t0, alive){
   /* the video is already playing but invisible; the original photo is never touched until it is covered */
+  alive=alive||function(){ return box.isConnected; };
   setTimeout(function(){
-    if(!box.isConnected) return;
+    if(!alive()) return;
     var a = img && img.naturalWidth ? frostShot(box, drawPhoto(img)) : null;
     if(!a){ reveal(); return; }
     a.style.zIndex="4"; a.style.transition="opacity "+(BLUR_MS/2)+"ms ease-in";
     box.appendChild(a); a.offsetWidth; a.style.opacity="1";                     /* photo goes soft */
     setTimeout(function(){
+      if(!alive()){ a.remove(); return; }
       reveal();                                                                  /* video on, hidden under the soft photo */
       a.style.transition="opacity "+(BLUR_MS/2)+"ms ease-out"; a.style.opacity="0";   /* soft photo melts away */
       setTimeout(function(){ a.remove(); }, BLUR_MS/2+60);
@@ -939,9 +949,9 @@ function scheduleVideo(m, id){
   clearTimeout(_vidT);
   var v=m.querySelector("video"), w=m.querySelector(".vidwrap"); if(!v) return;
   v.muted=true;
-  var t0=Date.now();
-  var shown=function(){ blurReveal(m, m.querySelector("img.thumb"), function(){ w.classList.add("show"); m.classList.add("has-vid"); }, t0); };
-  var ok=function(){ var c=curList[S.idx]; return !!(c && c.id===id && !S.detail && m.isConnected && S.view==="menu"); };
+  var t0=Date.now(), tok=m._vtok=(m._vtok||0)+1;
+  var ok=function(){ var c=curList[S.idx]; return !!(m._vtok===tok && v.isConnected && c && c.id===id && !S.detail && m.isConnected && S.view==="menu"); };
+  var shown=function(){ blurReveal(m, m.querySelector("img.thumb"), function(){ w.classList.add("show"); m.classList.add("has-vid"); }, t0, ok); };
   _vidT=setTimeout(function(){ if(ok()) playWhenReady(v, ok, shown); }, VIDEO_DELAY-VIDEO_LEAD);
 }
 function pauseCarouselVideo(){ clearTimeout(_vidT); slidesEl.querySelectorAll("video").forEach(function(v){ try{ v.pause(); }catch(_){} }); }
@@ -956,6 +966,9 @@ function updateMedia(){
     var want = (center ? "c:"+d.id+":"+(d.imgId||"")+":"+(d.videoId||"") : "s:"+(d.imgId||""))+":"+S.lang+":"+dn(d)+":"+d.cat;
     if(m.dataset.k===want) return;
     m.dataset.k=want;
+    m._vtok=(m._vtok||0)+1;                                   /* cancel timers of the previous content */
+    m.querySelectorAll("video").forEach(releaseVideo);
+    m.querySelectorAll("canvas.frost").forEach(function(c){ c.remove(); });
     m.classList.remove("has-vid");   /* new content: show the photo again until its video starts */
     var cl='<span class="badge cat">'+esc(catL(d.cat))+'</span>';
     if(center){
@@ -1075,7 +1088,7 @@ function openDetail(id){
   if(i>=0 && i!==S.idx) go(i);
   S.detail=id; S.detailMuted=true; pauseCarouselVideo(); renderDetail();
 }
-function closeDetail(){ clearTimeout(S.dVidT); S.detail=null; $("detailHost").innerHTML=""; resumeCarouselVideo(); }
+function closeDetail(){ clearTimeout(S.dVidT); S.detail=null; $("detailHost").querySelectorAll("video").forEach(releaseVideo); $("detailHost").innerHTML=""; resumeCarouselVideo(); }
 function detailStep(dir){
   if(curList.length<2) return;
   go(S.idx+dir); pauseCarouselVideo(); S.detail=curList[S.idx].id; S.detailMuted=true;
@@ -1104,9 +1117,9 @@ function setupLayer(layer, d){
   var v=layer.querySelector("video"); if(!v) return;
   v.muted=true; var id=d.id;
   var t0=Date.now();
-  var shown=function(){ blurReveal(layer, layer.querySelector("img.big"), function(){ v.classList.add("show"); layer.classList.add("has-vid"); }, t0); };
   clearTimeout(S.dVidT);
   var ok=function(){ return S.detail===id && v.isConnected; };
+  var shown=function(){ blurReveal(layer, layer.querySelector("img.big"), function(){ v.classList.add("show"); layer.classList.add("has-vid"); }, t0, ok); };
   S.dVidT=setTimeout(function(){ if(ok()) playWhenReady(v, ok, shown); }, VIDEO_DELAY-VIDEO_LEAD);
 }
 function preloadAround(){
@@ -1120,10 +1133,10 @@ function swapDetail(dir){
   box.setAttribute("aria-label",dn(d));
   // media: new layer slides in over the old one, old one slides out
   media.querySelectorAll(".d-layer").forEach(function(old){
-    if(old.classList.contains("leaving")) { old.remove(); return; }
+    if(old.classList.contains("leaving")) { old.querySelectorAll("video").forEach(releaseVideo); old.remove(); return; }
     old.classList.add("leaving"); var ov=old.querySelector("video"); if(ov){ try{ ov.pause(); }catch(_){} }
     old.style.transform="translateX("+(dir>0?-60:60)+"px) scale(.97)"; old.style.opacity="0";
-    setTimeout(function(){ old.remove(); },480);
+    setTimeout(function(){ old.querySelectorAll("video").forEach(releaseVideo); old.remove(); },480);
   });
   var layer=document.createElement("div"); layer.className="d-layer";
   layer.style.transform="translateX("+(dir>0?60:-60)+"px) scale(.97)"; layer.style.opacity="0";
