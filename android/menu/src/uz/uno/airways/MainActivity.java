@@ -59,6 +59,8 @@ public class MainActivity extends Activity {
     if (loading) { loading = false; try { web.stopLoading(); } catch (Exception e) { } failed = true; showOffline(); }
   } };
   boolean exiting = false;
+  boolean repin = false;            /* came back from a dock app: lock again */
+  final Runnable pinLater = new Runnable() { public void run() { lastPin = 0; pin(); } };
 
   DevicePolicyManager dpm;
   ComponentName admin;
@@ -237,7 +239,7 @@ public class MainActivity extends Activity {
             } else {
               /* screen pinning: unpin while the other app is open; it pins again when the user comes back */
               try { stopLockTask(); } catch (Exception e) { }
-              lastPin = System.currentTimeMillis();
+              lastPin = 0; repin = true;
             }
           }
           try { startActivity(go); } catch (Exception e) { }
@@ -398,8 +400,12 @@ public class MainActivity extends Activity {
     } else super.onActivityResult(rq, rc, data);
   }
 
-  @Override public void onWindowFocusChanged(boolean f) { super.onWindowFocusChanged(f); if (f) immersive(); }
-  @Override protected void onResume() { super.onResume(); web.onResume(); immersive(); pin(); }
+  @Override public void onWindowFocusChanged(boolean f) { super.onWindowFocusChanged(f); if (f) { immersive(); if (kioskOn()) { lastPin = 0; pin(); } } }
+  @Override protected void onResume() {
+    super.onResume(); web.onResume(); immersive(); pin();
+    /* the lock can only start once the window is really in front: try again shortly after returning */
+    if (kioskOn()) { h.removeCallbacks(pinLater); h.postDelayed(pinLater, 700); if (repin) { h.postDelayed(pinLater, 1800); repin = false; } }
+  }
   @Override protected void onPause() { web.onPause(); super.onPause(); }
 
   @Override public void onBackPressed() {

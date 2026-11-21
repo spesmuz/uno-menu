@@ -218,6 +218,15 @@ function startCam(){
   }).catch(function(){ $("camNo").textContent="Kameraga ruxsat berilmagan"; setTimeout(startCam,15000); });
 }
 startCam();
+/* the camera stops when another app (phone, SMS, Plus) is opened: release it and start it again on return */
+function stopCam(){ try{ if(vid.srcObject){ vid.srcObject.getTracks().forEach(function(t){ t.onended=null; t.stop(); }); } }catch(_){} vid.srcObject=null; camOK=false; }
+document.addEventListener("visibilitychange",function(){
+  if(document.hidden){ stopCam(); }
+  else { stopCam(); $("camNo").style.display=""; $("camNo").textContent="Kamera yoqilmoqda…"; setTimeout(startCam,300); }
+});
+window.addEventListener("pageshow",function(e){ if(e.persisted){ stopCam(); startCam(); } });
+/* if the picture freezes (track muted / ended) restart it */
+setInterval(function(){ try{ var tr=vid.srcObject&&vid.srcObject.getVideoTracks()[0]; if(!document.hidden && tr && (tr.readyState==="ended" || tr.muted)) { stopCam(); startCam(); } }catch(_){} }, 5000);
 function snap(){
   if(!camOK||!vid.videoWidth) return null;
   try{ var c=$("cv"), x=c.getContext("2d"), w=vid.videoWidth, h=vid.videoHeight, s=Math.min(w,h);
