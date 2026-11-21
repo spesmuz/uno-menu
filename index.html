@@ -285,6 +285,20 @@ canvas.frost{position:absolute;inset:0;image-rendering:auto;width:100%;height:10
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
 #toastHost,#detailHost,#cartHost{display:contents}
+#instBar{position:fixed;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));z-index:8500;max-width:460px;margin:0 auto;background:rgba(22,23,27,.97);border:1px solid rgba(232,176,75,.45);border-radius:20px;padding:14px;display:flex;gap:12px;align-items:center;box-shadow:0 18px 40px rgba(0,0,0,.55);transform:translateY(140%);transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+#instBar.show{transform:none}
+#instBar img{width:48px;height:48px;border-radius:12px;flex:none}
+#instBar .tx{flex:1;min-width:0}
+#instBar .tx b{display:block;font-size:14px;color:var(--text);line-height:1.3}
+#instBar .tx small{display:block;font-size:12px;color:var(--muted);margin-top:3px;line-height:1.35}
+#instBar .bt{display:flex;flex-direction:column;gap:6px;flex:none}
+#instBar button{height:36px;padding:0 14px;border-radius:12px;border:0;font-weight:800;font-size:13px}
+#instBar .go{background:var(--gold);color:#17130A}
+#instBar .no{background:transparent;color:var(--muted);height:24px;font-weight:600}
+#instBar .ios{display:none;flex-direction:column;gap:8px;margin-top:8px;font-size:13px;color:var(--text)}
+#instBar .ios span{display:flex;gap:8px;align-items:center}
+#instBar .ios i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:7px;background:var(--gold);color:#17130A;font-weight:800;font-size:12px;flex:none}
+#instBar.howto .ios{display:flex}
 #zonePick{position:fixed;inset:0;z-index:9000;background:radial-gradient(120% 70% at 50% 0%,rgba(70,52,22,.45),transparent 60%),#0A0B0D;display:none;padding:max(18px,env(safe-area-inset-top)) 16px max(18px,env(safe-area-inset-bottom));overflow-y:auto;-webkit-overflow-scrolling:touch}
 #zonePick.show{display:flex;animation:zpFade .28s ease both}
 @keyframes zpFade{from{opacity:0}to{opacity:1}}
@@ -675,9 +689,9 @@ var SFX=(function(){
 
 /* ---------- i18n ---------- */
 var T={
-uz:{askWaiter:"Tanlagan taomlaringizni ofitsiantga ayting",subtotal:"Taomlar",service:"Xizmat haqi",askBill:"Hisobni so'rash",waiterSent:"Ofitsiant chaqirildi",billSent:"Hisob so'raldi, ofitsiant olib keladi",waiterComing:"Ofitsiant kelmoqda",waitPlease:"Ofitsiant allaqachon chaqirilgan, biroz kuting",sendFail:"Yuborilmadi. Internetni tekshirib, qayta urinib ko'ring",tableL:"stol",search:"Taom qidirish",searchPh:"Taom nomi yoki tarkibi…",add:"Savatchaga qo'shish",more:"Batafsil",items:"ta taom",loading:"Menyu yuklanmoqda…",empty:"Menyu hali bo'sh.",results:"Qidiruv natijalari",none:"Hech narsa topilmadi.",order:"Buyurtmangiz",cartEmpty:"Savatcha bo'sh. Menyudan taom tanlang.",note:"Oshpazga izoh (ixtiyoriy)",notePh:"Masalan: achchiq bo'lmasin",total:"Jami",place:"Buyurtma berish",accepted:"Buyurtma qabul qilindi",preparing:"Taomlaringiz tayyorlanmoqda. Yoqimli ishtaha!",back:"Menyuga qaytish",waiter:"Ofitsiant chaqirildi, tez orada keladi",ingr:"Tarkibi",weight:"Og'irligi",time:"Tayyorlanish vaqti",min:"daq",sound:"Ovoz",close:"Yopish",prev:"Oldingi taom",next:"Keyingi taom",cur:"so'm",cart:"Savatchani ochish",waiterBtn:"Ofitsiantni chaqirish",dec:"Kamaytirish",inc:"Ko'paytirish",restaurant:"Restoran",clearAll:"Hammasini o'chirish",clearQ:"Hammasi o'chirilsinmi?",yes:"Ha",no:"Yo'q",kcal:"kkal",approx:"taxminan",cal:"Kaloriya",prot:"Oqsil",fat:"Yog'",carb:"Uglevod",g:"g",totalKcal:"Jami kaloriya",partKcal:"ba'zi taomlarda ma'lumot yo'q",toCenter:"markazga olib kelish",video:"videosi",cats:"Kategoriyalar",lang:"Til"},
-ru:{askWaiter:"Назовите выбранные блюда официанту",subtotal:"Блюда",service:"Обслуживание",askBill:"Попросить счёт",waiterSent:"Официант вызван",billSent:"Счёт запрошен, официант принесёт",waiterComing:"Официант идёт",waitPlease:"Официант уже вызван, немного подождите",sendFail:"Не отправлено. Проверьте интернет и попробуйте снова",tableL:"стол",search:"Поиск блюда",searchPh:"Название или состав…",add:"В корзину",more:"Подробнее",items:"блюд",loading:"Меню загружается…",empty:"Меню пока пусто.",results:"Результаты поиска",none:"Ничего не найдено.",order:"Ваш заказ",cartEmpty:"Корзина пуста. Выберите блюдо в меню.",note:"Комментарий для повара (необязательно)",notePh:"Например: не острое",total:"Итого",place:"Оформить заказ",accepted:"Заказ принят",preparing:"Ваши блюда готовятся. Приятного аппетита!",back:"Вернуться в меню",waiter:"Официант вызван и скоро подойдёт",ingr:"Состав",weight:"Вес",time:"Время приготовления",min:"мин",sound:"Звук",close:"Закрыть",prev:"Предыдущее блюдо",next:"Следующее блюдо",cur:"сум",cart:"Открыть корзину",waiterBtn:"Вызвать официанта",dec:"Уменьшить",inc:"Увеличить",restaurant:"Ресторан",clearAll:"Очистить всё",clearQ:"Удалить всё?",yes:"Да",no:"Нет",kcal:"ккал",approx:"примерно",cal:"Калорийность",prot:"Белки",fat:"Жиры",carb:"Углеводы",g:"г",totalKcal:"Всего калорий",partKcal:"не для всех блюд есть данные",toCenter:"показать в центре",video:"видео",cats:"Категории",lang:"Язык"},
-en:{askWaiter:"Tell your waiter the dishes you have chosen",subtotal:"Dishes",service:"Service charge",askBill:"Ask for the bill",waiterSent:"Waiter called",billSent:"Bill requested, the waiter will bring it",waiterComing:"The waiter is on the way",waitPlease:"The waiter has already been called, please wait",sendFail:"Not sent. Check the internet and try again",tableL:"table",search:"Search dishes",searchPh:"Dish name or ingredients…",add:"Add to order",more:"Details",items:"items",loading:"Loading menu…",empty:"The menu is empty for now.",results:"Search results",none:"Nothing found.",order:"Your order",cartEmpty:"Your order is empty. Pick a dish from the menu.",note:"Note for the chef (optional)",notePh:"For example: not spicy",total:"Total",place:"Place order",accepted:"Order received",preparing:"Your dishes are being prepared. Enjoy your meal!",back:"Back to menu",waiter:"A waiter is on the way",ingr:"Ingredients",weight:"Weight",time:"Cooking time",min:"min",sound:"Sound",close:"Close",prev:"Previous dish",next:"Next dish",cur:"UZS",cart:"Open order",waiterBtn:"Call a waiter",dec:"Decrease",inc:"Increase",restaurant:"Restaurant",clearAll:"Clear all",clearQ:"Remove everything?",yes:"Yes",no:"No",kcal:"kcal",approx:"approx.",cal:"Calories",prot:"Protein",fat:"Fat",carb:"Carbs",g:"g",totalKcal:"Total calories",partKcal:"some dishes have no data",toCenter:"bring to centre",video:"video",cats:"Categories",lang:"Language"}
+uz:{instTitle:"UNO menyusini telefoningizga qo'shing",instText:"Keyingi safar bir bosishda ochiladi, internetsiz ham ishlaydi.",instBtn:"O'rnatish",instLater:"Keyinroq",instIos1:"«Ulashish» tugmasini bosing (yoki ••• menyusida)",instIos2:"«Bosh ekranga qo'shish» ni tanlang",instDone:"Tushunarli",instOk:"Ilova o'rnatildi",askWaiter:"Tanlagan taomlaringizni ofitsiantga ayting",subtotal:"Taomlar",service:"Xizmat haqi",askBill:"Hisobni so'rash",waiterSent:"Ofitsiant chaqirildi",billSent:"Hisob so'raldi, ofitsiant olib keladi",waiterComing:"Ofitsiant kelmoqda",waitPlease:"Ofitsiant allaqachon chaqirilgan, biroz kuting",sendFail:"Yuborilmadi. Internetni tekshirib, qayta urinib ko'ring",tableL:"stol",search:"Taom qidirish",searchPh:"Taom nomi yoki tarkibi…",add:"Savatchaga qo'shish",more:"Batafsil",items:"ta taom",loading:"Menyu yuklanmoqda…",empty:"Menyu hali bo'sh.",results:"Qidiruv natijalari",none:"Hech narsa topilmadi.",order:"Buyurtmangiz",cartEmpty:"Savatcha bo'sh. Menyudan taom tanlang.",note:"Oshpazga izoh (ixtiyoriy)",notePh:"Masalan: achchiq bo'lmasin",total:"Jami",place:"Buyurtma berish",accepted:"Buyurtma qabul qilindi",preparing:"Taomlaringiz tayyorlanmoqda. Yoqimli ishtaha!",back:"Menyuga qaytish",waiter:"Ofitsiant chaqirildi, tez orada keladi",ingr:"Tarkibi",weight:"Og'irligi",time:"Tayyorlanish vaqti",min:"daq",sound:"Ovoz",close:"Yopish",prev:"Oldingi taom",next:"Keyingi taom",cur:"so'm",cart:"Savatchani ochish",waiterBtn:"Ofitsiantni chaqirish",dec:"Kamaytirish",inc:"Ko'paytirish",restaurant:"Restoran",clearAll:"Hammasini o'chirish",clearQ:"Hammasi o'chirilsinmi?",yes:"Ha",no:"Yo'q",kcal:"kkal",approx:"taxminan",cal:"Kaloriya",prot:"Oqsil",fat:"Yog'",carb:"Uglevod",g:"g",totalKcal:"Jami kaloriya",partKcal:"ba'zi taomlarda ma'lumot yo'q",toCenter:"markazga olib kelish",video:"videosi",cats:"Kategoriyalar",lang:"Til"},
+ru:{instTitle:"Добавьте меню UNO на телефон",instText:"В следующий раз откроется одним касанием и работает без интернета.",instBtn:"Установить",instLater:"Позже",instIos1:"Нажмите «Поделиться» (или в меню •••)",instIos2:"Выберите «На экран «Домой»»",instDone:"Понятно",instOk:"Приложение установлено",askWaiter:"Назовите выбранные блюда официанту",subtotal:"Блюда",service:"Обслуживание",askBill:"Попросить счёт",waiterSent:"Официант вызван",billSent:"Счёт запрошен, официант принесёт",waiterComing:"Официант идёт",waitPlease:"Официант уже вызван, немного подождите",sendFail:"Не отправлено. Проверьте интернет и попробуйте снова",tableL:"стол",search:"Поиск блюда",searchPh:"Название или состав…",add:"В корзину",more:"Подробнее",items:"блюд",loading:"Меню загружается…",empty:"Меню пока пусто.",results:"Результаты поиска",none:"Ничего не найдено.",order:"Ваш заказ",cartEmpty:"Корзина пуста. Выберите блюдо в меню.",note:"Комментарий для повара (необязательно)",notePh:"Например: не острое",total:"Итого",place:"Оформить заказ",accepted:"Заказ принят",preparing:"Ваши блюда готовятся. Приятного аппетита!",back:"Вернуться в меню",waiter:"Официант вызван и скоро подойдёт",ingr:"Состав",weight:"Вес",time:"Время приготовления",min:"мин",sound:"Звук",close:"Закрыть",prev:"Предыдущее блюдо",next:"Следующее блюдо",cur:"сум",cart:"Открыть корзину",waiterBtn:"Вызвать официанта",dec:"Уменьшить",inc:"Увеличить",restaurant:"Ресторан",clearAll:"Очистить всё",clearQ:"Удалить всё?",yes:"Да",no:"Нет",kcal:"ккал",approx:"примерно",cal:"Калорийность",prot:"Белки",fat:"Жиры",carb:"Углеводы",g:"г",totalKcal:"Всего калорий",partKcal:"не для всех блюд есть данные",toCenter:"показать в центре",video:"видео",cats:"Категории",lang:"Язык"},
+en:{instTitle:"Add the UNO menu to your phone",instText:"Next time it opens with one tap and works offline.",instBtn:"Install",instLater:"Later",instIos1:"Tap Share (or find it in the ••• menu)",instIos2:"Choose “Add to Home Screen”",instDone:"Got it",instOk:"App installed",askWaiter:"Tell your waiter the dishes you have chosen",subtotal:"Dishes",service:"Service charge",askBill:"Ask for the bill",waiterSent:"Waiter called",billSent:"Bill requested, the waiter will bring it",waiterComing:"The waiter is on the way",waitPlease:"The waiter has already been called, please wait",sendFail:"Not sent. Check the internet and try again",tableL:"table",search:"Search dishes",searchPh:"Dish name or ingredients…",add:"Add to order",more:"Details",items:"items",loading:"Loading menu…",empty:"The menu is empty for now.",results:"Search results",none:"Nothing found.",order:"Your order",cartEmpty:"Your order is empty. Pick a dish from the menu.",note:"Note for the chef (optional)",notePh:"For example: not spicy",total:"Total",place:"Place order",accepted:"Order received",preparing:"Your dishes are being prepared. Enjoy your meal!",back:"Back to menu",waiter:"A waiter is on the way",ingr:"Ingredients",weight:"Weight",time:"Cooking time",min:"min",sound:"Sound",close:"Close",prev:"Previous dish",next:"Next dish",cur:"UZS",cart:"Open order",waiterBtn:"Call a waiter",dec:"Decrease",inc:"Increase",restaurant:"Restaurant",clearAll:"Clear all",clearQ:"Remove everything?",yes:"Yes",no:"No",kcal:"kcal",approx:"approx.",cal:"Calories",prot:"Protein",fat:"Fat",carb:"Carbs",g:"g",totalKcal:"Total calories",partKcal:"some dishes have no data",toCenter:"bring to centre",video:"video",cats:"Categories",lang:"Language"}
 };
 function t(k){ return (T[S.lang]||T.uz)[k]||T.uz[k]||k; }
 function L(d,f){ var v = S.lang==="uz" ? d[f] : (d[f+"_"+S.lang]||d[f]); return v||""; }
@@ -1347,6 +1361,49 @@ function qrTable(){
 }
 function tableNo(){ var q=qrTable(); if(q) return q; var pk=pickedTable(); if(pk) return pk; try{ return (localStorage.getItem(TABLE_KEY)||"").trim(); }catch(_){ return ""; } }
 function setTableNo(v){ try{ v=String(v||"").trim().slice(0,12); if(v){ localStorage.setItem(TABLE_KEY,v); localStorage.setItem("uno_table_src","admin"); } else { localStorage.removeItem(TABLE_KEY); localStorage.removeItem("uno_table_src"); } }catch(_){} refreshCallUI(); }
+/* ---------- offer customers to install the menu on their phone (PWA) ---------- */
+(function(){
+  var KEY="uno_inst_later", deferred=null, bar=null;
+  var standalone = (window.matchMedia && (matchMedia("(display-mode: standalone)").matches || matchMedia("(display-mode: fullscreen)").matches)) || navigator.standalone===true;
+  var ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+  var iosSafari = ios && !/CriOS|FxiOS|EdgiOS|OPiOS|YaBrowser/.test(navigator.userAgent);
+  function skip(){
+    if(standalone || window.UnoKiosk) return true;                          /* already an app / restaurant tablet */
+    try{ if(localStorage.getItem("uno_device_mode")==="att") return true;
+         var t=Number(localStorage.getItem(KEY)||0); if(t && Date.now()-t < 3*864e5) return true; }catch(_){}
+    return false;
+  }
+  function show(){
+    if(bar || skip() || S.view!=="menu") return;
+    if(!deferred && !iosSafari) return;                                         /* browser cannot install: say nothing */
+    bar=document.createElement("div"); bar.id="instBar"; bar.setAttribute("role","dialog");
+    bar.innerHTML='<img src="icons/menu-192.png" alt=""><div class="tx"><b>'+esc(t("instTitle"))+'</b><small>'+esc(t("instText"))+'</small>'+
+      '<div class="ios"><span><i>1</i>'+esc(t("instIos1"))+' <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></span><span><i>2</i>'+esc(t("instIos2"))+'</span></div></div>'+
+      '<div class="bt"><button class="go" type="button">'+esc(t("instBtn"))+'</button><button class="no" type="button">'+esc(t("instLater"))+'</button></div>';
+    document.body.appendChild(bar);
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ bar.classList.add("show"); }); });
+    bar.querySelector(".no").onclick=function(){ hide(true); };
+    bar.querySelector(".go").onclick=async function(){
+      try{ SFX.select(); }catch(_){}
+      if(deferred){
+        deferred.prompt(); var ch=null; try{ ch=await deferred.userChoice; }catch(_){}
+        deferred=null; hide(!(ch&&ch.outcome==="accepted"));
+      } else if(iosSafari){
+        if(!bar.classList.contains("howto")){ bar.classList.add("howto"); this.textContent=t("instDone"); }
+        else hide(true);
+      }
+    };
+  }
+  function hide(later){
+    if(later){ try{ localStorage.setItem(KEY,String(Date.now())); }catch(_){} }
+    if(!bar) return; var b=bar; b.classList.remove("show"); setTimeout(function(){ b.remove(); },500);
+  }
+  window.addEventListener("beforeinstallprompt",function(e){ e.preventDefault(); deferred=e; setTimeout(show, 6000); });
+  window.addEventListener("appinstalled",function(){ deferred=null; hide(false); try{ toast(t("instOk")); }catch(_){} });
+  /* iPhone has no install event: offer after the guest has looked around for a moment */
+  if(iosSafari) setTimeout(show, 8000);
+})();
+
 /* ---------- waiter picks the zone and table every time the tablet is unlocked (switch: admin panel) ---------- */
 var ZONES_DEFAULT=[{id:"business",name:"BUSINESS",tables:"1-10"},{id:"comfort",name:"COMFORT",tables:"1-10"},{id:"family",name:"FAMILY",tables:"1-10"},{id:"conf",name:"CONFERENSIYA",tables:"1-5"},{id:"balkon",name:"BALKON",tables:"1-10"},{id:"vip",name:"VIP",tables:"1-6"}];
 var PICK_KEY="uno_table_pick";
