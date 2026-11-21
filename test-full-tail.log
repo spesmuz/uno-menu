@@ -1,0 +1,184 @@
+Command line invocation:
+    /Applications/Xcode_26.3.app/Contents/Developer/usr/bin/xcodebuild test-without-building -project UNOAirways.xcodeproj -scheme UNOAirways -destination id=9382144F-8314-4BFE-B115-59E7D63CDD75 -derivedDataPath ../build "-only-testing:UNOAirwaysUITests/DemoTests/testDemo"
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS Simulator, arch:arm64, id:9382144F-8314-4BFE-B115-59E7D63CDD75, OS:26.2, name:iPhone 17 Pro Max }
+{ platform:iOS Simulator, arch:x86_64, id:9382144F-8314-4BFE-B115-59E7D63CDD75, OS:26.2, name:iPhone 17 Pro Max }
+2026-11-21 13:28:56.271846+0000 UNOAirwaysUITests-Runner[23205:66933] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-11-21 13:29:03.036.
+Test Suite 'UNOAirwaysUITests.xctest' started at 2026-11-21 13:29:03.037.
+Test Suite 'DemoTests' started at 2026-11-21 13:29:03.037.
+Test Case '-[UNOAirwaysUITests.DemoTests testDemo]' started.
+    t =     0.00s Start Test at 2026-11-21 13:29:03.039
+    t =     0.42s Set Up
+    t =     0.42s Open uz.uno.airways
+    t =     0.42s     Launch uz.uno.airways
+    t =     7.21s         Setting up automation session
+    t =     8.18s         Wait for uz.uno.airways to idle
+    t =    22.95s Waiting 10.0s for WebView (First Match) to exist
+    t =    24.04s     Checking `Expect predicate `existsNoRetry == 1` for object WebView (First Match)`
+    t =    24.05s         Checking existence of `WebView (First Match)`
+    t =    24.33s Swipe left WebView (First Match)
+    t =    24.33s     Wait for uz.uno.airways to idle
+    t =    24.33s     Find the WebView (First Match)
+    t =    24.46s     Check for interrupting elements affecting WebView
+    t =    24.72s     Synthesize event
+    t =    25.59s     Wait for uz.uno.airways to idle
+    t =    32.17s Swipe left WebView at {{0.0, 62.0}, {440.0, 811.0}}
+    t =    32.17s     Wait for uz.uno.airways to idle
+    t =    32.17s     Find the WebView at {{0.0, 62.0}, {440.0, 811.0}}
+    t =    32.48s     Check for interrupting elements affecting WebView
+    t =    32.62s     Synthesize event
+    t =    33.19s     Wait for uz.uno.airways to idle
+    t =    37.73s Swipe left WebView at {{0.0, 62.0}, {440.0, 811.0}}
+    t =    37.74s     Wait for uz.uno.airways to idle
+    t =    37.75s     Find the WebView at {{0.0, 62.0}, {440.0, 811.0}}
+    t =    37.93s     Check for interrupting elements affecting WebView
+    t =    38.08s     Synthesize event
+    t =    38.95s     Wait for uz.uno.airways to idle
+    t =    43.51s Swipe right WebView at {{0.0, 62.0}, {440.0, 811.0}}
+    t =    43.51s     Wait for uz.uno.airways to idle
+    t =    43.52s     Find the WebView at {{0.0, 62.0}, {440.0, 811.0}}
+    t =    43.73s     Check for interrupting elements affecting WebView
+    t =    43.88s     Synthesize event
+    t =    44.41s     Wait for uz.uno.airways to idle
+    t =    47.44s Checking existence of `"Bron" Button`
+    t =    47.56s Tap "Bron" Button
+    t =    47.56s     Wait for uz.uno.airways to idle
+    t =    47.56s     Find the "Bron" Button
+    t =    47.61s     Check for interrupting elements affecting "Bron" Button
+    t =    47.74s     Synthesize event
+    t =    48.09s     Wait for uz.uno.airways to idle
+    t =    53.60s Waiting 5.0s for "Ismingiz" TextField to exist
+    t =    54.67s     Checking `Expect predicate `existsNoRetry == 1` for object "Ismingiz" TextField`
+    t =    54.67s         Checking existence of `"Ismingiz" TextField`
+    t =    55.10s Tap "Ismingiz" TextField
+    t =    55.10s     Wait for uz.uno.airways to idle
+    t =    55.11s     Find the "Ismingiz" TextField
+    t =    55.25s     Check for interrupting elements affecting "Ismingiz" TextField
+    t =    55.42s     Synthesize event
+    t =    55.78s     Wait for uz.uno.airways to idle
+    t =    61.19s Type 'Aziz Karimov' into "Ismingiz" TextField
+    t =    61.20s     Wait for uz.uno.airways to idle
+    t =    61.72s     Find the "Ismingiz" TextField
+    t =    62.93s     Check for interrupting elements affecting "Ismingiz" TextField
+    t =    64.76s     Synthesize event
+    t =    65.40s     Wait for uz.uno.airways to idle
+    t =    66.57s Checking existence of `TextField (Element at index 1)`
+    t =    67.17s Tap TextField (Element at index 1)
+    t =    67.17s     Wait for uz.uno.airways to idle
+    t =    67.19s     Find the TextField (Element at index 1)
+    t =    67.67s     Check for interrupting elements affecting "Telefon raqamingiz" TextField
+    t =    68.20s     Synthesize event
+    t =    68.78s     Wait for uz.uno.airways to idle
+    t =    70.04s Type '90 123 45 67' into "Telefon raqamingiz" TextField
+    t =    70.05s     Wait for uz.uno.airways to idle
+    t =    70.06s     Find the "Telefon raqamingiz" TextField
+    t =    70.25s     Check for interrupting elements affecting "Telefon raqamingiz" TextField
+    t =    70.40s     Synthesize event
+    t =    70.84s     Wait for uz.uno.airways to idle
+    t =    71.89s Checking existence of `"Tayyor" Button`
+    t =    72.08s Tap "Tayyor" Button
+    t =    72.08s     Wait for uz.uno.airways to idle
+    t =    72.09s     Find the "Tayyor" Button
+    t =    72.20s     Check for interrupting elements affecting "Tayyor" Button
+    t =    72.28s     Synthesize event
+    t =    72.61s     Wait for uz.uno.airways to idle
+    t =    74.45s Checking existence of `Stepper (First Match)`
+    t =    74.88s Tap Button (Element at index 1)
+    t =    74.88s     Wait for uz.uno.airways to idle
+    t =    74.88s     Find the Button (Element at index 1)
+    t =    75.36s     Check for interrupting elements affecting "Increment" Button
+    t =    75.49s     Synthesize event
+    t =    75.81s     Wait for uz.uno.airways to idle
+    t =    76.41s Tap "Increment" Button
+    t =    76.41s     Wait for uz.uno.airways to idle
+    t =    76.42s     Find the "Increment" Button
+    t =    76.80s     Check for interrupting elements affecting "Increment" Button
+    t =    76.88s     Synthesize event
+    t =    77.23s     Wait for uz.uno.airways to idle
+    t =    77.83s Checking existence of `Button (First Match)`
+    t =    78.17s Tap Button (First Match)
+    t =    78.17s     Wait for uz.uno.airways to idle
+    t =    78.17s     Find the Button (First Match)
+    t =    78.38s     Check for interrupting elements affecting "Joy, Farqi yo'q" Button
+    t =    78.44s     Synthesize event
+    t =    78.76s     Wait for uz.uno.airways to idle
+    t =    81.79s Checking existence of `Any (First Match)`
+    t =    81.90s Tap Any (First Match)
+    t =    81.90s     Wait for uz.uno.airways to idle
+    t =    81.91s     Find the Any (First Match)
+    t =    82.04s     Check for interrupting elements affecting "VIP xona" Button
+    t =    82.23s     Synthesize event
+    t =    82.54s     Wait for uz.uno.airways to idle
+    t =    85.67s Checking existence of `Button (First Match)`
+    t =    85.98s Tap Button (First Match)
+    t =    85.98s     Wait for uz.uno.airways to idle
+    t =    85.99s     Find the Button (First Match)
+    t =    86.32s     Check for interrupting elements affecting "Sabab, Oddiy tashrif" Button
+    t =    86.44s     Synthesize event
+    t =    86.80s     Wait for uz.uno.airways to idle
+    t =    89.74s Checking existence of `Any (First Match)`
+    t =    89.87s Tap Any (First Match)
+    t =    89.87s     Wait for uz.uno.airways to idle
+    t =    89.88s     Find the Any (First Match)
+    t =    90.03s     Check for interrupting elements affecting "Tug'ilgan kun" Button
+    t =    90.23s     Synthesize event
+    t =    90.53s     Wait for uz.uno.airways to idle
+    t =    93.65s Swipe up Target Application 'uz.uno.airways'
+    t =    93.65s     Wait for uz.uno.airways to idle
+    t =    93.66s     Find the Target Application 'uz.uno.airways'
+    t =    93.78s     Check for interrupting elements affecting "UNO Airways" Application
+    t =    93.88s     Synthesize event
+    t =    94.33s     Wait for uz.uno.airways to idle
+    t =    97.51s Swipe down Target Application 'uz.uno.airways'
+    t =    97.51s     Wait for uz.uno.airways to idle
+    t =    97.53s     Find the Target Application 'uz.uno.airways'
+    t =    97.81s     Check for interrupting elements affecting "UNO Airways" Application
+    t =    97.97s     Synthesize event
+    t =    98.52s     Wait for uz.uno.airways to idle
+    t =   101.10s Checking existence of `"UNO" Button`
+    t =   101.24s Tap "UNO" Button
+    t =   101.24s     Wait for uz.uno.airways to idle
+    t =   101.25s     Find the "UNO" Button
+    t =   101.37s     Check for interrupting elements affecting "airplane" Button
+    t =   101.53s     Synthesize event
+    t =   101.92s     Wait for uz.uno.airways to idle
+    t =   107.26s Swipe up Target Application 'uz.uno.airways'
+    t =   107.26s     Wait for uz.uno.airways to idle
+    t =   107.27s     Find the Target Application 'uz.uno.airways'
+    t =   107.41s     Check for interrupting elements affecting "UNO Airways" Application
+    t =   107.59s     Synthesize event
+    t =   108.08s     Wait for uz.uno.airways to idle
+    t =   111.33s Swipe down Target Application 'uz.uno.airways'
+    t =   111.33s     Wait for uz.uno.airways to idle
+    t =   111.33s     Find the Target Application 'uz.uno.airways'
+    t =   111.44s     Check for interrupting elements affecting "UNO Airways" Application
+    t =   111.51s     Synthesize event
+    t =   112.00s     Wait for uz.uno.airways to idle
+    t =   114.83s Checking existence of `"Menyu" Button`
+    t =   114.89s Tap "Menyu" Button
+    t =   114.89s     Wait for uz.uno.airways to idle
+    t =   114.90s     Find the "Menyu" Button
+    t =   114.95s     Check for interrupting elements affecting "fork.knife" Button
+    t =   115.04s     Synthesize event
+    t =   115.39s     Wait for uz.uno.airways to idle
+    t =   122.34s Tear Down
+Test Case '-[UNOAirwaysUITests.DemoTests testDemo]' passed (122.987 seconds).
+Test Suite 'DemoTests' passed at 2026-11-21 13:31:06.026.
+	 Executed 1 test, with 0 failures (0 unexpected) in 122.987 (122.989) seconds
+Test Suite 'UNOAirwaysUITests.xctest' passed at 2026-11-21 13:31:06.027.
+	 Executed 1 test, with 0 failures (0 unexpected) in 122.987 (122.990) seconds
+Test Suite 'Selected tests' passed at 2026-11-21 13:31:06.027.
+	 Executed 1 test, with 0 failures (0 unexpected) in 122.987 (122.991) seconds
+2026-11-21 13:31:59.985 xcodebuild[22122:64055] [MT] IDETestOperationsObserverDebug: 192.355 elapsed -- Testing started completed.
+2026-11-21 13:31:59.985 xcodebuild[22122:64055] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-21 13:31:59.985 xcodebuild[22122:64055] [MT] IDETestOperationsObserverDebug: 192.355 sec, +192.355 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/runner/work/uno-menu/uno-menu/build/Logs/Test/Test-UNOAirways-2026.11.21_13-28-41-+0000.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started
