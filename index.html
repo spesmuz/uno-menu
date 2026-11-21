@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="icons/menu-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="UNO Menyu">
 <meta name="theme-color" content="#08090B">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -377,7 +377,10 @@ canvas.frost{position:absolute;inset:0;image-rendering:auto;width:100%;height:10
 #adminView.paged{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 #adminView.paged .a-wrap{flex:1;min-height:0;width:100%;max-width:none;padding:12px 0 0;gap:10px}
 #adminView.paged .a-wrap>.msg,#adminView.paged .a-wrap>.progress{margin:0 16px}
-#adminView.paged .a-top{padding:10px 16px;gap:8px 10px}
+#adminView.paged .a-top{padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top));gap:8px 10px}
+#adminView .a-top{padding-top:max(16px,env(safe-area-inset-top))}
+#adminView .auth-wrap{padding-top:max(24px,env(safe-area-inset-top))}
+#adminView.paged .adm-dots{padding-bottom:max(8px,env(safe-area-inset-bottom))}
 #adminView.paged .a-top h1{font-size:19px}
 #adminView.paged .a-top .btn{height:36px;padding:0 12px;font-size:13px;border-radius:10px}
 .adm-tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 16px 6px;scrollbar-width:none;flex:none;-webkit-overflow-scrolling:touch}
@@ -544,8 +547,16 @@ function showRotSplash(){
   o.classList.remove("hidden","play"); void o.offsetWidth; o.classList.add("play");
   clearTimeout(_rotT); _rotT=setTimeout(function(){ o.classList.add("hidden"); o.classList.remove("play"); },1750);
 }
+/* safe areas (status bar with the clock, home indicator): the background runs under them,
+   the content (logo, buttons) stays inside, exactly where it is now */
+var _safe=null;
+function safeInsets(){
+  if(!_safe){ _safe=document.createElement("div"); _safe.style.cssText="position:fixed;left:0;top:0;width:0;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)"; document.body.appendChild(_safe); }
+  var cs=getComputedStyle(_safe); return {t:parseFloat(cs.paddingTop)||0, b:parseFloat(cs.paddingBottom)||0};
+}
 function fit(){
-  var vw=window.innerWidth||1180, vh=window.innerHeight||820;
+  var ins=safeInsets(), vw=window.innerWidth||1180, vh=Math.max(320,(window.innerHeight||820)-ins.t-ins.b);
+  stage.style.top="calc(50% + "+((ins.t-ins.b)/2)+"px)";
   var portrait = vh > vw*1.05, phone = Math.min(vw,vh) < 560, g;
   if(phone && portrait) g=GEO.phoneP;
   else if(phone){ g=Object.assign({},GEO.phoneL); g.W=Math.max(700,Math.min(1180,Math.round(430*vw/vh))); }
