@@ -53,7 +53,38 @@ jobs:
             -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath ../build \
             CODE_SIGNING_ALLOWED=NO build 2>&1 | tee ../out/build-full.log | grep -E "error:|warning: .*deprecated|BUILD (SUCCEEDED|FAILED)" | tee ../out/build.log
 
+      - name: Release to App Store Connect (TestFlight)
+        if: ${{ env.ASC_KEY_P8 != '' && env.APPLE_TEAM_ID != '' }}
+        timeout-minutes: 30
+        run: |
+          set -o pipefail
+          mkdir -p ~/.appstoreconnect/private_keys
+          KEY=~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8
+          printf '%s' "$ASC_KEY_P8" > "$KEY"
+          AUTH="-allowProvisioningUpdates -authenticationKeyPath $KEY -authenticationKeyID $ASC_KEY_ID -authenticationKeyIssuerID $ASC_ISSUER_ID"
+          cd ios
+          xcodebuild -project UNOAirways.xcodeproj -scheme UNOAirways -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath ../build/UNO.xcarchive \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
+            $AUTH archive 2>&1 | tee ../out/archive-full.log | grep -E "error:|ARCHIVE (SUCCEEDED|FAILED)" | tee ../out/archive.log
+          cat > ../build/export.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>${APPLE_TEAM_ID}</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict></plist>
+          EOF
+          xcodebuild -exportArchive -archivePath ../build/UNO.xcarchive -exportOptionsPlist ../build/export.plist \
+            -exportPath ../build/export $AUTH 2>&1 | tee ../out/upload-full.log | grep -E "error:|EXPORT (SUCCEEDED|FAILED)|Upload" | tee ../out/upload.log
+          rm -f "$KEY"
+
       - name: Screenshots
+        continue-on-error: true
+        timeout-minutes: 12
         run: |
           set -x
           APP=$(ls -d build/Build/Products/Debug-iphonesimulator/UNOAirways.app)
@@ -89,6 +120,7 @@ jobs:
 
       - name: Demo video
         continue-on-error: true
+        timeout-minutes: 12
         run: |
           xcrun simctl terminate "$DEV" uz.uno.airways || true
           cd ios
@@ -102,34 +134,6 @@ jobs:
           cd ..
           kill -INT $REC; wait $REC || true
           ls -la out/demo.mp4
-
-      - name: Release to App Store Connect (TestFlight)
-        if: ${{ env.ASC_KEY_P8 != '' && env.APPLE_TEAM_ID != '' }}
-        run: |
-          set -o pipefail
-          mkdir -p ~/.appstoreconnect/private_keys
-          KEY=~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8
-          printf '%s' "$ASC_KEY_P8" > "$KEY"
-          AUTH="-allowProvisioningUpdates -authenticationKeyPath $KEY -authenticationKeyID $ASC_KEY_ID -authenticationKeyIssuerID $ASC_ISSUER_ID"
-          cd ios
-          xcodebuild -project UNOAirways.xcodeproj -scheme UNOAirways -configuration Release \
-            -destination 'generic/platform=iOS' -archivePath ../build/UNO.xcarchive \
-            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
-            $AUTH archive 2>&1 | tee ../out/archive-full.log | grep -E "error:|ARCHIVE (SUCCEEDED|FAILED)" | tee ../out/archive.log
-          cat > ../build/export.plist <<EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0"><dict>
-            <key>method</key><string>app-store-connect</string>
-            <key>destination</key><string>upload</string>
-            <key>teamID</key><string>${APPLE_TEAM_ID}</string>
-            <key>signingStyle</key><string>automatic</string>
-            <key>manageAppVersionAndBuildNumber</key><false/>
-          </dict></plist>
-          EOF
-          xcodebuild -exportArchive -archivePath ../build/UNO.xcarchive -exportOptionsPlist ../build/export.plist \
-            -exportPath ../build/export $AUTH 2>&1 | tee ../out/upload-full.log | grep -E "error:|EXPORT (SUCCEEDED|FAILED)|Upload" | tee ../out/upload.log
-          rm -f "$KEY"
 
       - name: Publish results to branch ios-ci
         if: always()
