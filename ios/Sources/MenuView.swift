@@ -42,6 +42,7 @@ final class WebModel: NSObject, ObservableObject, WKNavigationDelegate, WKUIDele
     @Published var loading = true
     @Published var failed = false
     weak var web: WKWebView?
+    var loc: LocationBridge?
     private var loadedOnce = false
 
     func reload() {
@@ -138,7 +139,11 @@ struct WebView: UIViewRepresentable {
         c.applicationNameForUserAgent = "UNOAirwaysApp/" + (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1")
         c.websiteDataStore = .default()
         if #available(iOS 14.0, *) { c.limitsNavigationsToAppBoundDomains = true }   /* enables offline cache (service worker) */
+        let loc = LocationBridge()
+        c.userContentController.add(loc, name: "unoLocate")
         let w = InsetWebView(frame: .zero, configuration: c)
+        loc.web = w
+        model.loc = loc
         w.navigationDelegate = model
         w.uiDelegate = model
         w.isOpaque = false
