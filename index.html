@@ -645,11 +645,91 @@ html.th-aurora .logo b,html.th-aurora .logo span{color:#fff;text-shadow:0 1px 4p
 .th-opt em{position:absolute;top:16px;right:16px;font-style:normal;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:var(--gold);color:#17130A;padding:3px 7px;border-radius:8px}
 .th-sw{display:block;width:100%;height:96px;border-radius:11px;border:1px solid rgba(255,255,255,.1)}
 .th-sw-classic{background:radial-gradient(60% 50% at 50% 30%,rgba(232,176,75,.25),transparent 70%),linear-gradient(#17181c,#0e0f12)}
+.th-sw-boarding{background:repeating-linear-gradient(90deg,#14213D 0 2px,transparent 2px 4px) 60% 82%/40% 8px no-repeat,linear-gradient(#FBF7EC,#F4EEDD) 50% 50%/62% 70% no-repeat,repeating-linear-gradient(0deg,rgba(140,180,255,.1) 0 1px,transparent 1px 16px),repeating-linear-gradient(90deg,rgba(140,180,255,.1) 0 1px,transparent 1px 16px),#0B1B3A}
 .th-sw-aurora{background:linear-gradient(180deg,rgba(0,0,0,0) 62%,rgba(120,255,210,.5) 63%,rgba(0,0,0,0) 64.5%),url("media/n-aur1.webp") 0 15%/170% 75% no-repeat,url("media/n-stars.webp") 0 0/220px,linear-gradient(180deg,#010208,#071230 60%,#0d1c40 63%,#030914 64%,#01040c)}
+/* ================= THEME: Boarding pass — glass tickets above the night earth, departures-board tabs ================= */
+html.th-boarding{--gold:#FFC94D;--gold2:#FFE08A;--ink:#050B1E;--panel:rgba(16,28,60,.55);--line:rgba(255,255,255,.18);--text:#F2F6FF;--muted:#A9B8D6;
+  --bp-amber:#FFC94D;--bp-mono:ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace;
+  --bp-glass:linear-gradient(150deg,rgba(255,255,255,.20) 0%,rgba(255,255,255,.06) 32%,rgba(255,255,255,.03) 62%,rgba(255,255,255,.11) 100%);
+  --bp-rim:inset 0 1.5px .5px rgba(255,255,255,.95),inset 0 -1.5px .5px rgba(255,255,255,.35),inset 4px 4px 10px rgba(255,255,255,.14),inset -6px -6px 14px rgba(0,0,20,.25),inset 1.5px 0 0 rgba(140,190,255,.35),inset -1.5px 0 0 rgba(255,200,120,.35)}
+html.th-boarding,html.th-boarding body{background:#050B1E}
+html.th-boarding #adminView,html.th-boarding #editorHost{--gold:#E8B04B;--gold2:#F3C873;--ink:#0E0F12;--panel:#17181C;--card:#1E2026;--line:rgba(255,255,255,.10);--text:#F3EFE7;--muted:#A39E94}
+/* night sky with the curve of the earth, its blue atmosphere and city lights */
+html.th-boarding #menuView{background:
+   radial-gradient(circle at 50% calc(100% + 112vmax),#040915 0,#071434 125vmax,rgba(60,140,255,.85) 127.6vmax,rgba(150,210,255,.95) 127.9vmax,rgba(70,140,255,.45) 128.6vmax,rgba(40,90,220,.18) 132vmax,rgba(0,0,0,0) 142vmax),
+   radial-gradient(60% 45% at 18% 10%,rgba(80,110,255,.18),rgba(0,0,0,0) 70%),
+   radial-gradient(50% 40% at 88% 18%,rgba(255,170,90,.12),rgba(0,0,0,0) 70%),
+   repeating-linear-gradient(0deg,rgba(140,180,255,.045) 0 1px,transparent 1px 90px),
+   repeating-linear-gradient(90deg,rgba(140,180,255,.045) 0 1px,transparent 1px 90px),
+   linear-gradient(180deg,#02040c,#06102a 60%,#081634)}
+html.th-boarding #menuView::before{content:"";position:absolute;left:0;right:0;bottom:0;height:42%;pointer-events:none;z-index:0;
+  background:url("media/city-lights.svg") 0 100%/1600px auto repeat-x;opacity:.85;
+  -webkit-mask-image:radial-gradient(circle at 50% calc(100% + 112vmax),#000 0,#000 120vmax,rgba(0,0,0,.4) 125vmax,transparent 127.4vmax);
+          mask-image:radial-gradient(circle at 50% calc(100% + 112vmax),#000 0,#000 120vmax,rgba(0,0,0,.4) 125vmax,transparent 127.4vmax);animation:bpCity 4s ease-in-out infinite alternate}
+@keyframes bpCity{from{opacity:.65}to{opacity:.95}}
+html.th-boarding #sky{display:block;position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+html.th-boarding #sky svg{position:absolute;inset:0;width:100%;height:100%}
+html.th-boarding #stage{z-index:1}
+/* glass pills in the header */
+html.th-boarding .langs,html.th-boarding .search-box,html.th-boarding .cart-btn,html.th-boarding .icon-btn,html.th-boarding .stepper,html.th-boarding .fact,html.th-boarding .d-ingr,
+html.th-boarding .rv-item,html.th-boarding .rv-pick button,html.th-boarding .rv-form input,html.th-boarding .rv-form textarea{
+  background:var(--bp-glass);border:1px solid rgba(255,255,255,.28);box-shadow:var(--bp-rim),0 10px 26px rgba(0,0,10,.35);-webkit-backdrop-filter:blur(10px) saturate(160%);backdrop-filter:blur(10px) saturate(160%)}
+html.th-boarding .logo b,html.th-boarding .logo span{font-family:var(--bp-mono);letter-spacing:.18em}
+html.th-boarding .logo span{color:var(--bp-amber)}
+/* departures board: glass frame, split-flap tiles */
+html.th-boarding .tabs{background:rgba(3,6,16,.55);border:1px solid rgba(255,255,255,.22);border-radius:14px;padding:5px;gap:5px;box-shadow:var(--bp-rim),0 10px 26px rgba(0,0,10,.4);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+html.th-boarding .tab{font-family:var(--bp-mono);font-weight:700;letter-spacing:.14em;color:#FFD872;border-radius:7px;
+  background:linear-gradient(180deg,rgba(40,50,75,.85) 0 49%,rgba(0,0,0,.9) 49% 51%,rgba(28,36,56,.85) 51% 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+html.th-boarding .tab[aria-pressed="true"]{color:#120C00;background:linear-gradient(180deg,#FFDB5C 0 49%,#8a6a10 49% 51%,#FFC530 51% 100%);box-shadow:0 0 22px rgba(255,201,77,.45),inset 0 1px 0 rgba(255,255,255,.6);animation:bpFlip .45s cubic-bezier(.3,1.4,.5,1)}
+@keyframes bpFlip{0%{transform:perspective(300px) rotateX(-90deg)}100%{transform:perspective(300px) rotateX(0)}}
+html.th-boarding .langs button{font-family:var(--bp-mono);color:#D5DEF2}
+html.th-boarding .langs button[aria-pressed="true"]{background:var(--bp-amber);color:#120C00}
+/* the glass ticket */
+html.th-boarding .card{--notchY:calc(var(--cardW,500px) - 9px);background:
+   repeating-linear-gradient(90deg,rgba(255,255,255,.55) 0 7px,transparent 7px 13px) 22px var(--notchY)/calc(100% - 44px) 1.5px no-repeat,
+   repeating-linear-gradient(90deg,rgba(255,255,255,.85) 0 2px,transparent 2px 4px,rgba(255,255,255,.85) 4px 5px,transparent 5px 8px,rgba(255,255,255,.85) 8px 11px,transparent 11px 13px) right 24px bottom 4px/34% 6px no-repeat,
+   linear-gradient(150deg,rgba(255,255,255,.22) 0%,rgba(255,255,255,.07) 30%,rgba(255,255,255,.04) 60%,rgba(255,255,255,.13) 100%);
+  background-color:rgba(12,24,58,.28);color:#fff;border:1px solid rgba(255,255,255,.42);border-radius:20px;
+  box-shadow:inset 0 2px 1px rgba(255,255,255,.95),inset 0 -2px 1px rgba(255,255,255,.4),inset 6px 6px 16px rgba(255,255,255,.12),inset -10px -10px 24px rgba(0,0,20,.28),inset 2px 0 0 rgba(140,190,255,.4),inset -2px 0 0 rgba(255,200,120,.4),0 30px 70px rgba(0,0,15,.5);
+  -webkit-mask:radial-gradient(circle 15px at 0 var(--notchY),transparent 14.5px,#000 15px) left/51% 100% no-repeat,radial-gradient(circle 15px at 100% var(--notchY),transparent 14.5px,#000 15px) right/51% 100% no-repeat;
+          mask:radial-gradient(circle 15px at 0 var(--notchY),transparent 14.5px,#000 15px) left/51% 100% no-repeat,radial-gradient(circle 15px at 100% var(--notchY),transparent 14.5px,#000 15px) right/51% 100% no-repeat}
+html.th-boarding .slide.center .card{-webkit-backdrop-filter:blur(14px) saturate(170%) brightness(1.08);backdrop-filter:blur(14px) saturate(170%) brightness(1.08);border-color:rgba(255,255,255,.62)}
+html.th-boarding #stage.phone .card{--notchY:calc(var(--cardW,372px) - 7px)}
+html.th-boarding #stage.phoneL .card{-webkit-mask:none;mask:none}
+html.th-boarding .card::before{content:"✈ BOARDING PASS · GATE F-30";position:absolute;right:26px;top:calc(var(--notchY) - 15px);z-index:2;pointer-events:none;
+  font:700 9px/1 var(--bp-mono);letter-spacing:.22em;color:rgba(255,255,255,.55)}
+html.th-boarding .slide .glow{border-radius:20px;box-shadow:0 0 0 2px rgba(255,201,77,.25),0 30px 90px rgba(90,150,255,.28)}
+html.th-boarding .media{border-radius:13px;background:radial-gradient(circle at 50% 40%,rgba(255,255,255,.16),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.3);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6)}
+html.th-boarding .slide.center .media::after{content:"";position:absolute;inset:-20%;z-index:5;pointer-events:none;background:linear-gradient(115deg,transparent 42%,rgba(255,255,255,.22) 50%,transparent 58%);transform:translateX(-120%);animation:bpShine 7s ease-in-out infinite}
+@keyframes bpShine{0%,62%{transform:translateX(-120%)}86%,100%{transform:translateX(120%)}}
+html.th-boarding .badge{background:rgba(3,8,22,.55);border:1px solid rgba(255,255,255,.25);color:#fff;font-family:var(--bp-mono);letter-spacing:.12em;border-radius:7px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+html.th-boarding .badge.cat::before{content:"✈ ";color:var(--bp-amber)}
+html.th-boarding .badge.rt svg,html.th-boarding .stars .s-fg{color:var(--bp-amber)}
+html.th-boarding .info h2{font-family:var(--bp-mono);font-weight:800;letter-spacing:.06em;color:#fff;text-shadow:0 2px 8px rgba(0,0,20,.5)}
+html.th-boarding .info .price{font-family:var(--bp-mono);color:var(--bp-amber);display:flex;align-items:baseline;gap:6px;text-shadow:0 0 14px rgba(255,201,77,.35)}
+html.th-boarding .info .price::before{content:"FARE";font-size:10px;letter-spacing:.22em;color:rgba(255,255,255,.6);font-weight:700;text-shadow:none}
+html.th-boarding .desc{color:rgba(235,242,255,.85)}
+html.th-boarding .more-btn,html.th-boarding .more-btn.kc{background:rgba(255,255,255,.06);border:1.5px dashed rgba(255,255,255,.45);color:#fff;font-family:var(--bp-mono)}
+html.th-boarding .more-btn.kc svg{color:var(--bp-amber)}
+html.th-boarding .add-btn{background:linear-gradient(180deg,#FFD866,#FFBE2E);color:#140D00;white-space:nowrap;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.75),inset 0 -3px 6px rgba(150,90,0,.25),0 8px 22px rgba(255,190,46,.35)}
+html.th-boarding .stepper button{background:rgba(255,255,255,.18)}
+/* detail = full glass boarding pass */
+html.th-boarding .detail{background:rgba(3,7,20,.55);-webkit-backdrop-filter:blur(24px) saturate(150%);backdrop-filter:blur(24px) saturate(150%)}
+html.th-boarding .d-media{border-radius:20px;border:1px solid rgba(255,255,255,.4);box-shadow:inset 0 2px 0 rgba(255,255,255,.7),0 30px 70px rgba(0,0,15,.55)}
+html.th-boarding #stage .d-info{background:linear-gradient(150deg,rgba(255,255,255,.16),rgba(255,255,255,.04) 40%,rgba(255,255,255,.09));background-color:rgba(12,24,58,.3);
+  border:1px solid rgba(255,255,255,.35);border-radius:20px;padding:22px 22px 18px;box-shadow:inset 0 2px 1px rgba(255,255,255,.85),inset -8px -8px 20px rgba(0,0,20,.25),0 24px 60px rgba(0,0,15,.45)}
+html.th-boarding .d-info::before{content:"UNO AIRWAYS · BOARDING PASS · GATE F-30";font:700 10.5px/1.2 var(--bp-mono);letter-spacing:.12em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:rgba(255,255,255,.6);border-bottom:1.5px dashed rgba(255,255,255,.35);padding-bottom:10px}
+html.th-boarding .d-cat{color:var(--bp-amber);font-family:var(--bp-mono);letter-spacing:.2em}
+html.th-boarding .d-name{font-family:var(--bp-mono)}
+html.th-boarding .d-price{font-family:var(--bp-mono);color:var(--bp-amber)}
+html.th-boarding .d-rev{border-top:1.5px dashed rgba(255,255,255,.3)}
+html.th-boarding .rv-pick button.on{color:var(--bp-amber)}
+html.th-boarding .rv-send{background:linear-gradient(180deg,#FFD866,#FFBE2E);color:#140D00}
+html.th-boarding .drawer{background:linear-gradient(160deg,rgba(255,255,255,.14),rgba(255,255,255,.04));background-color:rgba(8,16,40,.6);border-left:1.5px dashed rgba(255,255,255,.35);-webkit-backdrop-filter:blur(26px) saturate(150%);backdrop-filter:blur(26px) saturate(150%)}
 </style>
 </head>
 <body>
-<div id="menuView"><div id="sky" aria-hidden="true"><i class="s1"></i><i class="s2"></i><i class="a2"></i><i class="a1"></i><div class="sea"><i class="rs"></i><i class="r2"></i><i class="r1"></i><i class="wv"></i></div></div>
+<div id="menuView"><div id="sky" aria-hidden="true"></div>
   <div id="stage" role="application" aria-label="Restoran menyusi">
     <header class="m-head">
       <div class="logo" id="logoBox"><img id="rLogo" class="hidden" alt="Restoran logotipi" draggable="false"><div class="lt"><b id="rName">RESTORAN</b><span id="rSub">RESTORAN</span></div></div>
@@ -1670,11 +1750,13 @@ function qrTable(){
 }
 /* waiter call / bill buttons stay hidden until the admin switches them on (the waiter stage is not live yet) */
 /* ---- menu themes (chosen in admin → Restoran, same on every device) ---- */
-var THEMES={classic:"Klassik (qora-oltin)", aurora:"Shimol yog'dusi (shisha, tungi dengiz)"};
+var THEMES={classic:"Klassik (qora-oltin)", aurora:"Shimol yog'dusi (shisha, tungi dengiz)", boarding:"Bort chiptasi (shisha)"};
+var SKY_HTML={aurora:'<i class="s1"></i><i class="s2"></i><i class="a2"></i><i class="a1"></i><div class="sea"><i class="rs"></i><i class="r2"></i><i class="r1"></i><i class="wv"></i></div>', boarding:'<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice"><defs><path id="bpR1" d="M120 700 Q 520 260 980 420 T 1520 220"/><path id="bpR2" d="M80 260 Q 640 520 1180 680 T 1560 760"/><path id="bpR3" d="M300 880 Q 760 120 1500 480"/><g id="bpPl"><path d="M-14 0 L14 0 M2 0 L-6 -11 L-2 -11 L9 0 L-2 11 L-6 11 Z M-12 0 L-15 -5 L-12 -5 L-8 0 L-12 5 L-15 5 Z" fill="#F5C842" stroke="#F5C842" stroke-width="1.2" stroke-linejoin="round"/></g></defs><g fill="none" stroke="rgba(245,200,66,.38)" stroke-width="2" stroke-dasharray="2 12" stroke-linecap="round"><use href="#bpR1" xlink:href="#bpR1"><animate attributeName="stroke-dashoffset" from="0" to="-56" dur="2.2s" repeatCount="indefinite"/></use><use href="#bpR2" xlink:href="#bpR2" stroke="rgba(150,190,255,.35)"><animate attributeName="stroke-dashoffset" from="0" to="-56" dur="2.8s" repeatCount="indefinite"/></use><use href="#bpR3" xlink:href="#bpR3" stroke="rgba(255,255,255,.22)"><animate attributeName="stroke-dashoffset" from="0" to="-56" dur="3.4s" repeatCount="indefinite"/></use></g><g fill="#F5C842"><circle cx="120" cy="700" r="4"><animate attributeName="r" values="3;7;3" dur="2.6s" begin="0s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;.35;1" dur="2.6s" begin="0s" repeatCount="indefinite"/></circle><circle cx="980" cy="420" r="4"><animate attributeName="r" values="3;7;3" dur="2.6s" begin="0.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;.35;1" dur="2.6s" begin="0.6s" repeatCount="indefinite"/></circle><circle cx="1520" cy="220" r="4"><animate attributeName="r" values="3;7;3" dur="2.6s" begin="1.2s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;.35;1" dur="2.6s" begin="1.2s" repeatCount="indefinite"/></circle><circle cx="80" cy="260" r="4"><animate attributeName="r" values="3;7;3" dur="2.6s" begin="0.3s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;.35;1" dur="2.6s" begin="0.3s" repeatCount="indefinite"/></circle><circle cx="1180" cy="680" r="4"><animate attributeName="r" values="3;7;3" dur="2.6s" begin="0.9s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;.35;1" dur="2.6s" begin="0.9s" repeatCount="indefinite"/></circle><circle cx="1560" cy="760" r="4"><animate attributeName="r" values="3;7;3" dur="2.6s" begin="1.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;.35;1" dur="2.6s" begin="1.5s" repeatCount="indefinite"/></circle><circle cx="300" cy="880" r="4"><animate attributeName="r" values="3;7;3" dur="2.6s" begin="0.4s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;.35;1" dur="2.6s" begin="0.4s" repeatCount="indefinite"/></circle><circle cx="1500" cy="480" r="4"><animate attributeName="r" values="3;7;3" dur="2.6s" begin="1.1s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;.35;1" dur="2.6s" begin="1.1s" repeatCount="indefinite"/></circle></g><use href="#bpPl" xlink:href="#bpPl"><animateMotion dur="16s" repeatCount="indefinite" rotate="auto"><mpath href="#bpR1" xlink:href="#bpR1"/></animateMotion></use><use href="#bpPl" xlink:href="#bpPl" opacity=".8"><animateMotion dur="21s" begin="-7s" repeatCount="indefinite" rotate="auto"><mpath href="#bpR2" xlink:href="#bpR2"/></animateMotion></use><use href="#bpPl" xlink:href="#bpPl" opacity=".6"><animateMotion dur="25s" begin="-12s" repeatCount="indefinite" rotate="auto"><mpath href="#bpR3" xlink:href="#bpR3"/></animateMotion></use><g fill="none" stroke="rgba(160,190,255,.16)" transform="translate(1440 120)"><circle r="70"/><circle r="52" stroke-dasharray="2 6"/><path d="M0 -86 L0 86 M-86 0 L86 0"/><text y="-92" fill="rgba(160,190,255,.4)" stroke="none" font-size="16" text-anchor="middle" font-family="monospace">N</text></g></svg>'};
 function applyTheme(){
   var url=(location.search.match(/[?&]theme=(\w+)/)||[])[1], t=url||(S.settings&&S.settings.theme)||"classic", root=document.documentElement;
   Object.keys(THEMES).forEach(function(k){ root.classList.toggle("th-"+k, k===t && k!=="classic"); });
-  var m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute("content", t==="aurora"?"#010208":"#0E0F12");
+  var sky=document.getElementById("sky"); if(sky && sky.dataset.t!==t){ sky.dataset.t=t; sky.innerHTML=SKY_HTML[t]||""; }
+  var m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute("content", t==="aurora"?"#010208":t==="boarding"?"#02040c":"#0E0F12");
   if(!url) try{ localStorage.setItem("uno_theme", t); }catch(_){}
 }
 function callsOn(){ return !!(S.settings && S.settings.callsOn); }
@@ -2170,7 +2252,7 @@ function renderAdmin(){
   h+='<section class="a-sec"><h2>Restoran</h2>'+
      '<div style="margin-bottom:18px"><b style="font-size:14px">Menyu mavzusi (dizayn)</b><p class="help">Tanlangan mavzu barcha planshet va telefonlarda darhol almashadi.</p><div class="th-pick">'+
      Object.keys(THEMES).map(function(k){ return '<button type="button" class="th-opt'+(k===thNow?' on':'')+'" data-a="setTheme" data-id="'+k+'" '+(ro?'disabled':'')+'><i class="th-sw th-sw-'+k+'"></i><span>'+esc(THEMES[k])+'</span>'+(k===thNow?'<em>Tanlangan</em>':'')+'</button>'; }).join("")+
-     '</div><div class="a-row" style="margin-top:8px"><a class="btn sm" href="?theme=aurora#menyu" target="_blank" rel="noopener">«Shimol yog\'dusi»ni oldindan ko\'rish</a></div><div class="msg" id="thMsg" hidden></div></div>'+
+     '</div><div class="a-row" style="margin-top:8px">'+Object.keys(THEMES).filter(function(k){ return k!=="classic"&&k!==thNow; }).map(function(k){ return '<a class="btn sm" href="?theme='+k+'#menyu" target="_blank" rel="noopener">«'+esc(THEMES[k].split(" (")[0])+'» — oldindan ko\'rish</a>'; }).join("")+'</div><div class="msg" id="thMsg" hidden></div></div>'+
      '<div class="a-row" style="align-items:center">'+
      '<div class="logo-pv" id="logoPv">'+(S.logoUploading?'<div style="width:80%"><div class="progress"><i></i></div></div>':(S.settings.logoId?'<img alt="Logotip" src="'+blob(S.settings.logoId)+'">':'Logotip yo\'q'))+'</div>'+
      '<div style="display:flex;flex-direction:column;gap:8px;flex:1;min-width:220px"><b style="font-size:14px">Logotip</b><p class="help">Fonsiz (shaffof) PNG tavsiya etiladi. Menyuning chap yuqori burchagida chiqadi.</p>'+
@@ -3498,7 +3580,7 @@ var AG_TOOLS=[
  {name:"update_settings", description:"Change restaurant settings.", parameters:{type:"OBJECT", properties:{
    name:{type:"STRING",description:"restaurant name"}, service:{type:"NUMBER",description:"service charge percent"},
    soundOn:{type:"BOOLEAN",description:"menu sound effects"}, callsOn:{type:"BOOLEAN",description:"waiter-call and bill buttons for guests"},
-   zonePick:{type:"BOOLEAN",description:"zone/table picker on restaurant tablets"}, theme:{type:"STRING",description:"menu design: classic (black-gold) or aurora (glass over a night sea with northern lights)"}}}},
+   zonePick:{type:"BOOLEAN",description:"zone/table picker on restaurant tablets"}, theme:{type:"STRING",description:"menu design: classic (black-gold), aurora (glass over a night sea with northern lights) or boarding (every dish is a boarding-pass ticket, departures-board tabs, flight-map background)"}}}},
  {name:"set_review_hidden", description:"Hide or show a customer review.", parameters:{type:"OBJECT", properties:{review_id:{type:"INTEGER"}, hidden:{type:"BOOLEAN"}}, required:["review_id","hidden"]}},
  {name:"get_reviews", description:"Read recent customer ratings and reviews (optionally of one dish, or only low ones).", parameters:{type:"OBJECT", properties:{dish_id:{type:"STRING"}, low_only:{type:"BOOLEAN"}, limit:{type:"INTEGER"}}}},
  {name:"get_attendance", description:"Staff attendance for a day: who came, when, who was late, who is absent.", parameters:{type:"OBJECT", properties:{date:{type:"STRING",description:"YYYY-MM-DD, default today"}}}},
