@@ -302,6 +302,7 @@ public class MainActivity extends Activity {
     s.setDomStorageEnabled(true);
     s.setDatabaseEnabled(true);
     s.setMediaPlaybackRequiresUserGesture(false);
+    s.setGeolocationEnabled(true);
     s.setAllowFileAccess(false);
     s.setAllowContentAccess(true);
     s.setCacheMode(WebSettings.LOAD_DEFAULT);
@@ -326,6 +327,13 @@ public class MainActivity extends Activity {
     });
 
     web.setWebChromeClient(new WebChromeClient() {
+      /* delivery: "send my location" (only our own site) */
+      @Override public void onGeolocationPermissionsShowPrompt(final String origin, final android.webkit.GeolocationPermissions.Callback cb) {
+        if (origin == null || !URL.startsWith(origin.endsWith("/") ? origin : origin + "/")) { cb.invoke(origin, false, false); return; }
+        if (has(android.Manifest.permission.ACCESS_FINE_LOCATION) || has(android.Manifest.permission.ACCESS_COARSE_LOCATION)) { cb.invoke(origin, true, false); return; }
+        geoOrigin = origin; geoCb = cb;
+        requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION}, GEO);
+      }
       @Override public boolean onShowFileChooser(WebView v, ValueCallback<Uri[]> cb, FileChooserParams p) {
         if (fileCb != null) fileCb.onReceiveValue(null);
         fileCb = cb;
@@ -351,7 +359,8 @@ public class MainActivity extends Activity {
   /* camera (staff attendance) and microphone (UNO AI voice commands): only our own site */
   PermissionRequest camReq;
   String[] camGrant;
-  static final int CAM = 9;
+  static final int CAM = 9, GEO = 11;
+  String geoOrigin; android.webkit.GeolocationPermissions.Callback geoCb;
   boolean has(String p) { return Build.VERSION.SDK_INT < 23 || checkSelfPermission(p) == android.content.pm.PackageManager.PERMISSION_GRANTED; }
   void askCamera(PermissionRequest r) {
     String origin = r.getOrigin() == null ? "" : r.getOrigin().toString();
@@ -377,6 +386,10 @@ public class MainActivity extends Activity {
   }
 
   @Override public void onRequestPermissionsResult(int rq, String[] perms, int[] res) {
+    if (rq == GEO && geoCb != null) {
+      boolean ok = false; for (int x : res) if (x == android.content.pm.PackageManager.PERMISSION_GRANTED) ok = true;
+      geoCb.invoke(geoOrigin, ok, false); geoCb = null; geoOrigin = null; return;
+    }
     if (rq == CAM && camReq != null) {
       boolean ok = res.length > 0;
       for (int x : res) if (x != android.content.pm.PackageManager.PERMISSION_GRANTED) ok = false;

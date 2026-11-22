@@ -103,22 +103,23 @@ final class WebModel: NSObject, ObservableObject, WKNavigationDelegate, WKUIDele
 
 /* tells the page how much of the screen the clock (top) and the tab bar + home line (bottom) cover */
 final class InsetWebView: WKWebView {
-    private var sent = UIEdgeInsets(top: -1, left: 0, bottom: -1, right: 0)
+    private var sent = UIEdgeInsets(top: -1, left: -1, bottom: -1, right: -1)
     override func layoutSubviews() {
         super.layoutSubviews()
         guard let win = window else { return }
         var top = win.safeAreaInsets.top
         var bottom = win.safeAreaInsets.bottom
+        let left = win.safeAreaInsets.left, right = win.safeAreaInsets.right
         if let tab = Self.tabBar(in: win.rootViewController), !tab.isHidden {
             let f = tab.convert(tab.bounds, to: self)
             bottom = max(bottom, bounds.maxY - f.minY)
         }
         top = max(0, top); bottom = max(0, bottom)
-        if abs(top - sent.top) < 0.5 && abs(bottom - sent.bottom) < 0.5 { return }
-        sent = UIEdgeInsets(top: top, left: 0, bottom: bottom, right: 0)
-        evaluateJavaScript("window.UNO_INSETS={t:\(Int(top.rounded())),b:\(Int(bottom.rounded()))};window.dispatchEvent(new Event('resize'));", completionHandler: nil)
+        if abs(top - sent.top) < 0.5 && abs(bottom - sent.bottom) < 0.5 && abs(left - sent.left) < 0.5 && abs(right - sent.right) < 0.5 { return }
+        sent = UIEdgeInsets(top: top, left: left, bottom: bottom, right: right)
+        evaluateJavaScript("window.UNO_INSETS={t:\(Int(top.rounded())),b:\(Int(bottom.rounded())),l:\(Int(left.rounded())),r:\(Int(right.rounded()))};window.dispatchEvent(new Event('resize'));", completionHandler: nil)
     }
-    func resend() { sent = UIEdgeInsets(top: -1, left: 0, bottom: -1, right: 0); setNeedsLayout() }
+    func resend() { sent = UIEdgeInsets(top: -1, left: -1, bottom: -1, right: -1); setNeedsLayout() }
     static func tabBar(in vc: UIViewController?) -> UITabBar? {
         guard let vc = vc else { return nil }
         if let t = vc as? UITabBarController { return t.tabBar }

@@ -94,3 +94,8 @@ Restoran planshetlari uchun menyu va admin panel. Bitta APK ichida ishlaydi.
 - Ovozli (mikrofon) yoki yozma buyruq; surat/video biriktirish mumkin.
 - Qila oladi: taom qo'shish (suratdan tarkib, og'irlik, kaloriya, tavsif — 3 tilda), taomni o'zgartirish/o'chirish, narx, kategoriya qo'shish/nomini o'zgartirish, sozlamalar, izohlarni yashirish, baholar va davomat hisoboti, bo'limni ochish.
 - Har bir o'zgarish oldidan tasdiqlash kartasi chiqadi.
+
+## Yetkazib berish
+- Supabase'da bir marta `orders.sql` ni ishga tushiring.
+- Admin panel → "Yetkazib berish": yoqish, yetkazish narxi, eng kam buyurtma, mijozga eslatma; buyurtmalar ro'yxati va holatlari.
+- Mijoz (QR-stolsiz, uyidan) savatchada "Yetkazib berish" → ism, telefon, manzil/joylashuv, to'lov. Buyurtma Telegram guruhga keladi.
