@@ -64,6 +64,7 @@ struct RootView: View {
         if let i = a.firstIndex(of: "-tab"), i + 1 < a.count, let n = Int(a[i + 1]) { return n }
         return 0
     }()
+    @ObservedObject private var news = NewsModel.shared
     var body: some View {
         GeometryReader { geo in
             let land = geo.size.width > geo.size.height
@@ -74,7 +75,7 @@ struct RootView: View {
                 page(2) { AboutView().safeAreaInset(edge: .bottom) { Color.clear.frame(height: UNOBar.height(land)) } }
                 page(3) { ProfileView().safeAreaInset(edge: .bottom) { Color.clear.frame(height: UNOBar.height(land)) } }
                 /* our own floating bar: bigger buttons, nothing behind it, the menu background runs to the very bottom */
-                UNOTabBar(tab: $tab, landscape: land)
+                UNOTabBar(tab: $tab, landscape: land, dot: news.unseen && tab != 3 ? 3 : nil)
                     .padding(.bottom, UNOBar.bottomPad(land, safe: safeB))
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                     .ignoresSafeArea(.all, edges: .bottom)
@@ -82,6 +83,11 @@ struct RootView: View {
         }
         .background(Config.bg.ignoresSafeArea())
         .accentColor(Config.gold)
+        .onAppear { news.start(); news.visible = tab == 3 }
+        .onChange(of: tab) { t in
+            news.visible = t == 3
+            if t == 3 { news.load(); news.markSeen() }
+        }
     }
     @ViewBuilder private func page<V: View>(_ i: Int, @ViewBuilder _ v: () -> V) -> some View {
         v().opacity(tab == i ? 1 : 0).allowsHitTesting(tab == i).accessibilityHidden(tab != i)
@@ -98,6 +104,7 @@ enum UNOBar {
 struct UNOTabBar: View {
     @Binding var tab: Int
     let landscape: Bool
+    var dot: Int? = nil   /* a small gold dot: something new on that tab */
     private let items: [(String, String)] = [("tab.menu", "fork.knife"), ("tab.book", "calendar.badge.plus"),
                                              ("tab.about", "airplane"), ("tab.profile", "person.crop.circle")]
     var body: some View {
@@ -110,13 +117,13 @@ struct UNOTabBar: View {
                     Group {
                         if landscape {
                             HStack(spacing: 8) {
-                                Image(systemName: items[i].1).font(.system(size: 18, weight: .semibold))
+                                Image(systemName: items[i].1).font(.system(size: 18, weight: .semibold)).overlay(badge(i), alignment: .topTrailing)
                                 Text(L.t(items[i].0)).font(.system(size: 15, weight: .semibold)).lineLimit(1)
                             }
                             .padding(.horizontal, 18)
                         } else {
                             VStack(spacing: 3) {
-                                Image(systemName: items[i].1).font(.system(size: 20, weight: .semibold))
+                                Image(systemName: items[i].1).font(.system(size: 20, weight: .semibold)).overlay(badge(i), alignment: .topTrailing)
                                 Text(L.t(items[i].0)).font(.system(size: 11, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
                             }
                             .frame(maxWidth: .infinity)
@@ -139,5 +146,12 @@ struct UNOTabBar: View {
         .padding(.horizontal, landscape ? 0 : 14)
         .environment(\.colorScheme, .dark)
         .animation(.easeOut(duration: 0.18), value: tab)
+    }
+    @ViewBuilder private func badge(_ i: Int) -> some View {
+        if dot == i {
+            Circle().fill(Color(red: 1, green: 0.32, blue: 0.3)).frame(width: 9, height: 9)
+                .overlay(Circle().stroke(Color.black.opacity(0.5), lineWidth: 1.5))
+                .offset(x: 5, y: -3)
+        }
     }
 }
