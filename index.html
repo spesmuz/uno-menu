@@ -3203,7 +3203,7 @@ Dlv.render=function(){
   var list=rows.filter(function(o){ return Dlv.f==="all"||(Dlv.f==="active"?["new","accepted","onway"].indexOf(o.status)>=0:o.status===Dlv.f); });
   if(!list.length) h+='<div class="msg">Bu yerda hozircha buyurtma yo\'q.</div>';
   list.forEach(function(o){
-    var map=o.lat!=null?' · <a href="https://maps.google.com/?q='+o.lat+','+o.lng+'" target="_blank" rel="noopener" style="color:var(--gold)">xarita</a>':'';
+    var map=o.lat!=null?' · <a href="https://www.google.com/maps/search/?api=1&query='+o.lat+','+o.lng+'" target="_blank" rel="noopener" style="color:var(--gold)">Google</a> · <a href="https://yandex.uz/maps/?pt='+o.lng+','+o.lat+'&z=17&l=map" target="_blank" rel="noopener" style="color:var(--gold)">Yandex</a>':'';
     h+='<div class="drow" style="align-items:flex-start;flex-wrap:wrap"><div class="mid"><b>#'+o.id+' · '+esc(o.name)+' · <a href="tel:'+esc(o.phone)+'" style="color:var(--gold)">'+esc(o.phone)+'</a></b>'+
       '<small style="display:block;margin:3px 0">'+rvDate(o.created_at)+' '+attHM(o.created_at)+' · '+(o.pay==="card"?"Karta":"Naqd")+' · <b>'+esc(Dlv.ST[o.status]||o.status)+'</b></small>'+
       '<p style="margin:2px 0;font-size:14px">📍 '+esc(o.address||"—")+map+'</p>'+(o.note?'<p style="margin:2px 0;font-size:13px;color:var(--muted)">💬 '+esc(o.note)+'</p>':'')+

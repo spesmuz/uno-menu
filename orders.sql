@@ -28,6 +28,21 @@ create policy uno_orders_admin on public.uno_orders for all
   using (public.uno_is_admin()) with check (public.uno_is_admin());
 grant select, update, delete on public.uno_orders to authenticated;
 
+-- Telegram'ga xaritadagi nuqta (pin) + Google / Yandex tugmalari
+create or replace function public.uno_tg_location(p_lat double precision, p_lng double precision, p_markup jsonb default null) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare tok text := public.uno_priv('tg_token'); chat text := public.uno_priv('tg_chat'); body jsonb;
+begin
+  if coalesce(tok,'') = '' or coalesce(chat,'') = '' or p_lat is null or p_lng is null then return; end if;
+  body := jsonb_build_object('chat_id', chat, 'latitude', p_lat, 'longitude', p_lng);
+  if p_markup is not null then body := body || jsonb_build_object('reply_markup', p_markup); end if;
+  perform net.http_post(url := 'https://api.telegram.org/bot' || tok || '/sendLocation', body := body,
+                        headers := '{"Content-Type":"application/json"}'::jsonb);
+exception when others then
+  raise warning 'telegram location: %', sqlerrm;
+end $$;
+revoke all on function public.uno_tg_location(double precision, double precision, jsonb) from public, anon, authenticated;
+
 -- mijoz buyurtma beradi. Narxlar bazadagi menyudan olinadi (telefondan kelgan narxga ishonilmaydi).
 create or replace function public.uno_order_create(
   p_name text, p_phone text, p_address text, p_items jsonb,
@@ -40,6 +55,7 @@ declare
   ph text := regexp_replace(coalesce(p_phone,''), '[^0-9+]', '', 'g');
   ad text := left(trim(coalesce(p_address,'')), 300);
   it jsonb; d jsonb; q int; price bigint; sub bigint := 0; lines jsonb := '[]'::jsonb; txt text := ''; oid bigint; tot bigint; maplink text := '';
+  gurl text; yurl text; kb jsonb;
 begin
   select data into st from public.uno_docs where path = 'settings/main';
   dl := coalesce(st->'delivery', '{}'::jsonb);
@@ -75,7 +91,12 @@ begin
   returning id into oid;
 
   if p_lat is not null and p_lng is not null then
-    maplink := chr(10) || '🗺 <a href="https://maps.google.com/?q=' || p_lat || ',' || p_lng || '">Xaritada ochish</a>';
+    gurl := 'https://www.google.com/maps/search/?api=1&query=' || p_lat || ',' || p_lng;
+    yurl := 'https://yandex.uz/maps/?pt=' || p_lng || ',' || p_lat || '&z=17&l=map';
+    maplink := chr(10) || '🗺 <a href="' || gurl || '">Google xarita</a> · <a href="' || yurl || '">Yandex xarita</a>';
+    kb := jsonb_build_object('inline_keyboard', jsonb_build_array(jsonb_build_array(
+            jsonb_build_object('text', '📍 Google Maps', 'url', gurl),
+            jsonb_build_object('text', '📍 Yandex Maps', 'url', yurl))));
   end if;
   begin
     perform public.uno_tg_send(
@@ -88,7 +109,9 @@ begin
       chr(10) || 'Taomlar: ' || to_char(sub, 'FM999G999G999') || ' so''m' ||
       case when fee > 0 then chr(10) || 'Yetkazish: ' || to_char(fee, 'FM999G999G999') || ' so''m' else '' end ||
       chr(10) || '<b>Jami: ' || to_char(tot, 'FM999G999G999') || ' so''m</b>' ||
-      chr(10) || '💳 ' || case when p_pay='card' then 'Karta (kuryerga)' else 'Naqd' end);
+      chr(10) || '💳 ' || case when p_pay='card' then 'Karta (kuryerga)' else 'Naqd' end, kb);
+    -- xaritadagi nuqta: Telegram'da bosilsa Google / Yandex / Navigator bilan ochiladi
+    perform public.uno_tg_location(p_lat, p_lng, kb);
   exception when others then null;
   end;
   return jsonb_build_object('id', oid, 'subtotal', sub, 'fee', fee, 'total', tot);
