@@ -41,7 +41,8 @@ jobs:
             CODE_SIGNING_ALLOWED=NO build 2>&1 | grep -E "error:|BUILD (SUCCEEDED|FAILED)"
 
       - name: Screenshots (iPhone 6.9")
-        timeout-minutes: 20
+        continue-on-error: true
+        timeout-minutes: 30
         run: |
           APP=$(ls -d build/Build/Products/Debug-iphonesimulator/UNOAirways.app)
           DEV=$(xcrun simctl list devices available -j | python3 -c '
@@ -57,7 +58,7 @@ jobs:
           print(best[1]); print(best[2], file=sys.stderr)')
           xcrun simctl boot "$DEV"; xcrun simctl bootstatus "$DEV" -b
           xcrun simctl install "$DEV" "$APP"
-          shoot() { # locale lang tab file wait
+          shoot() { # folder lang tab file wait
             xcrun simctl terminate "$DEV" uz.uno.airways || true
             xcrun simctl launch "$DEV" uz.uno.airways -tab $3 -AppleLanguages "($2)" -AppleLocale $2
             sleep $5
@@ -67,18 +68,16 @@ jobs:
             sips --cropToHeightWidth 2796 1290 /tmp/w.png --out "appstore/shots/$1/$4.png" >/dev/null
             sips -g pixelWidth -g pixelHeight "appstore/shots/$1/$4.png" | tail -2 | tr '\n' ' '; echo
           }
-          # first launch: let the menu download its photos
-          xcrun simctl launch "$DEV" uz.uno.airways -tab 0; sleep 40
-          for L in "en-US en" "ru ru"; do
-            set -- $L
-            shoot $1 $2 0 1 25
-            shoot $1 $2 1 2 8
-            shoot $1 $2 3 3 12
-            shoot $1 $2 2 4 8
-          done
+          # the runner's simulator is slow: one set of screens (Russian UI) for the main listing; other languages reuse it
+          xcrun simctl launch "$DEV" uz.uno.airways -tab 0 -AppleLanguages "(ru)" -AppleLocale ru || true; sleep 45
+          xcrun simctl io "$DEV" screenshot /tmp/raw.png && { mkdir -p appstore/shots/main; sips --resampleWidth 1290 /tmp/raw.png --out /tmp/w.png >/dev/null; sips --cropToHeightWidth 2796 1290 /tmp/w.png --out appstore/shots/main/1.png >/dev/null; }
+          shoot main ru 1 2 10 || true
+          shoot main ru 3 3 15 || true
+          shoot main ru 2 4 10 || true
           ls -la appstore/shots/*
 
       - name: Fill the listing and submit
+        if: always()
         run: |
           python3 -m pip install --quiet --break-system-packages pyjwt cryptography requests || python3 -m pip install --quiet pyjwt cryptography requests
           python3 appstore/submit.py

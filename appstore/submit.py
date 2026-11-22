@@ -12,6 +12,7 @@ META = json.load(open(os.path.join(os.path.dirname(__file__), "meta.json")))
 BUNDLE = os.environ.get("BUNDLE_ID", "uz.uno.airways")
 SUBMIT = os.environ.get("SUBMIT", "1") == "1"
 LOG = []
+PRIMARY = {"l": "en-US"}
 
 
 def log(msg):
@@ -61,6 +62,7 @@ def main():
         log(f"FAIL app {BUNDLE} not found in App Store Connect"); return
     app = apps[0]; APP = app["id"]
     log(f"OK   app {app['attributes'].get('name')} ({APP}), primary locale {app['attributes'].get('primaryLocale')}")
+    PRIMARY["l"] = app["attributes"].get("primaryLocale") or "en-US"
 
     # --- app-level: content rights, category, app info localizations (subtitle, privacy URL)
     step("content rights", lambda: call("PATCH", f"/v1/apps/{APP}", {"data": {"type": "apps", "id": APP,
@@ -185,7 +187,8 @@ def main():
     step("description, keywords, URLs", vlocs)
 
     def shots(loc):
-        files = sorted(glob.glob(os.path.join(os.path.dirname(__file__), "shots", loc, "*.png")))
+        files = sorted(glob.glob(os.path.join(os.path.dirname(__file__), "shots", loc, "*.png"))) or \
+                (sorted(glob.glob(os.path.join(os.path.dirname(__file__), "shots", "main", "*.png"))) if loc == PRIMARY["l"] else [])
         if not files: return "no files"
         lid = VLOC[loc]
         sets = call("GET", f"/v1/appStoreVersionLocalizations/{lid}/appScreenshotSets")["data"]
