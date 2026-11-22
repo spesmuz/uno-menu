@@ -29,20 +29,20 @@ struct AboutView: View {
                         Text(L.t("about.story")).font(.body).foregroundColor(.white.opacity(0.88)).fixedSize(horizontal: false, vertical: true)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(18).background(Config.card).clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .glassCard(padding: 18)
 
                     VStack(spacing: 0) {
                         row("mappin.and.ellipse", L.t("about.address"), Config.address) { openMap() }
-                        Divider().background(Color.white.opacity(0.08))
+                        Rectangle().fill(Color.white.opacity(0.10)).frame(height: 1).padding(.leading, 56)
                         row("phone.circle.fill", L.t("about.op"), Config.phonePretty) { open("tel://" + Config.phone) }
-                        Divider().background(Color.white.opacity(0.08))
+                        Rectangle().fill(Color.white.opacity(0.10)).frame(height: 1).padding(.leading, 56)
                         row("music.note", L.t("about.music"), L.t("about.music.t"), nil)
-                        Divider().background(Color.white.opacity(0.08))
+                        Rectangle().fill(Color.white.opacity(0.10)).frame(height: 1).padding(.leading, 56)
                         row("person.3.fill", L.t("about.seats"), L.t("about.seats.t"), nil)
-                        Divider().background(Color.white.opacity(0.08))
+                        Rectangle().fill(Color.white.opacity(0.10)).frame(height: 1).padding(.leading, 56)
                         row("gift.fill", L.t("about.events"), L.t("about.events.t"), nil)
                     }
-                    .background(Config.card).clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .glassCard(padding: 0)
 
                     VStack(spacing: 6) {
                         Button(L.t("about.privacy")) { UIApplication.shared.open(Config.privacyURL) }
@@ -54,7 +54,7 @@ struct AboutView: View {
                 }
                 .padding(.horizontal, 18)
             }
-            .background(Config.bg.ignoresSafeArea())
+            .background(UNOSky())
             .navigationBarHidden(true)
             .sheet(isPresented: $sharing) {
                 ShareSheet(items: [L.t("share.text"), Config.siteURL])
@@ -71,8 +71,7 @@ struct AboutView: View {
             }
             .frame(maxWidth: .infinity).padding(.vertical, 14)
             .foregroundColor(Config.gold)
-            .background(Config.card)
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .glassCard(padding: 0)
         }
     }
 
@@ -81,7 +80,7 @@ struct AboutView: View {
             Image(systemName: icon).font(.system(size: 18)).foregroundColor(Config.gold).frame(width: 26)
             VStack(alignment: .leading, spacing: 3) {
                 Text(title).font(.subheadline.bold()).foregroundColor(.white)
-                Text(text).font(.footnote).foregroundColor(.secondary).fixedSize(horizontal: false, vertical: true)
+                Text(text).font(.footnote).foregroundColor(Color.white.opacity(0.62)).fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
             if go != nil { Image(systemName: "chevron.right").font(.footnote).foregroundColor(.secondary) }

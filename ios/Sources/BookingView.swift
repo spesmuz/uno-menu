@@ -88,6 +88,7 @@ struct BookingView: View {
         NavigationView {
             Form {
                 Section(header: Text(L.t("book.guest"))) {
+                Group {
                     TextField(L.t("book.name"), text: $name)
                         .textContentType(.name)
                         .disableAutocorrection(true)
@@ -95,7 +96,10 @@ struct BookingView: View {
                         .keyboardType(.phonePad)
                         .textContentType(.telephoneNumber)
                 }
+                .listRowBackground(GlassRow())
+                }
                 Section(header: Text(L.t("book.when"))) {
+                Group {
                     DatePicker(L.t("book.date"), selection: $date,
                                in: Date()...Date().addingTimeInterval(180 * 86400))
                         .accentColor(Config.gold)
@@ -115,6 +119,8 @@ struct BookingView: View {
                     TextField(L.t("book.note"), text: $note)
                     Toggle(L.t("book.remind"), isOn: $remind).tint(Config.gold)
                 }
+                .listRowBackground(GlassRow())
+                }
                 Section {
                     Button(action: submit) {
                         HStack {
@@ -126,13 +132,16 @@ struct BookingView: View {
                         .padding(.vertical, 6)
                     }
                     .disabled(sending)
-                    .listRowBackground(Config.gold)
-                    .foregroundColor(.black)
+                    .listRowBackground(LinearGradient(colors: [Color(red: 1, green: 0.88, blue: 0.54), Color(red: 1, green: 0.79, blue: 0.30)], startPoint: .top, endPoint: .bottom))
+                    .foregroundColor(Color(red: 0.1, green: 0.07, blue: 0.02))
                 }
                 Section(header: Text(L.t("book.call")), footer: Text(L.t("book.call24"))) {
+                Group {
                     Button(action: callUs) {
                         Label(Config.phonePretty, systemImage: "phone.fill").foregroundColor(Config.gold)
                     }
+                }
+                .listRowBackground(GlassRow())
                 }
                 if !upcoming.isEmpty {
                     Section(header: Text(L.t("book.mine"))) {
@@ -143,6 +152,7 @@ struct BookingView: View {
                                     .font(.subheadline).foregroundColor(.secondary)
                             }
                             .padding(.vertical, 2)
+                            .listRowBackground(GlassRow())
                         }
                         .onDelete { idx in
                             let ids = idx.map { upcoming[$0].id }
@@ -153,6 +163,8 @@ struct BookingView: View {
                     }
                 }
             }
+            .modifier(ClearForm())
+            .background(UNOSky())
             .navigationTitle(L.t("book.title"))
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
@@ -236,5 +248,23 @@ struct BookingView: View {
                                             trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: false))
             center.add(req)
         }
+    }
+}
+
+
+/* Form/List with the night sky showing through */
+struct ClearForm: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 16.0, *) { content.scrollContentBackground(.hidden) }
+        else { content.onAppear { UITableView.appearance().backgroundColor = .clear } }
+    }
+}
+struct GlassRow: View {
+    var body: some View {
+        ZStack {
+            Rectangle().fill(.ultraThinMaterial)
+            Rectangle().fill(Color.white.opacity(0.05))
+        }
+        .environment(\.colorScheme, .dark)
     }
 }

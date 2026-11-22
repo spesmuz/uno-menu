@@ -190,7 +190,7 @@ input,select,textarea{font-family:inherit}
 #stage.portrait .m-head{flex-wrap:wrap;height:auto;row-gap:12px}
 #stage.portrait .logo{flex:1 1 auto;max-width:none}
 #stage.portrait .tabs-wrap{order:5;flex:1 0 100%}
-#stage.isl .logo{flex:1 1 auto}#stage.isl .logo img{width:50px;height:50px}#stage.isl .logo .lt{gap:2px}#stage.isl .logo b{font-size:18px}#stage.isl .logo span{white-space:normal;width:min-content;line-height:1.25;font-size:7.5px}
+#stage.isl .logo{flex:1 1 auto;margin-left:var(--islPad,0px)}#stage.isl .cart-btn{margin-right:var(--islPad,0px)}#stage.isl .logo img{width:50px;height:50px}#stage.isl .logo .lt{gap:2px}#stage.isl .logo b{font-size:18px}#stage.isl .logo span{white-space:normal;width:min-content;line-height:1.25;font-size:7.5px}
 #stage.portrait .tabs{justify-content:flex-start}
 #stage.portrait .rgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
 #stage.portrait .detail{flex-direction:column;padding:26px 26px 30px;gap:20px}
@@ -915,6 +915,8 @@ function fit(){
   stage.style.transform="translate(-50%,-50%) scale("+s+")"; S.scale=s;
   stage.classList.toggle("isl", !!(isl && phone && portrait));
   stage.style.paddingTop = (isl && phone && portrait) ? Math.max(6, Math.round((isl.y+isl.h/2)/s - 25))+"px" : "";
+  /* the screen's rounded corners: keep the logo and the cart clear of the curve (about 24pt in from each side) */
+  stage.style.setProperty("--islPad", (isl && phone && portrait) ? Math.max(0, Math.round(24/s - 14))+"px" : "0px");
   /* the stage reaches the screen's bottom edge (under the tab bar), so nothing in it is cut off by a hard line;
      its content keeps clear of the bar through the extra bottom padding */
   var exB = ins.b>0 ? ins.b/s : 0;
