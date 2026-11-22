@@ -55,7 +55,8 @@ declare
   ph text := regexp_replace(coalesce(p_phone,''), '[^0-9+]', '', 'g');
   ad text := left(trim(coalesce(p_address,'')), 300);
   it jsonb; d jsonb; q int; price bigint; sub bigint := 0; lines jsonb := '[]'::jsonb; txt text := ''; oid bigint; tot bigint; maplink text := '';
-  gurl text; yurl text; kb jsonb;
+  gurl text; yurl text; kb jsonb; catl text;
+  who text := nullif(left(trim(coalesce(p_name,'')),80),'');
 begin
   select data into st from public.uno_docs where path = 'settings/main';
   dl := coalesce(st->'delivery', '{}'::jsonb);
@@ -78,8 +79,10 @@ begin
     if d is null then continue; end if;
     price := greatest(0, coalesce(round((d->>'price')::numeric)::bigint, 0));
     sub := sub + price * q;
-    lines := lines || jsonb_build_array(jsonb_build_object('id', it->>'id', 'name', d->>'name', 'price', price, 'qty', q));
-    txt := txt || chr(10) || '• ' || public.uno_tg_esc(d->>'name') || ' × ' || q || ' — ' || to_char(price*q, 'FM999G999G999') || ' so''m';
+    -- kategoriya nomi (masalan "New York" salatmi yoki steykmi — bilinsin)
+    select c->>'label' into catl from jsonb_array_elements(coalesce(st->'cats','[]'::jsonb)) c where c->>'id' = d->>'cat' limit 1;
+    lines := lines || jsonb_build_array(jsonb_build_object('id', it->>'id', 'name', d->>'name', 'cat', coalesce(catl,''), 'price', price, 'qty', q));
+    txt := txt || chr(10) || '• ' || public.uno_tg_esc(d->>'name') || coalesce(' <i>(' || public.uno_tg_esc(nullif(catl,'')) || ')</i>', '') || ' × ' || q || ' — ' || to_char(price*q, 'FM999G999G999') || ' so''m';
   end loop;
   if jsonb_array_length(lines) = 0 then raise exception 'bad_items'; end if;
   if sub < minsum then raise exception 'min_sum:%', minsum; end if;

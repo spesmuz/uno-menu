@@ -75,6 +75,9 @@ struct RootView: View {
             AboutView()
                 .tabItem { Label(L.t("tab.about"), systemImage: "airplane") }
                 .tag(2)
+            ProfileView()
+                .tabItem { Label(L.t("tab.profile"), systemImage: "person.crop.circle") }
+                .tag(3)
         }
         .accentColor(Config.gold)
         .onChange(of: tab) { _ in UISelectionFeedbackGenerator().selectionChanged() }

@@ -45,6 +45,18 @@ final class WebModel: NSObject, ObservableObject, WKNavigationDelegate, WKUIDele
     var loc: LocationBridge?
     private var loadedOnce = false
 
+    override init() {
+        super.init()
+        /* profile saved in the "Profil" tab → the menu page gets the new name/phone right away */
+        NotificationCenter.default.addObserver(forName: .unoProfileChanged, object: nil, queue: .main) { [weak self] _ in
+            guard let w = self?.web else { return }
+            let js = ProfileBridge.script()
+            w.configuration.userContentController.removeAllUserScripts()
+            w.configuration.userContentController.addUserScript(WKUserScript(source: js, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+            w.evaluateJavaScript(js, completionHandler: nil)
+        }
+    }
+
     func reload() {
         failed = false; loading = true
         if let w = web {
@@ -150,6 +162,7 @@ struct WebView: UIViewRepresentable {
         c.applicationNameForUserAgent = "UNOAirwaysApp/" + (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1")
         c.websiteDataStore = .default()
         if #available(iOS 14.0, *) { c.limitsNavigationsToAppBoundDomains = true }   /* enables offline cache (service worker) */
+        c.userContentController.addUserScript(WKUserScript(source: ProfileBridge.script(), injectionTime: .atDocumentStart, forMainFrameOnly: true))
         let loc = LocationBridge()
         c.userContentController.add(loc, name: "unoLocate")
         let w = InsetWebView(frame: .zero, configuration: c)

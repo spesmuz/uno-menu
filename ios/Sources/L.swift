@@ -13,7 +13,7 @@ enum L {
 
     static let d: [String: [String: String]] = [
         "uz": [
-            "done": "Tayyor", "tab.menu": "Menyu", "tab.book": "Bron", "tab.about": "UNO",
+            "done": "Tayyor", "tab.profile": "Profil", "pf.me": "Mening ma'lumotlarim", "pf.name": "Ism familiya", "pf.hint": "Bir marta yozib qo'ying: bron, yetkazib berish va fikr qoldirishda ism va telefon o'zi to'ldiriladi.", "pf.save": "Saqlash", "pf.saved": "Saqlandi", "pf.news": "Yangiliklar", "pf.noNews": "Hozircha yangilik yo'q.",  "tab.menu": "Menyu", "tab.book": "Bron", "tab.about": "UNO",
             "offline.title": "Internet yo'q", "offline.text": "Menyuni ochish uchun internetga ulaning.", "retry": "Qayta urinish",
             "book.title": "Stol bron qilish", "book.guest": "Mehmon", "book.name": "Ismingiz", "book.phone": "Telefon raqamingiz",
             "book.when": "Qachon", "book.date": "Sana va vaqt", "book.guests": "Mehmonlar soni", "book.zone": "Joy", "book.occasion": "Sabab",
@@ -37,7 +37,7 @@ enum L {
             "share.text": "UNO Airways Restaurante — Farg'ona. Menyu:"
         ],
         "ru": [
-            "done": "Готово", "tab.menu": "Меню", "tab.book": "Бронь", "tab.about": "UNO",
+            "done": "Готово", "tab.profile": "Профиль", "pf.me": "Мои данные", "pf.name": "Имя и фамилия", "pf.hint": "Заполните один раз: имя и телефон подставятся сами при брони, доставке и отзывах.", "pf.save": "Сохранить", "pf.saved": "Сохранено", "pf.news": "Новости", "pf.noNews": "Пока новостей нет.",  "tab.menu": "Меню", "tab.book": "Бронь", "tab.about": "UNO",
             "offline.title": "Нет интернета", "offline.text": "Подключитесь к интернету, чтобы открыть меню.", "retry": "Повторить",
             "book.title": "Бронь столика", "book.guest": "Гость", "book.name": "Ваше имя", "book.phone": "Ваш телефон",
             "book.when": "Когда", "book.date": "Дата и время", "book.guests": "Количество гостей", "book.zone": "Место", "book.occasion": "Повод",
@@ -61,7 +61,7 @@ enum L {
             "share.text": "UNO Airways Restaurante — Фергана. Меню:"
         ],
         "en": [
-            "done": "Done", "tab.menu": "Menu", "tab.book": "Book", "tab.about": "UNO",
+            "done": "Done", "tab.profile": "Profile", "pf.me": "My details", "pf.name": "Full name", "pf.hint": "Fill in once: your name and phone are filled in automatically for bookings, delivery and reviews.", "pf.save": "Save", "pf.saved": "Saved", "pf.news": "News", "pf.noNews": "No news yet.",  "tab.menu": "Menu", "tab.book": "Book", "tab.about": "UNO",
             "offline.title": "No internet", "offline.text": "Connect to the internet to open the menu.", "retry": "Try again",
             "book.title": "Book a table", "book.guest": "Guest", "book.name": "Your name", "book.phone": "Your phone",
             "book.when": "When", "book.date": "Date and time", "book.guests": "Guests", "book.zone": "Seating", "book.occasion": "Occasion",
