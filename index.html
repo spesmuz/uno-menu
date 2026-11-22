@@ -2629,17 +2629,26 @@ function makeGemini(){
   async function call(body, opt){
     opt=opt||{};
     var k=await key();
-    var model=await pickModel(k), tried=[model], retry5xx=0, last=null;
+    var model=await pickModel(k), tried=[model], retry5xx=0, last=null, thinkOff=false;
+    /* fast mode: no long "thinking" before answering (the assistant replies in 1–3 s instead of 5–15 s) */
+    function bodyFor(m){
+      if(!opt.fast||thinkOff) return body;
+      try{ if(localStorage.getItem("uno_gem_nothink_"+m)) return body; }catch(_){}
+      var tc=/gemini-3/.test(m)?{thinkingLevel:"low"}:/2\.5-flash/.test(m)?{thinkingBudget:0}:null; if(!tc) return body;
+      var b=Object.assign({},body); b.generationConfig=Object.assign({},body.generationConfig||{},{thinkingConfig:tc}); return b;
+    }
     while(true){
       var res, info="";
-      try{ res=await fetch(GEM_BASE+"/models/"+model+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":k},body:JSON.stringify(body),signal:opt.signal}); }
+      var stream=!!opt.onText && !!(window.ReadableStream&&window.TextDecoder);
+      try{ res=await fetch(GEM_BASE+"/models/"+model+(stream?":streamGenerateContent?alt=sse":":generateContent"),{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":k},body:JSON.stringify(bodyFor(model)),signal:opt.signal}); }
       catch(e){
         if(e&&e.name==="AbortError") throw {code:"cancelled"};
         last={code:"network", msg:"so'rov yuborilmadi ("+(e&&e.message||"tarmoq")+")"};
         if(retry5xx<1){ retry5xx++; await new Promise(function(r){ setTimeout(r,1500); }); continue; }
         throw last;
       }
-      if(!res.ok){ try{ var ej=await res.json(); info=(ej.error&&(ej.error.status+": "+ej.error.message))||""; }catch(_){ } }
+      if(!res.ok){ try{ var ej=await res.json(); if(Array.isArray(ej)) ej=ej[0]||{}; info=(ej.error&&(ej.error.status+": "+ej.error.message))||""; }catch(_){ } }
+      if(res.status===400 && opt.fast && !thinkOff && /think/i.test(info)){ thinkOff=true; try{ localStorage.setItem("uno_gem_nothink_"+model,"1"); }catch(_){} continue; }
       /* model gone, not allowed, overloaded or without free quota: try the next model */
       var switchModel = res.status===404 || (res.status===429 && /limit: ?0|free_tier/i.test(info)) || res.status>=500 || (res.status===403 && !/key/i.test(info)) || (res.status===400 && /model/i.test(info) && !/key/i.test(info));
       if(res.status>=500 && retry5xx<1){ retry5xx++; await new Promise(function(r){ setTimeout(r,2000); }); continue; }
@@ -2650,10 +2659,35 @@ function makeGemini(){
       if(res.status===429) throw {code:"rate_limited", msg:info};
       if(res.status===400||res.status===403){ if(/key|API_KEY|PERMISSION/i.test(info)){ keyCache=null; throw {code:"bad_key", msg:info}; } if(/location|region|country/i.test(info)) throw {code:"region", msg:info}; throw {code:"image_rejected", msg:info}; }
       if(!res.ok) throw {code:"network", msg:"HTTP "+res.status+(info?" — "+info:"")};
-      var js=await res.json();
+      var js=stream?await readStream(res,opt.onText):await res.json();
       try{ localStorage.setItem("uno_gem_model",model); }catch(_){}
       return js;
     }
+  }
+  /* server-sent events → one response like generateContent; text is shown while it arrives */
+  async function readStream(res, onText){
+    var out={candidates:[{content:{role:"model",parts:[]},finishReason:""}]}, parts=out.candidates[0].content.parts, txt="";
+    function take(chunk){
+      var c=chunk&&chunk.candidates&&chunk.candidates[0]; if(chunk&&chunk.promptFeedback) out.promptFeedback=chunk.promptFeedback; if(!c) return;
+      if(c.finishReason) out.candidates[0].finishReason=c.finishReason;
+      ((c.content&&c.content.parts)||[]).forEach(function(p){
+        var last=parts[parts.length-1];
+        if(p.text!==undefined && !p.thought && !p.functionCall){
+          if(last && last.text!==undefined && !last.thought && !last.functionCall){ last.text+=p.text; if(p.thoughtSignature) last.thoughtSignature=p.thoughtSignature; }
+          else parts.push(Object.assign({},p));
+          txt+=p.text; try{ onText(txt); }catch(_){}
+        } else parts.push(p);
+      });
+    }
+    var reader=res.body.getReader(), dec=new TextDecoder(), buf="";
+    while(true){
+      var r=await reader.read(); if(r.done) break;
+      buf+=dec.decode(r.value,{stream:true});
+      var i; while((i=buf.indexOf("\n"))>=0){ var line=buf.slice(0,i).trim(); buf=buf.slice(i+1);
+        if(line.indexOf("data:")===0){ try{ take(JSON.parse(line.slice(5))); }catch(_){} } }
+    }
+    if(buf.trim().indexOf("data:")===0){ try{ take(JSON.parse(buf.trim().slice(5))); }catch(_){} }
+    return out;
   }
   async function nextModel(k, tried){
     var list=[];
@@ -3583,10 +3617,23 @@ var AG_TOOLS=[
    zonePick:{type:"BOOLEAN",description:"zone/table picker on restaurant tablets"}, theme:{type:"STRING",description:"menu design: classic (black-gold), aurora (glass over a night sea with northern lights) or boarding (every dish is a boarding-pass ticket, departures-board tabs, flight-map background)"}}}},
  {name:"set_review_hidden", description:"Hide or show a customer review.", parameters:{type:"OBJECT", properties:{review_id:{type:"INTEGER"}, hidden:{type:"BOOLEAN"}}, required:["review_id","hidden"]}},
  {name:"get_reviews", description:"Read recent customer ratings and reviews (optionally of one dish, or only low ones).", parameters:{type:"OBJECT", properties:{dish_id:{type:"STRING"}, low_only:{type:"BOOLEAN"}, limit:{type:"INTEGER"}}}},
- {name:"get_attendance", description:"Staff attendance for a day: who came, when, who was late, who is absent.", parameters:{type:"OBJECT", properties:{date:{type:"STRING",description:"YYYY-MM-DD, default today"}}}},
+ {name:"get_attendance", description:"Staff attendance. With date: that day in detail (who came, when, late minutes, left, absent). With from/to: a summary per person for the period (days worked, late count and minutes, absences).", parameters:{type:"OBJECT", properties:{date:{type:"STRING",description:"YYYY-MM-DD, default today"}, from:{type:"STRING"}, to:{type:"STRING"}}}},
+ {name:"delete_reviews", description:"Delete customer reviews permanently: by ids, all reviews of one dish, or all currently hidden reviews.", parameters:{type:"OBJECT", properties:{review_ids:{type:"ARRAY",items:{type:"INTEGER"}}, dish_id:{type:"STRING"}, only_hidden:{type:"BOOLEAN"}}}},
+ {name:"delete_category", description:"Delete a menu category. If it still has dishes, set delete_dishes=true to delete them too, otherwise move them first with update_dish.", parameters:{type:"OBJECT", properties:{cat_id:{type:"STRING"}, delete_dishes:{type:"BOOLEAN"}}, required:["cat_id"]}},
+ {name:"get_staff", description:"List the staff of the attendance system (name, team, role, PIN, shift, work days, active).", parameters:{type:"OBJECT", properties:{}}},
+ {name:"add_staff", description:"Add a staff member to the attendance system. PIN: 4 digits, unique; omit it to generate one. days: 1=Monday … 7=Sunday.",
+  parameters:{type:"OBJECT", properties:{name:{type:"STRING"}, role:{type:"STRING"}, team:{type:"STRING",description:"Oshpazlar, Ofitsiantlar, Barmenlar or Tozalik xodimalari"}, pin:{type:"STRING"}, shift_start:{type:"STRING",description:"HH:MM"}, shift_end:{type:"STRING",description:"HH:MM"}, days:{type:"ARRAY",items:{type:"INTEGER"}}}, required:["name"]}},
+ {name:"update_staff", description:"Change a staff member (only the fields that change). active=false means dismissed (keeps history).",
+  parameters:{type:"OBJECT", properties:{staff_id:{type:"STRING"}, name:{type:"STRING"}, role:{type:"STRING"}, team:{type:"STRING"}, pin:{type:"STRING"}, shift_start:{type:"STRING"}, shift_end:{type:"STRING"}, days:{type:"ARRAY",items:{type:"INTEGER"}}, active:{type:"BOOLEAN"}}, required:["staff_id"]}},
+ {name:"delete_staff", description:"Delete a staff member AND all their attendance records permanently.", parameters:{type:"OBJECT", properties:{staff_id:{type:"STRING"}}, required:["staff_id"]}},
+ {name:"delete_attendance", description:"Delete attendance records (check-ins/check-outs with their selfies) permanently for a date range, optionally only of one staff member and/or one kind.",
+  parameters:{type:"OBJECT", properties:{from:{type:"STRING",description:"YYYY-MM-DD (inclusive)"}, to:{type:"STRING",description:"YYYY-MM-DD (inclusive), default = from"}, staff_id:{type:"STRING"}, kind:{type:"STRING",description:"in (keldi) or out (ketdi); omit for both"}}, required:["from"]}},
+ {name:"get_bookings", description:"Read table bookings made from the iPhone app (newest first).", parameters:{type:"OBJECT", properties:{from:{type:"STRING"}, to:{type:"STRING"}, status:{type:"STRING",description:"new, confirmed or cancelled"}}}},
+ {name:"update_booking", description:"Set a booking's status.", parameters:{type:"OBJECT", properties:{booking_id:{type:"INTEGER"}, status:{type:"STRING",description:"new, confirmed or cancelled"}}, required:["booking_id","status"]}},
+ {name:"delete_bookings", description:"Delete bookings permanently by ids, or all bookings before a date.", parameters:{type:"OBJECT", properties:{booking_ids:{type:"ARRAY",items:{type:"INTEGER"}}, before:{type:"STRING",description:"YYYY-MM-DD"}}}},
  {name:"open_section", description:"Show a section of the admin panel on screen.", parameters:{type:"OBJECT", properties:{section:{type:"STRING",description:"one of: Taomlar, Kategoriyalar, AI, Davomat, Baholar, Stollar va QR, Telegram, Restoran, Oflayn, Planshet, Parol"}}, required:["section"]}}
 ];
-var AG_WRITE={add_dish:1,update_dish:1,delete_dish:1,add_category:1,rename_category:1,update_settings:1,set_review_hidden:1};
+var AG_WRITE={add_dish:1,update_dish:1,delete_dish:1,add_category:1,rename_category:1,update_settings:1,set_review_hidden:1,delete_reviews:1,delete_category:1,add_staff:1,update_staff:1,delete_staff:1,delete_attendance:1,update_booking:1,delete_bookings:1};
 
 function agToday(){ return new Date(Date.now()+5*3600e3).toISOString().slice(0,10); }
 function agSystem(){
@@ -3594,6 +3641,7 @@ function agSystem(){
   var ds=S.dishes.slice().sort(function(a,b){ return String(a.cat).localeCompare(String(b.cat))||(a.order||0)-(b.order||0); }).map(function(d){
     var r=RV.sum[d.id]; return d.id+" | "+d.name+" | "+d.cat+" | "+(d.price||0)+" so'm | "+(d.kcal?d.kcal+" kkal":"kkal yo'q")+" | "+(d.weight||"-")+(d.imgId?" | surat":"")+(d.videoId?" | video":"")+(r&&r.cnt?" | ★"+r.avg+" ("+r.cnt+")":""); }).join("\n");
   var st=S.settings||{};
+  var staff=(AG.staff||[]).map(function(p){ return p.id+" | "+p.name+" | "+(p.team||"-")+" | "+(p.role||"-")+" | "+String(p.shift_start).slice(0,5)+"–"+String(p.shift_end).slice(0,5)+" | "+(p.active?"active":"dismissed"); }).join("\n");
   return "You are «UNO AI», the voice and text assistant inside the admin panel of the digital menu of UNO Airways Restaurante (Farg'ona, Uzbekistan; Turkish and European cuisine; waiters dress as pilots).\n"+
    "The admin talks to you in Uzbek (sometimes Russian), by text or by VOICE messages (audio). Reply in the admin's language — Uzbek in Latin script by default. Keep replies short: 1–3 sentences, no markdown tables.\n"+
    "If the admin sent a voice message, START your text reply with a line «🎤 <exactly what they said, as text>» and then answer on the next line.\n"+
@@ -3604,7 +3652,8 @@ function agSystem(){
    "Attachments are named att1, att2 … in the order the admin sent them; pass these ids in photo/video. For a video only, pass it as video (the app makes the cover photo from a frame).\n"+
    "Today is "+agToday()+" (Asia/Tashkent).\n\n"+
    "RESTAURANT SETTINGS: name="+(st.name||"UNO Airways")+"; service="+svcPct(st)+"%; soundOn="+(st.soundOn!==false)+"; callsOn="+!!st.callsOn+"; zonePick="+!!st.zonePick+"; theme="+(st.theme||"classic")+"\n\n"+
-   "CATEGORIES (id = name):\n"+(cs||"(none)")+"\n\nDISHES (id | name | category id | price | kcal | weight | media | rating):\n"+(ds||"(none)");
+   "Deleting is allowed when the admin asks (dishes, categories, reviews, staff, attendance records, bookings): call the delete tool with the exact scope; the confirmation card shows how many items will be removed. Relative dates: «bugun» = today, «kecha» = yesterday, «o'tgan hafta» = the previous Monday–Sunday.\n"+
+   "STAFF (id | name | team | role | shift | status):\n"+(staff||"(not loaded or none)")+"\n\nCATEGORIES (id = name):\n"+(cs||"(none)")+"\n\nDISHES (id | name | category id | price | kcal | weight | media | rating):\n"+(ds||"(none)");
 }
 
 /* ---------- UI ---------- */
@@ -3631,7 +3680,7 @@ function agMount(){
   var inp=$("agIn");
   inp.addEventListener("input",function(){ inp.style.height="auto"; inp.style.height=Math.min(120,inp.scrollHeight)+"px"; agBarState(); });
   inp.addEventListener("keydown",function(e){ if(e.key==="Enter"&&!e.shiftKey&&!/Mobi|Android|iPhone|iPad/.test(navigator.userAgent)){ e.preventDefault(); agSendText(); } });
-  if(!AG.msgs.length) agSay("ai",'Salom! Men UNO AI. Ovozli yoki yozma buyruq bering. Masalan:<br>• 📷 surat yuklab: <i>«Bu Qo\'y kabob, narxi 85 ming, Mangalga qo\'sh»</i><br>• <i>«Lag\'mon narxini 48 mingga o\'zgartir»</i><br>• <i>«Bugun kim ishga kechikdi?»</i><br>• <i>«Eng past baholangan taomlar qaysi?»</i>',true);
+  if(!AG.msgs.length) agSay("ai",'Salom! Men UNO AI. Ovozli yoki yozma buyruq bering. Masalan:<br>• 📷 surat yuklab: <i>«Bu Qo\'y kabob, narxi 85 ming, Mangalga qo\'sh»</i><br>• <i>«Lag\'mon narxini 48 mingga o\'zgartir»</i><br>• <i>«Bugun kim ishga kechikdi?»</i><br>• <i>«Kechagi davomatni o\'chir»</i><br>• <i>«Yangi ofitsiant qo\'sh: Dilnoza, 10:00–22:00»</i><br>• <i>«Eng past baholangan taomlar qaysi?»</i>',true);
   agBarState();
 }
 function agSync(){
@@ -3641,8 +3690,9 @@ function agSync(){
   document.documentElement.classList.toggle("ag-fab",on);
   if(!on && AG.open) agShow(false);
 }
+function agLoadStaff(){ if(!S.sb) return Promise.resolve(); return S.sb.from("uno_staff").select("id,name,role,team,pin,shift_start,shift_end,days,active").order("name").then(function(r){ if(!r.error) AG.staff=r.data||[]; }); }
 function agShow(v){
-  AG.open=v; var p=$("agPanel"), f=$("agFab"); if(!p) return;
+  AG.open=v; if(v&&!AG.staff) agLoadStaff(); var p=$("agPanel"), f=$("agFab"); if(!p) return;
   p.hidden=!v; if(f) f.hidden=v; document.documentElement.classList.toggle("ag-open",v);
   if(v){ agScroll(); setTimeout(function(){ if(!/Mobi|Android|iPhone|iPad/.test(navigator.userAgent)) $("agIn").focus(); },50); }
 }
@@ -3776,9 +3826,13 @@ async function agSend(m){
 }
 async function agLoop(){
   for(var step=0; step<5; step++){
-    var body={system_instruction:{parts:[{text:agSystem()}]}, contents:agTrim(AG.hist), tools:[{function_declarations:AG_TOOLS}],
+    var body={system_instruction:{parts:[{text:agSystem()}]}, contents:agClean(agTrim(AG.hist)), tools:[{function_declarations:AG_TOOLS}],
               tool_config:{function_calling_config:{mode:"AUTO"}}, generationConfig:{temperature:0.3}};
-    var js=await S.sample.call(body,{});
+    AG._sb=null;
+    var js=await S.sample.call(body,{fast:true, onText:function(t){
+      var show=t.replace(/^\s*🎤[^\n]*\n?/,"").trim(); if(!show) return;
+      agTyping(false); if(!AG._sb){ AG._sb=agSay("ai",""); } if(AG._sb) AG._sb.innerHTML=esc(show).replace(/\n/g,"<br>"); agScroll(); }});
+    if(AG._sb){ AG._sb.remove(); AG.msgs.pop(); AG._sb=null; }
     var cand=js.candidates&&js.candidates[0], content=cand&&cand.content;
     if(!content||!content.parts||!content.parts.length){ agTyping(false); agSay("ai","Javob bo'lmadi"+(cand&&cand.finishReason?" ("+cand.finishReason+")":"")+". Boshqacha aytib ko'ring."); return; }
     content.role="model"; AG.hist.push(content);
@@ -3795,6 +3849,7 @@ async function agLoop(){
     if(writes.length){
       /* read calls in the same turn are answered now; writes wait for the admin */
       var rr=[]; for(var i=0;i<reads.length;i++) rr.push(await agRunRead(reads[i]));
+      for(var w=0;w<writes.length;w++){ var pv=AG_PREVIEW[writes[w].name]; if(pv){ try{ writes[w]._pv=await pv(writes[w].args||{}); }catch(e){ writes[w]._pv={n:null,err:String((e&&e.message)||e)}; } } }
       AG.pending={calls:writes, reads:rr};
       agCard(writes); return;
     }
@@ -3810,6 +3865,8 @@ function agTrim(h){
     return {role:c.role, parts:c.parts.map(function(p){ return p.inline_data?{text:"(media sent earlier)"}:p; })}; });
 }
 function agFR(call, response){ var fr={name:call.name, response:response}; if(call.id) fr.id=call.id; return {functionResponse:fr}; }
+/* clean copy of the history for the API (drops private fields like _pv) */
+function agClean(h){ return JSON.parse(JSON.stringify(h,function(k,v){ return k==="_pv"?undefined:v; })); }
 function agPendingResponses(done, note){
   var P=AG.pending; if(!P) return [];
   return P.reads.concat(P.calls.map(function(c){ return agFR(c, done||{ok:false, error:note||"cancelled by the admin"}); }));
@@ -3841,6 +3898,7 @@ function agDescribe(c){
   else if(c.name==="rename_category"){ h='<div class="ag-act"><div><em>Kategoriya nomi</em><b>'+esc(agCatName(a.cat_id))+' → '+esc(a.label||agCatName(a.cat_id))+'</b>'+(a.label_ru||a.label_en?'<p class="sm muted">RU: '+esc(a.label_ru||"—")+' · EN: '+esc(a.label_en||"—")+'</p>':'')+'</div></div>'; }
   else if(c.name==="update_settings"){ var N={name:"Restoran nomi",service:"Xizmat haqi, %",soundOn:"Menyu ovozlari",callsOn:"Ofitsiant/hisob tugmalari",zonePick:"Zona tanlash (planshet)",theme:"Menyu mavzusi"};
     h='<div class="ag-act"><div><em>Sozlamalar</em>'+Object.keys(N).filter(function(k){ return a[k]!==undefined; }).map(function(k){ var v=a[k]; return '<p class="sm"><i>'+N[k]+':</i> <b>'+(typeof v==="boolean"?(v?"yoqiladi":"o'chiriladi"):esc(String(v)))+'</b></p>'; }).join("")+'</div></div>'; }
+  else if(agDescribe2(c)){ h=agDescribe2(c); }
   else if(c.name==="set_review_hidden"){ h='<div class="ag-act"><div><em>Izoh #'+esc(String(a.review_id))+'</em><b>'+(a.hidden?"Yashiriladi":"Ko'rsatiladi")+'</b></div></div>'; }
   return h;
 }
@@ -3869,10 +3927,121 @@ async function agConfirm(yes){
   AG.busy=false; agBarState();
 }
 
+/* ---------- extra tools: previews (how many items a delete will touch) ---------- */
+function agRange(a){ var f=/^\d{4}-\d{2}-\d{2}$/.test(a.from||"")?a.from:(/^\d{4}-\d{2}-\d{2}$/.test(a.date||"")?a.date:agToday()), t=/^\d{4}-\d{2}-\d{2}$/.test(a.to||"")?a.to:f; if(t<f){ var x=f; f=t; t=x; } return {from:f,to:t,s:attDayStart(f).toISOString(),e:new Date(attDayStart(t).getTime()+864e5).toISOString()}; }
+function agStaffName(id){ var p=(AG.staff||[]).find(function(x){ return x.id===id; }); return p?p.name:id; }
+function agAttQuery(a, sel, head){ var R=agRange(a), q=S.sb.from("uno_att").select(sel, head?{count:"exact",head:true}:undefined).gte("at",R.s).lt("at",R.e); if(a.staff_id) q=q.eq("staff_id",a.staff_id); if(a.kind==="in"||a.kind==="out") q=q.eq("kind",a.kind); return q; }
+function agRevQuery(a, sel, head){ var q=S.sb.from("uno_reviews").select(sel, head?{count:"exact",head:true}:undefined); if(a.review_ids&&a.review_ids.length) q=q.in("id",a.review_ids); else if(a.dish_id) q=q.eq("dish_id",a.dish_id); else if(a.only_hidden) q=q.eq("hidden",true); else q=q.eq("id",-1); return q; }
+var AG_PREVIEW={
+  delete_attendance:async function(a){ var r=await agAttQuery(a,"id",true); if(r.error) throw r.error; return {n:r.count||0}; },
+  delete_reviews:async function(a){ var r=await agRevQuery(a,"id",true); if(r.error) throw r.error; return {n:r.count||0}; },
+  delete_category:async function(a){ return {n:dishesOf(a.cat_id).length}; },
+  delete_staff:async function(a){ var r=await S.sb.from("uno_att").select("id",{count:"exact",head:true}).eq("staff_id",a.staff_id); return {n:r.error?null:(r.count||0)}; },
+  delete_bookings:async function(a){ var q=S.sb.from("uno_bookings").select("id",{count:"exact",head:true}); if(a.booking_ids&&a.booking_ids.length) q=q.in("id",a.booking_ids); else if(a.before) q=q.lt("at",attDayStart(a.before).toISOString()); else q=q.eq("id",-1); var r=await q; if(r.error) throw r.error; return {n:r.count||0}; }
+};
+function agPvText(c){ var p=c._pv; if(!p) return ""; if(p.err) return '<p class="sm" style="color:#ff9f9f">Oldindan sanab bo\'lmadi: '+esc(p.err)+'</p>'; if(p.n===null) return ""; return '<p class="sm"><span class="gold">'+p.n+' ta</span> yozuv o\'chiriladi.</p>'; }
+function agDescribe2(c){
+  var a=c.args||{}, R;
+  if(c.name==="delete_attendance"){ R=agRange(a); return '<div class="ag-act del"><div><em>Davomatni o\'chirish</em><b>'+esc(R.from===R.to?R.from:R.from+" — "+R.to)+'</b><p class="sm">'+(a.staff_id?esc(agStaffName(a.staff_id)):"Barcha xodimlar")+(a.kind?" · faqat «"+(a.kind==="in"?"keldi":"ketdi")+"»":"")+' · selfilar bilan</p>'+agPvText(c)+'</div></div>'; }
+  if(c.name==="delete_reviews"){ var d=a.dish_id&&agDish(a.dish_id); return '<div class="ag-act del"><div><em>Izohlarni o\'chirish</em><b>'+(a.review_ids&&a.review_ids.length?"#"+a.review_ids.join(", #"):d?esc(d.name)+" — barcha izohlar":a.only_hidden?"Barcha yashirilgan izohlar":"?")+'</b>'+agPvText(c)+'</div></div>'; }
+  if(c.name==="delete_category"){ var n=(c._pv&&c._pv.n)||0; return '<div class="ag-act del"><div><em>Kategoriyani o\'chirish</em><b>'+esc(agCatName(a.cat_id))+'</b><p class="sm">'+(n?(a.delete_dishes?'Ichidagi <b class="gold">'+n+' ta taom</b> ham o\'chiriladi.':'Ichida '+n+' ta taom bor — avval ularni ko\'chirish kerak.'):'Kategoriya bo\'sh.')+'</p></div></div>'; }
+  if(c.name==="add_staff"){ return '<div class="ag-act"><div><em>Yangi xodim</em><b>'+esc(a.name)+'</b><p class="sm">'+esc([a.team,a.role,(a.shift_start||"10:00")+"–"+(a.shift_end||"23:00"),"PIN "+(a.pin||"avtomatik")].filter(Boolean).join(" · "))+'</p>'+(a.days?'<p class="sm muted">Kunlar: '+esc(a.days.map(function(x){ return ATT_DN[x-1]||x; }).join(", "))+'</p>':'')+'</div></div>'; }
+  if(c.name==="update_staff"){ var L={name:"Ism",role:"Lavozim",team:"Jamoa",pin:"PIN",shift_start:"Smena boshi",shift_end:"Smena oxiri",days:"Ish kunlari",active:"Holat"};
+    return '<div class="ag-act"><div><em>Xodimni o\'zgartirish</em><b>'+esc(agStaffName(a.staff_id))+'</b>'+Object.keys(L).filter(function(k){ return a[k]!==undefined; }).map(function(k){ var v=a[k]; if(k==="active") v=v?"ishlaydi":"ishdan bo'shatildi"; if(k==="days") v=v.map(function(x){ return ATT_DN[x-1]||x; }).join(", "); return '<p class="sm"><i>'+L[k]+':</i> <b>'+esc(String(v))+'</b></p>'; }).join("")+'</div></div>'; }
+  if(c.name==="delete_staff"){ return '<div class="ag-act del"><div><em>Xodimni o\'chirish</em><b>'+esc(agStaffName(a.staff_id))+'</b><p class="sm">Xodim va uning barcha davomat belgilari butunlay o\'chiriladi.</p>'+agPvText(c)+'</div></div>'; }
+  if(c.name==="update_booking"){ var ST={new:"yangi",confirmed:"tasdiqlandi",cancelled:"bekor qilindi"}; return '<div class="ag-act"><div><em>Bron #'+esc(String(a.booking_id))+'</em><b>'+esc(ST[a.status]||a.status)+'</b></div></div>'; }
+  if(c.name==="delete_bookings"){ return '<div class="ag-act del"><div><em>Bronlarni o\'chirish</em><b>'+(a.booking_ids&&a.booking_ids.length?"#"+a.booking_ids.join(", #"):a.before?esc(a.before)+" gacha bo'lganlari":"?")+'</b>'+agPvText(c)+'</div></div>'; }
+  return "";
+}
+/* ---------- extra tools: reads ---------- */
+async function agRunRead2(c){
+  var a=c.args||{};
+  if(c.name==="get_staff"){ await agLoadStaff(); return {ok:true, staff:(AG.staff||[]).map(function(p){ return {id:p.id,name:p.name,team:p.team,role:p.role,pin:p.pin,shift:String(p.shift_start).slice(0,5)+"–"+String(p.shift_end).slice(0,5),days:p.days,active:p.active}; })}; }
+  if(c.name==="get_attendance" && (a.from||a.to)){
+    var R=agRange(a); if(!AG.staff) await agLoadStaff();
+    var r=await S.sb.from("uno_att").select("staff_id,kind,at,late_min,early_min,worked_min").gte("at",R.s).lt("at",R.e).order("at").limit(5000); if(r.error) throw r.error;
+    var days=[], d=R.from; while(d<=R.to && days.length<370){ days.push(d); d=new Date(Date.parse(d+"T00:00:00Z")+864e5).toISOString().slice(0,10); }
+    return {ok:true, from:R.from, to:R.to, staff:(AG.staff||[]).filter(function(p){ return p.active; }).map(function(p){
+      var mine=(r.data||[]).filter(function(x){ return x.staff_id===p.id; }), came={}, late=0, lateMin=0, worked=0;
+      mine.forEach(function(x){ var k=attDay(x.at); if(x.kind==="in"&&!came[k]){ came[k]=1; if(x.late_min>0){ late++; lateMin+=x.late_min; } } if(x.kind==="out"&&x.worked_min) worked+=x.worked_min; });
+      var sched=days.filter(function(k){ return (p.days||[]).indexOf(attDow(k))>=0; });
+      return {name:p.name, team:p.team, scheduled_days:sched.length, came_days:Object.keys(came).length, absent_days:sched.filter(function(k){ return !came[k]; }).length, late_times:late, late_minutes:lateMin, worked_hours:Math.round(worked/6)/10}; })};
+  }
+  if(c.name==="get_bookings"){
+    var q=S.sb.from("uno_bookings").select("id,name,phone,at,guests,zone,occasion,note,status,created_at").order("at",{ascending:false}).limit(60);
+    if(a.from) q=q.gte("at",attDayStart(a.from).toISOString()); if(a.to) q=q.lt("at",new Date(attDayStart(a.to).getTime()+864e5).toISOString()); if(a.status) q=q.eq("status",a.status);
+    var b=await q; if(b.error) throw b.error;
+    return {ok:true, bookings:(b.data||[]).map(function(x){ return {id:x.id,name:x.name,phone:x.phone,when:attDay(x.at)+" "+attHM(x.at),guests:x.guests,zone:x.zone,occasion:x.occasion,note:x.note,status:x.status}; })};
+  }
+  return null;
+}
+/* ---------- extra tools: writes ---------- */
+async function agRunWrite2(c){
+  var a=c.args||{}, r;
+  if(c.name==="delete_attendance"){
+    var R=agRange(a), rows=await agAttQuery(a,"id,photo_key").limit(10000); if(rows.error) return {ok:false,error:rows.error.message};
+    var ids=(rows.data||[]).map(function(x){ return x.id; }), keys=(rows.data||[]).map(function(x){ return x.photo_key; }).filter(Boolean);
+    for(var i=0;i<ids.length;i+=200){ r=await S.sb.from("uno_att").delete().in("id",ids.slice(i,i+200)); if(r.error) return {ok:false,error:r.error.message}; }
+    for(var j=0;j<keys.length;j+=100){ try{ await S.sb.storage.from("uno-att").remove(keys.slice(j,j+100).map(function(k){ return /\./.test(k)?k:k+".jpg"; })); }catch(_){} }
+    try{ if(typeof Att!=="undefined"&&Att.el){ Att.load(); } }catch(_){}
+    return {ok:true, deleted:ids.length, label:"Davomat o'chirildi: "+ids.length+" ta belgi ("+(R.from===R.to?R.from:R.from+" — "+R.to)+")"};
+  }
+  if(c.name==="delete_reviews"){
+    var rv=await agRevQuery(a,"id"); if(rv.error) return {ok:false,error:rv.error.message};
+    var rids=(rv.data||[]).map(function(x){ return x.id; }); if(!rids.length) return {ok:true,deleted:0,label:"O'chiriladigan izoh topilmadi"};
+    r=await S.sb.from("uno_reviews").delete().in("id",rids); if(r.error) return {ok:false,error:r.error.message};
+    try{ rvLoadSum(); RV.list={}; if(typeof Rev!=="undefined"&&Rev.el){ Rev.rows=null; Rev.load(); } }catch(_){}
+    return {ok:true, deleted:rids.length, label:"Izohlar o'chirildi: "+rids.length+" ta"};
+  }
+  if(c.name==="delete_category"){
+    var cs=cats(), cc=cs.find(function(x){ return x.id===a.cat_id; }); if(!cc) return {ok:false,error:"kategoriya topilmadi"};
+    var ds=dishesOf(cc.id);
+    if(ds.length&&!a.delete_dishes) return {ok:false,error:"ichida "+ds.length+" ta taom bor", label:cc.label};
+    for(var k=0;k<ds.length;k++){ await netRetry(function(){ return S.db.doc("dishes/"+ds[k].id).delete(); }); if(ds[k].imgId) S.assets.delete(ds[k].imgId).catch(function(){}); if(ds[k].videoId) S.assets.delete(ds[k].videoId).catch(function(){}); }
+    await netRetry(function(){ return saveSettings({cats:cs.filter(function(x){ return x.id!==cc.id; })}); });
+    return {ok:true, label:"Kategoriya o'chirildi: "+cc.label+(ds.length?" ("+ds.length+" ta taom bilan)":"")};
+  }
+  if(c.name==="add_staff"||c.name==="update_staff"){
+    if(!AG.staff) await agLoadStaff();
+    var old=c.name==="update_staff"?(AG.staff||[]).find(function(x){ return x.id===a.staff_id; }):null;
+    if(c.name==="update_staff"&&!old) return {ok:false,error:"xodim topilmadi"};
+    var row={}; ["name","role","team","shift_start","shift_end"].forEach(function(k){ if(a[k]!==undefined) row[k]=String(a[k]).trim(); });
+    if(a.days) row.days=a.days.map(Number).filter(function(x){ return x>=1&&x<=7; }).sort();
+    if(a.active!==undefined) row.active=!!a.active;
+    if(a.pin!==undefined) row.pin=String(a.pin).replace(/\D/g,"");
+    if(c.name==="add_staff"){ if(!row.name) return {ok:false,error:"ism yo'q"}; row.role=row.role||""; row.team=row.team||""; row.shift_start=row.shift_start||"10:00"; row.shift_end=row.shift_end||"23:00"; row.days=row.days&&row.days.length?row.days:[1,2,3,4,5,6,7]; row.active=true;
+      if(!row.pin){ var used={}; (AG.staff||[]).forEach(function(x){ if(x.active) used[x.pin]=1; }); do{ row.pin=String(1000+Math.floor(Math.random()*9000)); }while(used[row.pin]); } }
+    if(row.pin!==undefined && !/^\d{4}$/.test(row.pin)) return {ok:false,error:"PIN 4 ta raqam bo'lishi kerak"};
+    if(row.pin && (AG.staff||[]).some(function(x){ return x.active && x.pin===row.pin && (!old||x.id!==old.id); })) return {ok:false,error:"bu PIN boshqa xodimda bor"};
+    r=c.name==="add_staff"?await S.sb.from("uno_staff").insert(row):await S.sb.from("uno_staff").update(row).eq("id",old.id);
+    if(r.error) return {ok:false,error:/duplicate|pin_active/.test(r.error.message)?"bu PIN boshqa xodimda bor":r.error.message};
+    await agLoadStaff(); try{ if(typeof Att!=="undefined"&&Att.el){ Att.load("staff"); } }catch(_){}
+    return {ok:true, label:(c.name==="add_staff"?"Xodim qo'shildi: "+row.name+" (PIN "+row.pin+")":"Xodim o'zgartirildi: "+(row.name||old.name))};
+  }
+  if(c.name==="delete_staff"){
+    if(!AG.staff) await agLoadStaff(); var p=(AG.staff||[]).find(function(x){ return x.id===a.staff_id; }); if(!p) return {ok:false,error:"xodim topilmadi"};
+    r=await S.sb.from("uno_staff").delete().eq("id",p.id); if(r.error) return {ok:false,error:r.error.message};
+    await agLoadStaff(); try{ if(typeof Att!=="undefined"&&Att.el){ Att.load(); } }catch(_){}
+    return {ok:true, label:"Xodim o'chirildi: "+p.name};
+  }
+  if(c.name==="update_booking"){
+    if(["new","confirmed","cancelled"].indexOf(a.status)<0) return {ok:false,error:"noto'g'ri holat"};
+    r=await S.sb.from("uno_bookings").update({status:a.status}).eq("id",a.booking_id); if(r.error) return {ok:false,error:r.error.message};
+    return {ok:true, label:"Bron #"+a.booking_id+": "+({new:"yangi",confirmed:"tasdiqlandi",cancelled:"bekor qilindi"})[a.status]};
+  }
+  if(c.name==="delete_bookings"){
+    var q=S.sb.from("uno_bookings").delete(); if(a.booking_ids&&a.booking_ids.length) q=q.in("id",a.booking_ids); else if(a.before) q=q.lt("at",attDayStart(a.before).toISOString()); else return {ok:false,error:"qaysi bronlar — aniq emas"};
+    r=await q.select("id"); if(r.error) return {ok:false,error:r.error.message};
+    return {ok:true, deleted:(r.data||[]).length, label:"Bronlar o'chirildi: "+(r.data||[]).length+" ta"};
+  }
+  return null;
+}
+
 /* ---------- tools: read ---------- */
 async function agRunRead(c){
   var a=c.args||{}, out;
   try{
+    var ext=await agRunRead2(c); if(ext) return agFR(c,ext);
     if(c.name==="get_reviews"){
       var q=S.sb.from("uno_reviews").select("id,dish_id,stars,name,comment,hidden,updated_at").order("updated_at",{ascending:false}).limit(Math.min(80,a.limit||40));
       if(a.dish_id) q=q.eq("dish_id",a.dish_id); if(a.low_only) q=q.lte("stars",3);
@@ -3910,6 +4079,7 @@ var AG_NUMS=["price","time","kcal","prot","fat","carb"];
 function agCatId(v){ var cs=cats(); v=String(v||"").trim(); var c=cs.find(function(x){ return x.id===v; })||cs.find(function(x){ return [x.label,x.label_ru,x.label_en].some(function(l){ return l&&l.toLowerCase()===v.toLowerCase(); }); }); return c?c.id:""; }
 async function agRunWrite(c){
   var a=c.args||{};
+  var ext=await agRunWrite2(c); if(ext) return ext;
   if(c.name==="add_dish"){
     var cat=agCatId(a.cat); if(!cat) return {ok:false,error:"kategoriya topilmadi: "+a.cat, label:a.name};
     var price=Math.round(Number(a.price)||0); if(!price) return {ok:false,error:"narx yo'q", label:a.name};
