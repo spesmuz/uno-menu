@@ -111,23 +111,26 @@ final class InsetWebView: WKWebView {
         let safe = win.safeAreaInsets
         var bottom = safe.bottom
         var left = safe.left, right = safe.right
-        /* the clock is hidden: only the camera cut-out has to stay clear, so the header moves up */
-        var top: CGFloat = safe.top > 30 ? safe.top - 14 : max(safe.top, 0)
-        top = max(top, bounds.width > bounds.height ? 4 : 10)
-        /* landscape: only the side with the camera needs the full margin, the other side just the rounded corner */
-        if bounds.width > bounds.height, let o = win.windowScene?.interfaceOrientation {
-            if o == .landscapeRight { right = min(right, 16) } else if o == .landscapeLeft { left = min(left, 16) }
-        }
+        /* the clock is hidden. Portrait: the header row goes up beside the camera island (the page keeps clear of it).
+           Landscape: the menu runs edge to edge, under the island too. */
+        let landscape = bounds.width > bounds.height
+        var top: CGFloat = landscape ? 4 : max(safe.top, 10)
+        var island = ""
+        if !landscape {
+            if safe.top >= 56 { island = String(format: "{x:%.1f,y:11.3,w:126,h:37.4}", (bounds.width - 126) / 2) }        // Dynamic Island
+            else if safe.top >= 40 { island = String(format: "{x:%.1f,y:0,w:162,h:32}", (bounds.width - 162) / 2) }      // notch
+            if !island.isEmpty { top = 0 }
+        } else { left = 0; right = 0 }
         if let tab = Self.tabBar(in: win.rootViewController), !tab.isHidden {
             let f = tab.convert(tab.bounds, to: self)
             bottom = max(bottom, bounds.maxY - f.minY)
         }
         top = max(0, top); bottom = max(0, bottom)
-        if abs(top - sent.top) < 0.5 && abs(bottom - sent.bottom) < 0.5 && abs(left - sent.left) < 0.5 && abs(right - sent.right) < 0.5 { return }
-        sent = UIEdgeInsets(top: top, left: left, bottom: bottom, right: right)
-        evaluateJavaScript("window.UNO_INSETS={t:\(Int(top.rounded())),b:\(Int(bottom.rounded())),l:\(Int(left.rounded())),r:\(Int(right.rounded()))};window.dispatchEvent(new Event('resize'));", completionHandler: nil)
+        if abs(top - sent.top) < 0.5 && abs(bottom - sent.bottom) < 0.5 && abs(left - sent.left) < 0.5 && abs(right - sent.right) < 0.5 && island == sentIsland { return }
+        sent = UIEdgeInsets(top: top, left: left, bottom: bottom, right: right); sentIsland = island
+        evaluateJavaScript("window.UNO_INSETS={t:\(Int(top.rounded())),b:\(Int(bottom.rounded())),l:\(Int(left.rounded())),r:\(Int(right.rounded())),island:\(island.isEmpty ? "null" : island)};window.dispatchEvent(new Event('resize'));", completionHandler: nil)
     }
-    func resend() { sent = UIEdgeInsets(top: -1, left: -1, bottom: -1, right: -1); setNeedsLayout() }
+    func resend() { sent = UIEdgeInsets(top: -1, left: -1, bottom: -1, right: -1); sentIsland = "-"; setNeedsLayout() }
     static func tabBar(in vc: UIViewController?) -> UITabBar? {
         guard let vc = vc else { return nil }
         if let t = vc as? UITabBarController { return t.tabBar }
