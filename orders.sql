@@ -82,7 +82,7 @@ begin
     -- kategoriya nomi (masalan "New York" salatmi yoki steykmi — bilinsin)
     select c->>'label' into catl from jsonb_array_elements(coalesce(st->'cats','[]'::jsonb)) c where c->>'id' = d->>'cat' limit 1;
     lines := lines || jsonb_build_array(jsonb_build_object('id', it->>'id', 'name', d->>'name', 'cat', coalesce(catl,''), 'price', price, 'qty', q));
-    txt := txt || chr(10) || '• ' || public.uno_tg_esc(d->>'name') || coalesce(' <i>(' || public.uno_tg_esc(nullif(catl,'')) || ')</i>', '') || ' × ' || q || ' — ' || to_char(price*q, 'FM999G999G999') || ' so''m';
+    txt := txt || chr(10) || '• ' || public.uno_tg_esc(d->>'name') || case when coalesce(catl,'') <> '' then ' <i>(' || public.uno_tg_esc(catl) || ')</i>' else '' end || ' × ' || q || ' — ' || to_char(price*q, 'FM999G999G999') || ' so''m';
   end loop;
   if jsonb_array_length(lines) = 0 then raise exception 'bad_items'; end if;
   if sub < minsum then raise exception 'min_sum:%', minsum; end if;
@@ -96,7 +96,8 @@ begin
   if p_lat is not null and p_lng is not null then
     gurl := 'https://www.google.com/maps/search/?api=1&query=' || p_lat || ',' || p_lng;
     yurl := 'https://yandex.uz/maps/?pt=' || p_lng || ',' || p_lat || '&z=17&l=map';
-    maplink := chr(10) || '🗺 <a href="' || gurl || '">Google xarita</a> · <a href="' || yurl || '">Yandex xarita</a>';
+    -- "&" in the links must be written as &amp; in Telegram HTML, otherwise Telegram rejects the whole message
+    maplink := chr(10) || '🗺 <a href="' || replace(gurl,'&','&amp;') || '">Google xarita</a> · <a href="' || replace(yurl,'&','&amp;') || '">Yandex xarita</a>';
     kb := jsonb_build_object('inline_keyboard', jsonb_build_array(jsonb_build_array(
             jsonb_build_object('text', '📍 Google Maps', 'url', gurl),
             jsonb_build_object('text', '📍 Yandex Maps', 'url', yurl))));
