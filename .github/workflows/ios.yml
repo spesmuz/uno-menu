@@ -81,6 +81,8 @@ jobs:
           xcodebuild -exportArchive -archivePath ../build/UNO.xcarchive -exportOptionsPlist ../build/export.plist \
             -exportPath ../build/export $AUTH 2>&1 | tee ../out/upload-full.log | grep -E "error:|EXPORT (SUCCEEDED|FAILED)|Upload" | tee ../out/upload.log
           rm -f "$KEY"
+          tail -n 4 ../out/upload.log | while read -r l; do echo "::notice title=upload::$l"; done
+          grep -E "error|Uploaded|uploaded|EXPORT" ../out/upload-full.log | tail -n 6 | while read -r l; do echo "::notice title=upload-detail::$l"; done
 
       - name: Screenshots
         continue-on-error: true
@@ -145,4 +147,4 @@ jobs:
           git init -q -b ios-ci
           git -c user.name=ci -c user.email=ci@local add -A
           git -c user.name=ci -c user.email=ci@local commit -qm "iOS CI run ${{ github.run_number }}"
-          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ios-ci
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ios-ci 2>&1 | tail -n 5 | while read -r l; do echo "::warning title=publish::$l"; done; true
