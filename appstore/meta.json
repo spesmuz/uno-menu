@@ -1,0 +1,32 @@
+{
+  "version": "1.2.2",
+  "copyright": "2026 UNO Airways Restaurante",
+  "category": "FOOD_AND_DRINK",
+  "review": {
+    "contactFirstName": "Nodirbek",
+    "contactLastName": "Tilovoldiyev",
+    "contactPhone": "+998918816979",
+    "contactEmail": "nodirbek9115969799@gmail.com",
+    "notes": "UNO Airways is the official app of UNO Airways Restaurante in Fergana, Uzbekistan (Turkish & European cuisine, aviation themed). The Menu tab shows the live restaurant menu with photos, videos, prices and ratings; guests can add dishes to the cart and order delivery (address + optional location). The Book tab sends a table reservation to the restaurant operators (24/7 phone confirmation). The Profile tab stores the guest's name, phone and optional photo so forms are filled automatically, and shows restaurant news. No login is required to use the app. Dish reviews written by guests are moderated by restaurant staff in the admin panel and can be removed at any time. Contact: +998 91 881 69 79."
+  },
+  "locales": {
+    "en-US": {
+      "subtitle": "Menu, booking & delivery",
+      "privacyPolicyUrl": "https://spesmuz.github.io/uno-menu/privacy.html",
+      "description": "Welcome aboard UNO Airways Restaurante — an aviation-themed restaurant in the heart of Fergana, serving Turkish and European cuisine.\n\nWith the app you can:\n• Browse the full menu with photos, short videos, prices and calories\n• See ratings from other guests and leave your own review\n• Order delivery across Fergana — add dishes to the cart, share your address or location, pay in cash or by card to the courier\n• Book a table for a family dinner, business lunch, birthday, wedding or conference — choose the date, time, number of guests and the hall (family, comfort, business, terrace, VIP)\n• Get a reminder two hours before your booking\n• Save your name, phone and photo once in your profile — they are filled in automatically everywhere\n• Follow restaurant news: live music every evening, shows and concerts\n\nOur waiters wear pilot uniforms, a large airplane model flies over the building and the hall is full of trees and living plants. The restaurant seats 350 guests.\n\nAddress: Fergana, Sohibqiron Temur street, 30\nPhone (24/7): +998 91 881 69 79\nInstagram: @uno_airways_restaurante",
+      "keywords": "restaurant,menu,Fergana,booking,table,delivery,Turkish,European,food,concert,live music,UNO",
+      "promotionalText": "Live music every evening. Book a table or order delivery in a few taps.",
+      "supportUrl": "https://spesmuz.github.io/uno-menu/",
+      "marketingUrl": "https://spesmuz.github.io/uno-menu/"
+    },
+    "ru": {
+      "subtitle": "Меню, бронь и доставка",
+      "privacyPolicyUrl": "https://spesmuz.github.io/uno-menu/privacy.html",
+      "description": "Добро пожаловать на борт UNO Airways Restaurante — ресторана в авиационном стиле в самом центре Ферганы. Турецкая и европейская кухня.\n\nВ приложении вы можете:\n• Смотреть всё меню с фото, короткими видео, ценами и калорийностью\n• Видеть оценки других гостей и оставлять свой отзыв\n• Заказывать доставку по Фергане — добавьте блюда в корзину, укажите адрес или точку на карте, оплатите наличными или картой курьеру\n• Бронировать столик на семейный ужин, бизнес-ланч, день рождения, свадьбу или конференцию — выберите дату, время, число гостей и зал (семейный, комфорт, бизнес, терраса, VIP)\n• Получать напоминание за два часа до брони\n• Один раз сохранить имя, телефон и фото в профиле — они подставятся сами\n• Следить за новостями ресторана: живая музыка каждый вечер, шоу и концерты\n\nНаши официанты в форме пилотов, над зданием парит большой макет самолёта, а в зале много деревьев и живых растений. Ресторан рассчитан на 350 гостей.\n\nАдрес: Фергана, ул. Сохибкирон Темур, 30\nТелефон (24/7): +998 91 881 69 79\nInstagram: @uno_airways_restaurante",
+      "keywords": "ресторан,меню,Фергана,бронь,столик,доставка,турецкая,европейская,кухня,концерт,музыка,UNO",
+      "promotionalText": "Живая музыка каждый вечер. Бронируйте столик или заказывайте доставку в пару касаний.",
+      "supportUrl": "https://spesmuz.github.io/uno-menu/",
+      "marketingUrl": "https://spesmuz.github.io/uno-menu/"
+    }
+  }
+}
