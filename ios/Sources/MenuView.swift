@@ -105,6 +105,7 @@ final class WebModel: NSObject, ObservableObject, WKNavigationDelegate, WKUIDele
 /* tells the page how much of the screen the clock (top) and the tab bar + home line (bottom) cover */
 final class InsetWebView: WKWebView {
     private var sent = UIEdgeInsets(top: -1, left: -1, bottom: -1, right: -1)
+    private var sentIsland = "-"
     override func layoutSubviews() {
         super.layoutSubviews()
         guard let win = window else { return }
