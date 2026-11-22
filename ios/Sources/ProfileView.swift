@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import PhotosUI
 
 /* "Profil" tab: the guest's name and phone (filled in everywhere automatically) + restaurant news with photos */
 struct NewsItem: Identifiable {
@@ -84,6 +85,8 @@ struct ProfileView: View {
     @AppStorage("uno.name") private var name = ""
     @AppStorage("uno.phone") private var phone = "+998 "
     @ObservedObject private var news = NewsModel.shared
+    @State private var photo: UIImage? = CustomerAPI.localPhoto()
+    @State private var picking = false
     @State private var saved = false
     @FocusState private var focus: Bool
 
@@ -102,12 +105,28 @@ struct ProfileView: View {
                     sectionTitle(L.t("pf.me"))
                     VStack(spacing: 14) {
                         HStack(spacing: 14) {
-                            ZStack {
-                                Circle().fill(LinearGradient(colors: [Config.gold.opacity(0.35), Config.gold.opacity(0.12)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                                Circle().strokeBorder(Config.gold.opacity(0.55), lineWidth: 1)
-                                Text(initials).font(.system(size: 20, weight: .bold)).foregroundColor(Config.gold)
+                            Menu {
+                                Button { picking = true } label: { Label(photo == nil ? L.t("pf.photo") : L.t("pf.photoChange"), systemImage: "photo.on.rectangle") }
+                                if photo != nil {
+                                    Button(role: .destructive) { setPhoto(nil) } label: { Label(L.t("pf.photoDel"), systemImage: "trash") }
+                                }
+                            } label: {
+                                ZStack(alignment: .bottomTrailing) {
+                                    ZStack {
+                                        Circle().fill(LinearGradient(colors: [Config.gold.opacity(0.35), Config.gold.opacity(0.12)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                                        if let p = photo { Image(uiImage: p).resizable().scaledToFill() }
+                                        else { Text(initials).font(.system(size: 24, weight: .bold)).foregroundColor(Config.gold) }
+                                    }
+                                    .frame(width: 76, height: 76)
+                                    .clipShape(Circle())
+                                    .overlay(Circle().strokeBorder(Config.gold.opacity(0.6), lineWidth: 1.5))
+                                    Image(systemName: "camera.fill").font(.system(size: 11, weight: .bold))
+                                        .foregroundColor(Color(red: 0.1, green: 0.07, blue: 0.02))
+                                        .frame(width: 26, height: 26)
+                                        .background(Circle().fill(Config.gold))
+                                        .overlay(Circle().stroke(Color.black.opacity(0.4), lineWidth: 1.5))
+                                }
                             }
-                            .frame(width: 56, height: 56)
                             VStack(spacing: 10) {
                                 glassField(L.t("pf.name"), text: $name, kb: .default, ct: .name)
                                 glassField(L.t("book.phone"), text: $phone, kb: .phonePad, ct: .telephoneNumber)
@@ -162,7 +181,8 @@ struct ProfileView: View {
             }
             .modifier(Refresh { news.load() })
         }
-        .onAppear { news.start() }
+        .onAppear { news.start(); CustomerAPI.syncOnLaunch() }
+        .sheet(isPresented: $picking) { PhotoPicker { img in if let img = img { setPhoto(img) } } }
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
@@ -224,7 +244,14 @@ struct ProfileView: View {
         f.locale = Locale(identifier: L.lang == "uz" ? "uz_Latn_UZ" : L.lang); return f
     }()
 
+    private func setPhoto(_ img: UIImage?) {
+        photo = img.map { CustomerAPI.square($0, side: 360) }
+        CustomerAPI.storeLocal(photo)
+        if ready { CustomerAPI.sync(name: name, phone: phone, photoChanged: true) }
+    }
+
     private func save() {
+        CustomerAPI.sync(name: name.trimmingCharacters(in: .whitespacesAndNewlines), phone: phone.trimmingCharacters(in: .whitespacesAndNewlines), photoChanged: true)
         focus = false
         name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         phone = phone.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -289,3 +316,75 @@ struct GlassCard: ViewModifier {
     }
 }
 extension View { func glassCard(padding: CGFloat = 16) -> some View { modifier(GlassCard(padding: padding)) } }
+
+
+/* the guest's profile also goes to the restaurant (admin → "Mijozlar") */
+enum CustomerAPI {
+    static var device: String {
+        let d = UserDefaults.standard
+        if let v = d.string(forKey: "uno.device"), !v.isEmpty { return v }
+        let v = UUID().uuidString; d.set(v, forKey: "uno.device"); return v
+    }
+    private static var photoURL: URL { FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("profile.jpg") }
+    static func localPhoto() -> UIImage? { (try? Data(contentsOf: photoURL)).flatMap { UIImage(data: $0) } }
+    static func storeLocal(_ img: UIImage?) {
+        if let img = img, let data = img.jpegData(compressionQuality: 0.8) { try? data.write(to: photoURL) }
+        else { try? FileManager.default.removeItem(at: photoURL) }
+    }
+    /* centre-cropped square, small enough to travel as text */
+    static func square(_ img: UIImage, side: CGFloat) -> UIImage {
+        let s = min(img.size.width, img.size.height)
+        let k = side / s
+        let size = CGSize(width: side, height: side)
+        let f = UIGraphicsImageRendererFormat.default(); f.scale = 1
+        return UIGraphicsImageRenderer(size: size, format: f).image { _ in
+            img.draw(in: CGRect(x: (side - img.size.width * k) / 2, y: (side - img.size.height * k) / 2, width: img.size.width * k, height: img.size.height * k))
+        }
+    }
+    private static var launched = false
+    static func syncOnLaunch() {
+        if launched { return }; launched = true
+        let d = UserDefaults.standard
+        let n = d.string(forKey: "uno.name") ?? "", p = d.string(forKey: "uno.phone") ?? ""
+        if n.trimmingCharacters(in: .whitespaces).count >= 2 && p.filter({ $0.isNumber }).count >= 9 && !d.bool(forKey: "uno.custSynced") {
+            sync(name: n, phone: p, photoChanged: true)
+        }
+    }
+    static func sync(name: String, phone: String, photoChanged: Bool) {
+        guard let url = URL(string: Config.supabaseURL + "/rest/v1/rpc/uno_customer_save") else { return }
+        var body: [String: Any] = ["p_device": device, "p_name": name, "p_phone": phone, "p_platform": "ios", "p_lang": L.lang]
+        if photoChanged {
+            if let img = localPhoto(), let data = img.jpegData(compressionQuality: 0.72) { body["p_photo"] = "data:image/jpeg;base64," + data.base64EncodedString() }
+            else { body["p_photo"] = "" }
+        }
+        var r = URLRequest(url: url, timeoutInterval: 25)
+        r.httpMethod = "POST"
+        r.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        r.setValue(Config.supabaseKey, forHTTPHeaderField: "apikey")
+        r.setValue("Bearer " + Config.supabaseKey, forHTTPHeaderField: "Authorization")
+        r.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        URLSession.shared.dataTask(with: r) { _, resp, _ in
+            if let h = resp as? HTTPURLResponse, (200..<300).contains(h.statusCode) { UserDefaults.standard.set(true, forKey: "uno.custSynced") }
+        }.resume()
+    }
+}
+
+/* photo library picker (works from iOS 14, no permission prompt needed) */
+struct PhotoPicker: UIViewControllerRepresentable {
+    let done: (UIImage?) -> Void
+    func makeUIViewController(context: Context) -> PHPickerViewController {
+        var c = PHPickerConfiguration(); c.filter = .images; c.selectionLimit = 1
+        let p = PHPickerViewController(configuration: c); p.delegate = context.coordinator; return p
+    }
+    func updateUIViewController(_ vc: PHPickerViewController, context: Context) {}
+    func makeCoordinator() -> Coordinator { Coordinator(done) }
+    final class Coordinator: NSObject, PHPickerViewControllerDelegate {
+        let done: (UIImage?) -> Void
+        init(_ d: @escaping (UIImage?) -> Void) { done = d }
+        func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+            picker.dismiss(animated: true)
+            guard let p = results.first?.itemProvider, p.canLoadObject(ofClass: UIImage.self) else { done(nil); return }
+            p.loadObject(ofClass: UIImage.self) { obj, _ in DispatchQueue.main.async { self.done(obj as? UIImage) } }
+        }
+    }
+}

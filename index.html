@@ -2293,7 +2293,7 @@ function sessionOK_old(){
   return false;
 }
 function startSession(){ try{ sessionStorage.setItem(SESSION_KEY,String(Date.now())); }catch(_){} }
-function endSession(){ S.sbSession=null; try{ if(AG.open) agShow(false); var f=$("agFab"); if(f) f.hidden=true; }catch(_){} if(typeof Att!=="undefined"){ if(Att.el&&Att.el.parentNode) Att.el.remove(); Att.el=null; Att.staff=null; Att.edit=null; } if(typeof Rev!=="undefined"){ if(Rev.el&&Rev.el.parentNode) Rev.el.remove(); Rev.el=null; Rev.rows=null; } if(typeof Dlv!=="undefined"){ if(Dlv.el&&Dlv.el.parentNode) Dlv.el.remove(); Dlv.el=null; Dlv.rows=null; } if(typeof News!=="undefined"){ if(News.el&&News.el.parentNode) News.el.remove(); News.el=null; News.rows=null; } S.tg=undefined; S.aiOn=undefined; try{ sessionStorage.removeItem(SESSION_KEY); }catch(_){} if(S.sb) S.sb.auth.signOut().catch(function(){}); }
+function endSession(){ S.sbSession=null; try{ if(AG.open) agShow(false); var f=$("agFab"); if(f) f.hidden=true; }catch(_){} if(typeof Att!=="undefined"){ if(Att.el&&Att.el.parentNode) Att.el.remove(); Att.el=null; Att.staff=null; Att.edit=null; } if(typeof Rev!=="undefined"){ if(Rev.el&&Rev.el.parentNode) Rev.el.remove(); Rev.el=null; Rev.rows=null; } if(typeof Dlv!=="undefined"){ if(Dlv.el&&Dlv.el.parentNode) Dlv.el.remove(); Dlv.el=null; Dlv.rows=null; } if(typeof News!=="undefined"){ if(News.el&&News.el.parentNode) News.el.remove(); News.el=null; News.rows=null; } if(typeof Cust!=="undefined"){ if(Cust.el&&Cust.el.parentNode) Cust.el.remove(); Cust.el=null; Cust.rows=null; } S.tg=undefined; S.aiOn=undefined; try{ sessionStorage.removeItem(SESSION_KEY); }catch(_){} if(S.sb) S.sb.auth.signOut().catch(function(){}); }
 function loginEmail(l){ l=String(l||"").trim().toLowerCase(); return l.indexOf("@")>=0?l:l+"@uno.local"; }
 function logoHTML(){ return S.settings.logoId?'<img alt="Logotip" src="'+blob(S.settings.logoId)+'">':''; }
 function renderAuth(mode){
@@ -2525,7 +2525,7 @@ function renderAdmin(){
       '<button class="btn gold" data-a="tgSave">Saqlash</button>'+(tg.configured?'<button class="btn" data-a="tgTest">Sinov xabari</button>':'')+'</div>'+
       '<div id="tgMsg"></div></section>';
   }
-  if(!ro && S.sb && sessionOK()) h+='<div id="attSlot"></div><div id="dlvSlot"></div><div id="newsSlot"></div><div id="revSlot"></div>';
+  if(!ro && S.sb && sessionOK()) h+='<div id="attSlot"></div><div id="dlvSlot"></div><div id="newsSlot"></div><div id="custSlot"></div><div id="revSlot"></div>';
   // categories
   h+='<section class="a-sec"><h2>Kategoriyalar</h2><p class="help" style="margin-bottom:10px">Har bir kategoriya nomini o\'zbek, rus va ingliz tilida yozing. Rus/ingliz bo\'sh qolsa, o\'zbekchasi ko\'rsatiladi.</p>';
   cats().forEach(function(c,i){
@@ -2589,7 +2589,7 @@ function renderAdmin(){
       '<p class="help" style="margin-top:10px">"Vaqtincha chiqish" ilovani yopadi, uy tugmasi bosilsa yoki planshet qayta yoqilsa menyu yana ochiladi. "Butunlay o\'chirish" ilovani oddiy ilovaga aylantiradi, keyin uni o\'chirib tashlash ham mumkin.</p>')+'</section>';
   }
   h+='</div>';
-  var y=window.scrollY, keep=admKeep(); if(Att.el && Att.el.parentNode) Att.el.remove(); if(Rev.el && Rev.el.parentNode) Rev.el.remove(); if(Dlv.el && Dlv.el.parentNode) Dlv.el.remove(); if(News.el && News.el.parentNode) News.el.remove(); A.innerHTML=h; Att.mount(); Dlv.mount(); News.mount(); Rev.mount(); if(!admPager(keep)) window.scrollTo(0,y); agSync();
+  var y=window.scrollY, keep=admKeep(); if(Att.el && Att.el.parentNode) Att.el.remove(); if(Rev.el && Rev.el.parentNode) Rev.el.remove(); if(Dlv.el && Dlv.el.parentNode) Dlv.el.remove(); if(News.el && News.el.parentNode) News.el.remove(); if(Cust.el && Cust.el.parentNode) Cust.el.remove(); A.innerHTML=h; Att.mount(); Dlv.mount(); News.mount(); Cust.mount(); Rev.mount(); if(!admPager(keep)) window.scrollTo(0,y); agSync();
   var lf=$("logoFile"); if(lf) lf.onchange=function(){ var f=this.files[0]; this.value=""; if(f) uploadLogo(f); };
   if(S.aiBulk && $("aiBulkBox")) renderAiBulk();
   offlineUI(); if(!Offline.last && !Offline.busy) syncMedia();
@@ -2600,7 +2600,7 @@ function renderAdmin(){
   if(S.editing) renderEditor();
 }
 /* ---------- admin sections as swipeable cards ---------- */
-var ADM_PAGES=[["Taomlar",/^Taomlar/],["Kategoriyalar",/^Kategoriyalar/],["AI",/intellekt/i],["Davomat",/davomati/i],["Yetkazish",/^Yetkazib berish/],["Yangiliklar",/^Yangiliklar/],["Baholar",/^Baholar/],["Stollar va QR",/^Stollar/],["Telegram",/^Telegram/],["Restoran",/^Restoran/],["Oflayn",/^Oflayn/],["Planshet",/^Planshet/],["Parol",/^Parol/]];
+var ADM_PAGES=[["Taomlar",/^Taomlar/],["Kategoriyalar",/^Kategoriyalar/],["AI",/intellekt/i],["Davomat",/davomati/i],["Yetkazish",/^Yetkazib berish/],["Yangiliklar",/^Yangiliklar/],["Mijozlar",/^Mijozlar/],["Baholar",/^Baholar/],["Stollar va QR",/^Stollar/],["Telegram",/^Telegram/],["Restoran",/^Restoran/],["Oflayn",/^Oflayn/],["Planshet",/^Planshet/],["Parol",/^Parol/]];
 function admKeep(){
   var pg=A.querySelector(".adm-pager"); if(!pg) return null;
   var tops={}; pg.querySelectorAll(".adm-page").forEach(function(p){ tops[p.dataset.k]=p.scrollTop; });
@@ -3314,6 +3314,52 @@ var ATT_DN=["Du","Se","Ch","Pa","Ju","Sh","Ya"];
 var ATT_TEAMS=["Oshpazlar","Ofitsiantlar","Barmenlar","Tozalik xodimalari"];
 function attTeam(s){ return String(s&&s.team||"").trim()||"Jamoasiz"; }
 /* ---- admin: news with photos (shown in the iPhone app's "Profil" tab) ---- */
+/* ===== Admin: guests' profiles from the iPhone app (name, phone, photo) ===== */
+var Cust={el:null, rows:null, err:"", q:"", del:null, orders:{}};
+Cust.mount=function(){ var slot=$("custSlot"); if(!slot) return; if(!Cust.el){ Cust.el=document.createElement("section"); Cust.el.className="a-sec"; Cust.el.addEventListener("click",Cust.click); Cust.el.addEventListener("input",function(e){ if(e.target.id==="cuQ"){ Cust.q=e.target.value; Cust.renderList(); } }); Cust.render(); Cust.load(); } slot.replaceWith(Cust.el); };
+Cust.digits=function(p){ return String(p||"").replace(/\D/g,"").slice(-9); };
+Cust.load=async function(){
+  var r=await S.sb.from("uno_customers").select("*").order("updated_at",{ascending:false}).limit(1000);
+  if(r.error){ Cust.err=String(r.error.message||r.error); Cust.rows=Cust.rows||[]; } else { Cust.err=""; Cust.rows=r.data||[]; }
+  try{ var o=await S.sb.from("uno_orders").select("phone").limit(5000); Cust.orders={}; (o.data||[]).forEach(function(x){ var k=Cust.digits(x.phone); if(k) Cust.orders[k]=(Cust.orders[k]||0)+1; }); }catch(_){}
+  Cust.render();
+};
+Cust.render=function(){
+  if(!Cust.el) return;
+  var n=(Cust.rows||[]).length;
+  var h='<h2>Mijozlar</h2><p class="help">iPhone ilovasining «Profil» bo\'limida ism, telefon va surat qo\'ygan mijozlar. Ma\'lumot mijoz «Saqlash»ni bosganda shu yerga keladi.</p>'+
+    '<div class="a-row" style="margin-top:12px;align-items:center"><label class="fld" style="max-width:none"><span>Qidirish (ism yoki telefon)</span><input id="cuQ" value="'+esc(Cust.q)+'" placeholder="Masalan: Nodirbek yoki 91 159"></label><button class="btn" data-cu="reload">Yangilash</button></div>'+
+    (Cust.rows?'<div class="help" style="margin-top:8px">Jami: <b style="color:var(--text)">'+n+'</b> ta mijoz</div>':'');
+  if(Cust.err) h+= /uno_customers|does not exist|schema cache/i.test(Cust.err)?'<div class="msg err">Mijozlar uchun bazani tayyorlang: Supabase → SQL Editor da <b>customers.sql</b> faylini bir marta ishga tushiring (Run).</div>':'<div class="msg err">'+esc(Cust.err)+'</div>';
+  h+='<div id="cuList" style="display:flex;flex-direction:column;gap:10px;margin-top:12px"></div>';
+  Cust.el.innerHTML=h; Cust.renderList();
+};
+Cust.renderList=function(){
+  var box=Cust.el&&Cust.el.querySelector("#cuList"); if(!box) return;
+  if(Cust.rows===null){ box.innerHTML='<div class="msg">Yuklanmoqda…</div>'; return; }
+  var q=Cust.q.trim().toLowerCase(), qd=q.replace(/\D/g,"");
+  var list=Cust.rows.filter(function(c){ return !q || String(c.name||"").toLowerCase().indexOf(q)>=0 || (qd.length>=2 && String(c.phone||"").replace(/\D/g,"").indexOf(qd)>=0); });
+  if(!list.length){ box.innerHTML='<div class="msg">'+(Cust.rows.length?'Hech kim topilmadi.':'Hozircha mijoz yo\'q.')+'</div>'; return; }
+  box.innerHTML=list.map(function(c){
+    var ini=String(c.name||"?").split(/\s+/).slice(0,2).map(function(w){ return w.charAt(0); }).join("").toUpperCase()||"?";
+    var av=c.photo?'<img src="'+esc(c.photo)+'" alt="" style="width:100%;height:100%;object-fit:cover">':'<span style="font-weight:800;color:var(--gold);font-size:18px">'+esc(ini)+'</span>';
+    var oc=Cust.orders[Cust.digits(c.phone)]||0, tel=String(c.phone||"").replace(/[^\d+]/g,"");
+    var when=c.updated_at?new Date(c.updated_at).toLocaleString("uz-UZ",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}):"";
+    return '<div class="drow"><span class="th" style="border-radius:50%;width:56px;height:56px">'+av+'</span>'+
+      '<div class="mid"><b>'+esc(c.name||"Ismsiz")+'</b><small>'+(tel?'<a href="tel:'+esc(tel)+'" style="color:var(--gold2);text-decoration:none">'+esc(c.phone)+'</a>':'Telefon yo\'q')+'</small>'+
+      '<small>'+esc((c.platform||"ios")==="ios"?"iPhone":c.platform)+(c.lang?' · '+esc(String(c.lang).toUpperCase()):'')+' · '+esc(when)+(oc?' · <b style="color:var(--text)">'+oc+'</b> ta buyurtma':'')+'</small></div>'+
+      '<div class="acts"><button class="btn sm danger" data-cu="del" data-id="'+esc(c.device)+'">'+(Cust.del===c.device?'Tasdiqlang':'O\'chirish')+'</button></div></div>';
+  }).join("");
+};
+Cust.click=async function(e){
+  var b=e.target.closest("[data-cu]"); if(!b) return; var a=b.dataset.cu, id=b.dataset.id;
+  if(a==="reload"){ Cust.rows=null; Cust.render(); await Cust.load(); return; }
+  if(a==="del"){
+    if(Cust.del!==id){ Cust.del=id; Cust.renderList(); return; }
+    var r=await S.sb.from("uno_customers").delete().eq("device",id); if(r.error){ Cust.err=String(r.error.message||r.error); Cust.render(); return; }
+    Cust.del=null; Cust.rows=(Cust.rows||[]).filter(function(c){ return c.device!==id; }); Cust.render();
+  }
+};
 var News={el:null, rows:null, err:"", busy:false, msg:"", file:null};
 News.mount=function(){ var slot=$("newsSlot"); if(!slot) return; if(!News.el){ News.el=document.createElement("section"); News.el.className="a-sec"; News.el.addEventListener("click",News.click); News.el.addEventListener("change",News.change); News.render(); News.load(); } slot.replaceWith(News.el); };
 News.load=async function(){ var r=await S.sb.from("uno_docs").select("path,data").like("path","news/%"); if(r.error){ News.err=String(r.error.message||r.error); News.rows=News.rows||[]; } else { News.err=""; News.rows=(r.data||[]).map(function(x){ return Object.assign({id:x.path.slice(5)},x.data||{}); }).sort(function(a,b){ return String(b.at||"").localeCompare(String(a.at||"")); }); } News.render(); };
