@@ -821,6 +821,7 @@ function showRotSplash(){
 var _safe=null;
 function safeInsets(){
   if(!_safe){ _safe=document.createElement("div"); _safe.style.cssText="position:fixed;left:0;top:0;width:0;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)"; document.body.appendChild(_safe); }
+  if(window.UNO_INSETS) return {t:+window.UNO_INSETS.t||0, b:+window.UNO_INSETS.b||0};   /* iPhone app: clock + tab bar sizes sent by the app */
   var cs=getComputedStyle(_safe); return {t:parseFloat(cs.paddingTop)||0, b:parseFloat(cs.paddingBottom)||0};
 }
 function fit(){

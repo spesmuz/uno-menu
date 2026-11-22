@@ -21,10 +21,14 @@ enum Config {
 final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         UNUserNotificationCenter.current().delegate = self
+        /* see-through tab bar: the menu background runs to the bottom edge */
         let tab = UITabBarAppearance()
-        tab.configureWithOpaqueBackground()
-        tab.backgroundColor = Config.uiBg
-        tab.shadowColor = UIColor.white.withAlphaComponent(0.08)
+        tab.configureWithTransparentBackground()
+        if #available(iOS 26.0, *) { } else {
+            tab.backgroundEffect = UIBlurEffect(style: .systemUltraThinMaterialDark)
+            tab.backgroundColor = UIColor.black.withAlphaComponent(0.25)
+        }
+        tab.shadowColor = .clear
         UITabBar.appearance().standardAppearance = tab
         if #available(iOS 15.0, *) { UITabBar.appearance().scrollEdgeAppearance = tab }
         UITabBar.appearance().tintColor = Config.uiGold

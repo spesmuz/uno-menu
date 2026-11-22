@@ -8,7 +8,7 @@ struct MenuView: View {
     var body: some View {
         ZStack {
             Config.bg.ignoresSafeArea()
-            WebView(model: model)   /* below the status bar, so the menu header never sits under the clock */
+            WebView(model: model).ignoresSafeArea()   /* full screen; the page keeps its header/footer clear of the clock and the tab bar (insets sent from here) */
             if model.loading && !model.failed {
                 VStack(spacing: 18) {
                     Image("Logo").resizable().scaledToFit().frame(width: 140, height: 140)
@@ -53,12 +53,14 @@ final class WebModel: NSObject, ObservableObject, WKNavigationDelegate, WKUIDele
 
     /* show the menu as soon as the page starts drawing, without waiting for every photo and video */
     func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
+        (webView as? InsetWebView)?.resend()
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
             guard let self = self, !self.failed else { return }
             self.loadedOnce = true; self.loading = false
         }
     }
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        (webView as? InsetWebView)?.resend()
         loadedOnce = true; loading = false; failed = false
     }
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { fail(error) }
@@ -99,6 +101,33 @@ final class WebModel: NSObject, ObservableObject, WKNavigationDelegate, WKUIDele
     }
 }
 
+/* tells the page how much of the screen the clock (top) and the tab bar + home line (bottom) cover */
+final class InsetWebView: WKWebView {
+    private var sent = UIEdgeInsets(top: -1, left: 0, bottom: -1, right: 0)
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        guard let win = window else { return }
+        var top = win.safeAreaInsets.top
+        var bottom = win.safeAreaInsets.bottom
+        if let tab = Self.tabBar(in: win.rootViewController), !tab.isHidden {
+            let f = tab.convert(tab.bounds, to: self)
+            bottom = max(bottom, bounds.maxY - f.minY)
+        }
+        top = max(0, top); bottom = max(0, bottom)
+        if abs(top - sent.top) < 0.5 && abs(bottom - sent.bottom) < 0.5 { return }
+        sent = UIEdgeInsets(top: top, left: 0, bottom: bottom, right: 0)
+        evaluateJavaScript("window.UNO_INSETS={t:\(Int(top.rounded())),b:\(Int(bottom.rounded()))};window.dispatchEvent(new Event('resize'));", completionHandler: nil)
+    }
+    func resend() { sent = UIEdgeInsets(top: -1, left: 0, bottom: -1, right: 0); setNeedsLayout() }
+    static func tabBar(in vc: UIViewController?) -> UITabBar? {
+        guard let vc = vc else { return nil }
+        if let t = vc as? UITabBarController { return t.tabBar }
+        for c in vc.children { if let t = tabBar(in: c) { return t } }
+        if let p = vc.presentedViewController { return tabBar(in: p) }
+        return nil
+    }
+}
+
 struct WebView: UIViewRepresentable {
     @ObservedObject var model: WebModel
     func makeUIView(context: Context) -> WKWebView {
@@ -108,7 +137,7 @@ struct WebView: UIViewRepresentable {
         c.applicationNameForUserAgent = "UNOAirwaysApp/" + (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1")
         c.websiteDataStore = .default()
         if #available(iOS 14.0, *) { c.limitsNavigationsToAppBoundDomains = true }   /* enables offline cache (service worker) */
-        let w = WKWebView(frame: .zero, configuration: c)
+        let w = InsetWebView(frame: .zero, configuration: c)
         w.navigationDelegate = model
         w.uiDelegate = model
         w.isOpaque = false
