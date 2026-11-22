@@ -99,7 +99,7 @@ def main():
                  "matureOrSuggestiveThemes", "medicalOrTreatmentInformation", "profanityOrCrudeHumor", "sexualContentGraphicAndNudity",
                  "sexualContentOrNudity", "violenceCartoonOrFantasy", "violenceRealistic", "violenceRealisticProlongedGraphicOrSadistic"]
         bools_false = ["gambling", "unrestrictedWebAccess", "lootBox", "messagingAndChat", "parentalControls", "ageAssurance",
-                       "advertising", "healthOrWellnessTopics", "seventeenPlus"]
+                       "advertising", "healthOrWellnessTopics", "seventeenPlus", "socialMedia", "datingAndRelationships", "sharedLocation", "socialMediaAgeRestricted"]
         attrs = {}
         for k in enums:
             if k in cur: attrs[k] = "NONE"

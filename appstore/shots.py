@@ -63,12 +63,14 @@ async def main(lang="ru"):
             await pg.wait_for_timeout(800)
         except Exception as e:
             print("detail:", e)
-        # 3. another category
+        # 3. another category whose first dish has a photo
         try:
-            tabs = pg.locator("#tabs .tab")
-            if await tabs.count() > 2:
-                await tabs.nth(2).click(); await pg.wait_for_timeout(2500)
-                await frame("3.png")
+            tabs = pg.locator("#tabs .tab"); n = await tabs.count()
+            for i in range(1, n):
+                await tabs.nth(i).click(); await pg.wait_for_timeout(1800)
+                if await pg.evaluate("!!document.querySelector('.slide.center .media img.thumb')"):
+                    await pg.wait_for_timeout(1500); await frame("3.png"); break
+            await tabs.nth(0).click(); await pg.wait_for_timeout(1500)
         except Exception as e:
             print("tab:", e)
         # 4. cart and delivery
