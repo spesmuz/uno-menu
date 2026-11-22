@@ -791,7 +791,7 @@ html.in-app #adminView:not(.paged){padding-bottom:var(--appB,0px)}
 html.in-app #agFab{bottom:calc(var(--appB,0px) + 12px)}
 html.in-app #agPanel{bottom:var(--appB,0px)!important;padding-bottom:0!important}
 /* menu: panels opened over the menu end above the tab bar (their dim backdrop still runs under it) */
-.overlay{padding-bottom:var(--insB,0px)}
+.overlay>.drawer{border-bottom:var(--insB,0px) solid transparent;background-clip:border-box}
 .detail{border-bottom:var(--insB,0px) solid transparent}
 </style>
 </head>
