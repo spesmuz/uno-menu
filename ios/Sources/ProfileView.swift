@@ -73,76 +73,127 @@ struct ProfileView: View {
     private var ready: Bool { name.trimmingCharacters(in: .whitespaces).count >= 2 && phone.filter { $0.isNumber }.count >= 9 }
 
     var body: some View {
-        NavigationView {
-            List {
-                Section(header: Text(L.t("pf.me")), footer: Text(L.t("pf.hint"))) {
-                    HStack(spacing: 14) {
-                        ZStack {
-                            Circle().fill(Config.gold.opacity(0.18)).frame(width: 52, height: 52)
-                            Text(initials).font(.headline).foregroundColor(Config.gold)
-                        }
-                        VStack(alignment: .leading, spacing: 8) {
-                            TextField(L.t("pf.name"), text: $name)
-                                .textContentType(.name).disableAutocorrection(true).focused($focus)
-                            TextField(L.t("book.phone"), text: $phone)
-                                .keyboardType(.phonePad).textContentType(.telephoneNumber).focused($focus)
-                        }
-                    }
-                    .padding(.vertical, 4)
-                    Button(action: save) {
-                        HStack {
-                            Spacer()
-                            Label(saved ? L.t("pf.saved") : L.t("pf.save"), systemImage: saved ? "checkmark.circle.fill" : "square.and.arrow.down")
-                                .font(.headline)
-                            Spacer()
-                        }
-                    }
-                    .disabled(!ready)
-                    .foregroundColor(ready ? .black : .secondary)
-                    .listRowBackground(ready ? Config.gold : Config.card)
-                }
+        ZStack {
+            UNOSky()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    Text(L.t("tab.profile"))
+                        .font(.system(size: 34, weight: .bold)).foregroundColor(.white)
+                        .padding(.top, 8)
 
-                Section(header: Text(L.t("pf.news"))) {
+                    /* my details */
+                    sectionTitle(L.t("pf.me"))
+                    VStack(spacing: 14) {
+                        HStack(spacing: 14) {
+                            ZStack {
+                                Circle().fill(LinearGradient(colors: [Config.gold.opacity(0.35), Config.gold.opacity(0.12)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                                Circle().strokeBorder(Config.gold.opacity(0.55), lineWidth: 1)
+                                Text(initials).font(.system(size: 20, weight: .bold)).foregroundColor(Config.gold)
+                            }
+                            .frame(width: 56, height: 56)
+                            VStack(spacing: 10) {
+                                glassField(L.t("pf.name"), text: $name, kb: .default, ct: .name)
+                                glassField(L.t("book.phone"), text: $phone, kb: .phonePad, ct: .telephoneNumber)
+                            }
+                        }
+                        Button(action: save) {
+                            Label(saved ? L.t("pf.saved") : L.t("pf.save"), systemImage: saved ? "checkmark.circle.fill" : "square.and.arrow.down")
+                                .font(.system(size: 16, weight: .bold))
+                                .frame(maxWidth: .infinity).frame(height: 48)
+                                .foregroundColor(ready ? Color(red: 0.1, green: 0.07, blue: 0.02) : Color.white.opacity(0.45))
+                                .background(
+                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                        .fill(ready ? AnyShapeStyle(LinearGradient(colors: [Color(red: 1, green: 0.88, blue: 0.54), Color(red: 1, green: 0.79, blue: 0.30)], startPoint: .top, endPoint: .bottom))
+                                                    : AnyShapeStyle(Color.white.opacity(0.08)))
+                                )
+                                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color.white.opacity(ready ? 0 : 0.14), lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(!ready)
+                    }
+                    .glassCard()
+                    Text(L.t("pf.hint")).font(.footnote).foregroundColor(Color.white.opacity(0.6)).padding(.horizontal, 6)
+
+                    /* news */
+                    HStack {
+                        sectionTitle(L.t("pf.news"))
+                        Spacer()
+                        Button { news.load() } label: {
+                            Image(systemName: "arrow.clockwise").font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(Config.gold).frame(width: 34, height: 34)
+                                .background(Circle().fill(Color.white.opacity(0.08)))
+                                .overlay(Circle().strokeBorder(Color.white.opacity(0.16), lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                    }
                     if news.items.isEmpty {
                         HStack {
                             Spacer()
                             if news.loading { ProgressView().tint(Config.gold) }
-                            else { Text(news.failed ? L.t("offline.text") : L.t("pf.noNews")).font(.subheadline).foregroundColor(.secondary).multilineTextAlignment(.center) }
+                            else { Text(news.failed ? L.t("offline.text") : L.t("pf.noNews")).font(.subheadline).foregroundColor(Color.white.opacity(0.6)).multilineTextAlignment(.center) }
                             Spacer()
-                        }.padding(.vertical, 24)
-                    }
-                    ForEach(news.items) { n in
-                        VStack(alignment: .leading, spacing: 10) {
-                            if let u = n.image {
-                                AsyncImage(url: u) { ph in
-                                    switch ph {
-                                    case .success(let img): img.resizable().scaledToFill()
-                                    default: Rectangle().fill(Config.card).overlay(ProgressView().tint(Config.gold))
-                                    }
-                                }
-                                .frame(maxWidth: .infinity).frame(height: 210).clipped()
-                                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                            }
-                            if !n.title.isEmpty { Text(n.title).font(.headline) }
-                            if !n.text.isEmpty { Text(n.text).font(.subheadline).foregroundColor(.white.opacity(0.85)).fixedSize(horizontal: false, vertical: true) }
-                            if let d = n.at { Text(Self.fmt.string(from: d)).font(.caption).foregroundColor(.secondary) }
                         }
-                        .padding(.vertical, 6)
+                        .padding(.vertical, 26)
+                        .glassCard()
                     }
+                    ForEach(news.items) { n in newsCard(n) }
                 }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 24)
+                .frame(maxWidth: 640)
+                .frame(maxWidth: .infinity)
             }
-            .listStyle(.insetGrouped)
-            .navigationTitle(L.t("tab.profile"))
-            .refreshable { news.load() }
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button(L.t("done")) { focus = false }.font(.body.bold()).foregroundColor(Config.gold)
-                }
+            .modifier(Refresh { news.load() })
+        }
+        .onAppear { if news.items.isEmpty { news.load() } }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button(L.t("done")) { focus = false }.font(.body.bold()).foregroundColor(Config.gold)
             }
         }
-        .navigationViewStyle(.stack)
-        .onAppear { if news.items.isEmpty { news.load() } }
+    }
+
+    private func sectionTitle(_ t: String) -> some View {
+        Text(t.uppercased()).font(.system(size: 13, weight: .bold)).kerning(1.2).foregroundColor(Config.gold.opacity(0.9)).padding(.horizontal, 6)
+    }
+
+    private func glassField(_ ph: String, text: Binding<String>, kb: UIKeyboardType, ct: UITextContentType) -> some View {
+        TextField("", text: text, prompt: Text(ph).foregroundColor(Color.white.opacity(0.4)))
+            .keyboardType(kb).textContentType(ct).disableAutocorrection(true).focused($focus)
+            .foregroundColor(.white).font(.system(size: 16))
+            .padding(.horizontal, 14).frame(height: 44)
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color(red: 0.01, green: 0.03, blue: 0.08).opacity(0.55)))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Color.white.opacity(0.16), lineWidth: 1))
+    }
+
+    /* photo area: 8.5 × 2.8 (wide banner), fills the frame without spilling over */
+    private func newsCard(_ n: NewsItem) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if let u = n.image {
+                Color.clear
+                    .aspectRatio(8.5 / 2.8, contentMode: .fit)
+                    .overlay(
+                        AsyncImage(url: u) { ph in
+                            switch ph {
+                            case .success(let img): img.resizable().scaledToFill()
+                            default: Rectangle().fill(Color.white.opacity(0.06)).overlay(ProgressView().tint(Config.gold))
+                            }
+                        }
+                    )
+                    .clipped()
+            }
+            VStack(alignment: .leading, spacing: 6) {
+                if !n.title.isEmpty { Text(n.title).font(.system(size: 18, weight: .bold)).foregroundColor(.white) }
+                if !n.text.isEmpty { Text(n.text).font(.subheadline).foregroundColor(Color.white.opacity(0.82)).fixedSize(horizontal: false, vertical: true) }
+                if let d = n.at {
+                    Label(Self.fmt.string(from: d), systemImage: "calendar").font(.caption).foregroundColor(Config.gold.opacity(0.85))
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .glassCard(padding: 0)
     }
 
     private var initials: String {
@@ -168,3 +219,56 @@ struct ProfileView: View {
 }
 
 extension Notification.Name { static let unoProfileChanged = Notification.Name("unoProfileChanged") }
+
+/* pull to refresh where the system supports it on a ScrollView */
+struct Refresh: ViewModifier {
+    let action: () -> Void
+    func body(content: Content) -> some View {
+        if #available(iOS 16.0, *) { content.refreshable { action() } } else { content }
+    }
+}
+
+/* the menu's night sky: deep blue, soft glows and the curve of the earth at the bottom */
+struct UNOSky: View {
+    var body: some View {
+        GeometryReader { g in
+            let w = g.size.width, h = g.size.height, r = max(w, h) * 1.6
+            ZStack {
+                LinearGradient(colors: [Color(red: 0.008, green: 0.016, blue: 0.047), Color(red: 0.024, green: 0.063, blue: 0.165), Color(red: 0.031, green: 0.086, blue: 0.204)],
+                               startPoint: .top, endPoint: .bottom)
+                RadialGradient(colors: [Color(red: 0.31, green: 0.43, blue: 1).opacity(0.18), .clear], center: UnitPoint(x: 0.18, y: 0.08), startRadius: 0, endRadius: w * 0.8)
+                RadialGradient(colors: [Color(red: 1, green: 0.67, blue: 0.35).opacity(0.10), .clear], center: UnitPoint(x: 0.9, y: 0.16), startRadius: 0, endRadius: w * 0.7)
+                /* earth */
+                Circle()
+                    .fill(Color(red: 0.016, green: 0.035, blue: 0.09))
+                    .overlay(Circle().stroke(Color(red: 0.55, green: 0.8, blue: 1), lineWidth: 2).blur(radius: 1))
+                    .shadow(color: Color(red: 0.25, green: 0.55, blue: 1).opacity(0.9), radius: 22)
+                    .frame(width: r * 2, height: r * 2)
+                    .position(x: w / 2, y: h - h * 0.06 + r)
+            }
+            .frame(width: w, height: h)
+        }
+        .ignoresSafeArea()
+    }
+}
+
+/* frosted glass card, like the menu's tickets */
+struct GlassCard: ViewModifier {
+    var padding: CGFloat = 16
+    func body(content: Content) -> some View {
+        content
+            .padding(padding)
+            .background(
+                ZStack {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous).fill(.ultraThinMaterial)
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .fill(LinearGradient(colors: [Color.white.opacity(0.10), Color.white.opacity(0.03), Color.white.opacity(0.06)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                }
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Color.white.opacity(0.16), lineWidth: 1))
+            .shadow(color: Color.black.opacity(0.35), radius: 16, x: 0, y: 10)
+            .environment(\.colorScheme, .dark)
+    }
+}
+extension View { func glassCard(padding: CGFloat = 16) -> some View { modifier(GlassCard(padding: padding)) } }

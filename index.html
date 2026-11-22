@@ -3316,7 +3316,7 @@ News.mount=function(){ var slot=$("newsSlot"); if(!slot) return; if(!News.el){ N
 News.load=async function(){ var r=await S.sb.from("uno_docs").select("path,data").like("path","news/%"); if(r.error){ News.err=String(r.error.message||r.error); News.rows=News.rows||[]; } else { News.err=""; News.rows=(r.data||[]).map(function(x){ return Object.assign({id:x.path.slice(5)},x.data||{}); }).sort(function(a,b){ return String(b.at||"").localeCompare(String(a.at||"")); }); } News.render(); };
 News.render=function(){
   if(!News.el) return;
-  var h='<h2>Yangiliklar</h2><p class="help">Bu yerdagi yangiliklar (surat, sarlavha, matn) iPhone ilovasining <b>«Profil»</b> bo\'limida mijozlarga ko\'rinadi. Masalan: yangi taom, aksiya, bugungi kechki konsert.</p>'+
+  var h='<h2>Yangiliklar</h2><p class="help">Bu yerdagi yangiliklar (surat, sarlavha, matn) iPhone ilovasining <b>«Profil»</b> bo\'limida mijozlarga ko\'rinadi. Masalan: yangi taom, aksiya, bugungi kechki konsert.</p><p class="help" style="margin-top:6px"><b style="color:var(--gold2)">Surat o\'lchami: 8,5 × 2,8 (keng banner), masalan 2550 × 840 piksel.</b> Boshqa o\'lchamdagi surat chetlaridan qirqilib, shu ramkaga to\'ldiriladi.</p>'+
     '<label style="display:block">Sarlavha<input id="nwTitle" maxlength="80" placeholder="Masalan: Shanba kuni jonli jazz kechasi"></label>'+
     '<label style="display:block;margin-top:8px">Matn<textarea id="nwText" rows="3" maxlength="600" style="width:100%;box-sizing:border-box" placeholder="Batafsil ma\'lumot…"></textarea></label>'+
     '<details style="margin-top:8px"><summary style="cursor:pointer;color:var(--muted);font-size:13px">Ruscha / inglizcha (ixtiyoriy)</summary>'+
