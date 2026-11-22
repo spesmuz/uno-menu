@@ -190,7 +190,7 @@ input,select,textarea{font-family:inherit}
 #stage.portrait .m-head{flex-wrap:wrap;height:auto;row-gap:12px}
 #stage.portrait .logo{flex:1 1 auto;max-width:none}
 #stage.portrait .tabs-wrap{order:5;flex:1 0 100%}
-#stage.isl .tabs-wrap{flex:1 1 calc(100% - 56px);min-width:0}#stage.isl #searchBtn,#stage.isl #waiterBtn{order:6}#stage.isl .logo{flex:1 1 auto}
+#stage.isl .logo{flex:1 1 auto}#stage.isl .logo img{width:50px;height:50px}#stage.isl .logo .lt{gap:2px}#stage.isl .logo b{font-size:18px}#stage.isl .logo span{white-space:normal;width:min-content;line-height:1.25;font-size:7.5px}
 #stage.portrait .tabs{justify-content:flex-start}
 #stage.portrait .rgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
 #stage.portrait .detail{flex-direction:column;padding:26px 26px 30px;gap:20px}
@@ -857,21 +857,26 @@ function fit(){
   var s=Math.min(vw/g.W, vh/H);
   stage.style.transform="translate(-50%,-50%) scale("+s+")"; S.scale=s;
   stage.classList.toggle("isl", !!(isl && phone && portrait));
-  stage.style.paddingTop = (isl && phone && portrait) ? Math.max(0, Math.round((isl.y+isl.h/2)/s - 20))+"px" : "";
+  stage.style.paddingTop = (isl && phone && portrait) ? Math.max(6, Math.round((isl.y+isl.h/2)/s - 25))+"px" : "";
   XS=g.XS; SC=g.SC; SLOT=g.SLOT;
   sizeCards(); if(typeof fitTabs==="function") fitTabs();
   fitIsland();
 }
 /* keep the logo (left) and the cart (right) clear of the camera island: shrink them just enough */
 function fitIsland(){
-  var lb=$("logoBox"), cb=$("cartBtn"), on=stage.classList.contains("isl"), isl=on&&safeInsets().island;
-  [lb,cb].forEach(function(el){ if(el){ el.style.transform=""; } });
+  var lb=$("logoBox"), cb=$("cartBtn"), sb=$("searchBtn"), on=stage.classList.contains("isl"), isl=on&&safeInsets().island;
+  [lb,cb,sb].forEach(function(el){ if(el){ el.style.transform=""; } });
   if(!isl||!lb||!cb) return;
-  var m=8, lr=lb.getBoundingClientRect(), cr=cb.getBoundingClientRect();
+  var m=8, lr=lb.getBoundingClientRect(), cr=cb.getBoundingClientRect(), sr=sb?sb.getBoundingClientRect():null;
   var lt=lb.querySelector(".lt"), lw=(lt?lt.getBoundingClientRect().right:lr.right)-lr.left;
-  var kl=Math.min(1,(isl.x-m-lr.left)/Math.max(1,lw)), kc=Math.min(1,(cr.right-(isl.x+isl.w+m))/Math.max(1,cr.width));
+  var kl=Math.min(1,(isl.x-m-lr.left)/Math.max(1,lw));
   if(kl<1){ lb.style.transformOrigin="left center"; lb.style.transform="scale("+Math.max(.55,kl)+")"; }
-  if(kc<1){ cb.style.transformOrigin="right center"; cb.style.transform="scale("+Math.max(.55,kc)+")"; }
+  /* right of the island: search + cart, shrunk together if they would touch it */
+  var leftEdge=(sr&&sr.width&&sr.top<cr.bottom&&sr.bottom>cr.top)?sr.left:cr.left, gw=cr.right-leftEdge;
+  var kc=Math.min(1,(cr.right-(isl.x+isl.w+m))/Math.max(1,gw));
+  if(kc<1){ kc=Math.max(.55,kc);
+    cb.style.transformOrigin="right center"; cb.style.transform="scale("+kc+")";
+    if(sr&&leftEdge===sr.left){ var shift=(cr.left-sr.right)*(1-kc)+cr.width*(1-kc); sb.style.transformOrigin="right center"; sb.style.transform="translateX("+shift.toFixed(1)+"px) scale("+kc+")"; } }
 }
 var CARD_EXTRA=150; /* card height = width + 150 (square photo + text block) */
 function sizeCards(){

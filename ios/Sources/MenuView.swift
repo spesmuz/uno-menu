@@ -162,6 +162,10 @@ struct WebView: UIViewRepresentable {
         w.scrollView.backgroundColor = Config.uiBg
         w.scrollView.contentInsetAdjustmentBehavior = .never
         w.scrollView.bounces = false
+        if #available(iOS 26.0, *) {        /* no dark fade under the tab bar / above the content: the background stays whole */
+            w.scrollView.topEdgeEffect.isHidden = true
+            w.scrollView.bottomEdgeEffect.isHidden = true
+        }
         w.allowsBackForwardNavigationGestures = false
         w.allowsLinkPreview = false
         if #available(iOS 16.4, *) { w.isInspectable = false }
