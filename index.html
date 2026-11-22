@@ -3884,6 +3884,13 @@ Att.click=async function(ev){
 };
 
 /* ================= ROUTING & DATA ================= */
+/* the menu never scrolls: after the (scrolling) admin panel, put the page back at the very top,
+   otherwise iOS keeps the old offset and the menu's header slides up under the screen edge */
+function menuTop(){
+  try{ if(window.scrollX||window.scrollY) window.scrollTo(0,0); document.documentElement.scrollTop=0; document.body.scrollTop=0; document.documentElement.scrollLeft=0; document.body.scrollLeft=0; }catch(_){}
+}
+if(window.visualViewport) window.visualViewport.addEventListener("scroll",function(){ if(S.view==="menu" && !document.querySelector("input:focus,textarea:focus") && (window.scrollY||window.scrollX)) menuTop(); });
+window.addEventListener("scroll",function(){ if(S.view==="menu" && !document.querySelector("input:focus,textarea:focus") && (window.scrollY||window.scrollX)) menuTop(); },{passive:true});
 function route(){
   var h=location.hash.replace("#","");
   if(h!=="admin" && Att.isTerminal()){ location.replace("davomat.html"); return; }
@@ -3891,7 +3898,7 @@ function route(){
   $("menuView").classList.toggle("hidden", S.view!=="menu");
   A.classList.toggle("hidden", S.view!=="admin");
   document.body.style.overflow = S.view==="menu" ? "hidden" : "";
-  if(S.view==="admin"){ if(S.detail) closeDetail(); pauseCarouselVideo(); renderAdmin(); } else { closeEditor(); fit(); refreshMenu(); requestAnimationFrame(function(){ sizeCards(); }); }
+  if(S.view==="admin"){ if(S.detail) closeDetail(); pauseCarouselVideo(); renderAdmin(); } else { closeEditor(); menuTop(); fit(); refreshMenu(); requestAnimationFrame(function(){ menuTop(); sizeCards(); }); setTimeout(menuTop,350); }
   if(typeof agSync==="function") agSync();
 }
 window.addEventListener("hashchange",route);

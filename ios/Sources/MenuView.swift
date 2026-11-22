@@ -48,6 +48,11 @@ final class WebModel: NSObject, ObservableObject, WKNavigationDelegate, WKUIDele
     override init() {
         super.init()
         /* profile saved in the "Profil" tab → the menu page gets the new name/phone right away */
+        /* the page itself never scrolls: when the keyboard goes away, iOS can leave it shifted up (header cut off) — put it back */
+        NotificationCenter.default.addObserver(forName: UIResponder.keyboardDidHideNotification, object: nil, queue: .main) { [weak self] _ in
+            guard let sv = self?.web?.scrollView else { return }
+            if sv.contentOffset != .zero { sv.setContentOffset(.zero, animated: true) }
+        }
         NotificationCenter.default.addObserver(forName: .unoProfileChanged, object: nil, queue: .main) { [weak self] _ in
             guard let w = self?.web else { return }
             let js = ProfileBridge.script()
