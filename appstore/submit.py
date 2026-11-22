@@ -40,6 +40,10 @@ def call(method, path, body=None, params=None, ok=(200, 201, 204)):
         try:
             errs = r.json().get("errors", [])
             detail = " | ".join((e.get("title", "") + ": " + e.get("detail", "")) for e in errs)
+            for e in errs:
+                ae = (e.get("meta") or {}).get("associatedErrors") or {}
+                for k, lst in ae.items():
+                    for x in lst: detail += f" || {x.get('code','')}: {x.get('detail') or x.get('title','')}"
         except Exception:
             detail = r.text[:500]
         raise RuntimeError(f"{method} {path} -> {r.status_code}: {detail}")
@@ -102,7 +106,17 @@ def main():
         for k in bools_false:
             if k in cur: attrs[k] = False
         if "userGeneratedContent" in cur: attrs["userGeneratedContent"] = True
-        call("PATCH", f"/v1/ageRatingDeclarations/{d['id']}", {"data": {"type": "ageRatingDeclarations", "id": d["id"], "attributes": attrs}})
+        import re
+        for _ in range(12):
+            try:
+                call("PATCH", f"/v1/ageRatingDeclarations/{d['id']}", {"data": {"type": "ageRatingDeclarations", "id": d["id"], "attributes": attrs}})
+                break
+            except RuntimeError as e:
+                m = re.search(r"attribute '(\w+)'", str(e))
+                if not m or m.group(1) in attrs: raise
+                k = m.group(1)
+                attrs[k] = "NONE" if any(w in k for w in ("Themes", "Reference", "Violence", "violence", "Nudity", "Humor", "Information", "Weapons", "contests", "Simulated")) else False
+                log(f"     age rating: added {k}={attrs[k]}")
         left = [k for k, v in call("GET", f"/v1/appInfos/{INFO}/ageRatingDeclaration")["data"]["attributes"].items() if v is None and k not in ("kidsAgeBand", "ageRatingOverride", "ageRatingOverrideV2", "koreaAgeRatingOverride", "developerAgeRatingInfoUrl")]
         return "unset: " + ",".join(left) if left else ""
     step("age rating", age)
@@ -148,8 +162,14 @@ def main():
             rel.append({"type": "territoryAvailabilities", "id": lid})
             inc.append({"type": "territoryAvailabilities", "id": lid, "attributes": {"available": True},
                         "relationships": {"territory": {"data": {"type": "territories", "id": t}}}})
-        call("POST", "/v2/appAvailabilities", {"data": {"type": "appAvailabilities", "attributes": {"availableInNewTerritories": True},
-             "relationships": {"app": {"data": {"type": "apps", "id": APP}}, "territoryAvailabilities": {"data": rel}}}, "included": inc})
+        payload = {"data": {"type": "appAvailabilities", "attributes": {"availableInNewTerritories": True},
+             "relationships": {"app": {"data": {"type": "apps", "id": APP}}, "territoryAvailabilities": {"data": rel}}}, "included": inc}
+        for n in range(3):
+            try:
+                call("POST", "/v2/appAvailabilities", payload); break
+            except Exception as e:
+                if n == 2: raise
+                time.sleep(5)
         return f"{len(terr)} territories"
     step("availability (all countries)", availability)
 
