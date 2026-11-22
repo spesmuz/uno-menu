@@ -785,6 +785,13 @@ html.th-aurora #adminView{background:radial-gradient(90% 60% at 30% 0%,rgba(60,2
   #adminView .a-sec{padding:18px 16px;border-radius:18px}
   #adminView .a-sec h2{font-size:17px}
 }
+/* phones: title + count on the first line, the buttons on the next; nothing pokes past the screen edges */
+#adminView{overflow-x:hidden}
+@media (max-width:700px){
+  #adminView .a-top{padding-left:16px!important;padding-right:16px!important;justify-content:flex-start}
+  #adminView .a-top .sp{flex:0 0 100%;height:0}
+  #adminView .a-top h1,#adminView .a-top .tag{flex:none}
+}
 /* inside the iPhone app: keep the panel and the AI button above the app's tab bar */
 html.in-app #adminView.paged{height:calc(100dvh - var(--appB,0px))}
 html.in-app #adminView.paged .adm-dots{padding-bottom:8px}
@@ -893,8 +900,18 @@ var _safe=null;
 function safeInsets(){
   if(!_safe){ _safe=document.createElement("div"); _safe.style.cssText="position:fixed;left:0;top:0;width:0;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)"; document.body.appendChild(_safe); }
   if(window.UNO_INSETS){ var U=window.UNO_INSETS; return {t:+U.t||0, b:+U.b||0, l:+U.l||0, r:+U.r||0, island:U.island||null}; }   /* iPhone app: clock + tab bar sizes sent by the app */
-  var cs=getComputedStyle(_safe); return {t:parseFloat(cs.paddingTop)||0, b:parseFloat(cs.paddingBottom)||0, l:parseFloat(cs.paddingLeft)||0, r:parseFloat(cs.paddingRight)||0};
+  var cs=getComputedStyle(_safe), o={t:parseFloat(cs.paddingTop)||0, b:parseFloat(cs.paddingBottom)||0, l:parseFloat(cs.paddingLeft)||0, r:parseFloat(cs.paddingRight)||0};
+  if(/UNOAirwaysApp/.test(navigator.userAgent||"")) o.b=Math.max(o.b, (window.innerWidth>window.innerHeight)?62:90);   /* iPhone app before it reports its tab bar */
+  return o;
 }
+/* the iPhone app is recognised by its name in the user agent even before it reports its bar size */
+function appFallback(){
+  if(window.UNO_INSETS || !/UNOAirwaysApp/.test(navigator.userAgent||"")) return;
+  var land=(window.innerWidth||0)>(window.innerHeight||0);
+  document.documentElement.classList.add("in-app");
+  document.documentElement.style.setProperty("--appB", (land?62:90)+"px");
+}
+appFallback(); window.addEventListener("resize", appFallback);
 function fit(){
   var ins=safeInsets(), isl=ins.island;
   if(window.UNO_INSETS){ document.documentElement.classList.add("in-app"); document.documentElement.style.setProperty("--appB", ins.b+"px"); } if(isl) ins.t=0;   /* iPhone app: the header row sits beside the camera island */
