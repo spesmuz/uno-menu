@@ -134,10 +134,7 @@ final class InsetWebView: WKWebView {
             else if safe.top >= 40 { island = String(format: "{x:%.1f,y:0,w:162,h:32}", (bounds.width - 162) / 2) }      // notch
             if !island.isEmpty { top = 0 }
         } else { left = 0; right = 0 }
-        if let tab = Self.tabBar(in: win.rootViewController), !tab.isHidden {
-            let f = tab.convert(tab.bounds, to: self)
-            bottom = max(bottom, bounds.maxY - f.minY)
-        }
+        bottom = max(bottom, UNOBar.reserved(landscape, safe: safe.bottom))   /* our floating tab bar */
         top = max(0, top); bottom = max(0, bottom)
         if abs(top - sent.top) < 0.5 && abs(bottom - sent.bottom) < 0.5 && abs(left - sent.left) < 0.5 && abs(right - sent.right) < 0.5 && island == sentIsland { return }
         sent = UIEdgeInsets(top: top, left: left, bottom: bottom, right: right); sentIsland = island

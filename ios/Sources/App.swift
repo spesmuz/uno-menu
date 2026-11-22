@@ -65,21 +65,79 @@ struct RootView: View {
         return 0
     }()
     var body: some View {
-        TabView(selection: $tab) {
-            MenuView()
-                .tabItem { Label(L.t("tab.menu"), systemImage: "fork.knife") }
-                .tag(0)
-            BookingView()
-                .tabItem { Label(L.t("tab.book"), systemImage: "calendar.badge.plus") }
-                .tag(1)
-            AboutView()
-                .tabItem { Label(L.t("tab.about"), systemImage: "airplane") }
-                .tag(2)
-            ProfileView()
-                .tabItem { Label(L.t("tab.profile"), systemImage: "person.crop.circle") }
-                .tag(3)
+        GeometryReader { geo in
+            let land = geo.size.width > geo.size.height
+            let safeB = geo.safeAreaInsets.bottom
+            ZStack(alignment: .bottom) {
+                page(0) { MenuView() }
+                page(1) { BookingView().safeAreaInset(edge: .bottom) { Color.clear.frame(height: UNOBar.height(land)) } }
+                page(2) { AboutView().safeAreaInset(edge: .bottom) { Color.clear.frame(height: UNOBar.height(land)) } }
+                page(3) { ProfileView().safeAreaInset(edge: .bottom) { Color.clear.frame(height: UNOBar.height(land)) } }
+                /* our own floating bar: bigger buttons, nothing behind it, the menu background runs to the very bottom */
+                UNOTabBar(tab: $tab, landscape: land)
+                    .padding(.bottom, UNOBar.bottomPad(land, safe: safeB))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                    .ignoresSafeArea(.all, edges: .bottom)
+            }
         }
+        .background(Config.bg.ignoresSafeArea())
         .accentColor(Config.gold)
-        .onChange(of: tab) { _ in UISelectionFeedbackGenerator().selectionChanged() }
+    }
+    @ViewBuilder private func page<V: View>(_ i: Int, @ViewBuilder _ v: () -> V) -> some View {
+        v().opacity(tab == i ? 1 : 0).allowsHitTesting(tab == i).accessibilityHidden(tab != i)
+    }
+}
+
+/* sizes shared with the menu page (it keeps its footer clear of the bar) */
+enum UNOBar {
+    static func height(_ landscape: Bool) -> CGFloat { landscape ? 60 : 66 }
+    static func bottomPad(_ landscape: Bool, safe: CGFloat) -> CGFloat { landscape ? 6 : max(8, safe - 12) }
+    static func reserved(_ landscape: Bool, safe: CGFloat) -> CGFloat { height(landscape) + bottomPad(landscape, safe: safe) + 6 }
+}
+
+struct UNOTabBar: View {
+    @Binding var tab: Int
+    let landscape: Bool
+    private let items: [(String, String)] = [("tab.menu", "fork.knife"), ("tab.book", "calendar.badge.plus"),
+                                             ("tab.about", "airplane"), ("tab.profile", "person.crop.circle")]
+    var body: some View {
+        HStack(spacing: landscape ? 6 : 2) {
+            ForEach(items.indices, id: \.self) { i in
+                let on = tab == i
+                Button {
+                    if tab != i { tab = i; UISelectionFeedbackGenerator().selectionChanged() }
+                } label: {
+                    Group {
+                        if landscape {
+                            HStack(spacing: 10) {
+                                Image(systemName: items[i].1).font(.system(size: 23, weight: .semibold))
+                                Text(L.t(items[i].0)).font(.system(size: 18, weight: .semibold)).lineLimit(1)
+                            }
+                            .padding(.horizontal, 22)
+                        } else {
+                            VStack(spacing: 4) {
+                                Image(systemName: items[i].1).font(.system(size: 21, weight: .semibold))
+                                Text(L.t(items[i].0)).font(.system(size: 12, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                    }
+                    .frame(height: UNOBar.height(landscape) - 10)
+                    .foregroundColor(on ? Config.gold : Color.white.opacity(0.8))
+                    .background(Capsule().fill(on ? Color.white.opacity(0.13) : Color.clear))
+                    .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(on ? .isSelected : [])
+            }
+        }
+        .padding(5)
+        .frame(height: UNOBar.height(landscape))
+        .background(.ultraThinMaterial, in: Capsule())
+        .overlay(Capsule().strokeBorder(Color.white.opacity(0.18), lineWidth: 1))
+        .shadow(color: Color.black.opacity(0.35), radius: 14, x: 0, y: 6)
+        .padding(.horizontal, landscape ? 0 : 14)
+        .environment(\.colorScheme, .dark)
+        .animation(.easeOut(duration: 0.18), value: tab)
     }
 }
