@@ -108,9 +108,16 @@ final class InsetWebView: WKWebView {
     override func layoutSubviews() {
         super.layoutSubviews()
         guard let win = window else { return }
-        var top = win.safeAreaInsets.top
-        var bottom = win.safeAreaInsets.bottom
-        let left = win.safeAreaInsets.left, right = win.safeAreaInsets.right
+        let safe = win.safeAreaInsets
+        var bottom = safe.bottom
+        var left = safe.left, right = safe.right
+        /* the clock is hidden: only the camera cut-out has to stay clear, so the header moves up */
+        var top: CGFloat = safe.top > 30 ? safe.top - 14 : max(safe.top, 0)
+        top = max(top, bounds.width > bounds.height ? 4 : 10)
+        /* landscape: only the side with the camera needs the full margin, the other side just the rounded corner */
+        if bounds.width > bounds.height, let o = win.windowScene?.interfaceOrientation {
+            if o == .landscapeRight { right = min(right, 16) } else if o == .landscapeLeft { left = min(left, 16) }
+        }
         if let tab = Self.tabBar(in: win.rootViewController), !tab.isHidden {
             let f = tab.convert(tab.bounds, to: self)
             bottom = max(bottom, bounds.maxY - f.minY)

@@ -46,7 +46,14 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
 struct UNOAirwaysApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     var body: some Scene {
-        WindowGroup { RootView().preferredColorScheme(.dark) }
+        WindowGroup { RootView().preferredColorScheme(.dark).statusBarHidden(true).fullScreenOverlays() }
+    }
+}
+
+/* full screen: no clock / battery bar, home line fades out */
+extension View {
+    @ViewBuilder func fullScreenOverlays() -> some View {
+        if #available(iOS 16.0, *) { self.persistentSystemOverlays(.hidden) } else { self }
     }
 }
 
