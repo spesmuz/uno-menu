@@ -259,6 +259,7 @@ input,select,textarea{font-family:inherit}
 #stage.phoneL .d-name{font-size:24px}
 #stage.phoneL .d-close{top:14px;right:16px}
 
+.langs.float,.dots{margin-bottom:var(--insB,0px)}
 .dots{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:250;display:flex;justify-content:center;align-items:center;gap:2px;height:40px;max-width:640px}
 .dots button{height:28px;padding:0 4px;border:0;background:transparent;display:flex;align-items:center}
 .dots span{display:block;width:8px;height:8px;border-radius:4px;background:rgba(255,255,255,.24);transition:width .5s cubic-bezier(.22,1,.36,1),background .5s}
@@ -861,6 +862,13 @@ function fit(){
   stage.style.transform="translate(-50%,-50%) scale("+s+")"; S.scale=s;
   stage.classList.toggle("isl", !!(isl && phone && portrait));
   stage.style.paddingTop = (isl && phone && portrait) ? Math.max(6, Math.round((isl.y+isl.h/2)/s - 25))+"px" : "";
+  /* the stage reaches the screen's bottom edge (under the tab bar), so nothing in it is cut off by a hard line;
+     its content keeps clear of the bar through the extra bottom padding */
+  var exB = ins.b>0 ? ins.b/s : 0;
+  stage.style.paddingBottom=""; stage.style.height=H+"px";
+  if(exB){ var pb=parseFloat(getComputedStyle(stage).paddingBottom)||0; stage.style.paddingBottom=(pb+exB).toFixed(1)+"px"; stage.style.height=(H+exB).toFixed(1)+"px";
+    stage.style.top="calc(50% + "+(ins.t/2)+"px)"; }
+  stage.style.setProperty("--insB", exB.toFixed(1)+"px");
   XS=g.XS; SC=g.SC; SLOT=g.SLOT;
   sizeCards(); if(typeof fitTabs==="function") fitTabs();
   fitIsland();
@@ -897,7 +905,7 @@ function sizeCards(){
   /* fill the free height down to the dots, keeping the square photo; cap the width */
   var cw=Math.max(260, Math.min(g.maxW, th-CARD_EXTRA-6));
   /* tall phones: the card is width-limited, so the free height goes to a taller photo instead of empty bands */
-  var mx=0; if(g===GEO.phoneP){ mx=Math.max(0, Math.min(Math.round(cw*0.42), th-(cw+CARD_EXTRA)-14)); }
+  var mx=0;   /* photos stay square everywhere */
   stage.style.setProperty("--mediaExtra", mx+"px");
   var ch=cw+CARD_EXTRA+mx;
   XS=g.XS.map(function(x){ return x*cw/g.baseW; }); SLOT=g.SLOT*cw/g.baseW;
@@ -1070,10 +1078,8 @@ function fitTabs(){
 }
 /* scroll position that shows the active tab with a little room on both sides */
 function tabTarget(tb,a){
-  var max=tb.scrollWidth-tb.clientWidth, l=a.offsetLeft-tb.clientLeft, cur=tb.scrollLeft;
-  if(l-24<cur) return Math.max(0,l-24);
-  if(l+a.offsetWidth+24>cur+tb.clientWidth) return Math.min(max,l+a.offsetWidth+24-tb.clientWidth);
-  return cur;
+  var max=tb.scrollWidth-tb.clientWidth, l=a.offsetLeft-tb.clientLeft;
+  return Math.max(0, Math.min(max, Math.round(l + a.offsetWidth/2 - tb.clientWidth/2)));   /* the active tab sits in the middle */
 }
 /* fade the edge where more categories are hidden */
 function tabsEdges(){

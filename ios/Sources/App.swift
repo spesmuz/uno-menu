@@ -90,7 +90,7 @@ struct RootView: View {
 
 /* sizes shared with the menu page (it keeps its footer clear of the bar) */
 enum UNOBar {
-    static func height(_ landscape: Bool) -> CGFloat { landscape ? 60 : 66 }
+    static func height(_ landscape: Bool) -> CGFloat { landscape ? 50 : 62 }
     static func bottomPad(_ landscape: Bool, safe: CGFloat) -> CGFloat { landscape ? 6 : max(8, safe - 12) }
     static func reserved(_ landscape: Bool, safe: CGFloat) -> CGFloat { height(landscape) + bottomPad(landscape, safe: safe) + 6 }
 }
@@ -109,15 +109,15 @@ struct UNOTabBar: View {
                 } label: {
                     Group {
                         if landscape {
-                            HStack(spacing: 10) {
-                                Image(systemName: items[i].1).font(.system(size: 23, weight: .semibold))
-                                Text(L.t(items[i].0)).font(.system(size: 18, weight: .semibold)).lineLimit(1)
+                            HStack(spacing: 8) {
+                                Image(systemName: items[i].1).font(.system(size: 18, weight: .semibold))
+                                Text(L.t(items[i].0)).font(.system(size: 15, weight: .semibold)).lineLimit(1)
                             }
-                            .padding(.horizontal, 22)
+                            .padding(.horizontal, 18)
                         } else {
-                            VStack(spacing: 4) {
-                                Image(systemName: items[i].1).font(.system(size: 21, weight: .semibold))
-                                Text(L.t(items[i].0)).font(.system(size: 12, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
+                            VStack(spacing: 3) {
+                                Image(systemName: items[i].1).font(.system(size: 20, weight: .semibold))
+                                Text(L.t(items[i].0)).font(.system(size: 11, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
                             }
                             .frame(maxWidth: .infinity)
                         }
