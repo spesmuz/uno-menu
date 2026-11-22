@@ -568,10 +568,88 @@ canvas.frost{position:absolute;inset:0;image-rendering:auto;width:100%;height:10
 .ag-rec button.go{background:#E8B04B;border-color:#E8B04B;color:#1a1306;padding:0 20px}
 html.ag-open #adminView{overflow:hidden}
 html.ag-fab #adminView .adm-page,html.ag-fab #adminView .a-wrap{padding-bottom:84px}
+/* ================= THEME: Aurora — liquid glass over a night sea with the northern lights ================= */
+html.th-aurora{--gold:#FFE3D6;--gold2:#FFFFFF;--ink:#14204F;--panel:rgba(255,255,255,.14);--card:rgba(255,255,255,.12);--line:rgba(255,255,255,.42);--text:#FFFFFF;--muted:rgba(255,255,255,.82);
+  --lq-bg:linear-gradient(140deg,rgba(255,255,255,.22) 0%,rgba(255,255,255,.04) 32%,rgba(255,255,255,0) 58%,rgba(255,255,255,.10) 100%);
+  --lq-sh:inset 0 1.5px .5px rgba(255,255,255,1),inset 0 -1.5px .5px rgba(255,255,255,.6),inset 3px 3px 6px rgba(255,255,255,.35),inset -4px -4px 9px rgba(10,5,30,.22),
+          inset 1.5px 0 0 rgba(140,185,255,.45),inset -1.5px 0 0 rgba(255,150,120,.45),0 10px 26px rgba(15,10,40,.30),0 1px 2px rgba(15,10,40,.25);
+  --lq-blur:blur(2.5px) saturate(170%) brightness(1.12) contrast(1.06);
+  --lq-coral:linear-gradient(140deg,rgba(255,190,165,.78) 0%,rgba(244,108,74,.55) 50%,rgba(255,160,130,.75) 100%);
+  --lq-violet:linear-gradient(140deg,rgba(205,205,255,.75),rgba(110,110,235,.5) 52%,rgba(180,180,255,.72))}
+html.th-aurora,html.th-aurora body{background:#010208}
+html.th-aurora #adminView,html.th-aurora #editorHost{--gold:#E8B04B;--gold2:#F3C873;--ink:#0E0F12;--panel:#17181C;--card:#1E2026;--line:rgba(255,255,255,.10);--text:#F3EFE7;--muted:#A39E94}
+html.th-aurora #menuView{background:linear-gradient(180deg,#010208 0%,#030719 34%,#071230 58%,#0d1c40 70%,#132a52 71.9%,#07112a 72.1%,#040a1d 82%,#01040c 100%)}
+html.th-aurora #menuView::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:linear-gradient(180deg,rgba(0,0,0,0) calc(72% - 1px),rgba(120,255,210,.35) 72%,rgba(0,0,0,0) calc(72% + 2px)),
+             radial-gradient(70% 22% at 50% 72%,rgba(70,220,170,.16),rgba(0,0,0,0) 70%)}
+#sky{display:none}
+html.th-aurora #sky{display:block;position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+html.th-aurora #sky>i,html.th-aurora #sky .sea>i{position:absolute;left:0}
+html.th-aurora #sky .s1,html.th-aurora #sky .s2{top:0;width:100%;height:72%;background-repeat:repeat;background-size:512px 512px;
+  -webkit-mask-image:linear-gradient(180deg,#000 55%,rgba(0,0,0,.25) 92%,transparent);mask-image:linear-gradient(180deg,#000 55%,rgba(0,0,0,.25) 92%,transparent)}
+html.th-aurora #sky .s1{background-image:url("media/n-stars.webp")}
+html.th-aurora #sky .s2{background-image:url("media/n-stars2.webp");background-position:180px 90px;animation:twinkle 3.2s ease-in-out infinite alternate}
+html.th-aurora #sky .a1,html.th-aurora #sky .a2{width:4800px;background-repeat:repeat-x;background-size:1600px 100%;mix-blend-mode:screen;transform-origin:50% 100%;will-change:transform}
+html.th-aurora #sky .a1{top:20%;height:70%;background-image:url("media/n-aur1.webp");animation:auroraMove 90s linear infinite;opacity:.95}
+html.th-aurora #sky .a2{top:24%;height:62%;background-image:url("media/n-aur2.webp");animation:auroraMove 130s linear infinite reverse;opacity:.7}
+html.th-aurora #sky .sea{position:absolute;left:0;right:0;top:72%;bottom:0;overflow:hidden}
+html.th-aurora #sky .sea>i{top:0}
+html.th-aurora #sky .sea{-webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.95),rgba(0,0,0,.55) 70%,rgba(0,0,0,.3));mask-image:linear-gradient(180deg,#000,rgba(0,0,0,.75) 70%,rgba(0,0,0,.5))}
+html.th-aurora #sky .r1,html.th-aurora #sky .r2{width:4800px;background-repeat:repeat-x;background-size:1600px 100%;mix-blend-mode:screen;transform-origin:50% 0;will-change:transform}
+html.th-aurora #sky .r1{top:-64.3%;height:250%;background-image:url("media/n-aur1r.webp");animation:auroraMove 90s linear infinite;opacity:1}
+html.th-aurora #sky .r2{top:-50%;height:221.4%;background-image:url("media/n-aur2r.webp");animation:auroraMove 130s linear infinite reverse;opacity:.55}
+html.th-aurora #sky .rs{width:100%;height:100%;background:url("media/n-starsr.webp") repeat;background-size:512px 512px;opacity:.55;
+  -webkit-mask-image:linear-gradient(180deg,#000,transparent 85%);mask-image:linear-gradient(180deg,#000,transparent 85%)}
+html.th-aurora #sky .wv{width:100%;height:calc(100% + 256px);background:url("media/n-waves.webp") repeat;background-size:512px 256px;opacity:.55;animation:waves 9s linear infinite;
+  -webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.35),#000 40%);mask-image:linear-gradient(180deg,rgba(0,0,0,.35),#000 40%)}
+@keyframes auroraMove{0%{transform:translate3d(0,0,0) scaleY(1)}50%{transform:translate3d(-800px,0,0) scaleY(1.14)}100%{transform:translate3d(-1600px,0,0) scaleY(1)}}
+@keyframes twinkle{from{opacity:.25}to{opacity:1}}
+@keyframes waves{from{transform:translate3d(0,-256px,0)}to{transform:translate3d(0,0,0)}}
+@media (prefers-reduced-motion:reduce){html.th-aurora #sky *{animation:none!important}}
+html.th-aurora #stage{z-index:1}
+html.th-aurora .tabs,html.th-aurora .langs,html.th-aurora .search-box,html.th-aurora .cart-btn,html.th-aurora .icon-btn,html.th-aurora .more-btn,html.th-aurora .stepper,
+html.th-aurora .fact,html.th-aurora .rv-item,html.th-aurora .rv-pick button,html.th-aurora .rv-form input,html.th-aurora .rv-form textarea,html.th-aurora .badge,html.th-aurora .d-ingr{
+  background:var(--lq-bg);border:1px solid rgba(255,255,255,.5);box-shadow:var(--lq-sh);-webkit-backdrop-filter:var(--lq-blur);backdrop-filter:var(--lq-blur);color:#fff;text-shadow:0 1px 2px rgba(30,15,50,.35)}
+html.th-aurora .search-box{border-color:rgba(255,255,255,.7)}
+html.th-aurora .tab{color:rgba(255,255,255,.92);text-shadow:0 1px 2px rgba(30,15,50,.4)}
+html.th-aurora .tab[aria-pressed="true"],html.th-aurora .langs button[aria-pressed="true"]{color:#22183A;text-shadow:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(255,255,255,.62));box-shadow:inset 0 1px 0 #fff,inset 0 -3px 6px rgba(80,50,90,.18),0 6px 16px rgba(20,12,45,.28)}
+html.th-aurora .card{background:linear-gradient(150deg,rgba(255,255,255,.20) 0%,rgba(255,255,255,.03) 28%,rgba(255,255,255,0) 60%,rgba(255,255,255,.08) 100%);border:1.5px solid rgba(255,255,255,.62);
+  box-shadow:inset 0 2.5px 1px rgba(255,255,255,1),inset 0 -2px 1px rgba(255,255,255,.65),inset 6px 6px 14px rgba(255,255,255,.30),inset -10px -10px 22px rgba(10,5,30,.24),
+    inset 2px 0 0 rgba(140,185,255,.5),inset -2px 0 0 rgba(255,150,120,.5),inset 0 0 0 1px rgba(255,255,255,.10),0 28px 60px rgba(10,8,35,.40),0 2px 6px rgba(10,8,35,.25)}
+html.th-aurora .slide.center .card{-webkit-backdrop-filter:blur(3px) saturate(175%) brightness(1.14) contrast(1.06);backdrop-filter:blur(3px) saturate(175%) brightness(1.14) contrast(1.06);border-color:rgba(255,255,255,.8)}
+html.th-aurora .card::before{content:"";position:absolute;inset:1px;border-radius:inherit;pointer-events:none;z-index:-1;
+  background:linear-gradient(118deg,rgba(255,255,255,0) 8%,rgba(255,255,255,.55) 13%,rgba(255,255,255,.08) 19%,rgba(255,255,255,0) 30%,rgba(255,255,255,0) 74%,rgba(255,255,255,.22) 80%,rgba(255,255,255,0) 86%),
+             radial-gradient(120% 60% at 20% 0%,rgba(255,255,255,.22),rgba(255,255,255,0) 55%)}
+html.th-aurora .card{isolation:isolate}
+html.th-aurora .slide.center .card{background-color:rgba(18,22,70,.20)}
+html.th-aurora .d-ingr,html.th-aurora .fact{background-color:rgba(18,22,70,.18)}
+html.th-aurora .slide .glow{box-shadow:0 0 0 3px rgba(255,255,255,.12),0 24px 70px rgba(255,140,110,.30)}
+html.th-aurora .media{background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.22),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.55);box-shadow:inset 0 2px 1px rgba(255,255,255,.95),inset 0 -2px 1px rgba(255,255,255,.4),inset -8px -8px 18px rgba(10,5,30,.25),inset 6px 6px 12px rgba(255,255,255,.2)}
+html.th-aurora .info h2,html.th-aurora .d-name{color:#fff;text-shadow:0 2px 6px rgba(30,15,50,.45)}
+html.th-aurora .info .price,html.th-aurora .d-price{color:#fff;text-shadow:0 2px 8px rgba(120,40,20,.55)}
+html.th-aurora .desc,html.th-aurora .d-desc,html.th-aurora .d-cat{color:#fff;text-shadow:0 1px 2px rgba(20,10,40,.75),0 0 10px rgba(20,10,40,.35)}
+html.th-aurora .add-btn,html.th-aurora .rv-send{background:var(--lq-coral);color:#fff;border:1px solid rgba(255,255,255,.6);text-shadow:0 1px 2px rgba(120,40,20,.45);
+  box-shadow:inset 0 2px 1px #fff,inset 0 -2px 1px rgba(255,255,255,.6),inset 4px 4px 8px rgba(255,255,255,.35),inset -5px -5px 10px rgba(120,30,10,.28),0 10px 24px rgba(200,80,50,.38);-webkit-backdrop-filter:blur(2px) saturate(170%);backdrop-filter:blur(2px) saturate(170%)}
+html.th-aurora .more-btn.kc{background:var(--lq-violet);border-color:rgba(255,255,255,.6)}
+html.th-aurora .stepper button{background:rgba(255,255,255,.28);box-shadow:inset 0 1px 0 #fff}
+html.th-aurora .badge.rt svg,html.th-aurora .stars .s-fg{color:#FFD36B}
+html.th-aurora .detail{background:rgba(20,30,80,.25);-webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%)}
+html.th-aurora .d-media{border-radius:28px;border:1px solid rgba(255,255,255,.6);box-shadow:inset 0 2px 0 rgba(255,255,255,.9),0 30px 70px rgba(15,10,40,.45)}
+html.th-aurora .drawer{background:linear-gradient(160deg,rgba(255,255,255,.26),rgba(255,255,255,.10));border-left:1px solid rgba(255,255,255,.55);box-shadow:inset 2px 0 0 rgba(255,255,255,.6);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%)}
+html.th-aurora .logo b,html.th-aurora .logo span{color:#fff;text-shadow:0 1px 4px rgba(30,15,50,.5)}
+.th-pick{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+.th-opt{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:8px;width:210px;padding:10px;border-radius:16px;border:1.5px solid var(--line);background:#1A1C21;color:var(--text);text-align:left;font-size:13px;font-weight:700}
+.th-opt.on{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,176,75,.18)}
+.th-opt em{position:absolute;top:16px;right:16px;font-style:normal;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:var(--gold);color:#17130A;padding:3px 7px;border-radius:8px}
+.th-sw{display:block;width:100%;height:96px;border-radius:11px;border:1px solid rgba(255,255,255,.1)}
+.th-sw-classic{background:radial-gradient(60% 50% at 50% 30%,rgba(232,176,75,.25),transparent 70%),linear-gradient(#17181c,#0e0f12)}
+.th-sw-aurora{background:linear-gradient(180deg,rgba(0,0,0,0) 62%,rgba(120,255,210,.5) 63%,rgba(0,0,0,0) 64.5%),url("media/n-aur1.webp") 0 15%/170% 75% no-repeat,url("media/n-stars.webp") 0 0/220px,linear-gradient(180deg,#010208,#071230 60%,#0d1c40 63%,#030914 64%,#01040c)}
 </style>
 </head>
 <body>
-<div id="menuView">
+<div id="menuView"><div id="sky" aria-hidden="true"><i class="s1"></i><i class="s2"></i><i class="a2"></i><i class="a1"></i><div class="sea"><i class="rs"></i><i class="r2"></i><i class="r1"></i><i class="wv"></i></div></div>
   <div id="stage" role="application" aria-label="Restoran menyusi">
     <header class="m-head">
       <div class="logo" id="logoBox"><img id="rLogo" class="hidden" alt="Restoran logotipi" draggable="false"><div class="lt"><b id="rName">RESTORAN</b><span id="rSub">RESTORAN</span></div></div>
@@ -606,7 +684,8 @@ html.ag-fab #adminView .adm-page,html.ag-fab #adminView .a-wrap{padding-bottom:8
 <div id="rotOverlay" class="rot hidden" aria-hidden="true"></div>
 <div id="adminView" class="hidden"></div>
 
-<script>
+<script>try{ var _tm=(location.search.match(/[?&]theme=(\w+)/)||[])[1]||localStorage.getItem('uno_theme'); if(_tm&&_tm!=='classic') document.documentElement.classList.add('th-'+_tm); }catch(_){}
+
 (function(){
 "use strict";
 var S = {
@@ -1590,6 +1669,14 @@ function qrTable(){
     return String(o.t).trim(); }catch(_){ return ""; }
 }
 /* waiter call / bill buttons stay hidden until the admin switches them on (the waiter stage is not live yet) */
+/* ---- menu themes (chosen in admin → Restoran, same on every device) ---- */
+var THEMES={classic:"Klassik (qora-oltin)", aurora:"Shimol yog'dusi (shisha, tungi dengiz)"};
+function applyTheme(){
+  var url=(location.search.match(/[?&]theme=(\w+)/)||[])[1], t=url||(S.settings&&S.settings.theme)||"classic", root=document.documentElement;
+  Object.keys(THEMES).forEach(function(k){ root.classList.toggle("th-"+k, k===t && k!=="classic"); });
+  var m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute("content", t==="aurora"?"#010208":"#0E0F12");
+  if(!url) try{ localStorage.setItem("uno_theme", t); }catch(_){}
+}
 function callsOn(){ return !!(S.settings && S.settings.callsOn); }
 function tableNo(){ var q=qrTable(); if(q) return q; var pk=pickedTable(); if(pk) return pk; try{ return (localStorage.getItem(TABLE_KEY)||"").trim(); }catch(_){ return ""; } }
 function setTableNo(v){ try{ v=String(v||"").trim().slice(0,12); if(v){ localStorage.setItem(TABLE_KEY,v); localStorage.setItem("uno_table_src","admin"); } else { localStorage.removeItem(TABLE_KEY); localStorage.removeItem("uno_table_src"); } }catch(_){} refreshCallUI(); }
@@ -2079,7 +2166,12 @@ function renderAdmin(){
   if(S.dbError) h+='<div class="msg err">Bazaga ulanib bo\'lmadi: '+esc(S.dbError)+'</div>';
   if(!S.loadedDishes) h+='<div class="msg">Yuklanmoqda…</div><div class="progress"><i></i></div>';
   // settings
-  h+='<section class="a-sec"><h2>Restoran</h2><div class="a-row" style="align-items:center">'+
+  var thNow=(S.settings&&S.settings.theme)||"classic";
+  h+='<section class="a-sec"><h2>Restoran</h2>'+
+     '<div style="margin-bottom:18px"><b style="font-size:14px">Menyu mavzusi (dizayn)</b><p class="help">Tanlangan mavzu barcha planshet va telefonlarda darhol almashadi.</p><div class="th-pick">'+
+     Object.keys(THEMES).map(function(k){ return '<button type="button" class="th-opt'+(k===thNow?' on':'')+'" data-a="setTheme" data-id="'+k+'" '+(ro?'disabled':'')+'><i class="th-sw th-sw-'+k+'"></i><span>'+esc(THEMES[k])+'</span>'+(k===thNow?'<em>Tanlangan</em>':'')+'</button>'; }).join("")+
+     '</div><div class="a-row" style="margin-top:8px"><a class="btn sm" href="?theme=aurora#menyu" target="_blank" rel="noopener">«Shimol yog\'dusi»ni oldindan ko\'rish</a></div><div class="msg" id="thMsg" hidden></div></div>'+
+     '<div class="a-row" style="align-items:center">'+
      '<div class="logo-pv" id="logoPv">'+(S.logoUploading?'<div style="width:80%"><div class="progress"><i></i></div></div>':(S.settings.logoId?'<img alt="Logotip" src="'+blob(S.settings.logoId)+'">':'Logotip yo\'q'))+'</div>'+
      '<div style="display:flex;flex-direction:column;gap:8px;flex:1;min-width:220px"><b style="font-size:14px">Logotip</b><p class="help">Fonsiz (shaffof) PNG tavsiya etiladi. Menyuning chap yuqori burchagida chiqadi.</p>'+
      (ro?'':'<div class="a-row"><label class="btn">Logotip tanlash<input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" class="sr"></label>'+(S.settings.logoId?'<button class="btn danger" data-a="rmLogo">Olib tashlash</button>':'')+'</div>')+'</div></div>'+
@@ -2264,12 +2356,13 @@ function errText(e){
 }
 async function saveSettings(patch){
   var next=Object.assign({}, S.settings, patch);
-  await S.db.doc("settings/main").set({name:next.name||"", cats:next.cats||[], logoId:next.logoId||"", soundOn:next.soundOn!==false, service:svcPct(next), zones:Array.isArray(next.zones)?next.zones:[], zonePick:!!next.zonePick, callsOn:!!next.callsOn});
+  await S.db.doc("settings/main").set({name:next.name||"", cats:next.cats||[], logoId:next.logoId||"", soundOn:next.soundOn!==false, service:svcPct(next), zones:Array.isArray(next.zones)?next.zones:[], zonePick:!!next.zonePick, callsOn:!!next.callsOn, theme:THEMES[next.theme]?next.theme:"classic"});
 }
 A.addEventListener("click", async function(e){
   var b=e.target.closest("[data-a]"); if(!b||b.disabled) return;
   var act=b.dataset.a, id=b.dataset.id;
   try{
+    if(act==="setTheme"){ if(!THEMES[id]) return; await saveSettings({theme:id}); S.settings.theme=id; applyTheme(); renderAdmin(); var tm=$("thMsg"); if(tm){ tm.hidden=false; msg(tm,"Mavzu saqlandi: "+THEMES[id]+". Menyular bir necha soniyada yangilanadi.","ok"); } return; }
     if(act==="aiBulk"){ aiBulk(); return; }
     if(act==="aiBulkStop"){ if(S.aiBulkCtl) S.aiBulkCtl.abort(); return; }
     if(act==="aiBulkSave"){ b.disabled=true; await aiBulkSave(); return; }
@@ -3405,7 +3498,7 @@ var AG_TOOLS=[
  {name:"update_settings", description:"Change restaurant settings.", parameters:{type:"OBJECT", properties:{
    name:{type:"STRING",description:"restaurant name"}, service:{type:"NUMBER",description:"service charge percent"},
    soundOn:{type:"BOOLEAN",description:"menu sound effects"}, callsOn:{type:"BOOLEAN",description:"waiter-call and bill buttons for guests"},
-   zonePick:{type:"BOOLEAN",description:"zone/table picker on restaurant tablets"}}}},
+   zonePick:{type:"BOOLEAN",description:"zone/table picker on restaurant tablets"}, theme:{type:"STRING",description:"menu design: classic (black-gold) or aurora (glass over a night sea with northern lights)"}}}},
  {name:"set_review_hidden", description:"Hide or show a customer review.", parameters:{type:"OBJECT", properties:{review_id:{type:"INTEGER"}, hidden:{type:"BOOLEAN"}}, required:["review_id","hidden"]}},
  {name:"get_reviews", description:"Read recent customer ratings and reviews (optionally of one dish, or only low ones).", parameters:{type:"OBJECT", properties:{dish_id:{type:"STRING"}, low_only:{type:"BOOLEAN"}, limit:{type:"INTEGER"}}}},
  {name:"get_attendance", description:"Staff attendance for a day: who came, when, who was late, who is absent.", parameters:{type:"OBJECT", properties:{date:{type:"STRING",description:"YYYY-MM-DD, default today"}}}},
@@ -3428,7 +3521,7 @@ function agSystem(){
    "New dish from a photo or video: identify the dish and every visible component, estimate each component's weight, the portion weight, calories, protein, fat and carbs per portion, typical cooking time, write an appetizing description and the ingredients — all in Uzbek, Russian and English. "+AI_RULES+"\n"+
    "Attachments are named att1, att2 … in the order the admin sent them; pass these ids in photo/video. For a video only, pass it as video (the app makes the cover photo from a frame).\n"+
    "Today is "+agToday()+" (Asia/Tashkent).\n\n"+
-   "RESTAURANT SETTINGS: name="+(st.name||"UNO Airways")+"; service="+svcPct(st)+"%; soundOn="+(st.soundOn!==false)+"; callsOn="+!!st.callsOn+"; zonePick="+!!st.zonePick+"\n\n"+
+   "RESTAURANT SETTINGS: name="+(st.name||"UNO Airways")+"; service="+svcPct(st)+"%; soundOn="+(st.soundOn!==false)+"; callsOn="+!!st.callsOn+"; zonePick="+!!st.zonePick+"; theme="+(st.theme||"classic")+"\n\n"+
    "CATEGORIES (id = name):\n"+(cs||"(none)")+"\n\nDISHES (id | name | category id | price | kcal | weight | media | rating):\n"+(ds||"(none)");
 }
 
@@ -3664,7 +3757,7 @@ function agDescribe(c){
   } else if(c.name==="delete_dish"){ d=agDish(a.dish_id); h='<div class="ag-act del"><div><em>O\'chirish</em><b>'+esc(d?d.name:a.dish_id)+'</b><p class="sm">Taom menyudan butunlay o\'chiriladi.</p></div></div>'; }
   else if(c.name==="add_category"){ h='<div class="ag-act"><div><em>Yangi kategoriya</em><b>'+esc(a.label)+'</b><p class="sm muted">RU: '+esc(a.label_ru||"—")+' · EN: '+esc(a.label_en||"—")+'</p></div></div>'; }
   else if(c.name==="rename_category"){ h='<div class="ag-act"><div><em>Kategoriya nomi</em><b>'+esc(agCatName(a.cat_id))+' → '+esc(a.label||agCatName(a.cat_id))+'</b>'+(a.label_ru||a.label_en?'<p class="sm muted">RU: '+esc(a.label_ru||"—")+' · EN: '+esc(a.label_en||"—")+'</p>':'')+'</div></div>'; }
-  else if(c.name==="update_settings"){ var N={name:"Restoran nomi",service:"Xizmat haqi, %",soundOn:"Menyu ovozlari",callsOn:"Ofitsiant/hisob tugmalari",zonePick:"Zona tanlash (planshet)"};
+  else if(c.name==="update_settings"){ var N={name:"Restoran nomi",service:"Xizmat haqi, %",soundOn:"Menyu ovozlari",callsOn:"Ofitsiant/hisob tugmalari",zonePick:"Zona tanlash (planshet)",theme:"Menyu mavzusi"};
     h='<div class="ag-act"><div><em>Sozlamalar</em>'+Object.keys(N).filter(function(k){ return a[k]!==undefined; }).map(function(k){ var v=a[k]; return '<p class="sm"><i>'+N[k]+':</i> <b>'+(typeof v==="boolean"?(v?"yoqiladi":"o'chiriladi"):esc(String(v)))+'</b></p>'; }).join("")+'</div></div>'; }
   else if(c.name==="set_review_hidden"){ h='<div class="ag-act"><div><em>Izoh #'+esc(String(a.review_id))+'</em><b>'+(a.hidden?"Yashiriladi":"Ko'rsatiladi")+'</b></div></div>'; }
   return h;
@@ -3790,7 +3883,7 @@ async function agRunWrite(c){
   }
   if(c.name==="update_settings"){
     var p={}; if(a.name!==undefined) p.name=String(a.name).trim(); if(a.service!==undefined) p.service=Math.max(0,Math.min(50,Number(a.service)||0));
-    ["soundOn","callsOn","zonePick"].forEach(function(k){ if(a[k]!==undefined) p[k]=!!a[k]; });
+    ["soundOn","callsOn","zonePick"].forEach(function(k){ if(a[k]!==undefined) p[k]=!!a[k]; }); if(a.theme!==undefined&&THEMES[a.theme]) p.theme=a.theme;
     if(!Object.keys(p).length) return {ok:false,error:"o'zgarish yo'q"};
     await netRetry(function(){ return saveSettings(p); });
     return {ok:true, label:"Sozlamalar saqlandi"};
@@ -3824,15 +3917,15 @@ async function init(){
   if(!S.db){
     var cc=null; try{ cc=JSON.parse(localStorage.getItem(CACHE_KEY)||"null"); }catch(_){}
     clearTimeout(timer);
-    if(cc){ var sm=cc["settings/main"]||{}; S.settings={name:sm.name||"",logoId:String(sm.logoId||""),soundOn:sm.soundOn!==false,service:sm.service,cats:Array.isArray(sm.cats)?sm.cats:[],zones:Array.isArray(sm.zones)?sm.zones:[],zonePick:!!sm.zonePick,callsOn:!!sm.callsOn};
+    if(cc){ var sm=cc["settings/main"]||{}; S.settings={name:sm.name||"",logoId:String(sm.logoId||""),soundOn:sm.soundOn!==false,service:sm.service,cats:Array.isArray(sm.cats)?sm.cats:[],zones:Array.isArray(sm.zones)?sm.zones:[],zonePick:!!sm.zonePick,callsOn:!!sm.callsOn,theme:sm.theme||"classic"}; applyTheme();
       S.dishes=Object.keys(cc).filter(function(k){return k.indexOf("dishes/")===0;}).map(function(k){ var d=cc[k]||{}; var o={id:k.slice(7),name:String(d.name||""),desc:String(d.desc||""),price:Number(d.price)||0,cat:String(d.cat||""),order:Number(d.order)||0,imgId:String(d.imgId||""),videoId:String(d.videoId||""),weight:String(d.weight||""),time:Number(d.time)||0,kcal:Number(d.kcal)||0,prot:Number(d.prot)||0,fat:Number(d.fat)||0,carb:Number(d.carb)||0,kcalEst:!!d.kcalEst}; ["ingr","name_ru","desc_ru","ingr_ru","name_en","desc_en","ingr_en"].forEach(function(x){ o[x]=String(d[x]||""); }); return o; });
       S.loadedSettings=true; }
     else note.textContent="Menyu ma'lumotlarini olib bo'lmadi. Internetni tekshiring.";
     S.loadedDishes=true; onData(); if(!cc) setTimeout(function(){ location.reload(); },30000); return;
   }
   S.db.doc("settings/main").onSnapshot(function(snap){
-    var d=snap.exists?snap.data():{}; S.settings={name:(d&&d.name)||"", logoId:String((d&&d.logoId)||""), soundOn:!(d&&d.soundOn===false), service:d&&d.service, cats:Array.isArray(d&&d.cats)?d.cats.filter(function(c){return c&&c.id&&c.label;}):[], zones:Array.isArray(d&&d.zones)?d.zones:[], zonePick:!!(d&&d.zonePick), callsOn:!!(d&&d.callsOn)};
-    S.loadedSettings=true; onData(); try{ refreshCallUI(); }catch(_){}
+    var d=snap.exists?snap.data():{}; S.settings={name:(d&&d.name)||"", logoId:String((d&&d.logoId)||""), soundOn:!(d&&d.soundOn===false), service:d&&d.service, cats:Array.isArray(d&&d.cats)?d.cats.filter(function(c){return c&&c.id&&c.label;}):[], zones:Array.isArray(d&&d.zones)?d.zones:[], zonePick:!!(d&&d.zonePick), callsOn:!!(d&&d.callsOn), theme:(d&&d.theme)||"classic"};
+    applyTheme(); S.loadedSettings=true; onData(); try{ refreshCallUI(); }catch(_){}
   });
   S.db.collection("dishes").onSnapshot(function(snap){
     S.dishes=snap.docs.map(function(doc){ var d=doc.data()||{}; var o={id:doc.id,name:String(d.name||""),desc:String(d.desc||""),price:Number(d.price)||0,cat:String(d.cat||""),order:Number(d.order)||0,imgId:String(d.imgId||""),videoId:String(d.videoId||""),weight:String(d.weight||""),time:Number(d.time)||0,kcal:Number(d.kcal)||0,prot:Number(d.prot)||0,fat:Number(d.fat)||0,carb:Number(d.carb)||0,kcalEst:!!d.kcalEst};
