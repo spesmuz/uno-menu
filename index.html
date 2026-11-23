@@ -805,6 +805,50 @@ html.in-app #agPanel{bottom:var(--appB,0px)!important;padding-bottom:0!important
 /* menu: panels opened over the menu end above the tab bar (their dim backdrop still runs under it) */
 .overlay>.drawer{border-bottom:var(--insB,0px) solid transparent;background-clip:border-box}
 .detail{border-bottom:var(--insB,0px) solid transparent}
+
+/* ================= UNO AI for guests ================= */
+.gai-fab{position:absolute;left:32px;bottom:17px;z-index:260;width:54px;height:54px;border-radius:50%;border:1px solid rgba(255,214,120,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
+  color:#1A1306;background:radial-gradient(circle at 35% 30%,#FFF1C2,#FFC94D 55%,#D99A22);box-shadow:0 0 0 4px rgba(255,201,77,.14),0 10px 26px rgba(0,0,0,.45);cursor:pointer;margin-bottom:var(--insB,0px);animation:gaiPulse 3.2s ease-in-out infinite}
+.gai-fab svg{width:22px;height:22px}.gai-fab b{font:800 10px/1 inherit;letter-spacing:.08em;margin-top:1px}
+@keyframes gaiPulse{0%,100%{box-shadow:0 0 0 4px rgba(255,201,77,.14),0 10px 26px rgba(0,0,0,.45)}50%{box-shadow:0 0 0 10px rgba(255,201,77,.05),0 10px 26px rgba(0,0,0,.45)}}
+#stage.phone .gai-fab{left:12px;bottom:6px;width:48px;height:48px}
+#stage.phoneL .gai-fab{bottom:4px;width:44px;height:44px}
+#gai{position:fixed;inset:0;z-index:9000;display:flex;align-items:flex-end;justify-content:center;background:rgba(2,5,16,.45);opacity:0;pointer-events:none;transition:opacity .25s}
+#gai.on{opacity:1;pointer-events:auto}
+#gai .gai-sheet{width:min(560px,100%);height:min(80vh,760px);margin-bottom:var(--appB,0px);display:flex;flex-direction:column;border-radius:26px 26px 0 0;overflow:hidden;
+  background:linear-gradient(170deg,rgba(28,40,84,.86),rgba(8,14,34,.92));border:1px solid rgba(255,255,255,.16);border-bottom:0;-webkit-backdrop-filter:blur(22px) saturate(150%);backdrop-filter:blur(22px) saturate(150%);
+  box-shadow:0 -20px 60px rgba(0,0,0,.5);transform:translateY(40px);transition:transform .3s cubic-bezier(.2,.8,.2,1);color:#F2F6FF}
+#gai.on .gai-sheet{transform:none}
+@media (orientation:landscape) and (max-height:520px){#gai .gai-sheet{height:calc(100vh - 16px - var(--appB,0px));border-radius:22px 22px 0 0}}
+.gai-head{display:flex;align-items:center;gap:12px;padding:16px 16px 12px;border-bottom:1px solid rgba(255,255,255,.1)}
+.gai-ava{flex:none;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#1A1306;background:radial-gradient(circle at 35% 30%,#FFF1C2,#FFC94D 55%,#D99A22)}
+.gai-ava svg{width:22px;height:22px}
+.gai-head h3{margin:0;font-size:17px}.gai-head p{margin:2px 0 0;font-size:12px;color:#A9B8D6}
+.gai-x{margin-left:auto;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:#fff;font-size:18px;cursor:pointer}
+.gai-log{flex:1;overflow-y:auto;padding:14px 14px 6px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch}
+.gai-m{max-width:86%;padding:10px 13px;border-radius:18px;font-size:15px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word}
+.gai-m.ai{align-self:flex-start;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-bottom-left-radius:6px}
+.gai-m.me{align-self:flex-end;background:linear-gradient(180deg,#FFE08A,#FFC94D);color:#1A1306;border-bottom-right-radius:6px}
+.gai-m.err{border-color:rgba(255,120,120,.45);color:#FFC2C2}
+.gai-cards{display:flex;flex-direction:column;gap:8px;margin-top:8px;white-space:normal}
+.gai-card{display:flex;align-items:center;gap:10px;width:100%;padding:7px;border-radius:14px;border:1px solid rgba(255,214,120,.35);background:rgba(3,7,20,.45);color:inherit;text-align:left;cursor:pointer}
+.gai-card img,.gai-card .ph{flex:none;width:52px;height:52px;border-radius:10px;object-fit:cover;background:rgba(255,255,255,.08)}
+.gai-card b{display:block;font-size:14px}.gai-card small{display:block;color:#FFD67A;font-size:13px;margin-top:2px}
+.gai-card i{margin-left:auto;font-style:normal;font-size:12px;color:#A9B8D6;padding-right:4px;white-space:nowrap}
+.gai-typing{align-self:flex-start;display:flex;gap:4px;padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.08)}
+.gai-typing span{width:7px;height:7px;border-radius:50%;background:#FFD67A;opacity:.4;animation:agDot 1s infinite}
+.gai-typing span:nth-child(2){animation-delay:.15s}.gai-typing span:nth-child(3){animation-delay:.3s}
+.gai-chips{display:flex;gap:8px;overflow-x:auto;padding:4px 14px 10px;scrollbar-width:none}
+.gai-chips::-webkit-scrollbar{display:none}
+.gai-chips button{flex:none;padding:8px 12px;border-radius:16px;border:1px solid rgba(255,214,120,.35);background:rgba(255,255,255,.06);color:#FFE7A6;font-size:13px;cursor:pointer}
+.gai-in{display:flex;gap:8px;padding:10px 12px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid rgba(255,255,255,.1)}
+html.in-app .gai-in{padding-bottom:12px}
+.gai-in textarea{flex:1;resize:none;height:44px;max-height:110px;padding:11px 14px;border-radius:22px;border:1px solid rgba(255,255,255,.18);background:rgba(3,7,20,.55);color:#fff;font:15px/1.4 inherit;outline:none}
+.gai-in textarea:focus{border-color:#FFC94D}
+.gai-in button{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:linear-gradient(180deg,#FFE08A,#FFC94D);color:#1A1306;font-size:18px;cursor:pointer}
+.gai-in button:disabled{opacity:.45}
+.slide.gai-hl .card{animation:gaiHl 1.6s ease 2}
+@keyframes gaiHl{50%{box-shadow:0 0 0 3px #FFC94D,0 0 40px rgba(255,201,77,.55)}}
 </style>
 </head>
 <body>
@@ -836,6 +880,7 @@ html.in-app #agPanel{bottom:var(--appB,0px)!important;padding-bottom:0!important
     <div id="cartHost"></div>
     <div class="status-note" id="statusNote"></div>
     <div class="dots" id="dots"></div>
+    <button class="gai-fab" id="gaiFab" type="button" aria-label="UNO AI"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l1.9 5.3 5.3 1.9-5.3 1.9L12 16.9l-1.9-5.3-5.3-1.9 5.3-1.9z" fill="currentColor"/><path d="M19 14.5l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9z" fill="currentColor" opacity=".8"/></svg><b>AI</b></button>
     <div class="langs float" id="langs" role="group" aria-label="Til"><button data-lang="uz" aria-pressed="true">UZ</button><button data-lang="ru" aria-pressed="false">RU</button><button data-lang="en" aria-pressed="false">EN</button></div>
   </div>
 </div>
@@ -2226,6 +2271,106 @@ function setSearch(open){
   $("searchBox").classList.toggle("hidden",!open); $("tabs").classList.toggle("hidden",open);
   if(open){ $("searchInput").value=""; $("searchInput").focus(); } else { S.query=""; showResults(false); }
 }
+/* ================= UNO AI for guests: tells about the menu and suggests dishes; it changes nothing ================= */
+var GAI={open:false, msgs:[], busy:false, model:null, el:null};
+var GAI_T={
+  uz:{sub:"Menyu bo'yicha yordamchingiz", hi:function(n){ return "Bortga xush kelibsiz"+(n?", "+n:"")+"! ✈️ Men UNO AI — menyumiz bo'yicha yordamchingizman. Bugun qanday kayfiyatdasiz: to'yimli go'shtli taommi, yengil salatmi yoki shirinlik? Ayting, sizga mosini topib beraman."; },
+      ph:"Savolingizni yozing…", chips:["Nima tavsiya qilasiz?","Go'shtli taom","Yengil taom","Bolalar uchun","Shirinlik"], see:"Menyuda ko'rish", err:"Hozir javob bera olmayapman. Birozdan keyin yana urinib ko'ring yoki +998 91 881 69 79 ga qo'ng'iroq qiling.", busy:"Juda ko'p savol bo'ldi — bir daqiqadan keyin davom etamiz 🙂", off:"Internet yo'q. Ulanib, qayta yuboring."},
+  ru:{sub:"Ваш помощник по меню", hi:function(n){ return "Добро пожаловать на борт"+(n?", "+n:"")+"! ✈️ Я UNO AI — помогу с выбором из нашего меню. Какое сегодня настроение: что-нибудь сытное мясное, лёгкий салат или десерт? Расскажите — подберу подходящее."; },
+      ph:"Напишите вопрос…", chips:["Что посоветуете?","Мясное","Что-то лёгкое","Для детей","Десерт"], see:"Показать в меню", err:"Сейчас не получается ответить. Попробуйте чуть позже или позвоните +998 91 881 69 79.", busy:"Слишком много вопросов — продолжим через минуту 🙂", off:"Нет интернета. Подключитесь и отправьте снова."},
+  en:{sub:"Your menu assistant", hi:function(n){ return "Welcome aboard"+(n?", "+n:"")+"! ✈️ I'm UNO AI, here to help you choose from our menu. What are you in the mood for: something hearty with meat, a light salad or a dessert? Tell me and I'll find the right dish."; },
+      ph:"Type your question…", chips:["What do you recommend?","Something with meat","Something light","For kids","Dessert"], see:"Show in menu", err:"I can't answer right now. Please try again shortly or call +998 91 881 69 79.", busy:"Lots of questions at once — let's continue in a minute 🙂", off:"No internet. Connect and send again."}
+};
+function gaiT(){ return GAI_T[S.lang]||GAI_T.uz; }
+function gaiDev(){ try{ var v=localStorage.getItem("uno_gdev"); if(!v){ v="g-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,10); localStorage.setItem("uno_gdev",v); } return v; }catch(_){ return "g-anon-"+Math.random().toString(36).slice(2,10); } }
+var GAI_ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l1.9 5.3 5.3 1.9-5.3 1.9L12 16.9l-1.9-5.3-5.3-1.9 5.3-1.9z" fill="currentColor"/><path d="M19 14.5l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9z" fill="currentColor" opacity=".8"/></svg>';
+function gaiBuild(){
+  if(GAI.el) return GAI.el;
+  var el=document.createElement("div"); el.id="gai"; el.setAttribute("role","dialog"); el.setAttribute("aria-modal","true"); el.setAttribute("aria-label","UNO AI");
+  el.innerHTML='<div class="gai-sheet"><div class="gai-head"><span class="gai-ava">'+GAI_ICON+'</span><div><h3>UNO AI</h3><p id="gaiSub"></p></div><button class="gai-x" type="button" data-gai="close" aria-label="×">✕</button></div>'+
+    '<div class="gai-log" id="gaiLog" aria-live="polite"></div><div class="gai-chips" id="gaiChips"></div>'+
+    '<form class="gai-in" id="gaiForm"><textarea id="gaiIn" rows="1" maxlength="500" enterkeyhint="send"></textarea><button type="submit" id="gaiSend" aria-label="➤">➤</button></form></div>';
+  document.body.appendChild(el); GAI.el=el;
+  el.addEventListener("click",function(e){
+    if(e.target===el || e.target.closest("[data-gai=close]")){ gaiShow(false); return; }
+    var c=e.target.closest("[data-gchip]"); if(c){ gaiSend(c.textContent); return; }
+    var d=e.target.closest("[data-gdish]"); if(d){ gaiGoDish(d.dataset.gdish); }
+  });
+  $("gaiForm").addEventListener("submit",function(e){ e.preventDefault(); gaiSend($("gaiIn").value); });
+  $("gaiIn").addEventListener("keydown",function(e){ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); gaiSend(this.value); } });
+  $("gaiIn").addEventListener("input",function(){ this.style.height="44px"; this.style.height=Math.min(110,this.scrollHeight)+"px"; });
+  return el;
+}
+function gaiShow(on){
+  var el=gaiBuild(); GAI.open=on;
+  if(on){
+    if(!GAI.msgs.length){ var pf=null; try{ pf=prof(); }catch(_){} GAI.msgs.push({role:"model", text:gaiT().hi(pf&&pf.name?pf.name.split(/\s+/)[0]:""), local:true}); }
+    gaiRender(); el.classList.add("on"); setTimeout(function(){ if(!matchMedia("(pointer:coarse)").matches) $("gaiIn").focus(); },250);
+  } else el.classList.remove("on");
+}
+function gaiDishHTML(id){
+  var d=S.dishes.find(function(x){ return x.id===id; }); if(!d) return "";
+  return '<button type="button" class="gai-card" data-gdish="'+esc(d.id)+'">'+(d.imgId?'<img alt="" src="'+blob(d.imgId)+'">':'<span class="ph"></span>')+'<span><b>'+esc(dn(d))+'</b><small>'+esc(fmtL(d.price))+'</small></span><i>'+esc(gaiT().see)+' ›</i></button>';
+}
+function gaiFormat(m){
+  var ids=[], txt=String(m.text||"").replace(/\[\[([^\]\s]{1,64})\]\]/g,function(_,id){ if(ids.indexOf(id)<0) ids.push(id); return ""; });
+  txt=esc(txt.replace(/\*\*(.+?)\*\*/g,"$1").replace(/^#+\s*/gm,"").replace(/[ \t]+([.,!?])/g,"$1").replace(/ {2,}/g," ").trim());
+  var cards=ids.map(gaiDishHTML).join("");
+  return txt+(cards?'<div class="gai-cards">'+cards+'</div>':'');
+}
+function gaiRender(){
+  var log=$("gaiLog"); if(!log) return; var T=gaiT();
+  $("gaiSub").textContent=T.sub; $("gaiIn").placeholder=T.ph;
+  log.innerHTML=GAI.msgs.map(function(m){ return '<div class="gai-m '+(m.role==="user"?"me":"ai")+(m.err?" err":"")+'">'+(m.role==="user"?esc(m.text):gaiFormat(m))+'</div>'; }).join("")+(GAI.busy?'<div class="gai-typing"><span></span><span></span><span></span></div>':'');
+  $("gaiChips").innerHTML=GAI.msgs.filter(function(m){ return m.role==="user"; }).length<2 && !GAI.busy ? T.chips.map(function(c){ return '<button type="button" data-gchip>'+esc(c)+'</button>'; }).join("") : "";
+  $("gaiSend").disabled=GAI.busy;
+  requestAnimationFrame(function(){ log.scrollTop=log.scrollHeight; });
+}
+function gaiGoDish(id){
+  var d=S.dishes.find(function(x){ return x.id===id; }); if(!d) return;
+  gaiShow(false); if(S.detail) try{ closeDetail(); }catch(_){}
+  try{ setSearch(false); }catch(_){}
+  S.cat=d.cat; renderTabs(); buildSlides();
+  var i=curList.findIndex(function(x){ return x.id===d.id; });
+  if(i>=0){ S.idx=i; layout(); try{ SFX.dish(); }catch(_){}
+    setTimeout(function(){ var el=slideNodes[i]; if(el){ el.classList.add("gai-hl"); setTimeout(function(){ el.classList.remove("gai-hl"); },3400); } },350); }
+}
+var GAI_MODELS=["gemini-2.5-flash","gemini-flash-latest","gemini-2.0-flash","gemini-flash-lite-latest"];
+async function gaiAsk(hist){
+  var dev=gaiDev(), list=GAI.model?[GAI.model].concat(GAI_MODELS.filter(function(x){ return x!==GAI.model; })):GAI_MODELS.slice();
+  var lastErr="err";
+  for(var mi=0; mi<list.length && mi<3; mi++){
+    var r=await sbRpc("uno_guest_ai_ask",{p_device:dev, p_msgs:hist, p_lang:S.lang, p_model:list[mi]});
+    if(r.error){ var em=String(r.error.message||r.error); if(/rate_limited/.test(em)) throw "busy"; throw "err"; }
+    var id=r.data, t0=Date.now();
+    while(Date.now()-t0<45000){
+      await new Promise(function(ok){ setTimeout(ok, 900); });
+      var q=await sbRpc("uno_guest_ai_reply",{p_id:id, p_device:dev});
+      if(q.error) continue;
+      var v=q.data||{};
+      if(v.pending) continue;
+      if(v.ok){ GAI.model=list[mi]; return v.text; }
+      if(v.status===404 || v.status===400){ lastErr="model"; break; }
+      if(v.status===429) throw "busy";
+      throw "err";
+    }
+    if(lastErr!=="model") throw "err";
+  }
+  throw "err";
+}
+async function gaiSend(text){
+  text=String(text||"").trim(); if(!text || GAI.busy) return;
+  if(navigator.onLine===false){ GAI.msgs.push({role:"model", text:gaiT().off, err:true, local:true}); gaiRender(); return; }
+  $("gaiIn").value=""; $("gaiIn").style.height="44px";
+  GAI.msgs.push({role:"user", text:text}); GAI.busy=true; gaiRender();
+  var hist=[], seen=false;
+  GAI.msgs.forEach(function(m){ if(m.local||m.err) return; if(m.role==="user") seen=true; if(seen) hist.push({role:m.role, text:m.text}); });
+  try{ var ans=await gaiAsk(hist.slice(-14)); GAI.msgs.push({role:"model", text:ans}); }
+  catch(e){ GAI.msgs.push({role:"model", text:e==="busy"?gaiT().busy:gaiT().err, err:true, local:true}); }
+  GAI.busy=false; gaiRender();
+}
+$("gaiFab").addEventListener("click",function(){ gaiShow(true); });
+document.addEventListener("keydown",function(e){ if(e.key==="Escape" && GAI.open) gaiShow(false); });
 $("searchBtn").onclick=function(){ setSearch($("searchBox").classList.contains("hidden")); };
 $("searchClose").onclick=function(e){ e.preventDefault(); setSearch(false); };
 $("searchInput").addEventListener("input",function(){ S.query=this.value.trim().toLowerCase(); showResults(!!S.query); });
@@ -4706,7 +4851,7 @@ async function init(){
   rvLoadSum(); setInterval(rvLoadSum, 5*60*1000);
   if(S.view==="admin") renderAdmin();
 }
-window.unoBack=function(){ if(S.detail){ closeDetail(); return 1; } if(S.cartOpen){ S.cartOpen=false; S.confirmClear=false; renderCart(); return 1; } if(S.view==="admin"){ location.hash="#menyu"; return 1; } return 0; };
+window.unoBack=function(){ if(typeof GAI!=="undefined"&&GAI.open){ gaiShow(false); return 1; } if(S.detail){ closeDetail(); return 1; } if(S.cartOpen){ S.cartOpen=false; S.confirmClear=false; renderCart(); return 1; } if(S.view==="admin"){ location.hash="#menyu"; return 1; } return 0; };
 init();
 })();
 </script>
