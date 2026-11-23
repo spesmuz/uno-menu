@@ -298,7 +298,13 @@ def main():
             call("POST", "/v1/reviewSubmissionItems", {"data": {"type": "reviewSubmissionItems", "relationships": {
                  "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": SID}},
                  "appStoreVersion": {"data": {"type": "appStoreVersions", "id": V}}}}})
-        call("PATCH", f"/v1/reviewSubmissions/{SID}", {"data": {"type": "reviewSubmissions", "id": SID, "attributes": {"submitted": True}}})
+        for k in range(16):   # freshly uploaded screenshots / build need a few minutes before Apple accepts the submission
+            try:
+                call("PATCH", f"/v1/reviewSubmissions/{SID}", {"data": {"type": "reviewSubmissions", "id": SID, "attributes": {"submitted": True}}})
+                break
+            except RuntimeError as e:
+                if "not ready" not in str(e) and "STATE_ERROR" not in str(e) or k == 15: raise
+                log(f"     not ready yet, waiting ({k+1})"); time.sleep(45)
         return "SUBMITTED — waiting for review"
     step("submit for review", submit)
 
