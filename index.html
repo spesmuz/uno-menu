@@ -2,7 +2,7 @@
 <html lang="uz">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>UNO Airways Restaurante</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/menu-192.png">
@@ -771,7 +771,7 @@ html.th-aurora #adminView{background:radial-gradient(90% 60% at 30% 0%,rgba(60,2
 :is(html.th-boarding,html.th-aurora) .ag-btns button{background:rgba(255,255,255,.08)}
 #adminView .adm-tabs{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 18px,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(90deg,transparent 0,#000 18px,#000 calc(100% - 18px),transparent)}
 .adm-lang{display:inline-flex;gap:2px;padding:3px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16)}
-.adm-lang button{min-width:40px;height:30px;border:0;border-radius:9px;background:transparent;color:var(--muted);font:700 12px/1 inherit;letter-spacing:.5px;cursor:pointer}
+.adm-lang button{min-width:40px;height:30px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-family:inherit;font-weight:700;font-size:12px;line-height:1;letter-spacing:.5px;cursor:pointer}
 .adm-lang button.on{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#1A1306}
 #atrNote{position:fixed;left:50%;top:max(12px,env(safe-area-inset-top));transform:translateX(-50%);z-index:9999;padding:8px 14px;border-radius:12px;background:rgba(10,16,36,.92);border:1px solid rgba(255,255,255,.18);color:#fff;font-size:13px;pointer-events:none}
 /* all admin checkboxes become switches */
@@ -809,7 +809,7 @@ html.in-app #agPanel{bottom:var(--appB,0px)!important;padding-bottom:0!important
 /* ================= UNO AI for guests ================= */
 .gai-fab{position:absolute;left:32px;bottom:17px;z-index:260;width:54px;height:54px;border-radius:50%;border:1px solid rgba(255,214,120,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
   color:#1A1306;background:radial-gradient(circle at 35% 30%,#FFF1C2,#FFC94D 55%,#D99A22);box-shadow:0 0 0 4px rgba(255,201,77,.14),0 10px 26px rgba(0,0,0,.45);cursor:pointer;margin-bottom:var(--insB,0px);animation:gaiPulse 3.2s ease-in-out infinite}
-.gai-fab svg{width:22px;height:22px}.gai-fab b{font:800 10px/1 inherit;letter-spacing:.08em;margin-top:1px}
+.gai-fab svg{width:22px;height:22px}.gai-fab b{font-family:inherit;font-weight:800;font-size:10px;line-height:1;letter-spacing:.08em;margin-top:1px}
 @keyframes gaiPulse{0%,100%{box-shadow:0 0 0 4px rgba(255,201,77,.14),0 10px 26px rgba(0,0,0,.45)}50%{box-shadow:0 0 0 10px rgba(255,201,77,.05),0 10px 26px rgba(0,0,0,.45)}}
 #stage.phone .gai-fab{left:12px;bottom:6px;width:48px;height:48px}
 #stage.phoneL .gai-fab{bottom:4px;width:44px;height:44px}
@@ -844,7 +844,7 @@ html.in-app #agPanel{bottom:var(--appB,0px)!important;padding-bottom:0!important
 .gai-chips button{flex:none;padding:8px 12px;border-radius:16px;border:1px solid rgba(255,214,120,.35);background:rgba(255,255,255,.06);color:#FFE7A6;font-size:13px;cursor:pointer}
 .gai-in{display:flex;gap:8px;padding:10px 12px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid rgba(255,255,255,.1)}
 html.in-app .gai-in{padding-bottom:12px}
-.gai-in textarea{flex:1;resize:none;height:44px;max-height:110px;padding:11px 14px;border-radius:22px;border:1px solid rgba(255,255,255,.18);background:rgba(3,7,20,.55);color:#fff;font:16px/1.4 inherit;outline:none}
+.gai-in textarea{flex:1;resize:none;height:44px;max-height:110px;padding:11px 14px;border-radius:22px;border:1px solid rgba(255,255,255,.18);background:rgba(3,7,20,.55);color:#fff;font-family:inherit;font-size:16px;line-height:1.4;outline:none}
 .gai-in textarea:focus{border-color:#FFC94D}
 .gai-in button{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:linear-gradient(180deg,#FFE08A,#FFC94D);color:#1A1306;font-size:18px;cursor:pointer}
 .gai-in button:disabled{opacity:.45}
