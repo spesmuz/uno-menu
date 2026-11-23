@@ -294,6 +294,21 @@ def main():
         SID = open_["id"] if open_ else call("POST", "/v1/reviewSubmissions", {"data": {"type": "reviewSubmissions", "attributes": {"platform": "IOS"},
               "relationships": {"app": {"data": {"type": "apps", "id": APP}}}}})["data"]["id"]
         items = call("GET", f"/v1/reviewSubmissions/{SID}/items")["data"]
+        log("     submission " + (open_["attributes"].get("state") if open_ else "new") + "; items: " + ", ".join(i["attributes"].get("state", "?") for i in items))
+        if open_ and open_["attributes"].get("state") == "UNRESOLVED_ISSUES":
+            # after a rejection the old submission keeps the rejected item: cancel it and send a fresh one
+            try:
+                call("PATCH", f"/v1/reviewSubmissions/{SID}", {"data": {"type": "reviewSubmissions", "id": SID, "attributes": {"canceled": True}}})
+                log("     old rejected submission canceled")
+                for _ in range(20):
+                    st = call("GET", f"/v1/reviewSubmissions/{SID}")["data"]["attributes"].get("state")
+                    if st not in ("CANCELING",): break
+                    time.sleep(15)
+            except Exception as e:
+                log(f"     cancel failed — {e}")
+            SID = call("POST", "/v1/reviewSubmissions", {"data": {"type": "reviewSubmissions", "attributes": {"platform": "IOS"},
+                  "relationships": {"app": {"data": {"type": "apps", "id": APP}}}}})["data"]["id"]
+            items = []
         if not items:
             call("POST", "/v1/reviewSubmissionItems", {"data": {"type": "reviewSubmissionItems", "relationships": {
                  "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": SID}},
