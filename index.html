@@ -3165,6 +3165,46 @@ async function trAll(){
   box=$("aiBulkBox");
   setAiBox('<div class="msg '+(lastErr?'err':'ok')+'">'+done+' ta taom'+(cs.length?' va kategoriyalar':'')+' tarjima qilindi'+(lastErr?'. Xato: '+esc(lastErr):'.')+'</div>');
 }
+/* while an admin is signed in, anything still missing Russian or English (a new category, a new dish)
+   is translated in the background — guests then see the whole menu in the language they chose */
+var AUTO_TR={busy:false, tried:{}, t:0};
+function autoTr(){
+  if(!S.sbSession || !S.sample || !S.db) return;
+  if(S.aiOn===undefined){ if(!sessionOK()) return; S.aiOn=null; S.sb.rpc("uno_ai_status").then(function(r){ S.aiOn=r.error?false:!!r.data; S.aiSql=!r.error; autoTr(); }); return; }
+  if(!S.aiOn || AUTO_TR.busy) return;
+  clearTimeout(AUTO_TR.t); AUTO_TR.t=setTimeout(runAutoTr, 2500);
+}
+function trMissingDish(d){ return d.name && (!d.name_ru||!d.name_en||(d.desc&&(!d.desc_ru||!d.desc_en))||(d.ingr&&(!d.ingr_ru||!d.ingr_en))); }
+async function runAutoTr(){
+  if(S.editing){ AUTO_TR.t=setTimeout(runAutoTr, 8000); return; }
+  var dk=function(d){ return "d:"+d.id+":"+d.name+":"+(d.desc||"").length; }, ck=function(c){ return "c:"+c.id+":"+c.label; };
+  var todo=S.dishes.filter(function(d){ return trMissingDish(d) && !AUTO_TR.tried[dk(d)]; });
+  var cs=cats().filter(function(c){ return c.label && (!c.label_ru||!c.label_en) && !AUTO_TR.tried[ck(c)]; });
+  if(!todo.length && !cs.length) return;
+  AUTO_TR.busy=true;
+  try{
+    if(cs.length){
+      cs.forEach(function(c){ AUTO_TR.tried[ck(c)]=1; });
+      var cr=await aiTranslate(cs.map(function(c){ return {id:"c:"+c.id,name:c.label,desc:"",ingr:""}; }));
+      var next=cats().map(function(c){ var t=cr["c:"+c.id]; if(!t) return c; return Object.assign({},c,{label_ru:c.label_ru||clip(t.name_ru,30),label_en:c.label_en||clip(t.name_en,30)}); });
+      await saveSettings({cats:next});
+    }
+    for(var i=0;i<todo.length;i+=8){
+      var chunk=todo.slice(i,i+8); chunk.forEach(function(d){ AUTO_TR.tried[dk(d)]=1; });
+      var res;
+      try{ res=await aiTranslate(chunk.map(function(d){ return {id:d.id,name:d.name,desc:d.desc||"",ingr:d.ingr||""}; })); }
+      catch(e){ if(e&&e.code==="rate_limited"){ await new Promise(function(r){ setTimeout(r,30000); }); i-=8; continue; } throw e; }
+      for(var j=0;j<chunk.length;j++){
+        var d=S.dishes.find(function(x){ return x.id===chunk[j].id; })||chunk[j], t=res[d.id]; if(!t) continue;
+        var patch={};
+        [["name",60],["desc",160],["ingr",400]].forEach(function(f){ ["_ru","_en"].forEach(function(l){ var k=f[0]+l; if(!d[k] && d[f[0]] && t[k]) patch[k]=clip(t[k],f[1]); }); });
+        if(Object.keys(patch).length) await S.db.doc("dishes/"+d.id).update(patch);
+      }
+      await new Promise(function(r){ setTimeout(r,3000); });
+    }
+  }catch(e){ console.warn("autoTr", e); }
+  finally{ AUTO_TR.busy=false; }
+}
 /* ---- editor ---- */
 function langSec(l,suf,E,show){
   var lab={uz:["Taom nomi *","Qisqa tavsif","Tarkibi (batafsil oynada chiqadi)"],ru:["Название","Краткое описание","Состав"],en:["Name","Short description","Ingredients"]}[l];
@@ -3904,6 +3944,7 @@ function route(){
 window.addEventListener("hashchange",route);
 
 function onData(){
+  try{ autoTr(); }catch(_){}
   if(S.view==="admin") renderAdmin(); else refreshMenu();
   clearTimeout(Offline.t); Offline.t=setTimeout(syncMedia,4000);
 }
