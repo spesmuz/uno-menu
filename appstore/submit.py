@@ -288,7 +288,7 @@ def main():
     # --- submit for review
     def submit():
         subs = call("GET", "/v1/reviewSubmissions", params={"filter[app]": APP, "filter[platform]": "IOS", "limit": 20})["data"]
-        open_ = next((s for s in subs if s["attributes"].get("state") in ("READY_FOR_REVIEW",)), None)
+        open_ = next((s for s in subs if s["attributes"].get("state") in ("READY_FOR_REVIEW", "UNRESOLVED_ISSUES")), None)
         busy = next((s for s in subs if s["attributes"].get("state") in ("WAITING_FOR_REVIEW", "IN_REVIEW")), None)
         if busy: return "already in review (" + busy["attributes"]["state"] + ")"
         SID = open_["id"] if open_ else call("POST", "/v1/reviewSubmissions", {"data": {"type": "reviewSubmissions", "attributes": {"platform": "IOS"},
