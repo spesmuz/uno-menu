@@ -13,6 +13,7 @@ BUNDLE = os.environ.get("BUNDLE_ID", "uz.uno.airways")
 SUBMIT = os.environ.get("SUBMIT", "1") == "1"
 LOG = []
 PRIMARY = {"l": "en-US"}
+EXCLUDE = {"CHN"}
 
 
 def log(msg):
@@ -148,8 +149,21 @@ def main():
     def availability():
         try:
             a = call("GET", f"/v1/apps/{APP}/appAvailabilityV2")
-            if a.get("data"): return "already set"
-        except Exception:
+            if a.get("data"):
+                # mainland China needs its own government filing (and two China-only compliance forms): leave it out
+                AID = a["data"]["id"]; off = []
+                url = f"/v2/appAvailabilities/{AID}/territoryAvailabilities"; params = {"limit": 200, "include": "territory"}
+                while url:
+                    r = call("GET", url, params=params)
+                    for t in r["data"]:
+                        tid = ((t.get("relationships") or {}).get("territory") or {}).get("data", {}).get("id")
+                        if tid in EXCLUDE and t["attributes"].get("available"):
+                            call("PATCH", f"/v1/territoryAvailabilities/{t['id']}", {"data": {"type": "territoryAvailabilities", "id": t["id"], "attributes": {"available": False}}})
+                            off.append(tid)
+                    url = r.get("links", {}).get("next"); params = None
+                return "already set" + (f"; removed {','.join(off)}" if off else "")
+        except Exception as e:
+            if "removed" in str(e) or "PATCH" in str(e): raise
             pass
         terr = []
         url = "/v1/territories"; params = {"limit": 200}
@@ -160,7 +174,7 @@ def main():
         for i, t in enumerate(terr):
             lid = "${t%d}" % i
             rel.append({"type": "territoryAvailabilities", "id": lid})
-            inc.append({"type": "territoryAvailabilities", "id": lid, "attributes": {"available": True},
+            inc.append({"type": "territoryAvailabilities", "id": lid, "attributes": {"available": t not in EXCLUDE},
                         "relationships": {"territory": {"data": {"type": "territories", "id": t}}}})
         payload = {"data": {"type": "appAvailabilities", "attributes": {"availableInNewTerritories": True},
              "relationships": {"app": {"data": {"type": "apps", "id": APP}}, "territoryAvailabilities": {"data": rel}}}, "included": inc}
