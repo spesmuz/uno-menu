@@ -2299,7 +2299,7 @@ function gaiBuild(){
   });
   $("gaiForm").addEventListener("submit",function(e){ e.preventDefault(); gaiSend($("gaiIn").value); });
   $("gaiIn").addEventListener("keydown",function(e){ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); gaiSend(this.value); } });
-  $("gaiIn").addEventListener("focus",function(){ setTimeout(gaiFit,60); setTimeout(gaiFit,350); });
+  $("gaiIn").addEventListener("focus",function(){ gaiFit(); [30,120,300,600,900].forEach(function(t){ setTimeout(gaiFit,t); }); });
   $("gaiIn").addEventListener("blur",function(){ setTimeout(gaiFit,120); setTimeout(function(){ if(!GAI.open||document.activeElement!==$("gaiIn")) try{ window.scrollTo(0,0); }catch(_){} },300); });
   $("gaiIn").addEventListener("input",function(){ this.style.height="44px"; this.style.height=Math.min(110,this.scrollHeight)+"px"; });
   return el;
@@ -2308,12 +2308,15 @@ function gaiBuild(){
 function gaiFit(){
   var el=GAI.el; if(!el) return; var vv=window.visualViewport;
   if(!vv || !GAI.open){ el.style.top=""; el.style.height=""; el.classList.remove("kb"); return; }
+  /* iPhone scrolls the whole page up to "show" the field; the page never scrolls, so put it back first */
+  if(window.scrollY||window.scrollX||document.documentElement.scrollTop||document.body.scrollTop){ window.scrollTo(0,0); document.documentElement.scrollTop=0; document.body.scrollTop=0; }
   var kb=vv.height < window.innerHeight-120;
   el.classList.toggle("kb", kb);
   el.style.top=(kb?vv.offsetTop:0)+"px"; el.style.height=(kb?vv.height:window.innerHeight)+"px";
   if(kb){ var log=$("gaiLog"); if(log) log.scrollTop=log.scrollHeight; }
 }
 if(window.visualViewport){ visualViewport.addEventListener("resize",gaiFit); visualViewport.addEventListener("scroll",gaiFit); }
+window.addEventListener("scroll",function(){ if(GAI.open) gaiFit(); },{passive:true});
 function gaiShow(on){
   var el=gaiBuild(); GAI.open=on; if(!on){ try{ document.activeElement&&document.activeElement.blur(); }catch(_){} setTimeout(function(){ gaiFit(); try{ menuTop(); }catch(_){} },60); }
   if(on){
