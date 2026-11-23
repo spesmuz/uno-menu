@@ -1170,9 +1170,15 @@ function applyStatic(){
   $("langs").setAttribute("aria-label",t("lang"));
   $("langs").querySelectorAll("button").forEach(function(b){ b.setAttribute("aria-pressed", String(b.dataset.lang===S.lang)); });
 }
+/* iPhone app: its own buttons and pages follow the language chosen here */
+function tellAppLang(){
+  try{ if(window.webkit&&webkit.messageHandlers&&webkit.messageHandlers.unoLang) webkit.messageHandlers.unoLang.postMessage(S.lang); }catch(_){}
+}
+setTimeout(tellAppLang,300);
 function setLang(l){
   if(!T[l]||l===S.lang) return;
   S.lang=l; try{ localStorage.setItem("uno_lang",l); }catch(_){}
+  tellAppLang();
   applyStatic(); renderTabs();
   var keep=S.idx; buildSlides(); S.idx=keep; layout(true);
   refreshCartUI(); if(S.query) renderResults(); if(S.detail) renderDetail(true);

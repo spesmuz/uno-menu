@@ -65,17 +65,18 @@ struct RootView: View {
         return 0
     }()
     @ObservedObject private var news = NewsModel.shared
+    @ObservedObject private var lang = LangStore.shared
     var body: some View {
         GeometryReader { geo in
             let land = geo.size.width > geo.size.height
             let safeB = UNOBar.homeIndicator(geo.safeAreaInsets.bottom)   /* the screen edge, not the keyboard */
             ZStack(alignment: .bottom) {
                 page(0) { MenuView() }
-                page(1) { BookingView().safeAreaInset(edge: .bottom) { Color.clear.frame(height: UNOBar.height(land)) } }
-                page(2) { AboutView().safeAreaInset(edge: .bottom) { Color.clear.frame(height: UNOBar.height(land)) } }
-                page(3) { ProfileView().safeAreaInset(edge: .bottom) { Color.clear.frame(height: UNOBar.height(land)) } }
+                page(1) { BookingView().id(lang.lang).environment(\.locale, L.locale).safeAreaInset(edge: .bottom) { Color.clear.frame(height: UNOBar.height(land)) } }
+                page(2) { AboutView().id(lang.lang).environment(\.locale, L.locale).safeAreaInset(edge: .bottom) { Color.clear.frame(height: UNOBar.height(land)) } }
+                page(3) { ProfileView().id(lang.lang).environment(\.locale, L.locale).safeAreaInset(edge: .bottom) { Color.clear.frame(height: UNOBar.height(land)) } }
                 /* our own floating bar: bigger buttons, nothing behind it, the menu background runs to the very bottom */
-                UNOTabBar(tab: $tab, landscape: land, dot: news.unseen && tab != 3 ? 3 : nil)
+                UNOTabBar(tab: $tab, landscape: land, lang: lang.lang, dot: news.unseen && tab != 3 ? 3 : nil)
                     .padding(.bottom, UNOBar.bottomPad(land, safe: safeB))
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                     .ignoresSafeArea(.all, edges: .bottom)
@@ -89,6 +90,7 @@ struct RootView: View {
             news.visible = t == 3
             if t == 3 { news.load(); news.markSeen() }
         }
+        .onChange(of: lang.lang) { _ in news.load() }
     }
     @ViewBuilder private func page<V: View>(_ i: Int, @ViewBuilder _ v: () -> V) -> some View {
         v().opacity(tab == i ? 1 : 0).allowsHitTesting(tab == i).accessibilityHidden(tab != i)
@@ -110,6 +112,7 @@ enum UNOBar {
 struct UNOTabBar: View {
     @Binding var tab: Int
     let landscape: Bool
+    var lang: String = L.lang   /* a new value redraws the labels */
     var dot: Int? = nil   /* a small gold dot: something new on that tab */
     private let items: [(String, String)] = [("tab.menu", "fork.knife"), ("tab.book", "calendar.badge.plus"),
                                              ("tab.about", "airplane"), ("tab.profile", "person.crop.circle")]

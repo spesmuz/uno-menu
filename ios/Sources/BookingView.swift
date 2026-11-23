@@ -186,10 +186,10 @@ struct BookingView: View {
 
     private var upcoming: [Booking] { mine.filter { $0.at > Date().addingTimeInterval(-3 * 3600) }.sorted { $0.at < $1.at } }
 
-    private static let fmt: DateFormatter = {
+    static var fmt: DateFormatter {
         let f = DateFormatter(); f.dateStyle = .medium; f.timeStyle = .short
-        f.locale = Locale(identifier: L.lang == "uz" ? "uz_Latn_UZ" : L.lang); return f
-    }()
+        f.locale = L.locale; return f
+    }
 
     private func callUs() {
         if let u = URL(string: "tel://" + Config.phone) { UIApplication.shared.open(u) }

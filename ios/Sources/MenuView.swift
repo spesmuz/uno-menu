@@ -167,6 +167,7 @@ struct WebView: UIViewRepresentable {
         c.userContentController.addUserScript(WKUserScript(source: ProfileBridge.script(), injectionTime: .atDocumentStart, forMainFrameOnly: true))
         let loc = LocationBridge()
         c.userContentController.add(loc, name: "unoLocate")
+        c.userContentController.add(LangBridge(), name: "unoLang")   /* the menu tells the app which language was chosen */
         let w = InsetWebView(frame: .zero, configuration: c)
         loc.web = w
         model.loc = loc
@@ -189,4 +190,11 @@ struct WebView: UIViewRepresentable {
         return w
     }
     func updateUIView(_ uiView: WKWebView, context: Context) {}
+}
+
+/* window.webkit.messageHandlers.unoLang.postMessage("uz" | "ru" | "en") */
+final class LangBridge: NSObject, WKScriptMessageHandler {
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        if let l = message.body as? String { LangStore.shared.set(l) }
+    }
 }

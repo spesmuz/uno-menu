@@ -239,10 +239,10 @@ struct ProfileView: View {
         return s.isEmpty ? "?" : s
     }
 
-    private static let fmt: DateFormatter = {
+    static var fmt: DateFormatter {
         let f = DateFormatter(); f.dateStyle = .medium; f.timeStyle = .none
-        f.locale = Locale(identifier: L.lang == "uz" ? "uz_Latn_UZ" : L.lang); return f
-    }()
+        f.locale = L.locale; return f
+    }
 
     private func setPhoto(_ img: UIImage?) {
         photo = img.map { CustomerAPI.square($0, side: 360) }

@@ -1,13 +1,36 @@
 import Foundation
+import Combine
 
-/* App texts: Uzbek by default, Russian or English when the phone uses them */
+/* The language the menu page chose (UZ / RU / EN); the phone's language until the menu says otherwise */
+final class LangStore: ObservableObject {
+    static let shared = LangStore()
+    private static let key = "uno.lang"
+    @Published private(set) var lang: String
+
+    private init() {
+        if let s = UserDefaults.standard.string(forKey: LangStore.key), ["uz", "ru", "en"].contains(s) {
+            lang = s
+        } else {
+            let p = (Locale.preferredLanguages.first ?? "uz").lowercased()
+            lang = p.hasPrefix("ru") ? "ru" : p.hasPrefix("en") ? "en" : "uz"
+        }
+    }
+
+    func set(_ l: String) {
+        let v = l.lowercased()
+        guard ["uz", "ru", "en"].contains(v) else { return }
+        let apply = {
+            UserDefaults.standard.set(v, forKey: LangStore.key)
+            if self.lang != v { self.lang = v }
+        }
+        if Thread.isMainThread { apply() } else { DispatchQueue.main.async(execute: apply) }
+    }
+}
+
+/* App texts in the language chosen in the menu */
 enum L {
-    static let lang: String = {
-        let p = (Locale.preferredLanguages.first ?? "uz").lowercased()
-        if p.hasPrefix("ru") { return "ru" }
-        if p.hasPrefix("en") { return "en" }
-        return "uz"
-    }()
+    static var lang: String { LangStore.shared.lang }
+    static var locale: Locale { Locale(identifier: lang == "uz" ? "uz_Latn_UZ" : lang) }
 
     static func t(_ k: String) -> String { (d[lang]?[k]) ?? (d["uz"]?[k]) ?? k }
 
