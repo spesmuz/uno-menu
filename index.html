@@ -2733,6 +2733,8 @@ function renderAdmin(){
       '<div class="a-row"><label class="fld"><span>Gemini API kaliti</span><input id="aiKey" type="password" autocomplete="off" placeholder="'+(S.aiOn?'saqlangan — almashtirish uchun yangisini kiriting':'AQ.… yoki AIza…')+'"></label><button class="btn gold" data-a="aiSaveKey">Saqlash</button>'+(S.aiOn?'<button class="btn" data-a="aiTest">Sinab ko\'rish</button>':'')+'</div>'+
       (S.aiOn?'<div class="a-row" style="margin-top:14px"><button class="btn gold" data-a="aiAll">Suratli barcha taomlarni hisoblash ('+withImg+')</button></div><p class="help" style="margin-top:6px">Qo\'lda kiritilgan kaloriyalarga tegilmaydi. Har bir taom 5–10 soniya oladi.</p>'+
         '<div class="a-row" style="margin-top:14px"><button class="btn" data-a="trAll" style="border-color:rgba(232,176,75,.5)">🌐 Tarjimasi yo\'q taom va kategoriyalarni tarjima qilish</button></div><p class="help" style="margin-top:6px">O\'zbekcha nom, tavsif va tarkib rus va ingliz tiliga o\'giriladi. Mavjud tarjimalarga tegilmaydi.</p>':'')+
+      (function(){ var ns=aiNotesOf(S.settings); return '<h3 style="margin:18px 0 6px;font-size:15px">🧠 Mijozlar UNO AI\'si biladigan ma\'lumotlar ('+ns.length+')</h3><p class="help" style="margin:0 0 8px">Pastdagi UNO AI tugmasini bosib yozing: «UNO AI ga yetkaz: …». Tasdiqlaganingizdan keyin menyudagi UNO AI mijozlarga shu ma\'lumotni aytadi.</p>'+
+        (ns.length?ns.map(function(n){ return '<div class="a-row" style="align-items:flex-start;gap:8px;margin:4px 0"><span style="flex:1;line-height:1.45">'+esc(n.text)+'</span><button class="btn" data-a="aiNoteDel" data-id="'+esc(n.id)+'" aria-label="O\'chirish">✕</button></div>'; }).join(''):'<p class="help muted">Hozircha yo\'q.</p>'); })()+
       '<div id="aiMsg"></div><div id="aiBulkBox" style="margin-top:12px">'+(S.aiBoxHTML||'')+'</div></section>';
   }
   h+='<section class="a-sec"><h2>Taomlar</h2><p class="help"><b style="color:var(--gold2)">Surat o\'lchami: 1080 × 1080 piksel (kvadrat, 1:1).</b> Menyudagi surat maydoni har doim kvadrat, shuning uchun barcha suratlarni shu o\'lchamda tayyorlang. Video ham kvadrat (1080 × 1080) bo\'lsin, 20 MB dan oshmasin. Video bo\'lsa, taom markazga kelganda surat o\'rniga video o\'ynaydi.</p>';
@@ -2851,7 +2853,11 @@ function errText(e){
 }
 async function saveSettings(patch){
   var next=Object.assign({}, S.settings, patch);
-  await S.db.doc("settings/main").set({name:next.name||"", cats:next.cats||[], logoId:next.logoId||"", soundOn:next.soundOn!==false, service:svcPct(next), zones:Array.isArray(next.zones)?next.zones:[], zonePick:!!next.zonePick, callsOn:!!next.callsOn, theme:THEMES[next.theme]?next.theme:"classic", delivery:next.delivery||{}});
+  await S.db.doc("settings/main").set({name:next.name||"", cats:next.cats||[], logoId:next.logoId||"", soundOn:next.soundOn!==false, service:svcPct(next), zones:Array.isArray(next.zones)?next.zones:[], zonePick:!!next.zonePick, callsOn:!!next.callsOn, theme:THEMES[next.theme]?next.theme:"classic", delivery:next.delivery||{}, aiNotes:aiNotesOf(next)});
+}
+/* short facts the admin taught the guests' UNO AI: [{id, text, at}] */
+function aiNotesOf(st){
+  return (Array.isArray(st&&st.aiNotes)?st.aiNotes:[]).filter(function(n){ return n&&n.id&&String(n.text||"").trim(); }).slice(-40);
 }
 A.addEventListener("click", async function(e){
   var b=e.target.closest("[data-a]"); if(!b||b.disabled) return;
@@ -2894,6 +2900,7 @@ A.addEventListener("click", async function(e){
       if(rk.error){ msg($("aiMsg"),/uno_set_ai_key|function/.test(rk.error.message)?"Avval ai.sql ni ishga tushiring.":errText(rk.error),"err"); return; }
       try{ localStorage.removeItem("uno_gem_model"); }catch(_){} S.sample.reset(); S.aiOn=true; S.aiSql=true; renderAdmin(); setTimeout(function(){ msg($("aiMsg"),"Kalit saqlandi. AI tayyor.","ok"); },50);
     }
+    else if(act==="aiNoteDel"){ var left=aiNotesOf(S.settings).filter(function(n){ return n.id!==id; }); await saveSettings({aiNotes:left}); S.settings.aiNotes=left; renderAdmin(); }
     else if(act==="aiTest"){
       msg($("aiMsg"),"AI'dan javob kutilmoqda…");
       try{ var tj=await S.sample.json('Reply with only JSON: {"ok":true,"kcal_osh":0} where kcal_osh is the calories of one 350 g portion of Uzbek plov.',{}); msg($("aiMsg"),"AI ishlayapti ✅ (sinov: 350 g osh ≈ "+aiNum(tj&&tj.kcal_osh)+" kkal)","ok"); }
@@ -4315,9 +4322,11 @@ var AG_TOOLS=[
  {name:"get_bookings", description:"Read table bookings made from the iPhone app (newest first).", parameters:{type:"OBJECT", properties:{from:{type:"STRING"}, to:{type:"STRING"}, status:{type:"STRING",description:"new, confirmed or cancelled"}}}},
  {name:"update_booking", description:"Set a booking's status.", parameters:{type:"OBJECT", properties:{booking_id:{type:"INTEGER"}, status:{type:"STRING",description:"new, confirmed or cancelled"}}, required:["booking_id","status"]}},
  {name:"delete_bookings", description:"Delete bookings permanently by ids, or all bookings before a date.", parameters:{type:"OBJECT", properties:{booking_ids:{type:"ARRAY",items:{type:"INTEGER"}}, before:{type:"STRING",description:"YYYY-MM-DD"}}}},
+ {name:"teach_guest_ai", description:"Pass a fact to the CUSTOMER-facing UNO AI (the chat guests use inside the menu), so it can tell guests about it. Use when the admin asks to tell / pass / teach something to the guests' UNO AI («UNO AI ga yetkaz», «mijozlar AI'ga o'rgat», «mijozlarga shuni aytsin»). text: one short, self-contained fact in Uzbek Latin, written for guests, in the admin's meaning, max 300 characters. Several facts → several calls.", parameters:{type:"OBJECT", properties:{text:{type:"STRING"}}, required:["text"]}},
+ {name:"forget_guest_ai", description:"Remove a fact previously passed to the customer-facing UNO AI.", parameters:{type:"OBJECT", properties:{note_id:{type:"STRING"}}, required:["note_id"]}},
  {name:"open_section", description:"Show a section of the admin panel on screen.", parameters:{type:"OBJECT", properties:{section:{type:"STRING",description:"one of: Taomlar, Kategoriyalar, AI, Davomat, Baholar, Stollar va QR, Telegram, Restoran, Oflayn, Planshet, Parol"}}, required:["section"]}}
 ];
-var AG_WRITE={add_dish:1,update_dish:1,delete_dish:1,add_category:1,rename_category:1,update_settings:1,set_review_hidden:1,delete_reviews:1,delete_category:1,add_staff:1,update_staff:1,delete_staff:1,delete_attendance:1,update_booking:1,delete_bookings:1};
+var AG_WRITE={add_dish:1,update_dish:1,delete_dish:1,add_category:1,rename_category:1,update_settings:1,set_review_hidden:1,delete_reviews:1,delete_category:1,add_staff:1,update_staff:1,delete_staff:1,delete_attendance:1,update_booking:1,delete_bookings:1,teach_guest_ai:1,forget_guest_ai:1};
 
 function agToday(){ return new Date(Date.now()+5*3600e3).toISOString().slice(0,10); }
 function agSystem(){
@@ -4337,6 +4346,8 @@ function agSystem(){
    "Today is "+agToday()+" (Asia/Tashkent).\n\n"+
    "RESTAURANT SETTINGS: name="+(st.name||"UNO Airways")+"; service="+svcPct(st)+"%; soundOn="+(st.soundOn!==false)+"; callsOn="+!!st.callsOn+"; zonePick="+!!st.zonePick+"; theme="+(st.theme||"classic")+"\n\n"+
    "Deleting is allowed when the admin asks (dishes, categories, reviews, staff, attendance records, bookings): call the delete tool with the exact scope; the confirmation card shows how many items will be removed. Relative dates: «bugun» = today, «kecha» = yesterday, «o'tgan hafta» = the previous Monday–Sunday.\n"+
+   "There are TWO assistants: you (admin panel) and the customer-facing «UNO AI» inside the guest menu. You cannot talk to it directly; the ONLY way to pass it information is the teach_guest_ai tool (it is saved and the guest AI reads it in every conversation). Never say you passed, told or taught it something unless you called teach_guest_ai and the admin confirmed the card.\n"+
+   "FACTS ALREADY PASSED TO THE GUEST UNO AI (id | text):\n"+(aiNotesOf(st).map(function(n){ return n.id+" | "+n.text; }).join("\n")||"(none)")+"\n\n"+
    "STAFF (id | name | team | role | shift | status):\n"+(staff||"(not loaded or none)")+"\n\nCATEGORIES (id = name):\n"+(cs||"(none)")+"\n\nDISHES (id | name | category id | price | kcal | weight | media | rating):\n"+(ds||"(none)");
 }
 
@@ -4634,6 +4645,8 @@ function agDescribe2(c){
     return '<div class="ag-act"><div><em>Xodimni o\'zgartirish</em><b>'+esc(agStaffName(a.staff_id))+'</b>'+Object.keys(L).filter(function(k){ return a[k]!==undefined; }).map(function(k){ var v=a[k]; if(k==="active") v=v?"ishlaydi":"ishdan bo'shatildi"; if(k==="days") v=v.map(function(x){ return ATT_DN[x-1]||x; }).join(", "); return '<p class="sm"><i>'+L[k]+':</i> <b>'+esc(String(v))+'</b></p>'; }).join("")+'</div></div>'; }
   if(c.name==="delete_staff"){ return '<div class="ag-act del"><div><em>Xodimni o\'chirish</em><b>'+esc(agStaffName(a.staff_id))+'</b><p class="sm">Xodim va uning barcha davomat belgilari butunlay o\'chiriladi.</p>'+agPvText(c)+'</div></div>'; }
   if(c.name==="update_booking"){ var ST={new:"yangi",confirmed:"tasdiqlandi",cancelled:"bekor qilindi"}; return '<div class="ag-act"><div><em>Bron #'+esc(String(a.booking_id))+'</em><b>'+esc(ST[a.status]||a.status)+'</b></div></div>'; }
+  if(c.name==="teach_guest_ai"){ return '<div class="ag-act"><div><em>Mijozlar UNO AI\'siga yetkazish</em><b>'+esc(String(a.text||"").trim().slice(0,300))+'</b><p class="sm muted">Menyudagi UNO AI mijozlarga shu ma\'lumotni aytib beradi.</p></div></div>'; }
+  if(c.name==="forget_guest_ai"){ var fn=aiNotesOf(S.settings).find(function(n){ return n.id===a.note_id; }); return '<div class="ag-act del"><div><em>Mijozlar UNO AI\'sidan olib tashlash</em><b>'+esc(fn?fn.text:a.note_id)+'</b></div></div>'; }
   if(c.name==="delete_bookings"){ return '<div class="ag-act del"><div><em>Bronlarni o\'chirish</em><b>'+(a.booking_ids&&a.booking_ids.length?"#"+a.booking_ids.join(", #"):a.before?esc(a.before)+" gacha bo'lganlari":"?")+'</b>'+agPvText(c)+'</div></div>'; }
   return "";
 }
@@ -4707,6 +4720,18 @@ async function agRunWrite2(c){
     r=await S.sb.from("uno_staff").delete().eq("id",p.id); if(r.error) return {ok:false,error:r.error.message};
     await agLoadStaff(); try{ if(typeof Att!=="undefined"&&Att.el){ Att.load(); } }catch(_){}
     return {ok:true, label:"Xodim o'chirildi: "+p.name};
+  }
+  if(c.name==="teach_guest_ai"){
+    var tx=String(a.text||"").replace(/\s+/g," ").trim().slice(0,300); if(!tx) return {ok:false,error:"matn yo'q"};
+    var ns=aiNotesOf(S.settings); if(ns.length>=40) return {ok:false,error:"40 ta ma'lumot to'ldi — avval keraksizini olib tashlang"};
+    var nid="n"+Date.now().toString(36); ns.push({id:nid,text:tx,at:new Date().toISOString()});
+    await netRetry(function(){ return saveSettings({aiNotes:ns}); }); S.settings.aiNotes=ns;
+    return {ok:true, note_id:nid, label:"Mijozlar UNO AI'siga yetkazildi"};
+  }
+  if(c.name==="forget_guest_ai"){
+    var ns2=aiNotesOf(S.settings), left=ns2.filter(function(n){ return n.id!==a.note_id; }); if(left.length===ns2.length) return {ok:false,error:"topilmadi"};
+    await netRetry(function(){ return saveSettings({aiNotes:left}); }); S.settings.aiNotes=left;
+    return {ok:true, label:"Mijozlar UNO AI'sidan olib tashlandi"};
   }
   if(c.name==="update_booking"){
     if(["new","confirmed","cancelled"].indexOf(a.status)<0) return {ok:false,error:"noto'g'ri holat"};
@@ -4853,14 +4878,14 @@ async function init(){
   if(!S.db){
     var cc=null; try{ cc=JSON.parse(localStorage.getItem(CACHE_KEY)||"null"); }catch(_){}
     clearTimeout(timer);
-    if(cc){ var sm=cc["settings/main"]||{}; S.settings={name:sm.name||"",logoId:String(sm.logoId||""),soundOn:sm.soundOn!==false,service:sm.service,cats:Array.isArray(sm.cats)?sm.cats:[],zones:Array.isArray(sm.zones)?sm.zones:[],zonePick:!!sm.zonePick,callsOn:!!sm.callsOn,theme:sm.theme||"classic",delivery:sm.delivery||{}}; applyTheme();
+    if(cc){ var sm=cc["settings/main"]||{}; S.settings={name:sm.name||"",logoId:String(sm.logoId||""),soundOn:sm.soundOn!==false,service:sm.service,cats:Array.isArray(sm.cats)?sm.cats:[],zones:Array.isArray(sm.zones)?sm.zones:[],zonePick:!!sm.zonePick,callsOn:!!sm.callsOn,theme:sm.theme||"classic",delivery:sm.delivery||{},aiNotes:aiNotesOf(sm)}; applyTheme();
       S.dishes=Object.keys(cc).filter(function(k){return k.indexOf("dishes/")===0;}).map(function(k){ var d=cc[k]||{}; var o={id:k.slice(7),name:String(d.name||""),desc:String(d.desc||""),price:Number(d.price)||0,cat:String(d.cat||""),order:Number(d.order)||0,imgId:String(d.imgId||""),videoId:String(d.videoId||""),weight:String(d.weight||""),time:Number(d.time)||0,kcal:Number(d.kcal)||0,prot:Number(d.prot)||0,fat:Number(d.fat)||0,carb:Number(d.carb)||0,kcalEst:!!d.kcalEst}; ["ingr","name_ru","desc_ru","ingr_ru","name_en","desc_en","ingr_en"].forEach(function(x){ o[x]=String(d[x]||""); }); return o; });
       S.loadedSettings=true; }
     else note.textContent="Menyu ma'lumotlarini olib bo'lmadi. Internetni tekshiring.";
     S.loadedDishes=true; onData(); if(!cc) setTimeout(function(){ location.reload(); },30000); return;
   }
   S.db.doc("settings/main").onSnapshot(function(snap){
-    var d=snap.exists?snap.data():{}; S.settings={name:(d&&d.name)||"", logoId:String((d&&d.logoId)||""), soundOn:!(d&&d.soundOn===false), service:d&&d.service, cats:Array.isArray(d&&d.cats)?d.cats.filter(function(c){return c&&c.id&&c.label;}):[], zones:Array.isArray(d&&d.zones)?d.zones:[], zonePick:!!(d&&d.zonePick), callsOn:!!(d&&d.callsOn), theme:(d&&d.theme)||"classic", delivery:(d&&d.delivery)||{}};
+    var d=snap.exists?snap.data():{}; S.settings={name:(d&&d.name)||"", logoId:String((d&&d.logoId)||""), soundOn:!(d&&d.soundOn===false), service:d&&d.service, cats:Array.isArray(d&&d.cats)?d.cats.filter(function(c){return c&&c.id&&c.label;}):[], zones:Array.isArray(d&&d.zones)?d.zones:[], zonePick:!!(d&&d.zonePick), callsOn:!!(d&&d.callsOn), theme:(d&&d.theme)||"classic", delivery:(d&&d.delivery)||{}, aiNotes:aiNotesOf(d)};
     applyTheme(); S.loadedSettings=true; onData(); try{ refreshCallUI(); }catch(_){}
   });
   S.db.collection("dishes").onSnapshot(function(snap){
