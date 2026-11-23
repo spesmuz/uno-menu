@@ -2348,11 +2348,11 @@ function gaiGoDish(id){
   if(i>=0){ S.idx=i; layout(); try{ SFX.dish(); }catch(_){}
     setTimeout(function(){ var el=slideNodes[i]; if(el){ el.classList.add("gai-hl"); setTimeout(function(){ el.classList.remove("gai-hl"); },3400); } },350); }
 }
-var GAI_MODELS=["gemini-2.5-flash","gemini-flash-latest","gemini-2.0-flash","gemini-flash-lite-latest"];
+var GAI_MODELS=["gemini-flash-lite-latest","gemini-flash-latest","gemini-2.5-flash"];
 async function gaiAsk(hist){
   var dev=gaiDev(), list=GAI.model?[GAI.model].concat(GAI_MODELS.filter(function(x){ return x!==GAI.model; })):GAI_MODELS.slice();
   var lastErr="err";
-  for(var mi=0; mi<list.length && mi<3; mi++){
+  for(var mi=0; mi<list.length; mi++){
     var r=await sbRpc("uno_guest_ai_ask",{p_device:dev, p_msgs:hist, p_lang:S.lang, p_model:list[mi]});
     if(r.error){ var em=String(r.error.message||r.error); if(/rate_limited/.test(em)) throw "busy"; throw "err"; }
     var id=r.data, t0=Date.now();
@@ -2363,9 +2363,9 @@ async function gaiAsk(hist){
       var v=q.data||{};
       if(v.pending) continue;
       if(v.ok){ GAI.model=list[mi]; return v.text; }
-      if(v.status===404 || v.status===400){ lastErr="model"; break; }
-      if(v.status===429) throw "busy";
-      throw "err";
+      /* model gone (404/400) or busy (503, 500, timeout): try the next model */
+      if(v.status===429 && mi===list.length-1) throw "busy";
+      lastErr="model"; break;
     }
     if(lastErr!=="model") throw "err";
   }
