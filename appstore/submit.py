@@ -191,6 +191,8 @@ def main():
     vers = call("GET", f"/v1/apps/{APP}/appStoreVersions", params={"filter[platform]": "IOS", "limit": 20})["data"]
     def vstate(v): return v["attributes"].get("appVersionState") or v["attributes"].get("appStoreState")
     log("     versions: " + ", ".join(f"{v['attributes'].get('versionString')}={vstate(v)}" for v in vers))
+    if any(vstate(v) in ("WAITING_FOR_REVIEW", "IN_REVIEW", "PENDING_DEVELOPER_RELEASE") for v in vers):
+        log("SKIP a version is already with App Review — nothing changed"); return
     editable = [v for v in vers if vstate(v) in ("PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED", "INVALID_BINARY")]
     attrs = {"versionString": META["version"], "copyright": META["copyright"], "releaseType": "AFTER_APPROVAL"}
     if editable:

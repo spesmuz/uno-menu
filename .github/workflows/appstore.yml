@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - 'appstore/**'
+      - '!appstore/status.py'
       - '.github/workflows/appstore.yml'
 
 permissions:
