@@ -770,6 +770,10 @@ html.th-aurora #adminView{background:radial-gradient(90% 60% at 30% 0%,rgba(60,2
 :is(html.th-boarding,html.th-aurora) #adminView .adm-dots i.on{background:var(--gold)}
 :is(html.th-boarding,html.th-aurora) .ag-btns button{background:rgba(255,255,255,.08)}
 #adminView .adm-tabs{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 18px,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(90deg,transparent 0,#000 18px,#000 calc(100% - 18px),transparent)}
+.adm-lang{display:inline-flex;gap:2px;padding:3px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16)}
+.adm-lang button{min-width:40px;height:30px;border:0;border-radius:9px;background:transparent;color:var(--muted);font:700 12px/1 inherit;letter-spacing:.5px;cursor:pointer}
+.adm-lang button.on{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#1A1306}
+#atrNote{position:fixed;left:50%;top:max(12px,env(safe-area-inset-top));transform:translateX(-50%);z-index:9999;padding:8px 14px;border-radius:12px;background:rgba(10,16,36,.92);border:1px solid rgba(255,255,255,.18);color:#fff;font-size:13px;pointer-events:none}
 /* all admin checkboxes become switches */
 #adminView input[type=checkbox]{-webkit-appearance:none;appearance:none;flex:none;width:46px;height:28px;margin:0;border-radius:14px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.18);position:relative;cursor:pointer;transition:background .2s,border-color .2s;vertical-align:middle}
 #adminView input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.35);transition:transform .2s}
@@ -2485,7 +2489,7 @@ function renderAdmin(){
   }
   A.dataset.mode="panel";
   var ro=!S.canEdit||!S.db;
-  var h='<div class="a-top"><h1>Admin panel</h1><span class="tag ok">'+S.dishes.length+' ta taom</span><span class="sp"></span><a class="btn" href="#menyu">Menyuni ko\'rish</a>'+(ro?'':'<button class="btn gold" data-a="new">'+ICON.plus+' Yangi taom</button><button class="btn" data-a="logout">Chiqish</button>')+(!ro&&window.UnoKiosk?'<button class="btn danger" data-a="exitApp">Ilovadan chiqish</button>':'')+'</div><div class="a-wrap">';
+  var h='<div class="a-top"><h1>Admin panel</h1><span class="tag ok">'+S.dishes.length+' ta taom</span><span class="sp"></span><div class="adm-lang" data-notr role="group" aria-label="Til / Язык / Language">'+["uz","ru","en"].map(function(l){ return '<button type="button" data-alang="'+l+'" class="'+(ATR.lang===l?'on':'')+'">'+l.toUpperCase()+'</button>'; }).join("")+'</div><a class="btn" href="#menyu">Menyuni ko\'rish</a>'+(ro?'':'<button class="btn gold" data-a="new">'+ICON.plus+' Yangi taom</button><button class="btn" data-a="logout">Chiqish</button>')+(!ro&&window.UnoKiosk?'<button class="btn danger" data-a="exitApp">Ilovadan chiqish</button>':'')+'</div><div class="a-wrap">';
   var n=adminNotice(); if(n) h+=n;
   if(S.dbError) h+='<div class="msg err">Bazaga ulanib bo\'lmadi: '+esc(S.dbError)+'</div>';
   if(!S.loadedDishes) h+='<div class="msg">Yuklanmoqda…</div><div class="progress"><i></i></div>';
@@ -2606,7 +2610,7 @@ function renderAdmin(){
       '<p class="help" style="margin-top:10px">"Vaqtincha chiqish" ilovani yopadi, uy tugmasi bosilsa yoki planshet qayta yoqilsa menyu yana ochiladi. "Butunlay o\'chirish" ilovani oddiy ilovaga aylantiradi, keyin uni o\'chirib tashlash ham mumkin.</p>')+'</section>';
   }
   h+='</div>';
-  var y=window.scrollY, keep=admKeep(); if(Att.el && Att.el.parentNode) Att.el.remove(); if(Rev.el && Rev.el.parentNode) Rev.el.remove(); if(Dlv.el && Dlv.el.parentNode) Dlv.el.remove(); if(News.el && News.el.parentNode) News.el.remove(); if(Cust.el && Cust.el.parentNode) Cust.el.remove(); A.innerHTML=h; Att.mount(); Dlv.mount(); News.mount(); Cust.mount(); Rev.mount(); if(!admPager(keep)) window.scrollTo(0,y); agSync();
+  var y=window.scrollY, keep=admKeep(); if(Att.el && Att.el.parentNode) Att.el.remove(); if(Rev.el && Rev.el.parentNode) Rev.el.remove(); if(Dlv.el && Dlv.el.parentNode) Dlv.el.remove(); if(News.el && News.el.parentNode) News.el.remove(); if(Cust.el && Cust.el.parentNode) Cust.el.remove(); A.innerHTML=h; Att.mount(); Dlv.mount(); News.mount(); Cust.mount(); atrWatch(); if(ATR.lang!=="uz"){ ATR.dirty=true; atrLoad().then(atrApply); } Rev.mount(); if(!admPager(keep)) window.scrollTo(0,y); agSync();
   var lf=$("logoFile"); if(lf) lf.onchange=function(){ var f=this.files[0]; this.value=""; if(f) uploadLogo(f); };
   if(S.aiBulk && $("aiBulkBox")) renderAiBulk();
   offlineUI(); if(!Offline.last && !Offline.busy) syncMedia();
@@ -3205,6 +3209,98 @@ async function runAutoTr(){
   }catch(e){ console.warn("autoTr", e); }
   finally{ AUTO_TR.busy=false; }
 }
+/* ===== Admin panel in Uzbek / Russian / English =====
+   The panel is written in Uzbek; Russian and English come from the restaurant's AI (Gemini) once, are saved
+   (settings/i18n_admin, shared by every device) and are then applied instantly to whatever is on screen.
+   Typed values, names of dishes, guests, staff and reviews are left as they are. */
+var ATR={tried:{}, next:0, lang:(function(){ try{ return localStorage.getItem("uno_admin_lang")||"uz"; }catch(_){ return "uz"; } })(), dict:{ru:{},en:{}}, loaded:false, pend:{}, busy:false, t:0, obs:null, orig:new WeakMap(), attrO:new WeakMap()};
+try{ var _ad=JSON.parse(localStorage.getItem("uno_admin_i18n")||"null"); if(_ad&&_ad.ru) ATR.dict=_ad; }catch(_){}
+function atrSkip(el){
+  for(var e=el; e && e!==A; e=e.parentElement){
+    if(e.hasAttribute && (e.hasAttribute("data-notr")||e.isContentEditable)) return true;
+    var tg=e.tagName; if(tg==="SCRIPT"||tg==="STYLE"||tg==="TEXTAREA"||tg==="CODE"||tg==="PRE"||tg==="OPTION"&&e.parentElement&&e.parentElement.hasAttribute("data-notr")) return true;
+    if(e.classList && (e.classList.contains("mid")||e.classList.contains("ag-msg")||e.classList.contains("rv-t")||e.classList.contains("catrow"))) return true;
+  }
+  return false;
+}
+function atrData(){ /* user data that must stay as typed */
+  var set={}; (S.dishes||[]).forEach(function(d){ set[d.name]=1; }); cats().forEach(function(c){ set[c.label]=1; }); return set;
+}
+function atrWant(t, data){ t=t.trim(); return t.length>=2 && t.length<=400 && /[A-Za-z]{2}/.test(t) && !data[t] && !/^[\d\s.,:;%+×x\-–—/()#№]+$/.test(t) && !/^https?:|@|\.(png|jpe?g|sql|apk|html)$/i.test(t); }
+function atrApply(){
+  if(!A || S.view!=="admin") return;
+  var L=ATR.lang, d=ATR.dict[L]||{}, data=atrData(), need={};
+  var w=document.createTreeWalker(A, NodeFilter.SHOW_TEXT, null), n, nodes=[];
+  while((n=w.nextNode())) nodes.push(n);
+  nodes.forEach(function(tn){
+    var el=tn.parentElement; if(!el || atrSkip(el)) return;
+    var cur=tn.nodeValue, o=ATR.orig.get(tn);
+    if(o===undefined || (cur!==o.uz && cur!==o.tr)) { o={uz:cur, tr:null}; ATR.orig.set(tn,o); }
+    var src=o.uz, key=src.trim();
+    if(L==="uz"){ if(cur!==src) tn.nodeValue=src; return; }
+    if(!atrWant(key,data)) return;
+    var tr=d[key];
+    if(tr){ var v=src.replace(key,tr); o.tr=v; if(cur!==v) tn.nodeValue=v; }
+    else need[key]=1;
+  });
+  A.querySelectorAll("[placeholder],[title],[aria-label]").forEach(function(el){
+    if(atrSkip(el.parentElement||el) && !el.matches("input,textarea,button")) return;
+    ["placeholder","title","aria-label"].forEach(function(at){
+      if(!el.hasAttribute(at)) return;
+      var m=ATR.attrO.get(el)||{}; var cur=el.getAttribute(at);
+      if(m[at]===undefined || (cur!==m[at] && cur!==m[at+"_tr"])) m[at]=cur;
+      ATR.attrO.set(el,m);
+      var src=m[at], key=src.trim();
+      if(L==="uz"){ if(cur!==src) el.setAttribute(at,src); return; }
+      if(!atrWant(key,data)) return;
+      var tr=d[key]; if(tr){ m[at+"_tr"]=tr; if(cur!==tr) el.setAttribute(at,tr); } else need[key]=1;
+    });
+  });
+  var keys=Object.keys(need).filter(function(k){ return !ATR.pend[k] && !ATR.tried[k]; });
+  if(keys.length && !ATR.busy && Date.now()>ATR.next) atrFetch(keys);
+}
+function atrNote(t){ var b=$("atrNote"); if(!t){ if(b) b.remove(); return; } if(!b){ b=document.createElement("div"); b.id="atrNote"; document.body.appendChild(b); } b.textContent=t; }
+async function atrLoad(){
+  if(ATR.loaded || !S.db) return; ATR.loaded=true;
+  try{ var r=await S.db.doc("settings/i18n_admin").get(); var v=r&&r.exists&&r.data(); if(v&&v.ru){ ATR.dict.ru=Object.assign({},v.ru,ATR.dict.ru); ATR.dict.en=Object.assign({},v.en||{},ATR.dict.en); } }catch(_){}
+}
+async function atrFetch(keys){
+  keys.forEach(function(k){ ATR.pend[k]=1; ATR.tried[k]=1; });
+  if(ATR.busy) return;
+  ATR.busy=true;
+  try{
+    await atrLoad();
+    if(!S.sample || !S.aiOn){ if(S.aiOn===undefined && sessionOK()){ var r0=await S.sb.rpc("uno_ai_status"); S.aiOn=r0.error?false:!!r0.data; } }
+    var todo=Object.keys(ATR.pend).filter(function(k){ return !(ATR.dict.ru[k]&&ATR.dict.en[k]); });
+    if(todo.length && (!S.sample || !S.aiOn)){ ATR.next=Date.now()+60000; todo.forEach(function(k){ delete ATR.tried[k]; }); setTimeout(function(){ atrNote(ATR.lang==="ru"?"Для перевода нужен ключ AI (Sozlamalar → AI)":"An AI key is needed to translate (Sozlamalar → AI)"); setTimeout(function(){ atrNote(""); },4000); },0); todo=[]; }
+    else for(var i=0;i<todo.length;i+=60){
+      atrNote(ATR.lang==="ru"?"Перевод панели…":"Translating the panel…");
+      var part=todo.slice(i,i+60);
+      var prompt="You translate the user interface of a restaurant admin panel from Uzbek (Latin script) into Russian and English. "+
+        "Strings are buttons, labels, hints and messages; keep them short and natural, keep the same punctuation, leading/trailing symbols, numbers and emoji. "+
+        "If a string is a proper name, a brand, a code, or is not Uzbek, return it unchanged. Reply with JSON only: an array [{\"i\":0,\"ru\":\"\",\"en\":\"\"}] in the same order.\n\n"+
+        JSON.stringify(part.map(function(t,k){ return {i:k,uz:t}; }));
+      var arr=await S.sample.json(prompt,{});
+      if(!Array.isArray(arr)) arr=arr&&Array.isArray(arr.items)?arr.items:[];
+      arr.forEach(function(x){ var k=part[x&&x.i]; if(k===undefined) return; if(x.ru) ATR.dict.ru[k]=String(x.ru); if(x.en) ATR.dict.en[k]=String(x.en); });
+      part.forEach(function(k){ if(!ATR.dict.ru[k]) ATR.dict.ru[k]=k; if(!ATR.dict.en[k]) ATR.dict.en[k]=k; });
+    }
+    try{ localStorage.setItem("uno_admin_i18n", JSON.stringify(ATR.dict)); }catch(_){}
+    if(todo.length && S.aiOn) try{ await S.db.doc("settings/i18n_admin").set({ru:ATR.dict.ru, en:ATR.dict.en, at:Date.now()}); }catch(_){}
+  }catch(e){ console.warn("admin i18n", e); }
+  finally{ ATR.busy=false; ATR.pend={}; if(!document.getElementById("atrNote")||/Перевод|Translating/.test(($("atrNote")||{}).textContent||"")) atrNote(""); setTimeout(atrApply,50); }
+}
+function atrWatch(){
+  if(ATR.obs || !A || !window.MutationObserver) return;
+  ATR.obs=new MutationObserver(function(){ if(ATR.lang==="uz" && !ATR.dirty) return; clearTimeout(ATR.t); ATR.t=setTimeout(atrApply, 120); });
+  ATR.obs.observe(A, {childList:true, subtree:true, characterData:true, attributes:true, attributeFilter:["placeholder","title","aria-label"]});
+}
+document.addEventListener("click", function(e){
+  var b=e.target.closest && e.target.closest("[data-alang]"); if(!b) return;
+  ATR.lang=b.dataset.alang; ATR.dirty=true; try{ localStorage.setItem("uno_admin_lang", ATR.lang); }catch(_){}
+  document.querySelectorAll("[data-alang]").forEach(function(x){ x.classList.toggle("on", x.dataset.alang===ATR.lang); });
+  atrLoad().then(atrApply);
+});
 /* ---- editor ---- */
 function langSec(l,suf,E,show){
   var lab={uz:["Taom nomi *","Qisqa tavsif","Tarkibi (batafsil oynada chiqadi)"],ru:["Название","Краткое описание","Состав"],en:["Name","Short description","Ingredients"]}[l];
