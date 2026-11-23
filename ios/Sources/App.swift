@@ -68,7 +68,7 @@ struct RootView: View {
     var body: some View {
         GeometryReader { geo in
             let land = geo.size.width > geo.size.height
-            let safeB = geo.safeAreaInsets.bottom
+            let safeB = UNOBar.homeIndicator(geo.safeAreaInsets.bottom)   /* the screen edge, not the keyboard */
             ZStack(alignment: .bottom) {
                 page(0) { MenuView() }
                 page(1) { BookingView().safeAreaInset(edge: .bottom) { Color.clear.frame(height: UNOBar.height(land)) } }
@@ -97,6 +97,11 @@ struct RootView: View {
 
 /* sizes shared with the menu page (it keeps its footer clear of the bar) */
 enum UNOBar {
+    /* bottom inset of the screen itself; geo.safeAreaInsets grows by the keyboard's height while it is up */
+    static func homeIndicator(_ fallback: CGFloat) -> CGFloat {
+        let w = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.flatMap { $0.windows }.first { $0.isKeyWindow }
+        return w?.safeAreaInsets.bottom ?? min(fallback, 34)
+    }
     static func height(_ landscape: Bool) -> CGFloat { landscape ? 50 : 62 }
     static func bottomPad(_ landscape: Bool, safe: CGFloat) -> CGFloat { landscape ? 6 : max(8, safe - 12) }
     static func reserved(_ landscape: Bool, safe: CGFloat) -> CGFloat { height(landscape) + bottomPad(landscape, safe: safe) + 6 }
