@@ -79,6 +79,7 @@ struct RootView: View {
                     .padding(.bottom, UNOBar.bottomPad(land, safe: safeB))
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                     .ignoresSafeArea(.all, edges: .bottom)
+                    .ignoresSafeArea(.keyboard, edges: .bottom)   /* stays down behind the keyboard instead of riding on top of it */
             }
         }
         .background(Config.bg.ignoresSafeArea())

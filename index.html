@@ -813,12 +813,13 @@ html.in-app #agPanel{bottom:var(--appB,0px)!important;padding-bottom:0!important
 @keyframes gaiPulse{0%,100%{box-shadow:0 0 0 4px rgba(255,201,77,.14),0 10px 26px rgba(0,0,0,.45)}50%{box-shadow:0 0 0 10px rgba(255,201,77,.05),0 10px 26px rgba(0,0,0,.45)}}
 #stage.phone .gai-fab{left:12px;bottom:6px;width:48px;height:48px}
 #stage.phoneL .gai-fab{bottom:4px;width:44px;height:44px}
-#gai{position:fixed;inset:0;z-index:9000;display:flex;align-items:flex-end;justify-content:center;background:rgba(2,5,16,.45);opacity:0;pointer-events:none;transition:opacity .25s}
+#gai{position:fixed;left:0;right:0;top:0;height:100%;z-index:9000;display:flex;align-items:flex-end;justify-content:center;background:rgba(2,5,16,.45);opacity:0;pointer-events:none;transition:opacity .25s}
 #gai.on{opacity:1;pointer-events:auto}
 #gai .gai-sheet{width:min(560px,100%);height:min(80vh,760px);margin-bottom:var(--appB,0px);display:flex;flex-direction:column;border-radius:26px 26px 0 0;overflow:hidden;
   background:linear-gradient(170deg,rgba(28,40,84,.86),rgba(8,14,34,.92));border:1px solid rgba(255,255,255,.16);border-bottom:0;-webkit-backdrop-filter:blur(22px) saturate(150%);backdrop-filter:blur(22px) saturate(150%);
   box-shadow:0 -20px 60px rgba(0,0,0,.5);transform:translateY(40px);transition:transform .3s cubic-bezier(.2,.8,.2,1);color:#F2F6FF}
 #gai.on .gai-sheet{transform:none}
+#gai.kb .gai-sheet{height:100%;max-height:none;margin-bottom:0;border-radius:0}
 @media (orientation:landscape) and (max-height:520px){#gai .gai-sheet{height:calc(100vh - 16px - var(--appB,0px));border-radius:22px 22px 0 0}}
 .gai-head{display:flex;align-items:center;gap:12px;padding:16px 16px 12px;border-bottom:1px solid rgba(255,255,255,.1)}
 .gai-ava{flex:none;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#1A1306;background:radial-gradient(circle at 35% 30%,#FFF1C2,#FFC94D 55%,#D99A22)}
@@ -843,7 +844,7 @@ html.in-app #agPanel{bottom:var(--appB,0px)!important;padding-bottom:0!important
 .gai-chips button{flex:none;padding:8px 12px;border-radius:16px;border:1px solid rgba(255,214,120,.35);background:rgba(255,255,255,.06);color:#FFE7A6;font-size:13px;cursor:pointer}
 .gai-in{display:flex;gap:8px;padding:10px 12px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid rgba(255,255,255,.1)}
 html.in-app .gai-in{padding-bottom:12px}
-.gai-in textarea{flex:1;resize:none;height:44px;max-height:110px;padding:11px 14px;border-radius:22px;border:1px solid rgba(255,255,255,.18);background:rgba(3,7,20,.55);color:#fff;font:15px/1.4 inherit;outline:none}
+.gai-in textarea{flex:1;resize:none;height:44px;max-height:110px;padding:11px 14px;border-radius:22px;border:1px solid rgba(255,255,255,.18);background:rgba(3,7,20,.55);color:#fff;font:16px/1.4 inherit;outline:none}
 .gai-in textarea:focus{border-color:#FFC94D}
 .gai-in button{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:linear-gradient(180deg,#FFE08A,#FFC94D);color:#1A1306;font-size:18px;cursor:pointer}
 .gai-in button:disabled{opacity:.45}
@@ -2298,11 +2299,23 @@ function gaiBuild(){
   });
   $("gaiForm").addEventListener("submit",function(e){ e.preventDefault(); gaiSend($("gaiIn").value); });
   $("gaiIn").addEventListener("keydown",function(e){ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); gaiSend(this.value); } });
+  $("gaiIn").addEventListener("focus",function(){ setTimeout(gaiFit,60); setTimeout(gaiFit,350); });
+  $("gaiIn").addEventListener("blur",function(){ setTimeout(gaiFit,120); setTimeout(function(){ if(!GAI.open||document.activeElement!==$("gaiIn")) try{ window.scrollTo(0,0); }catch(_){} },300); });
   $("gaiIn").addEventListener("input",function(){ this.style.height="44px"; this.style.height=Math.min(110,this.scrollHeight)+"px"; });
   return el;
 }
+/* keyboard: the chat follows the visible area, so the field stays just above the keyboard and nothing jumps */
+function gaiFit(){
+  var el=GAI.el; if(!el) return; var vv=window.visualViewport;
+  if(!vv || !GAI.open){ el.style.top=""; el.style.height=""; el.classList.remove("kb"); return; }
+  var kb=vv.height < window.innerHeight-120;
+  el.classList.toggle("kb", kb);
+  el.style.top=(kb?vv.offsetTop:0)+"px"; el.style.height=(kb?vv.height:window.innerHeight)+"px";
+  if(kb){ var log=$("gaiLog"); if(log) log.scrollTop=log.scrollHeight; }
+}
+if(window.visualViewport){ visualViewport.addEventListener("resize",gaiFit); visualViewport.addEventListener("scroll",gaiFit); }
 function gaiShow(on){
-  var el=gaiBuild(); GAI.open=on;
+  var el=gaiBuild(); GAI.open=on; if(!on){ try{ document.activeElement&&document.activeElement.blur(); }catch(_){} setTimeout(function(){ gaiFit(); try{ menuTop(); }catch(_){} },60); }
   if(on){
     if(!GAI.msgs.length){ var pf=null; try{ pf=prof(); }catch(_){} GAI.msgs.push({role:"model", text:gaiT().hi(pf&&pf.name?pf.name.split(/\s+/)[0]:""), local:true}); }
     gaiRender(); el.classList.add("on"); setTimeout(function(){ if(!matchMedia("(pointer:coarse)").matches) $("gaiIn").focus(); },250);
