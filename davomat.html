@@ -286,10 +286,8 @@ function submit(){
     var t=hm(new Date(new Date(r.at).getTime())), first=String(r.name||"").split(" ")[0];
     var fine=r.fine>0?("Jarima: "+money(r.fine)+(r.fine_hours?" ("+r.fine_hours+" soat × "+money(r.fine_hour)+")":"")):"";
     if(r.already_in){
-      beep("ok");
-      show(r.fine>0?"late":"ok", face||"✓", first+", siz kelgansiz", t, fine||"Kelish allaqachon belgilangan",
-        "Ketyapsizmi? Pastdagi tugmani bosing.");
-      offerOut(code, photo, face, first);
+      hint("Ketish belgilanmoqda…");
+      autoOut(code, photo, face, first, t, fine);
     } else if(r.kind==="in"){
       var late=(r.late||0)>(r.grace||0);
       beep(late?"late":"ok");
@@ -297,7 +295,7 @@ function submit(){
         late?("Kechikdingiz: "+dur(r.late)):"Vaqtida keldingiz", fine?(fine+". Sababli bo'lsa rahbarga ayting."):(r.dup?"Siz allaqachon belgilangansiz.":"Ish kuningiz xayrli o'tsin!"));
     } else {
       beep("ok");
-      show("out", face||"👋", "Xayr, "+first+"!", t, r.worked!=null?("Bugun ishladingiz: "+dur(r.worked)):"Ketish belgilandi", r.dup?"Siz allaqachon belgilangansiz.":"Yaxshi dam oling!");
+      show("out", face||"👋", "Xayr, "+first+"!", t, r.worked!=null?("Bugun ishladingiz: "+dur(r.worked)):"Ketish belgilandi", r.dup?"Siz allaqachon belgilangansiz.":"Maroqli hordiq tilaymiz! 🌙");
     }
   }).catch(function(e){
     pin=""; dots();
@@ -310,18 +308,18 @@ function submit(){
   });
 }
 
-/* within the arrival window a second PIN only says "already here"; a deliberate tap records the leave */
-function offerOut(code, photo, face, first){
-  var b=document.createElement("button"); b.id="outBtn"; b.type="button"; b.textContent="👋 Ketishni belgilash";
-  $("res").appendChild(b); clearTimeout(resT); resT=setTimeout(function(){ $("res").className=""; busy=false; hint("Shaxsiy PIN-kodingizni tering"); },10000);
-  b.addEventListener("click",function(e){
-    e.stopPropagation(); b.disabled=true; b.textContent="Belgilanmoqda…";
-    rpc("uno_att_punch_out",{p_token:token,p_pin:code,p_photo:photo,p_wait:!!photo},9000).then(function(r){
-      if(!r||!r.ok){ b.disabled=false; b.textContent="Qayta urinib ko'ring"; return; }
-      if(r.key) tgPhoto(r.key,photo);
-      beep("ok");
-      show("out", face||"👋", "Xayr, "+first+"!", hm(new Date(r.at)), r.worked!=null?("Bugun ishladingiz: "+dur(r.worked)):"Ketish belgilandi", "Yaxshi dam oling!");
-    }).catch(function(err){ b.disabled=false; b.textContent=/uno_att_punch_out|function/.test(err&&err.message||"")?"Baza yangilanmagan (attendance_fines.sql)":"Xatolik — qayta bosing"; });
+/* second PIN after arriving = leaving: record it at once (a repeat within 2 min is still ignored by the server) */
+function autoOut(code, photo, face, first, t, fine){
+  rpc("uno_att_punch_out",{p_token:token,p_pin:code,p_photo:photo,p_wait:!!photo},9000).then(function(r){
+    if(!r||!r.ok){ busy=false; wrong("Xatolik. Qayta urining"); return; }
+    if(r.key) tgPhoto(r.key,photo);
+    beep("ok");
+    if(r.kind==="out") show("out", face||"👋", "Xayr, "+first+"!", hm(new Date(r.at)), r.worked!=null?("Bugun ishladingiz: "+dur(r.worked)):"Ketish belgilandi", "Maroqli hordiq tilaymiz! 🌙");
+    else show("ok", face||"✓", first+", siz kelgansiz", t, fine||"Kelish allaqachon belgilangan", "Siz allaqachon belgilangansiz.");
+  }).catch(function(err){
+    busy=false;
+    if(/uno_att_punch_out|function/.test(err&&err.message||"")) show("late", face||"⚠️", first+", siz kelgansiz", t, "Ketish yozilmadi", "Baza yangilanmagan: adminga ayting (attendance_fines.sql).");
+    else wrong("Xatolik. Qayta urining");
   });
 }
 /* ---- hidden admin entry: hold the logo 3 s or tap it 7 times ---- */
