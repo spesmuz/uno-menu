@@ -5,9 +5,10 @@ options:
   deploymentTarget:
     iOS: "15.0"
   createIntermediateGroups: true
+  developmentLanguage: en
 settings:
   base:
-    MARKETING_VERSION: "1.2.5"
+    MARKETING_VERSION: "1.2.6"
     CURRENT_PROJECT_VERSION: "1"
     SWIFT_VERSION: "5.0"
 targets:
@@ -24,13 +25,13 @@ targets:
         CFBundleName: UNO Airways
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        CFBundleDevelopmentRegion: uz
-        CFBundleLocalizations: [uz, ru, en]
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, ru, uz]
         LSApplicationQueriesSchemes: [instagram, tg, tel]
         ITSAppUsesNonExemptEncryption: false
-        NSMicrophoneUsageDescription: "UNO AI yordamchisiga ovozli buyruq berish uchun mikrofon kerak."
-        NSLocationWhenInUseUsageDescription: "Yetkazib berish uchun manzilingizni aniqlash."
-        NSCameraUsageDescription: "Taom suratini olish uchun kamera kerak."
+        NSMicrophoneUsageDescription: "The microphone is used only when you speak to the UNO AI assistant."
+        NSLocationWhenInUseUsageDescription: "Your location is used only to fill in the delivery address for your order."
+        NSCameraUsageDescription: "The camera is used only to take a photo of a dish or for your profile picture."
         UILaunchScreen:
           UIColorName: LaunchBg
           UIImageName: Logo

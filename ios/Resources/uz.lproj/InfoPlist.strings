@@ -1,0 +1,4 @@
+"NSMicrophoneUsageDescription" = "Mikrofon faqat UNO AI yordamchisi bilan gaplashganingizda ishlatiladi.";
+"NSLocationWhenInUseUsageDescription" = "Joylashuvingiz faqat buyurtmani yetkazish manzilini to'ldirish uchun ishlatiladi.";
+"NSCameraUsageDescription" = "Kamera faqat taom yoki profil suratini olish uchun ishlatiladi.";
+"CFBundleDisplayName" = "UNO Airways";

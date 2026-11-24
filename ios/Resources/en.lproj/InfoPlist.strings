@@ -1,0 +1,4 @@
+"NSMicrophoneUsageDescription" = "The microphone is used only when you speak to the UNO AI assistant.";
+"NSLocationWhenInUseUsageDescription" = "Your location is used only to fill in the delivery address for your order.";
+"NSCameraUsageDescription" = "The camera is used only to take a photo of a dish or for your profile picture.";
+"CFBundleDisplayName" = "UNO Airways";

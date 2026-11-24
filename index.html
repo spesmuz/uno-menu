@@ -1003,7 +1003,9 @@ var S = {
   cat:null, idx:0, cart:{}, query:"", drag:0, dragging:false, cartOpen:false, ordered:false,
   view:"menu", editing:null, lang:"uz", detail:null
 };
-try{ var _l=localStorage.getItem("uno_lang"); if(_l==="ru"||_l==="en"||_l==="uz") S.lang=_l; }catch(_){}
+/* first visit: the phone's language (so the app, its system prompts and the menu agree); afterwards the guest's own choice */
+try{ var _l=localStorage.getItem("uno_lang"); if(_l==="ru"||_l==="en"||_l==="uz") S.lang=_l;
+  else { var _n=String((navigator.languages&&navigator.languages[0])||navigator.language||"").toLowerCase(); S.lang=/^ru/.test(_n)?"ru":/^en/.test(_n)?"en":"uz"; } }catch(_){}
 var $ = function(id){ return document.getElementById(id); };
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
 function fmtUZ(n){ n=Math.round(Number(n)||0); return String(n).replace(/\B(?=(\d{3})+(?!\d))/g," ")+" so'm"; }
@@ -1276,6 +1278,7 @@ function applyStatic(){
 }
 /* iPhone app: its own buttons and pages follow the language chosen here */
 function tellAppLang(){
+  try{ if(!localStorage.getItem("uno_lang")) return; }catch(_){}
   try{ if(window.webkit&&webkit.messageHandlers&&webkit.messageHandlers.unoLang) webkit.messageHandlers.unoLang.postMessage(S.lang); }catch(_){}
 }
 setTimeout(tellAppLang,300);
