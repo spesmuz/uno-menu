@@ -719,6 +719,16 @@ html.th-liquid .info .price,html.th-liquid .d-price{color:#9BDCFF;text-shadow:0 
 html.th-liquid .badge.cat,html.th-liquid .tab{letter-spacing:.06em}
 html.th-liquid .gai-fab{background:radial-gradient(circle at 35% 30%,#fff,#BFE7FF 55%,#6FC3F5);border-color:rgba(255,255,255,.8);box-shadow:0 0 0 4px rgba(155,220,255,.16),0 10px 26px rgba(0,0,0,.5)}
 html.th-liquid .logo span{color:#9BDCFF}
+
+/* GPU glass on: elements become clear lenses (the canvas draws the refraction under them) */
+html.th-liquid.lq-gl :is(.tabs,.search-box,.icon-btn,.cart-btn,.langs,.slide.center .card,.slide.center .more-btn,.slide.center .badge,.arrow,.stepper){
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:rgba(255,255,255,.035)!important;border:1px solid rgba(255,255,255,.28)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(255,255,255,.12)!important}
+html.th-liquid.lq-gl .slide.center .card{background:rgba(6,6,8,.18)!important}
+html.th-liquid.lq-gl .slide.center .card::before,html.th-liquid.lq-gl .card::after,html.th-liquid.lq-gl .tab[aria-pressed="true"]::after{display:none}
+html.th-liquid.lq-gl .slide.center .media{background:transparent;border-color:rgba(255,255,255,.22);box-shadow:none}
+html.th-liquid.lq-gl .slide.center .info h2,html.th-liquid.lq-gl .slide.center .desc{text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 14px rgba(0,0,0,.6)}
+html.th-liquid.lq-gl .gai-fab{background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.95),rgba(190,230,255,.85) 55%,rgba(110,195,245,.85))}
 /* ================= THEME: Boarding pass — glass tickets above the night earth, departures-board tabs ================= */
 html.th-boarding{--gold:#FFC94D;--gold2:#FFE08A;--ink:#050B1E;--panel:rgba(16,28,60,.55);--line:rgba(255,255,255,.18);--text:#F2F6FF;--muted:#A9B8D6;
   --bp-amber:#FFC94D;--bp-mono:ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace;
@@ -2141,7 +2151,7 @@ SKY_HTML.liquid='<div class="lq-fb"></div><canvas></canvas>';
 /* flowing black-and-white chrome, drawn by the GPU at low resolution (falls back to a slow CSS swirl) */
 function liquidSky(sky){
   var cv=sky.querySelector("canvas"); if(!cv) return;
-  var gl=cv.getContext("webgl",{antialias:false,alpha:false,powerPreference:"low-power"}); if(!gl) return;
+  var gl=cv.getContext("webgl",{antialias:false,alpha:false,powerPreference:"low-power",preserveDrawingBuffer:false}); if(!gl) return;
   var vs="attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
   var fs="precision mediump float;uniform vec2 R;uniform float T;"+
    "float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}"+
@@ -2154,19 +2164,66 @@ function liquidSky(sky){
    "float c=mix(.02,.88,smoothstep(.4,.98,band))*(.5+.5*N.z)+sp*.8;"+
    "vec3 col=vec3(c);col+=vec3(.25,.5,.9)*sp*.25*smoothstep(.6,1.,band);"+
    "gl_FragColor=vec4(pow(col,vec3(1.15)),1.);}";
-  function sh(t,src){ var o=gl.createShader(t); gl.shaderSource(o,src); gl.compileShader(o); return gl.getShaderParameter(o,gl.COMPILE_STATUS)?o:null; }
-  var v=sh(gl.VERTEX_SHADER,vs), f=sh(gl.FRAGMENT_SHADER,fs); if(!v||!f) return;
-  var pr=gl.createProgram(); gl.attachShader(pr,v); gl.attachShader(pr,f); gl.linkProgram(pr); if(!gl.getProgramParameter(pr,gl.LINK_STATUS)) return;
-  gl.useProgram(pr);
-  var b=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,b); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
-  var loc=gl.getAttribLocation(pr,"p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
-  var uR=gl.getUniformLocation(pr,"R"), uT=gl.getUniformLocation(pr,"T"), t0=performance.now(), last=0;
-  sky.classList.add("gl");
-  var still=window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches;
-  function size(){ var k=0.45, w=Math.max(2,Math.round(cv.clientWidth*k)), hh=Math.max(2,Math.round(cv.clientHeight*k)); if(cv.width!==w||cv.height!==hh){ cv.width=w; cv.height=hh; gl.viewport(0,0,w,hh); } }
+  
+  /* pass 2: the glass. Every button and card is a lens: the chrome behind it bends toward the rim, splits into colours at the edge
+     and is slightly magnified in the middle — the same picture the page is drawn on, so it lines up exactly */
+  var fs2="precision mediump float;uniform sampler2D B;uniform vec2 R;uniform float S;uniform int NQ;uniform vec4 Q[16];uniform vec2 Z[16];"+
+   "float sd(vec2 p,vec4 q,float r){vec2 c=q.xy+.5*q.zw;vec2 b=.5*q.zw;vec2 d=abs(p-c)-b+r;return length(max(d,0.))+min(max(d.x,d.y),0.)-r;}"+
+   "void main(){vec2 p=gl_FragCoord.xy;float dm=1e5;int k=-1;"+
+   "for(int i=0;i<16;i++){if(i>=NQ)break;float d=sd(p,Q[i],Z[i].x);if(d<dm){dm=d;k=i;}}"+
+   "vec2 uv=p/R;vec3 col=texture2D(B,uv).rgb;"+
+   "if(k>=0){vec4 q;vec2 z;for(int i=0;i<16;i++){if(i==k){q=Q[i];z=Z[i];}}"+
+   " if(dm<0.){float e=min(26.*S,.5*min(q.z,q.w));float t=clamp(1.+dm/e,0.,1.);float bend=t*t*t;"+
+   "  vec2 n=normalize(vec2(sd(p+vec2(1.,0.),q,z.x)-sd(p-vec2(1.,0.),q,z.x),sd(p+vec2(0.,1.),q,z.x)-sd(p-vec2(0.,1.),q,z.x))+1e-5);"+
+   "  vec2 c=q.xy+.5*q.zw;vec2 off=-n*bend*22.*S+(c-p)*.07;"+
+   "  float r=texture2D(B,uv+off/R).r;float g=texture2D(B,uv+off*1.18/R).g;float bb=texture2D(B,uv+off*1.38/R).b;"+
+   "  col=vec3(r,g,bb);col*=mix(z.y,1.,bend*.7);"+
+   "  col+=vec3(1.)*smoothstep(1.8*S,0.,abs(dm))*.35;"+
+   " }else{col*=1.-.45*exp(-dm/(9.*S))*step(0.,dm);}}"+
+   "gl_FragColor=vec4(col,1.);}";
+  function sh(t,src){ var o=gl.createShader(t); gl.shaderSource(o,src); gl.compileShader(o); if(!gl.getShaderParameter(o,gl.COMPILE_STATUS)){ console.warn(gl.getShaderInfoLog(o)); return null; } return o; }
+  function prog(f){ var v=sh(gl.VERTEX_SHADER,vs), x=sh(gl.FRAGMENT_SHADER,f); if(!v||!x) return null; var pr=gl.createProgram(); gl.attachShader(pr,v); gl.attachShader(pr,x); gl.linkProgram(pr); return gl.getProgramParameter(pr,gl.LINK_STATUS)?pr:null; }
+  var P1=prog(fs), P2=prog(fs2); if(!P1||!P2) return;
+  var buf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buf); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  function bindQuad(pr){ var l=gl.getAttribLocation(pr,"p"); gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l,2,gl.FLOAT,false,0,0); }
+  var u1={R:gl.getUniformLocation(P1,"R"),T:gl.getUniformLocation(P1,"T")};
+  var u2={B:gl.getUniformLocation(P2,"B"),R:gl.getUniformLocation(P2,"R"),S:gl.getUniformLocation(P2,"S"),N:gl.getUniformLocation(P2,"NQ"),Q:gl.getUniformLocation(P2,"Q"),Z:gl.getUniformLocation(P2,"Z")};
+  var tex=gl.createTexture(), fbo=gl.createFramebuffer(), tw=0, th=0;
+  var K=0.5, t0=performance.now(), last=0, still=window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches;
+  var GLASS=".tabs,.search-box,.icon-btn,.cart-btn,.langs,.gai-fab,.slide.center .card,.slide.center .add-btn,.slide.center .more-btn,.slide.center .badge,.arrow,.stepper";
+  var Qa=new Float32Array(64), Za=new Float32Array(32);
+  sky.classList.add("gl"); document.documentElement.classList.add("lq-gl");
+  function size(){
+    var w=Math.max(2,Math.round(cv.clientWidth*K)), h=Math.max(2,Math.round(cv.clientHeight*K));
+    if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h; }
+    if(tw!==w||th!==h){ tw=w; th=h; gl.bindTexture(gl.TEXTURE_2D,tex); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+      gl.bindFramebuffer(gl.FRAMEBUFFER,fbo); gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0); gl.bindFramebuffer(gl.FRAMEBUFFER,null); }
+  }
+  function rects(){
+    var cr=cv.getBoundingClientRect(), n=0, sx=cv.width/cr.width, sy=cv.height/cr.height;
+    if(S.view!=="menu"||document.querySelector(".detail,.overlay")) return 0;
+    var els=document.querySelectorAll(GLASS);
+    for(var i=0;i<els.length&&n<16;i++){
+      var e=els[i], r=e.getBoundingClientRect(); if(r.width<8||r.height<8||r.bottom<cr.top||r.top>cr.bottom) continue;
+      var st=getComputedStyle(e); if(st.visibility==="hidden"||st.display==="none"||+st.opacity<.2) continue;
+      var sc=e.offsetWidth?r.width/e.offsetWidth:1, rad=Math.min(parseFloat(st.borderTopLeftRadius)||0, 9999)*sc;
+      Qa[n*4]=(r.left-cr.left)*sx; Qa[n*4+1]=(cr.bottom-r.bottom)*sy; Qa[n*4+2]=r.width*sx; Qa[n*4+3]=r.height*sy;
+      Za[n*2]=Math.min(rad*sx, .5*Math.min(r.width*sx,r.height*sy)); Za[n*2+1]=e.classList.contains("card")?.5:(e.classList.contains("add-btn")?1.:.72);
+      n++;
+    }
+    return n;
+  }
   function frame(now){
-    if(sky.dataset.t!=="liquid") return;
-    if(!document.hidden && now-last>40){ last=now; size(); gl.uniform2f(uR,cv.width,cv.height); gl.uniform1f(uT,(now-t0)/1000); gl.drawArrays(gl.TRIANGLES,0,3); }
+    if(sky.dataset.t!=="liquid"){ document.documentElement.classList.remove("lq-gl"); return; }
+    if(!document.hidden && now-last>33){ last=now; size();
+      gl.bindFramebuffer(gl.FRAMEBUFFER,fbo); gl.viewport(0,0,tw,th); gl.useProgram(P1); gl.bindBuffer(gl.ARRAY_BUFFER,buf); bindQuad(P1);
+      gl.uniform2f(u1.R,tw,th); gl.uniform1f(u1.T,(now-t0)/1000); gl.drawArrays(gl.TRIANGLES,0,3);
+      gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.viewport(0,0,tw,th); gl.useProgram(P2); bindQuad(P2);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,tex); gl.uniform1i(u2.B,0);
+      var n=rects(); gl.uniform2f(u2.R,tw,th); gl.uniform1f(u2.S,K); gl.uniform1i(u2.N,n); gl.uniform4fv(u2.Q,Qa); gl.uniform2fv(u2.Z,Za);
+      gl.drawArrays(gl.TRIANGLES,0,3); }
     if(!still) requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
