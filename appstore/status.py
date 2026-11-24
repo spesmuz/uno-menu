@@ -10,3 +10,7 @@ for s in requests.get(A+"/v1/reviewSubmissions",params={"filter[app]":app,"limit
     print("SUBMISSION",s["attributes"].get("state"),s["attributes"].get("submittedDate"))
 r=requests.get("https://itunes.apple.com/lookup",params={"id":app,"country":"uz"}).json()
 print("PUBLIC",r.get("resultCount"),[(x.get("trackName"),x.get("version"),x.get("trackViewUrl")) for x in r.get("results",[])])
+
+for s_ in requests.get(A+"/v1/reviewSubmissions",params={"filter[app]":app,"limit":5,"include":"items"},headers=H).json().get("data",[]):
+    it=requests.get(A+f"/v1/reviewSubmissions/{s_['id']}/items",headers=H).json().get("data",[])
+    print("SUB",s_["id"][:8],s_["attributes"].get("state"),s_["attributes"].get("submittedDate"),[i["attributes"].get("state") for i in it])
