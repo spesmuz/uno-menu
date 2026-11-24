@@ -664,7 +664,7 @@ html.th-liquid{--gold:#9BDCFF;--gold2:#E6F6FF;--ink:#0A0C10;--panel:rgba(255,255
   --lq-coral:linear-gradient(180deg,#E6F6FF 0%,#9BDCFF 55%,#6FC3F5 100%);
   --lq-violet:linear-gradient(140deg,rgba(235,245,255,.7),rgba(150,200,240,.45) 52%,rgba(220,235,255,.65))}
 html.th-liquid,html.th-liquid body{background:#050505}
-html.th-liquid #adminView,html.th-liquid #editorHost{--gold:#E8B04B;--gold2:#F3C873;--ink:#0E0F12;--panel:#17181C;--card:#1E2026;--line:rgba(255,255,255,.10);--text:#F3EFE7;--muted:#A39E94}
+html.th-liquid #adminView,html.th-liquid #editorHost{--gold:#9BDCFF;--gold2:#E6F6FF;--panel:rgba(14,16,20,.6);--card:rgba(255,255,255,.06);--line:rgba(255,255,255,.2);--text:#FFFFFF;--muted:rgba(255,255,255,.7);--fieldBg:rgba(0,0,0,.55)}
 html.th-liquid #menuView{background:#060606}
 html.th-liquid #sky{display:block;position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
 html.th-liquid #sky canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -832,23 +832,33 @@ html.th-boarding #adminView{background:
    radial-gradient(50% 40% at 88% 18%,rgba(255,170,90,.10),rgba(0,0,0,0) 70%),
    linear-gradient(180deg,#02040c,#06102a 60%,#081634) fixed;background-attachment:fixed}
 html.th-aurora #adminView{background:radial-gradient(90% 60% at 30% 0%,rgba(60,200,170,.14),rgba(0,0,0,0) 60%),radial-gradient(80% 50% at 85% 10%,rgba(150,90,255,.14),rgba(0,0,0,0) 60%),linear-gradient(180deg,#010208,#050b22 60%,#0a1634);background-attachment:fixed}
-:is(html.th-boarding,html.th-aurora) #adminView .a-top{background:rgba(4,8,22,.55);border-bottom:1px solid var(--line);-webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%)}
-:is(html.th-boarding,html.th-aurora) #adminView .a-sec{background:linear-gradient(160deg,rgba(255,255,255,.09),rgba(255,255,255,.03) 40%,rgba(255,255,255,.05));border:1px solid var(--line);
+/* liquid glass admin: the same black-and-white chrome, standing still behind the glass panels */
+html.th-liquid #adminView{background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.5)),radial-gradient(120% 80% at 50% 40%,rgba(0,0,0,0) 40%,rgba(0,0,0,.6) 100%),
+  conic-gradient(from 210deg at 30% 30%,#0b0b0b,#e8e8e8 7%,#151515 14%,#7a7a7a 21%,#050505 29%,#cfcfcf 36%,#0e0e0e 45%,#aaa 54%,#070707 63%,#e2e2e2 71%,#121212 81%,#8a8a8a 90%,#0b0b0b);background-attachment:fixed}
+html.th-liquid #adminView .a-sec{position:relative;background:linear-gradient(160deg,rgba(255,255,255,.10),rgba(8,8,10,.72) 35%,rgba(8,8,10,.78));-webkit-backdrop-filter:blur(22px) saturate(120%) brightness(.7);backdrop-filter:blur(22px) saturate(120%) brightness(.7)}
+html.th-liquid #adminView .a-sec::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;pointer-events:none;
+  background:conic-gradient(from 200deg,transparent,rgba(255,60,170,.9) 8%,rgba(255,215,70,.85) 14%,rgba(80,255,190,.85) 20%,rgba(70,160,255,.95) 27%,rgba(190,110,255,.7) 33%,transparent 40%,transparent 60%,rgba(70,160,255,.7) 70%,rgba(255,60,170,.6) 78%,transparent 86%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+html.th-liquid #adminView .btn.gold,html.th-liquid #adminView .adm-tabs button.on,html.th-liquid #adminView .adm-lang button.on{background:linear-gradient(180deg,#E6F6FF,#9BDCFF 55%,#6FC3F5);color:#06121C;box-shadow:inset 0 2px 1px #fff,0 8px 20px rgba(110,190,255,.3)}
+html.th-liquid #adminView .a-top{background:rgba(0,0,0,.55)}
+html.th-liquid #adminView input[type=checkbox]:checked{background:#6FC3F5;border-color:#6FC3F5}
+:is(html.th-boarding,html.th-aurora,html.th-liquid) #adminView .a-top{background:rgba(4,8,22,.55);border-bottom:1px solid var(--line);-webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%)}
+:is(html.th-boarding,html.th-aurora,html.th-liquid) #adminView .a-sec{background:linear-gradient(160deg,rgba(255,255,255,.09),rgba(255,255,255,.03) 40%,rgba(255,255,255,.05));border:1px solid var(--line);
    box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 14px 34px rgba(0,0,12,.35);-webkit-backdrop-filter:blur(14px) saturate(130%);backdrop-filter:blur(14px) saturate(130%)}
-:is(html.th-boarding,html.th-aurora) #adminView .btn{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
-:is(html.th-boarding,html.th-aurora) #adminView .btn.gold{background:linear-gradient(180deg,var(--gold2),var(--gold));border-color:transparent;color:#1A1306;box-shadow:0 6px 18px rgba(255,190,60,.25)}
-:is(html.th-boarding,html.th-aurora) #adminView .btn.danger{color:#FF9A9A;border-color:rgba(255,120,120,.4);background:rgba(255,80,80,.06)}
-:is(html.th-boarding,html.th-aurora) #adminView .fld input,:is(html.th-boarding,html.th-aurora) #adminView .fld select,:is(html.th-boarding,html.th-aurora) #adminView .fld textarea,
-:is(html.th-boarding,html.th-aurora) #adminView .a-sec input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]),:is(html.th-boarding,html.th-aurora) #adminView .a-sec select,:is(html.th-boarding,html.th-aurora) #adminView .a-sec textarea{background:var(--fieldBg);border:1px solid rgba(255,255,255,.16);color:var(--text)}
-:is(html.th-boarding,html.th-aurora) #adminView .fld input:focus,:is(html.th-boarding,html.th-aurora) #adminView .fld select:focus,:is(html.th-boarding,html.th-aurora) #adminView .fld textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,201,77,.18)}
-:is(html.th-boarding,html.th-aurora) #adminView .drow{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.10)}
-:is(html.th-boarding,html.th-aurora) #adminView .drow .th{background:rgba(255,255,255,.08)}
-:is(html.th-boarding,html.th-aurora) #adminView .msg{background:rgba(255,255,255,.07);border:1px solid var(--line)}
-:is(html.th-boarding,html.th-aurora) #adminView .adm-tabs button{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.16);color:var(--muted);box-shadow:inset 0 1px 0 rgba(255,255,255,.10);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
-:is(html.th-boarding,html.th-aurora) #adminView .adm-tabs button.on{background:linear-gradient(180deg,var(--gold2),var(--gold));border-color:transparent;color:#1A1306}
-:is(html.th-boarding,html.th-aurora) #adminView .adm-dots i{background:rgba(255,255,255,.25)}
-:is(html.th-boarding,html.th-aurora) #adminView .adm-dots i.on{background:var(--gold)}
-:is(html.th-boarding,html.th-aurora) .ag-btns button{background:rgba(255,255,255,.08)}
+:is(html.th-boarding,html.th-aurora,html.th-liquid) #adminView .btn{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+:is(html.th-boarding,html.th-aurora,html.th-liquid) #adminView .btn.gold{background:linear-gradient(180deg,var(--gold2),var(--gold));border-color:transparent;color:#1A1306;box-shadow:0 6px 18px rgba(255,190,60,.25)}
+:is(html.th-boarding,html.th-aurora,html.th-liquid) #adminView .btn.danger{color:#FF9A9A;border-color:rgba(255,120,120,.4);background:rgba(255,80,80,.06)}
+:is(html.th-boarding,html.th-aurora,html.th-liquid) #adminView .fld input,:is(html.th-boarding,html.th-aurora,html.th-liquid) #adminView .fld select,:is(html.th-boarding,html.th-aurora,html.th-liquid) #adminView .fld textarea,
+:is(html.th-boarding,html.th-aurora,html.th-liquid) #adminView .a-sec input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]),:is(html.th-boarding,html.th-aurora,html.th-liquid) #adminView .a-sec select,:is(html.th-boarding,html.th-aurora,html.th-liquid) #adminView .a-sec textarea{background:var(--fieldBg);border:1px solid rgba(255,255,255,.16);color:var(--text)}
+:is(html.th-boarding,html.th-aurora,html.th-liquid) #adminView .fld input:focus,:is(html.th-boarding,html.th-aurora,html.th-liquid) #adminView .fld select:focus,:is(html.th-boarding,html.th-aurora,html.th-liquid) #adminView .fld textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,201,77,.18)}
+:is(html.th-boarding,html.th-aurora,html.th-liquid) #adminView .drow{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.10)}
+:is(html.th-boarding,html.th-aurora,html.th-liquid) #adminView .drow .th{background:rgba(255,255,255,.08)}
+:is(html.th-boarding,html.th-aurora,html.th-liquid) #adminView .msg{background:rgba(255,255,255,.07);border:1px solid var(--line)}
+:is(html.th-boarding,html.th-aurora,html.th-liquid) #adminView .adm-tabs button{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.16);color:var(--muted);box-shadow:inset 0 1px 0 rgba(255,255,255,.10);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+:is(html.th-boarding,html.th-aurora,html.th-liquid) #adminView .adm-tabs button.on{background:linear-gradient(180deg,var(--gold2),var(--gold));border-color:transparent;color:#1A1306}
+:is(html.th-boarding,html.th-aurora,html.th-liquid) #adminView .adm-dots i{background:rgba(255,255,255,.25)}
+:is(html.th-boarding,html.th-aurora,html.th-liquid) #adminView .adm-dots i.on{background:var(--gold)}
+:is(html.th-boarding,html.th-aurora,html.th-liquid) .ag-btns button{background:rgba(255,255,255,.08)}
 #adminView .adm-tabs{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 18px,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(90deg,transparent 0,#000 18px,#000 calc(100% - 18px),transparent)}
 .adm-lang{display:inline-flex;gap:2px;padding:3px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16)}
 .adm-lang button{min-width:40px;height:30px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-family:inherit;font-weight:700;font-size:12px;line-height:1;letter-spacing:.5px;cursor:pointer}
