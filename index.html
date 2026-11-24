@@ -739,7 +739,7 @@ html.th-liquid :is(.tab,.info h2,.d-name,.desc,.d-desc,.d-cat,.logo b,.badge,.fa
 html.th-liquid :is(.desc,.d-desc){color:rgba(11,13,18,.72)!important}
 html.th-liquid .info .price,html.th-liquid .d-price,html.th-liquid .logo span{color:#0A84FF!important;text-shadow:none!important}
 html.th-liquid .tab[aria-pressed="true"],html.th-liquid .langs button[aria-pressed="true"]{background:#0B0D12!important;color:#fff!important}
-html.th-liquid.lq-gl .slide.center .card{background:rgba(255,255,255,.3)!important}
+html.th-liquid.lq-gl .slide.center .card{background:rgba(255,255,255,.18)!important}
 html.th-liquid.lq-gl :is(.tabs,.search-box,.icon-btn,.cart-btn,.langs,.slide.center .card,.slide.center .more-btn,.slide.center .badge,.arrow,.stepper){border-color:rgba(0,0,0,.12)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.9)!important}
 html.th-liquid .add-btn{background:linear-gradient(180deg,#5AB2FF,#0A84FF)!important;color:#fff!important;border-color:rgba(255,255,255,.7)!important;box-shadow:0 10px 24px rgba(10,132,255,.35),inset 0 1px 0 rgba(255,255,255,.7)!important}
 html.th-liquid .slide:not(.center) .card{background:rgba(255,255,255,.55)}
@@ -2187,7 +2187,7 @@ function liquidSky(sky){
    "  vec2 c=q.xy+.5*q.zw;vec2 off=-n*bend*80.*S+(c-p)*.24;"+
    "  float r=texture2D(B,uv+off/R).r;float g=texture2D(B,uv+off*1.5/R).g;float bb=texture2D(B,uv+off*2.05/R).b;"+
    "  col=vec3(r,g,bb);col*=mix(z.y,1.,bend*.7);"+
-   "  col*=1.-.16*smoothstep(.7,1.,bend)*(1.-smoothstep(0.,3.*S,-dm-1.5*S));col-=vec3(.55)*smoothstep(1.6*S,0.,abs(dm));col+=vec3(.8,.9,1.)*smoothstep(3.*S,0.,abs(dm+4.*S))*.35;col+=vec3(1.)*pow(clamp(1.-(p.y-q.y)/q.w,0.,1.),14.)*.18*step(-6.*S,dm);"+
+   "  col*=1.-.16*smoothstep(.7,1.,bend)*(1.-smoothstep(0.,3.*S,-dm-1.5*S));col-=vec3(.28)*smoothstep(1.2*S,0.,abs(dm));col+=vec3(.8,.9,1.)*smoothstep(3.*S,0.,abs(dm+4.*S))*.35;col+=vec3(1.)*pow(clamp(1.-(p.y-q.y)/q.w,0.,1.),14.)*.18*step(-6.*S,dm);"+
    " }else{col*=1.-.22*exp(-dm/(16.*S))*step(0.,dm);}}"+
    "gl_FragColor=vec4(col,1.);}";
   function sh(t,src){ var o=gl.createShader(t); gl.shaderSource(o,src); gl.compileShader(o); if(!gl.getShaderParameter(o,gl.COMPILE_STATUS)){ console.warn(gl.getShaderInfoLog(o)); return null; } return o; }
@@ -2198,7 +2198,7 @@ function liquidSky(sky){
   var u1={R:gl.getUniformLocation(P1,"R"),T:gl.getUniformLocation(P1,"T")};
   var u2={B:gl.getUniformLocation(P2,"B"),R:gl.getUniformLocation(P2,"R"),S:gl.getUniformLocation(P2,"S"),N:gl.getUniformLocation(P2,"NQ"),Q:gl.getUniformLocation(P2,"Q"),Z:gl.getUniformLocation(P2,"Z")};
   var tex=gl.createTexture(), fbo=gl.createFramebuffer(), tw=0, th=0;
-  var K=0.5, t0=performance.now(), last=0, still=window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches;
+  var K=Math.min(window.devicePixelRatio||1,2), t0=performance.now(), last=0, still=window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches;
   var GLASS=".tabs,.search-box,.icon-btn,.cart-btn,.langs,.gai-fab,.slide.center .card,.slide.center .add-btn,.slide.center .more-btn,.slide.center .badge,.arrow,.stepper";
   var Qa=new Float32Array(64), Za=new Float32Array(32);
   sky.classList.add("gl"); document.documentElement.classList.add("lq-gl");
@@ -2219,7 +2219,7 @@ function liquidSky(sky){
       var st=getComputedStyle(e); if(st.visibility==="hidden"||st.display==="none"||+st.opacity<.2) continue;
       var sc=e.offsetWidth?r.width/e.offsetWidth:1, rad=Math.min(parseFloat(st.borderTopLeftRadius)||0, 9999)*sc;
       Qa[n*4]=(r.left-cr.left)*sx; Qa[n*4+1]=(cr.bottom-r.bottom)*sy; Qa[n*4+2]=r.width*sx; Qa[n*4+3]=r.height*sy;
-      Za[n*2]=Math.min(rad*sx, .5*Math.min(r.width*sx,r.height*sy)); Za[n*2+1]=e.classList.contains("card")?.5:(e.classList.contains("add-btn")?1.:.72);
+      Za[n*2]=Math.min(rad*sx, .5*Math.min(r.width*sx,r.height*sy)); Za[n*2+1]=e.classList.contains("card")?.985:(e.classList.contains("add-btn")?1.:.97);
       n++;
     }
     return n;
