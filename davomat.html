@@ -82,6 +82,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer
   .pad{gap:8px;width:min(100%,330px)}
   .pad button{height:max(36px,calc((100vh - 200px) / 4));border-radius:16px;font-size:24px}
 }
+#outBtn{margin-top:22px;padding:16px 28px;border-radius:18px;border:0;background:#3B82F6;color:#fff;font:700 20px/1 inherit;box-shadow:0 10px 30px rgba(59,130,246,.45)}#outBtn:disabled{opacity:.7}
 </style>
 </head>
 <body>
@@ -257,12 +258,12 @@ document.addEventListener("keydown",function(e){ if(busy) return; if(/^\d$/.test
 
 function money(n){ return String(Math.round(n||0)).replace(/\B(?=(\d{3})+(?!\d))/g," ")+" so'm"; }
 function show(cls, ic, name, time, st, sub){
-  var r=$("res"); r.className="show "+cls;
+  var r=$("res"); r.className="show "+cls; var ob=$("outBtn"); if(ob) ob.remove();
   $("rIc").innerHTML=ic; $("rName").textContent=name; $("rTime").textContent=time; $("rSt").textContent=st; $("rSub").textContent=sub||"";
   $("rSt").style.display=st?"":"none";
   clearTimeout(resT); resT=setTimeout(function(){ r.className=""; busy=false; hint("Shaxsiy PIN-kodingizni tering"); },/Jarima/.test(String(st)+String(sub))?7000:4200);
 }
-$("res").addEventListener("click",function(){ clearTimeout(resT); this.className=""; busy=false; });
+$("res").addEventListener("click",function(e){ if(e.target.id==="outBtn") return; clearTimeout(resT); this.className=""; busy=false; });
 
 function submit(){
   var code=pin;
@@ -287,7 +288,8 @@ function submit(){
     if(r.already_in){
       beep("ok");
       show(r.fine>0?"late":"ok", face||"✓", first+", siz kelgansiz", t, fine||"Kelish allaqachon belgilangan",
-        "Ketishni "+(r.out_from?hm(new Date(r.out_from)):"keyinroq")+" dan keyin belgilaysiz.");
+        "Ketyapsizmi? Pastdagi tugmani bosing.");
+      offerOut(code, photo, face, first);
     } else if(r.kind==="in"){
       var late=(r.late||0)>(r.grace||0);
       beep(late?"late":"ok");
@@ -308,6 +310,20 @@ function submit(){
   });
 }
 
+/* within the arrival window a second PIN only says "already here"; a deliberate tap records the leave */
+function offerOut(code, photo, face, first){
+  var b=document.createElement("button"); b.id="outBtn"; b.type="button"; b.textContent="👋 Ketishni belgilash";
+  $("res").appendChild(b); clearTimeout(resT); resT=setTimeout(function(){ $("res").className=""; busy=false; hint("Shaxsiy PIN-kodingizni tering"); },10000);
+  b.addEventListener("click",function(e){
+    e.stopPropagation(); b.disabled=true; b.textContent="Belgilanmoqda…";
+    rpc("uno_att_punch_out",{p_token:token,p_pin:code,p_photo:photo,p_wait:!!photo},9000).then(function(r){
+      if(!r||!r.ok){ b.disabled=false; b.textContent="Qayta urinib ko'ring"; return; }
+      if(r.key) tgPhoto(r.key,photo);
+      beep("ok");
+      show("out", face||"👋", "Xayr, "+first+"!", hm(new Date(r.at)), r.worked!=null?("Bugun ishladingiz: "+dur(r.worked)):"Ketish belgilandi", "Yaxshi dam oling!");
+    }).catch(function(err){ b.disabled=false; b.textContent=/uno_att_punch_out|function/.test(err&&err.message||"")?"Baza yangilanmagan (attendance_fines.sql)":"Xatolik — qayta bosing"; });
+  });
+}
 /* ---- hidden admin entry: hold the logo 3 s or tap it 7 times ---- */
 (function(){
   var lg=$("logo"), holdT=null, taps=0, tapT=null;

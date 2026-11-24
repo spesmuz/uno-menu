@@ -128,7 +128,7 @@ begin
   if last.kind = 'in' and ts - last.at < interval '18 hours' then
     -- kirish oynasi: smena boshidan (yoki kelgan vaqtdan, smena bo'lmasa) N daqiqa ichida qayta belgilansa — ketish emas
     anchor := case when scheduled and (last.at at time zone tz) >= sched - interval '6 hours' then sched else (last.at at time zone tz) end;
-    if loc < anchor + make_interval(mins => win) then
+    if loc < anchor + make_interval(mins => win) and coalesce(current_setting('uno.force_out', true), '') <> '1' then
       return jsonb_build_object('ok', true, 'dup', true, 'already_in', true, 'kind', 'in', 'name', s.name, 'at', last.at, 'late', last.late_min, 'grace', grace,
         'out_from', (anchor + make_interval(mins => win)) at time zone tz,
         'fine', (select coalesce(sum(amount),0) from public.uno_att_fines where staff_id = s.id and day = sday and status <> 'excused'));
@@ -193,6 +193,19 @@ begin
 end $$;
 revoke all on function public.uno_att_punch(text,text,text,timestamptz,boolean) from public;
 grant execute on function public.uno_att_punch(text,text,text,timestamptz,boolean) to anon, authenticated;
+
+-- ===== terminal: xodim "Ketishni belgilash" tugmasini bosdi (oyna ichida ham ketishni qayd qiladi) =====
+create or replace function public.uno_att_punch_out(p_token text, p_pin text, p_photo text default null, p_wait boolean default false)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare r jsonb;
+begin
+  perform set_config('uno.force_out', '1', true);
+  r := public.uno_att_punch(p_token, p_pin, p_photo, null, p_wait);
+  perform set_config('uno.force_out', '', true);
+  return r;
+end $$;
+revoke all on function public.uno_att_punch_out(text,text,text,boolean) from public;
+grant execute on function public.uno_att_punch_out(text,text,text,boolean) to anon, authenticated;
 
 -- ===== kelmaganlar: ogohlantirish + oyna tugagach "kelmadi" jarimasi =====
 create or replace function public.uno_att_check_absent() returns int
