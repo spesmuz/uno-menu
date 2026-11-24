@@ -255,11 +255,12 @@ $("pad").addEventListener("click",function(e){
 });
 document.addEventListener("keydown",function(e){ if(busy) return; if(/^\d$/.test(e.key)&&pin.length<PIN_LEN){ pin+=e.key; dots(); if(pin.length===PIN_LEN) submit(); } else if(e.key==="Backspace"){ pin=pin.slice(0,-1); dots(); } });
 
+function money(n){ return String(Math.round(n||0)).replace(/\B(?=(\d{3})+(?!\d))/g," ")+" so'm"; }
 function show(cls, ic, name, time, st, sub){
   var r=$("res"); r.className="show "+cls;
   $("rIc").innerHTML=ic; $("rName").textContent=name; $("rTime").textContent=time; $("rSt").textContent=st; $("rSub").textContent=sub||"";
   $("rSt").style.display=st?"":"none";
-  clearTimeout(resT); resT=setTimeout(function(){ r.className=""; busy=false; hint("Shaxsiy PIN-kodingizni tering"); },4200);
+  clearTimeout(resT); resT=setTimeout(function(){ r.className=""; busy=false; hint("Shaxsiy PIN-kodingizni tering"); },/Jarima/.test(String(st)+String(sub))?7000:4200);
 }
 $("res").addEventListener("click",function(){ clearTimeout(resT); this.className=""; busy=false; });
 
@@ -282,11 +283,16 @@ function submit(){
       return;
     }
     var t=hm(new Date(new Date(r.at).getTime())), first=String(r.name||"").split(" ")[0];
-    if(r.kind==="in"){
+    var fine=r.fine>0?("Jarima: "+money(r.fine)+(r.fine_hours?" ("+r.fine_hours+" soat × "+money(r.fine_hour)+")":"")):"";
+    if(r.already_in){
+      beep("ok");
+      show(r.fine>0?"late":"ok", face||"✓", first+", siz kelgansiz", t, fine||"Kelish allaqachon belgilangan",
+        "Ketishni "+(r.out_from?hm(new Date(r.out_from)):"keyinroq")+" dan keyin belgilaysiz.");
+    } else if(r.kind==="in"){
       var late=(r.late||0)>(r.grace||0);
       beep(late?"late":"ok");
-      show(late?"late":"ok", face||(late?"⏰":"✓"), "Xush kelibsiz, "+first+"!", t,
-        late?("Kechikdingiz: "+dur(r.late)):"Vaqtida keldingiz", r.dup?"Siz allaqachon belgilangansiz.":"Ish kuningiz xayrli o'tsin!");
+      show(late||r.fine>0?"late":"ok", face||(late?"⏰":"✓"), "Xush kelibsiz, "+first+"!", t,
+        late?("Kechikdingiz: "+dur(r.late)):"Vaqtida keldingiz", fine?(fine+". Sababli bo'lsa rahbarga ayting."):(r.dup?"Siz allaqachon belgilangansiz.":"Ish kuningiz xayrli o'tsin!"));
     } else {
       beep("ok");
       show("out", face||"👋", "Xayr, "+first+"!", t, r.worked!=null?("Bugun ishladingiz: "+dur(r.worked)):"Ketish belgilandi", r.dup?"Siz allaqachon belgilangansiz.":"Yaxshi dam oling!");

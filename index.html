@@ -4037,6 +4037,10 @@ Att.load=async function(what){
       Att.rows=await Att.q(S.sb.from("uno_att").select("id,staff_id,kind,at,late_min,early_min,worked_min,offline,manual").gte("at",new Date(attDayStart(k).getTime()-6*3600e3).toISOString()).order("at",{ascending:false}).limit(500));
       S.sb.rpc("uno_att_check_absent").then(function(){},function(){});
     }
+    if(!what||what==="fines"||what==="today"){
+      try{ Att.fines=await Att.q(S.sb.from("uno_att_fines").select("*").gte("day",attDay(Date.now()-62*864e5)).order("day",{ascending:false}).order("id",{ascending:false}).limit(1000)); Att.finesErr=""; }
+      catch(e){ Att.fines=Att.fines||[]; Att.finesErr=String(e&&e.message||e); }
+    }
     if(!what||what==="cfg"){ Att.cfg=await Att.q(S.sb.rpc("uno_att_settings")); Att.devs=await Att.q(S.sb.from("uno_att_devices").select("id,name,revoked,created_at,last_seen").order("created_at")); }
     Att.err="";
   }catch(e){ Att.err=String(e&&e.message||e); }
@@ -4068,14 +4072,43 @@ Att.render=function(){
     Att.el.innerHTML=h; return;
   }
   if(Att.isTerminal()) h+='<div class="msg ok" style="margin-bottom:12px">Bu telefon — <b>eshik terminali</b>. Admin paneldan chiqsangiz, davomat ekrani ochiladi.</div>';
-  var tabs=[["today","Bugun"],["staff","Xodimlar"+(Att.staff?" ("+Att.staff.filter(function(s){return s.active;}).length+")":"")],["rep","Hisobot"],["cfg","Sozlamalar va terminal"]];
+  var pf=(Att.fines||[]).filter(function(f){ return f.status==="pending"; }).length;
+  var tabs=[["today","Bugun"],["fines","Jarimalar"+(pf?" ("+pf+")":"")],["staff","Xodimlar"+(Att.staff?" ("+Att.staff.filter(function(s){return s.active;}).length+")":"")],["rep","Hisobot"],["cfg","Sozlamalar va terminal"]];
   h+='<div class="a-row" style="gap:8px;margin-bottom:14px">'+tabs.map(function(t){ return '<button class="btn sm'+(Att.tab===t[0]?' gold':'')+'" data-att="tab" data-v="'+t[0]+'">'+t[1]+'</button>'; }).join("")+'</div>';
   if(!Att.staff){ h+='<div class="msg">Yuklanmoqda…</div>'; Att.el.innerHTML=h; return; }
   if(Att.tab==="today") h+=Att.todayHTML();
   else if(Att.tab==="staff") h+=Att.staffHTML();
   else if(Att.tab==="rep") h+=Att.repHTML();
+  else if(Att.tab==="fines") h+=Att.finesHTML();
   else h+=Att.cfgHTML();
   Att.el.innerHTML=h;
+};
+/* fines: late (per full hour) and no-show; the admin marks each one "excused" (removed) or "confirmed" */
+Att.finesHTML=function(){
+  var mons={}, by={}; (Att.staff||[]).forEach(function(s){ by[s.id]=s; });
+  if(Att.finesErr) return '<div class="msg err">Jarimalar uchun <b>attendance_fines.sql</b> faylini Supabase SQL Editor\'da ishga tushiring (<a style="color:var(--gold)" href="https://raw.githubusercontent.com/spesmuz/uno-menu/main/attendance_fines.sql" target="_blank" rel="noopener">faylni ochish</a>).</div>';
+  var all=(Att.fines||[]).filter(function(f){ return Att.teamOk(by[f.staff_id]||{}); });
+  all.forEach(function(f){ mons[f.day.slice(0,7)]=1; });
+  var mk=Object.keys(mons).sort().reverse(), cur=Att.fineMon||mk[0]||attDay(Date.now()).slice(0,7);
+  var list=all.filter(function(f){ return f.day.slice(0,7)===cur; });
+  var pend=all.filter(function(f){ return f.status==="pending"; });
+  var money=function(n){ return fmt(n); };
+  var row=function(f){
+    var st=by[f.staff_id]||{name:"?"}, ex=f.status==="excused", ok=f.status==="confirmed";
+    var what=f.kind==="absent"?'Kelmadi':('Kechikdi '+attDur(f.minutes));
+    return '<div class="drow" style="'+(ex?'opacity:.55':'')+'"><div class="mid"><b>'+esc(st.name)+'</b><small>'+f.day.split("-").reverse().join(".")+' · '+what+(attTeam(st)!=="Jamoasiz"?' · '+esc(attTeam(st)):'')+'</small>'+
+      '<small style="font-size:14px;font-weight:700;color:'+(ex?'var(--muted)':'#E5544B')+(ex?';text-decoration:line-through':'')+'">'+money(f.amount)+'</small></div>'+
+      '<div class="acts">'+(f.status==="pending"?'<button class="btn sm" data-att="fine" data-id="'+f.id+'" data-st="excused">✅ Sababli</button><button class="btn sm danger" data-att="fine" data-id="'+f.id+'" data-st="confirmed">Sababsiz</button>':
+        '<span class="tag" style="font-size:12px">'+(ex?'Sababli — olib tashlandi':'Tasdiqlangan')+'</span><button class="btn sm" data-att="fine" data-id="'+f.id+'" data-st="pending">Qayta ko\'rish</button>')+'</div></div>';
+  };
+  var h=Att.teamBar()+(Att.cfg&&Att.cfg.fines?'<p class="help">Qoidalar: smena boshidan '+Math.round((Att.cfg.window||300)/60*10)/10+' soat ichida terminal faqat «keldi» deb oladi. Kechikish — har to\'liq soat uchun '+money(Att.cfg.fine_hour)+', kelmasa — '+money(Att.cfg.fine_absent)+'. «Sababli» bosilsa jarima olib tashlanadi.</p>':'');
+  if(pend.length) h+='<h3 style="font-size:15px;margin:14px 0 8px;color:var(--gold2)">Hal qilinmagan ('+pend.length+')</h3><div style="display:flex;flex-direction:column;gap:8px">'+pend.map(row).join("")+'</div>';
+  h+='<div class="a-row" style="margin:18px 0 8px;align-items:center;gap:8px"><b style="font-size:15px">Oy bo\'yicha</b>'+mk.map(function(m){ return '<button class="btn sm'+(m===cur?' gold':'')+'" data-att="fineMon" data-v="'+m+'">'+m.split("-").reverse().join(".")+'</button>'; }).join("")+'</div>';
+  var tot={}; list.forEach(function(f){ if(f.status==="excused") return; tot[f.staff_id]=(tot[f.staff_id]||0)+f.amount; });
+  var ids=Object.keys(tot).sort(function(a,b){ return tot[b]-tot[a]; });
+  if(ids.length) h+='<div style="overflow-x:auto"><table class="aitab"><thead><tr><th>Xodim</th><th>Jami jarima</th></tr></thead><tbody>'+ids.map(function(i){ return '<tr><td>'+esc((by[i]||{name:"?"}).name)+'</td><td><b>'+money(tot[i])+'</b></td></tr>'; }).join("")+'<tr><td><b>Hammasi</b></td><td><b>'+money(ids.reduce(function(a,i){ return a+tot[i]; },0))+'</b></td></tr></tbody></table></div>';
+  h+=list.length?'<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">'+list.map(row).join("")+'</div>':'<div class="msg" style="margin-top:10px">Bu oyda jarima yo\'q.</div>';
+  return h+Att.msg("fines");
 };
 Att.msg=function(k){ var m=Att.msgs[k]; return m?'<div class="msg '+(m.k||"")+'" style="margin-top:10px">'+esc(m.t)+'</div>':''; };
 Att.say=function(k,t,kind){ Att.msgs[k]=t?{t:t,k:kind}:null; Att.render(); };
@@ -4290,6 +4323,10 @@ Att.cfgHTML=function(){
   h+='<h3 style="font-size:14px;margin:20px 0 8px">Qoidalar va Telegram</h3>'+
     '<div class="a-row"><label class="fld" style="max-width:220px;min-width:170px"><span>Kechikish chegarasi, daqiqa</span><input id="cfgGrace" inputmode="numeric" maxlength="3" value="'+esc(c.grace!=null?c.grace:10)+'"></label>'+
     '<label class="fld" style="max-width:260px;min-width:190px"><span>«Kelmadi» xabari, smenadan keyin (daq)</span><input id="cfgAbsent" inputmode="numeric" maxlength="3" value="'+esc(c.absent!=null?c.absent:30)+'"></label></div>'+
+    (c.fines?'<div class="a-row" style="margin-top:12px"><label class="fld" style="max-width:220px;min-width:170px"><span>Faqat «keldi» oynasi, soat</span><input id="cfgWin" inputmode="decimal" maxlength="4" value="'+esc(Math.round((c.window||300)/6)/10)+'"></label>'+
+      '<label class="fld" style="max-width:220px;min-width:170px"><span>Kechikish jarimasi (1 soat), so\'m</span><input id="cfgFineH" inputmode="numeric" maxlength="9" value="'+esc(c.fine_hour!=null?c.fine_hour:50000)+'"></label>'+
+      '<label class="fld" style="max-width:220px;min-width:170px"><span>Kelmaganlik jarimasi, so\'m</span><input id="cfgFineA" inputmode="numeric" maxlength="9" value="'+esc(c.fine_absent!=null?c.fine_absent:200000)+'"></label></div>':
+      '<p class="help" style="margin-top:10px">Jarimalar va «faqat keldi» oynasi uchun <b>attendance_fines.sql</b> faylini Supabase\'da ishga tushiring.</p>')+
     '<div class="a-row" style="margin-top:12px"><label class="fld" style="max-width:300px"><span>Rahbarlar guruhi ID (ixtiyoriy)</span><input id="cfgChat" placeholder="bo\'sh — ofitsiantlar guruhiga" value="'+esc(c.chat||"")+'"></label>'+
     '<label style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><input type="checkbox" id="cfgTg" '+(c.tg!=="off"?'checked':'')+'> Telegram\'ga xabar yuborish</label></div>'+
     '<div class="a-row" style="margin-top:12px"><button class="btn gold" data-att="saveCfg">Saqlash</button></div>'+
@@ -4313,7 +4350,11 @@ Att.click=async function(ev){
   var a=b.dataset.att, id=b.dataset.id, v=b.dataset.v;
   try{
     if(a==="reload"){ Att.err=""; Att.staff=Att.staff||null; Att.render(); await Att.load(); return; }
-    if(a==="tab"){ Att.tab=v; Att.photo=null; Att.render(); if(v==="today") Att.load("today"); if(v==="cfg") Att.load("cfg"); return; }
+    if(a==="tab"){ Att.tab=v; Att.photo=null; Att.render(); if(v==="today") Att.load("today"); if(v==="cfg") Att.load("cfg"); if(v==="fines") Att.load("fines"); return; }
+    if(a==="fine"){ var st=b.dataset.st; b.disabled=true;
+      await Att.q(S.sb.rpc("uno_att_fine_decide",{p_id:+id,p_status:st}));
+      (Att.fines||[]).forEach(function(f){ if(f.id===+id) f.status=st; }); Att.render(); return; }
+    if(a==="fineMon"){ Att.fineMon=v; Att.render(); return; }
     if(a==="photo"){ var rr=await Att.q(S.sb.from("uno_att").select("photo,at,kind,staff_id").eq("id",id).single()); var st=(Att.staff||[]).find(function(s){ return s.id===rr.staff_id; })||{};
       if(!rr.photo){ Att.say("today","Bu belgida surat yo'q (kamera yoqilmagan bo'lgan).",""); return; }
       Att.photo={src:rr.photo,name:st.name||"",when:attDay(rr.at)+" "+attHM(rr.at)+" · "+(rr.kind==="in"?"keldi":"ketdi")}; Att.render(); var ph=$("attPhoto"); if(ph) ph.scrollIntoView({block:"nearest",behavior:"smooth"}); return; }
@@ -4373,6 +4414,7 @@ Att.click=async function(ev){
       await Att.q(S.sb.from("uno_att_devices").update({revoked:true}).eq("id",id)); await Att.load("cfg"); return; }
     if(a==="saveCfg"){ b.disabled=true;
       await Att.q(S.sb.rpc("uno_att_set",{p_grace:parseInt($("cfgGrace").value)||0,p_absent:parseInt($("cfgAbsent").value)||30,p_chat:$("cfgChat").value.trim(),p_tg:$("cfgTg").checked?"on":"off"}));
+      if($("cfgWin")) await Att.q(S.sb.rpc("uno_att_set_fines",{p_window:Math.round((parseFloat(String($("cfgWin").value).replace(",","."))||5)*60),p_fine_hour:parseInt(String($("cfgFineH").value).replace(/\D/g,""))||0,p_fine_absent:parseInt(String($("cfgFineA").value).replace(/\D/g,""))||0}));
       Att.msgs.cfg={t:"Saqlandi.",k:"ok"}; await Att.load("cfg"); return; }
   }catch(err){ var k=Att.tab==="cfg"?(a==="setTerm"||a==="revoke"?"term":"cfg"):Att.tab==="staff"?"staff":Att.tab==="rep"?"rep":"today";
     var m=String(err&&err.message||err); if(/duplicate key|uno_staff_pin_active/.test(m)) m="Bu PIN-kod boshqa xodimda bor."; else if(/team/.test(m)&&/column|schema/.test(m)) m="Jamoalar uchun attendance.sql faylini Supabase'da qayta ishga tushiring."; Att.say(k,"Xatolik: "+m,"err"); }
