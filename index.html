@@ -721,12 +721,12 @@ html.th-liquid .gai-fab{background:radial-gradient(circle at 35% 30%,#fff,#BFE7F
 html.th-liquid .logo span{color:#9BDCFF}
 
 /* GPU glass on: elements become clear lenses (the canvas draws the refraction under them) */
-html.th-liquid.lq-gl :is(.tabs,.search-box,.icon-btn,.cart-btn,.langs,.slide.center .card,.slide.center .more-btn,.slide.center .badge,.arrow,.stepper){
+html.th-liquid.lq-gl :is(.tabs,.search-box,.icon-btn,.cart-btn,.langs,.slide .card,.slide.center .more-btn,.slide.center .badge,.arrow,.stepper){
   -webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:rgba(255,255,255,.035)!important;border:1px solid rgba(255,255,255,.28)!important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(255,255,255,.12)!important}
-html.th-liquid.lq-gl .slide.center .card{background:rgba(6,6,8,.18)!important}
-html.th-liquid.lq-gl .slide.center .card::before,html.th-liquid.lq-gl .card::after,html.th-liquid.lq-gl .tab[aria-pressed="true"]::after{display:none}
-html.th-liquid.lq-gl .slide.center .media{background:transparent;border-color:rgba(255,255,255,.22);box-shadow:none}
+html.th-liquid.lq-gl .slide .card{background:rgba(6,6,8,.18)!important}
+html.th-liquid.lq-gl .card::before,html.th-liquid.lq-gl .card::after,html.th-liquid.lq-gl .tab[aria-pressed="true"]::after{display:none}
+html.th-liquid.lq-gl .slide .media{background:transparent;border-color:rgba(255,255,255,.22);box-shadow:none}
 html.th-liquid.lq-gl .slide.center .info h2,html.th-liquid.lq-gl .slide.center .desc{text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 14px rgba(0,0,0,.6)}
 html.th-liquid.lq-gl .gai-fab{background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.95),rgba(190,230,255,.85) 55%,rgba(110,195,245,.85))}
 /* ================= THEME: Boarding pass — glass tickets above the night earth, departures-board tabs ================= */
@@ -2167,12 +2167,12 @@ function liquidSky(sky){
   
   /* pass 2: the glass. Every button and card is a lens: the chrome behind it bends toward the rim, splits into colours at the edge
      and is slightly magnified in the middle — the same picture the page is drawn on, so it lines up exactly */
-  var fs2="precision mediump float;uniform sampler2D B;uniform vec2 R;uniform float S;uniform int NQ;uniform vec4 Q[16];uniform vec2 Z[16];"+
+  var fs2="precision mediump float;uniform sampler2D B;uniform vec2 R;uniform float S;uniform int NQ;uniform vec4 Q[24];uniform vec2 Z[24];"+
    "float sd(vec2 p,vec4 q,float r){vec2 c=q.xy+.5*q.zw;vec2 b=.5*q.zw;vec2 d=abs(p-c)-b+r;return length(max(d,0.))+min(max(d.x,d.y),0.)-r;}"+
    "void main(){vec2 p=gl_FragCoord.xy;float dm=1e5;int k=-1;"+
-   "for(int i=0;i<16;i++){if(i>=NQ)break;float d=sd(p,Q[i],Z[i].x);if(d<dm){dm=d;k=i;}}"+
+   "for(int i=0;i<24;i++){if(i>=NQ)break;float d=sd(p,Q[i],Z[i].x);if(d<dm){dm=d;k=i;}}"+
    "vec2 uv=p/R;vec3 col=texture2D(B,uv).rgb;"+
-   "if(k>=0){vec4 q;vec2 z;for(int i=0;i<16;i++){if(i==k){q=Q[i];z=Z[i];}}"+
+   "if(k>=0){vec4 q;vec2 z;for(int i=0;i<24;i++){if(i==k){q=Q[i];z=Z[i];}}"+
    " if(dm<0.){float e=min(26.*S,.5*min(q.z,q.w));float t=clamp(1.+dm/e,0.,1.);float bend=t*t*t;"+
    "  vec2 n=normalize(vec2(sd(p+vec2(1.,0.),q,z.x)-sd(p-vec2(1.,0.),q,z.x),sd(p+vec2(0.,1.),q,z.x)-sd(p-vec2(0.,1.),q,z.x))+1e-5);"+
    "  vec2 c=q.xy+.5*q.zw;vec2 off=-n*bend*22.*S+(c-p)*.07;"+
@@ -2190,22 +2190,24 @@ function liquidSky(sky){
   var u2={B:gl.getUniformLocation(P2,"B"),R:gl.getUniformLocation(P2,"R"),S:gl.getUniformLocation(P2,"S"),N:gl.getUniformLocation(P2,"NQ"),Q:gl.getUniformLocation(P2,"Q"),Z:gl.getUniformLocation(P2,"Z")};
   var tex=gl.createTexture(), fbo=gl.createFramebuffer(), tw=0, th=0;
   var K=Math.min(window.devicePixelRatio||1,2), t0=performance.now(), last=0, still=window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches;
-  var GLASS=".tabs,.search-box,.icon-btn,.cart-btn,.langs,.gai-fab,.slide.center .card,.slide.center .add-btn,.slide.center .more-btn,.slide.center .badge,.arrow,.stepper";
-  var Qa=new Float32Array(64), Za=new Float32Array(32);
+  var GLASS=".tabs,.search-box,.icon-btn,.cart-btn,.langs,.gai-fab,.slide .card,.slide.center .add-btn,.slide.center .more-btn,.slide.center .badge,.arrow,.stepper";
+  var Qa=new Float32Array(96), Za=new Float32Array(48);
   sky.classList.add("gl"); document.documentElement.classList.add("lq-gl");
+  /* the flowing background is soft, so it is drawn smaller and stretched; the glass itself is drawn at full screen sharpness */
   function size(){
     var w=Math.max(2,Math.round(cv.clientWidth*K)), h=Math.max(2,Math.round(cv.clientHeight*K));
     if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h; }
-    if(tw!==w||th!==h){ tw=w; th=h; gl.bindTexture(gl.TEXTURE_2D,tex); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+    var bw=Math.max(2,Math.round(w*.5)), bh=Math.max(2,Math.round(h*.5));
+    if(tw!==bw||th!==bh){ tw=bw; th=bh; gl.bindTexture(gl.TEXTURE_2D,tex); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,bw,bh,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
-      gl.bindFramebuffer(gl.FRAMEBUFFER,fbo); gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0); gl.bindFramebuffer(gl.FRAMEBUFFER,null); }
+      gl.bindFramebuffer(gl.FRAMEBUFFER,fbo); gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0); gl.bindFramebuffer(gl.FRAMEBUFFER,null); last=0; }
   }
   function rects(){
     var cr=cv.getBoundingClientRect(), n=0, sx=cv.width/cr.width, sy=cv.height/cr.height;
     if(S.view!=="menu"||document.querySelector(".detail,.overlay")) return 0;
-    var els=document.querySelectorAll(GLASS);
-    for(var i=0;i<els.length&&n<16;i++){
+    var els=Array.prototype.slice.call(document.querySelectorAll(GLASS)).sort(function(a,b){ return (b.closest(".slide.center")?1:0)-(a.closest(".slide.center")?1:0); });
+    for(var i=0;i<els.length&&n<24;i++){
       var e=els[i], r=e.getBoundingClientRect(); if(r.width<8||r.height<8||r.bottom<cr.top||r.top>cr.bottom) continue;
       var st=getComputedStyle(e); if(st.visibility==="hidden"||st.display==="none"||+st.opacity<.2) continue;
       var sc=e.offsetWidth?r.width/e.offsetWidth:1, rad=Math.min(parseFloat(st.borderTopLeftRadius)||0, 9999)*sc;
@@ -2217,12 +2219,15 @@ function liquidSky(sky){
   }
   function frame(now){
     if(sky.dataset.t!=="liquid"){ document.documentElement.classList.remove("lq-gl"); return; }
-    if(!document.hidden && now-last>33){ last=now; size();
-      gl.bindFramebuffer(gl.FRAMEBUFFER,fbo); gl.viewport(0,0,tw,th); gl.useProgram(P1); gl.bindBuffer(gl.ARRAY_BUFFER,buf); bindQuad(P1);
-      gl.uniform2f(u1.R,tw,th); gl.uniform1f(u1.T,(now-t0)/1000); gl.drawArrays(gl.TRIANGLES,0,3);
-      gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.viewport(0,0,tw,th); gl.useProgram(P2); bindQuad(P2);
+    if(!document.hidden){ size();
+      /* background: ~30 fps is plenty for a slow flow */
+      if(now-last>33){ last=now;
+        gl.bindFramebuffer(gl.FRAMEBUFFER,fbo); gl.viewport(0,0,tw,th); gl.useProgram(P1); gl.bindBuffer(gl.ARRAY_BUFFER,buf); bindQuad(P1);
+        gl.uniform2f(u1.R,tw,th); gl.uniform1f(u1.T,(now-t0)/1000); gl.drawArrays(gl.TRIANGLES,0,3); }
+      /* glass: every frame, so the lenses move exactly with the cards while they slide */
+      gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.viewport(0,0,cv.width,cv.height); gl.useProgram(P2); gl.bindBuffer(gl.ARRAY_BUFFER,buf); bindQuad(P2);
       gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,tex); gl.uniform1i(u2.B,0);
-      var n=rects(); gl.uniform2f(u2.R,tw,th); gl.uniform1f(u2.S,K); gl.uniform1i(u2.N,n); gl.uniform4fv(u2.Q,Qa); gl.uniform2fv(u2.Z,Za);
+      var n=rects(); gl.uniform2f(u2.R,cv.width,cv.height); gl.uniform1f(u2.S,K); gl.uniform1i(u2.N,n); gl.uniform4fv(u2.Q,Qa); gl.uniform2fv(u2.Z,Za);
       gl.drawArrays(gl.TRIANGLES,0,3); }
     if(!still) requestAnimationFrame(frame);
   }
