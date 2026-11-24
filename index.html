@@ -709,7 +709,7 @@ html.th-liquid .drawer{background:linear-gradient(160deg,rgba(255,255,255,.26),r
 html.th-liquid .logo b,html.th-liquid .logo span{color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.5)}
 /* real glass: a rainbow dispersion rim and a cold rim light on cards and the active tab */
 html.th-liquid .card::after,html.th-liquid .tab[aria-pressed="true"]::after,html.th-liquid .add-btn::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;pointer-events:none;
-  background:conic-gradient(from 200deg,rgba(255,80,160,.0),rgba(255,80,160,.75) 8%,rgba(255,210,90,.7) 14%,rgba(110,255,200,.7) 20%,rgba(90,170,255,.85) 27%,rgba(190,120,255,.6) 33%,rgba(255,255,255,0) 40%,rgba(255,255,255,0) 60%,rgba(90,170,255,.6) 70%,rgba(255,80,160,.55) 78%,rgba(255,255,255,0) 86%);
+  background:conic-gradient(from 200deg,rgba(255,80,160,.0),rgba(255,60,170,1) 8%,rgba(255,215,70,1) 14%,rgba(80,255,190,1) 20%,rgba(70,160,255,1) 27%,rgba(190,110,255,.9) 33%,rgba(255,255,255,0) 40%,rgba(255,255,255,0) 60%,rgba(90,170,255,.6) 70%,rgba(255,80,160,.55) 78%,rgba(255,255,255,0) 86%);
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
 html.th-liquid .tab[aria-pressed="true"],html.th-liquid .add-btn{position:relative}
 html.th-liquid .card{border-color:rgba(255,255,255,.45)}
@@ -2176,9 +2176,9 @@ function liquidSky(sky){
    " if(dm<0.){float e=min(26.*S,.5*min(q.z,q.w));float t=clamp(1.+dm/e,0.,1.);float bend=t*t*t;"+
    "  vec2 n=normalize(vec2(sd(p+vec2(1.,0.),q,z.x)-sd(p-vec2(1.,0.),q,z.x),sd(p+vec2(0.,1.),q,z.x)-sd(p-vec2(0.,1.),q,z.x))+1e-5);"+
    "  vec2 c=q.xy+.5*q.zw;vec2 off=-n*bend*22.*S+(c-p)*.07;"+
-   "  float r=texture2D(B,uv+off/R).r;float g=texture2D(B,uv+off*1.18/R).g;float bb=texture2D(B,uv+off*1.38/R).b;"+
-   "  col=vec3(r,g,bb);col*=mix(z.y,1.,bend*.7);"+
-   "  col+=vec3(1.)*smoothstep(1.8*S,0.,abs(dm))*.35;"+
+   "  float r=texture2D(B,uv+off/R).r;float g=texture2D(B,uv+off*1.45/R).g;float bb=texture2D(B,uv+off*1.95/R).b;"+
+   "  col=vec3(r,g,bb);float L0=dot(col,vec3(.299,.587,.114));col=mix(vec3(L0),col,1.+2.1*bend);"+"float ph=dot(p,vec2(.011,.017))/S+atan(n.y,n.x)*2.+L0*6.;vec3 film=.5+.5*cos(6.2832*(vec3(0.,.33,.67)+ph*.16));col+=film*bend*bend*.45*(.35+L0);col*=mix(z.y,1.,bend*.7);"+
+   "  col+=vec3(1.)*smoothstep(1.8*S,0.,abs(dm))*.5;"+
    " }else{col*=1.-.45*exp(-dm/(9.*S))*step(0.,dm);}}"+
    "gl_FragColor=vec4(col,1.);}";
   function sh(t,src){ var o=gl.createShader(t); gl.shaderSource(o,src); gl.compileShader(o); if(!gl.getShaderParameter(o,gl.COMPILE_STATUS)){ console.warn(gl.getShaderInfoLog(o)); return null; } return o; }
