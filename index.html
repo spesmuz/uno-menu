@@ -729,23 +729,6 @@ html.th-liquid.lq-gl .slide.center .card::before,html.th-liquid.lq-gl .card::aft
 html.th-liquid.lq-gl .slide.center .media{background:transparent;border-color:rgba(255,255,255,.22);box-shadow:none}
 html.th-liquid.lq-gl .slide.center .info h2,html.th-liquid.lq-gl .slide.center .desc{text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 14px rgba(0,0,0,.6)}
 html.th-liquid.lq-gl .gai-fab{background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.95),rgba(190,230,255,.85) 55%,rgba(110,195,245,.85))}
-
-/* white version: dark ink on clear glass */
-html.th-liquid,html.th-liquid body,html.th-liquid #menuView{background:#fafafa}
-html.th-liquid #sky::after{display:none}
-html.th-liquid #sky .lq-fb{background:radial-gradient(45% 35% at 25% 20%,#8cbfff,transparent 70%),radial-gradient(40% 35% at 80% 38%,#c7a8ff,transparent 70%),radial-gradient(45% 35% at 35% 75%,#ffb894,transparent 70%),radial-gradient(35% 30% at 85% 85%,#98eed8,transparent 70%),#f6f6fa;filter:none;animation:none}
-html.th-liquid{--text:#0B0D12;--muted:rgba(11,13,18,.62);--line:rgba(0,0,0,.18);--gold:#0A84FF;--gold2:#5AB2FF}
-html.th-liquid :is(.tab,.info h2,.d-name,.desc,.d-desc,.d-cat,.logo b,.badge,.fact,.langs button,.search-box,.search-box input,.cart-btn,.icon-btn,.more-btn,.stepper,.arrow,.rv-item,.dots i){color:#0B0D12!important;text-shadow:none!important}
-html.th-liquid :is(.desc,.d-desc){color:rgba(11,13,18,.72)!important}
-html.th-liquid .info .price,html.th-liquid .d-price,html.th-liquid .logo span{color:#0A84FF!important;text-shadow:none!important}
-html.th-liquid .tab[aria-pressed="true"],html.th-liquid .langs button[aria-pressed="true"]{background:#0B0D12!important;color:#fff!important}
-html.th-liquid.lq-gl .slide.center .card{background:rgba(255,255,255,.18)!important}
-html.th-liquid.lq-gl :is(.tabs,.search-box,.icon-btn,.cart-btn,.langs,.slide.center .card,.slide.center .more-btn,.slide.center .badge,.arrow,.stepper){border-color:rgba(0,0,0,.12)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.9)!important}
-html.th-liquid .add-btn{background:linear-gradient(180deg,#5AB2FF,#0A84FF)!important;color:#fff!important;border-color:rgba(255,255,255,.7)!important;box-shadow:0 10px 24px rgba(10,132,255,.35),inset 0 1px 0 rgba(255,255,255,.7)!important}
-html.th-liquid .slide:not(.center) .card{background:rgba(255,255,255,.55)}
-html.th-liquid .more-btn.kc,html.th-liquid .more-btn.kc *{color:#0B0D12!important;text-shadow:none!important}html.th-liquid .more-btn.kc{background:rgba(255,255,255,.4)!important}
-html.th-liquid .gai-fab{background:radial-gradient(circle at 35% 30%,#fff,#d8ecff 55%,#7cc0ff)!important}
-html.th-liquid .info h2,html.th-liquid .slide.center .info h2,html.th-liquid.lq-gl .slide.center .info h2,html.th-liquid.lq-gl .slide.center .desc{text-shadow:none!important}
 /* ================= THEME: Boarding pass — glass tickets above the night earth, departures-board tabs ================= */
 html.th-boarding{--gold:#FFC94D;--gold2:#FFE08A;--ink:#050B1E;--panel:rgba(16,28,60,.55);--line:rgba(255,255,255,.18);--text:#F2F6FF;--muted:#A9B8D6;
   --bp-amber:#FFC94D;--bp-mono:ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace;
@@ -2170,17 +2153,18 @@ function liquidSky(sky){
   var cv=sky.querySelector("canvas"); if(!cv) return;
   var gl=cv.getContext("webgl",{antialias:false,alpha:false,powerPreference:"low-power",preserveDrawingBuffer:false}); if(!gl) return;
   var vs="attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
-  /* pass 1: a soft, slowly flowing colour field (sky blue, lavender, peach, mint) — gives the glass something to bend */
   var fs="precision mediump float;uniform vec2 R;uniform float T;"+
-   "vec3 blob(vec2 uv,vec2 c,float r,vec3 col){float d=length(uv-c);return col*exp(-d*d/(r*r));}"+
-   "void main(){vec2 uv=gl_FragCoord.xy/R;uv.x*=R.x/R.y;float t=T*.12;float ar=R.x/R.y;"+
-   "vec3 c=vec3(.97,.97,.99);"+
-   "c=mix(c,vec3(.55,.75,1.),clamp(length(blob(uv,vec2(ar*(.25+.15*sin(t*1.1)),.78+.08*cos(t*.9)),.42,vec3(1.))),0.,1.)*.85);"+
-   "c=mix(c,vec3(.78,.66,1.),clamp(length(blob(uv,vec2(ar*(.78+.12*cos(t*.8)),.62+.12*sin(t*.7)),.38,vec3(1.))),0.,1.)*.8);"+
-   "c=mix(c,vec3(1.,.72,.58),clamp(length(blob(uv,vec2(ar*(.35+.18*cos(t*.6)),.28+.1*sin(t*1.2)),.40,vec3(1.))),0.,1.)*.75);"+
-   "c=mix(c,vec3(.6,.93,.85),clamp(length(blob(uv,vec2(ar*(.82+.1*sin(t*1.3)),.18+.08*cos(t)),.34,vec3(1.))),0.,1.)*.7);"+
-   "c=mix(c,vec3(1.,.87,.55),clamp(length(blob(uv,vec2(ar*(.55+.2*sin(t*.5)),.5+.2*cos(t*.45)),.22,vec3(1.))),0.,1.)*.55);"+
-   "gl_FragColor=vec4(c,1.);}";
+   "float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}"+
+   "float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}"+
+   "float fb(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*n(p);p=mat2(1.6,1.2,-1.2,1.6)*p;a*=.5;}return v;}"+
+   "float F(vec2 p){vec2 q=vec2(fb(p+vec2(0.,T*.05)),fb(p+vec2(5.2,1.3)-T*.04));vec2 r=vec2(fb(p+3.*q+vec2(1.7,9.2)+T*.03),fb(p+3.*q+vec2(8.3,2.8)));return fb(p+3.5*r);}"+
+   "void main(){vec2 uv=(gl_FragCoord.xy-.5*R)/min(R.x,R.y)*.75;float e=.01;float f=F(uv);"+
+   "float fx=F(uv+vec2(e,0.))-f,fy=F(uv+vec2(0.,e))-f;vec3 N=normalize(vec3(-fx*30.,-fy*30.,1.));"+
+   "float band=.5+.5*sin(f*9.+N.x*2.);vec3 L=normalize(vec3(-.4,.6,.7));float sp=pow(max(dot(reflect(-L,N),vec3(0,0,1)),0.),24.);"+
+   "float c=mix(.02,.88,smoothstep(.4,.98,band))*(.5+.5*N.z)+sp*.8;"+
+   "vec3 col=vec3(c);col+=vec3(.25,.5,.9)*sp*.25*smoothstep(.6,1.,band);"+
+   "gl_FragColor=vec4(pow(col,vec3(1.15)),1.);}";
+  
   /* pass 2: the glass. Every button and card is a lens: the chrome behind it bends toward the rim, splits into colours at the edge
      and is slightly magnified in the middle — the same picture the page is drawn on, so it lines up exactly */
   var fs2="precision mediump float;uniform sampler2D B;uniform vec2 R;uniform float S;uniform int NQ;uniform vec4 Q[16];uniform vec2 Z[16];"+
@@ -2189,13 +2173,13 @@ function liquidSky(sky){
    "for(int i=0;i<16;i++){if(i>=NQ)break;float d=sd(p,Q[i],Z[i].x);if(d<dm){dm=d;k=i;}}"+
    "vec2 uv=p/R;vec3 col=texture2D(B,uv).rgb;"+
    "if(k>=0){vec4 q;vec2 z;for(int i=0;i<16;i++){if(i==k){q=Q[i];z=Z[i];}}"+
-   " if(dm<0.){float e=min(64.*S,.5*min(q.z,q.w));float t=clamp(1.+dm/e,0.,1.);float bend=t*t*(3.-2.*t);bend=pow(bend,1.6);"+
+   " if(dm<0.){float e=min(26.*S,.5*min(q.z,q.w));float t=clamp(1.+dm/e,0.,1.);float bend=t*t*t;"+
    "  vec2 n=normalize(vec2(sd(p+vec2(1.,0.),q,z.x)-sd(p-vec2(1.,0.),q,z.x),sd(p+vec2(0.,1.),q,z.x)-sd(p-vec2(0.,1.),q,z.x))+1e-5);"+
-   "  vec2 c=q.xy+.5*q.zw;vec2 off=-n*bend*80.*S+(c-p)*.24;"+
-   "  float r=texture2D(B,uv+off/R).r;float g=texture2D(B,uv+off*1.5/R).g;float bb=texture2D(B,uv+off*2.05/R).b;"+
+   "  vec2 c=q.xy+.5*q.zw;vec2 off=-n*bend*22.*S+(c-p)*.07;"+
+   "  float r=texture2D(B,uv+off/R).r;float g=texture2D(B,uv+off*1.18/R).g;float bb=texture2D(B,uv+off*1.38/R).b;"+
    "  col=vec3(r,g,bb);col*=mix(z.y,1.,bend*.7);"+
-   "  col*=1.-.16*smoothstep(.7,1.,bend)*(1.-smoothstep(0.,3.*S,-dm-1.5*S));col-=vec3(.28)*smoothstep(1.2*S,0.,abs(dm));col+=vec3(.8,.9,1.)*smoothstep(3.*S,0.,abs(dm+4.*S))*.35;col+=vec3(1.)*pow(clamp(1.-(p.y-q.y)/q.w,0.,1.),14.)*.18*step(-6.*S,dm);"+
-   " }else{col*=1.-.22*exp(-dm/(16.*S))*step(0.,dm);}}"+
+   "  col+=vec3(1.)*smoothstep(1.8*S,0.,abs(dm))*.35;"+
+   " }else{col*=1.-.45*exp(-dm/(9.*S))*step(0.,dm);}}"+
    "gl_FragColor=vec4(col,1.);}";
   function sh(t,src){ var o=gl.createShader(t); gl.shaderSource(o,src); gl.compileShader(o); if(!gl.getShaderParameter(o,gl.COMPILE_STATUS)){ console.warn(gl.getShaderInfoLog(o)); return null; } return o; }
   function prog(f){ var v=sh(gl.VERTEX_SHADER,vs), x=sh(gl.FRAGMENT_SHADER,f); if(!v||!x) return null; var pr=gl.createProgram(); gl.attachShader(pr,v); gl.attachShader(pr,x); gl.linkProgram(pr); return gl.getProgramParameter(pr,gl.LINK_STATUS)?pr:null; }
@@ -2226,7 +2210,7 @@ function liquidSky(sky){
       var st=getComputedStyle(e); if(st.visibility==="hidden"||st.display==="none"||+st.opacity<.2) continue;
       var sc=e.offsetWidth?r.width/e.offsetWidth:1, rad=Math.min(parseFloat(st.borderTopLeftRadius)||0, 9999)*sc;
       Qa[n*4]=(r.left-cr.left)*sx; Qa[n*4+1]=(cr.bottom-r.bottom)*sy; Qa[n*4+2]=r.width*sx; Qa[n*4+3]=r.height*sy;
-      Za[n*2]=Math.min(rad*sx, .5*Math.min(r.width*sx,r.height*sy)); Za[n*2+1]=e.classList.contains("card")?.985:(e.classList.contains("add-btn")?1.:.97);
+      Za[n*2]=Math.min(rad*sx, .5*Math.min(r.width*sx,r.height*sy)); Za[n*2+1]=e.classList.contains("card")?.5:(e.classList.contains("add-btn")?1.:.72);
       n++;
     }
     return n;
@@ -2249,7 +2233,7 @@ function applyTheme(){
   if(!THEMES[t] && !(url && PREVIEW_THEMES[t])) t=THEMES[t]?t:"classic";
   Object.keys(THEMES).concat(Object.keys(PREVIEW_THEMES)).forEach(function(k){ root.classList.toggle("th-"+k, k===t && k!=="classic"); });
   var sky=document.getElementById("sky"); if(sky && sky.dataset.t!==t){ sky.dataset.t=t; sky.innerHTML=SKY_HTML[t]||""; sky.classList.remove("gl"); if(t==="liquid") liquidSky(sky); }
-  var m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute("content", t==="liquid"?"#fafafa":t==="aurora"?"#010208":t==="boarding"?"#02040c":"#0E0F12");
+  var m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute("content", t==="aurora"?"#010208":t==="boarding"?"#02040c":"#0E0F12");
   if(!url) try{ localStorage.setItem("uno_theme", t); }catch(_){}
 }
 function callsOn(){ return !!(S.settings && S.settings.callsOn); }
