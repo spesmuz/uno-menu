@@ -4,7 +4,7 @@
    - dish photos and videos: the page downloads them all in advance into "uno-media";
      videos are served from it with byte ranges, so they play without internet
    - menu data and calls (Supabase API) are never cached here: the app keeps its own copy */
-var VERSION = "uno-v109";
+var VERSION = "uno-v110";
 var MEDIA = "uno-media-v1";
 var CORE = ["./", "index.html", "davomat.html", "manifest.webmanifest", "media/logo.png", "media/emblem.png", "icons/menu-192.png", "icons/menu-512.png", "icons/menu-180.png", "icons/menu-maskable-512.png", "icons/menu-maskable-192.png", "media/n-stars.webp", "media/n-stars2.webp", "media/n-starsr.webp", "media/n-aur1.webp", "media/n-aur2.webp", "media/n-aur1r.webp", "media/n-aur2r.webp", "media/n-waves.webp", "media/city-lights.svg"];
 
@@ -43,6 +43,17 @@ function cacheFirst(req, store) {
     }).catch(function () { return hit || Response.error(); });
     if (hit) { net.catch(function () {}); return hit; }
     return net;
+  });
+}
+
+/* uploaded photos never change under the same name: once saved, never download again */
+function storedOnly(req) {
+  return caches.match(req.url).then(function (hit) {
+    if (hit) return hit;
+    return fetch(req).then(function (res) {
+      if (res && (res.ok || res.type === "opaque")) { var cp = res.clone(); caches.open(MEDIA).then(function (c) { c.put(req.url, cp); }); }
+      return res;
+    });
   });
 }
 
@@ -95,7 +106,7 @@ self.addEventListener("fetch", function (e) {
   }
   if (/\.supabase\.co$/.test(url.hostname) && url.pathname.indexOf("/storage/v1/object/public/") === 0) {
     if (isVideo || req.headers.has("range")) e.respondWith(rangeFromCache(req));
-    else e.respondWith(cacheFirst(req, MEDIA));
+    else e.respondWith(storedOnly(req));
     return;
   }
   // everything else (Supabase API, realtime, Telegram…): straight to the network

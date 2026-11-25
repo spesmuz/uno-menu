@@ -2892,8 +2892,9 @@ function renderAdmin(){
      '<div class="a-row" style="margin-top:14px"><label class="fld"><span>Restoran nomi (birinchi so\'z katta, qolgani kichik yoziladi)</span><input id="setName" maxlength="40" value="'+esc(S.settings.name||"")+'" '+(ro?"disabled":"")+'></label><button class="btn gold" data-a="saveName" '+(ro?"disabled":"")+'>Saqlash</button></div>'+
      '<div class="a-row" style="margin-top:14px;align-items:center"><label class="chk" style="font-size:14px;color:var(--text)"><input type="checkbox" id="setSound" '+(S.settings.soundOn!==false?"checked":"")+' '+(ro?"disabled":"")+'> Menyu ovozlari (taom tanlanganda, savatchaga qo\'shilganda, buyurtmada)</label>'+(ro?'':'<button class="btn sm" data-a="testSound">Ovozni sinash</button>')+'</div><div id="setMsg"></div></section>';
   // offline readiness
-  h+='<section class="a-sec"><h2>Oflayn rejim</h2><p class="help">Menyu, rasmlar va videolar shu qurilmada saqlanadi: internet bo\'lmasa ham menyu to\'liq ishlaydi. Internet qaytganda o\'zgarishlar o\'zi yuklanadi.</p>'+
-     '<div id="offStat" style="margin-top:10px;font-size:14px"></div><div class="a-row" style="margin-top:10px"><button class="btn" data-a="syncMedia">Hozir yuklash</button></div></section>';
+  h+='<section class="a-sec"><h2>Oflayn rejim</h2><p class="help">Faqat restorandagi menyu planshetlari uchun: barcha rasm va videolar shu qurilmaga oldindan yuklanadi, internet bo\'lmasa ham menyu to\'liq ishlaydi. Mijozlar telefonida bu o\'chiq — trafik tejaladi.</p>'+
+     (offlineDevice()?'<div id="offStat" style="margin-top:10px;font-size:14px"></div><div class="a-row" style="margin-top:10px"><button class="btn" data-a="syncMedia">Hozir yangilash</button>'+(window.UnoKiosk?'':'<button class="btn" data-a="offMedia">Bu qurilmada o\'chirish</button>')+'</div>'
+      :'<p class="help" style="margin-top:8px">Bu qurilmada o\'chiq.</p><div class="a-row" style="margin-top:10px"><button class="btn" data-a="syncMedia">Bu qurilma — planshet: yoqish</button></div>')+'</section>';
   // tables, service charge, QR codes
   var base=location.origin+location.pathname.replace(/[^\/]*$/,"");
   h+='<section class="a-sec"><h2>Stollar, xizmat haqi va QR-kodlar</h2>'+
@@ -3128,7 +3129,8 @@ A.addEventListener("click", async function(e){
     else if(act==="aiAll"){ aiAllPhotos(); }
     else if(act==="trAll"){ trAll(); }
     else if(act==="aiAllStop"){ S.aiAllStop=true; }
-    else if(act==="syncMedia"){ Offline.last=0; syncMedia(); }
+    else if(act==="syncMedia"){ try{ localStorage.setItem("uno_offline","1"); }catch(_){} Offline.last=0; syncMedia(true); renderAdmin(); }
+    else if(act==="offMedia"){ try{ localStorage.removeItem("uno_offline"); }catch(_){} Offline.last=0; renderAdmin(); }
     else if(act==="zpPreview"){ openZonePicker(true); }
     else if(act==="zpAdd"||act==="zpDel"||act==="zpSave"){
       var zs=[]; document.querySelectorAll("#zpRows [data-zn]").forEach(function(inp){ var i=inp.dataset.zn; zs.push({id:"z"+i, name:inp.value.trim().toUpperCase(), tables:(document.querySelector('#zpRows [data-zt="'+i+'"]')||{}).value||""}); });
@@ -3790,12 +3792,15 @@ function enhanceImage(file){
   return new Promise(function(resolve,reject){
     var url=URL.createObjectURL(file), im=new Image();
     im.onload=function(){
-      var max=1400, s=Math.min(1, max/Math.max(im.naturalWidth,im.naturalHeight));
+      var max=1200, s=Math.min(1, max/Math.max(im.naturalWidth,im.naturalHeight));
       var w=Math.round(im.naturalWidth*s), h=Math.round(im.naturalHeight*s);
       var c=document.createElement("canvas"); c.width=w; c.height=h; var ctx=c.getContext("2d");
       ctx.filter="brightness(1.05) contrast(1.1) saturate(1.22)"; ctx.drawImage(im,0,0,w,h); URL.revokeObjectURL(url);
-      var png=file.type==="image/png"||file.type==="image/webp";
-      c.toBlob(function(b){ b?resolve(b):reject(new Error("canvas")); }, png?"image/png":"image/jpeg", .9);
+      /* WebP (or JPEG) at 0.82: 5–10× smaller than PNG, looks the same on a phone */
+      c.toBlob(function(b){
+        if(b && b.type==="image/webp") return resolve(b);
+        c.toBlob(function(j){ j?resolve(j):reject(new Error("canvas")); }, "image/jpeg", .84);
+      }, "image/webp", .82);
     };
     im.onerror=function(){ URL.revokeObjectURL(url); reject(new Error("Rasmni o'qib bo'lmadi")); };
     im.src=url;
@@ -4512,7 +4517,10 @@ function mediaUrls(){
   (S.dishes||[]).forEach(function(d){ add(d.imgId); add(d.videoId); });
   return out;
 }
-async function syncMedia(){
+/* downloading every photo and video in advance costs traffic: only on menu tablets / kiosks, never on guests' phones */
+function offlineDevice(){ try{ if(localStorage.getItem("uno_offline")==="1") return true; }catch(_){} return !!(window.UnoKiosk); }
+async function syncMedia(force){
+  if(!force && !offlineDevice()) return;
   if(!("caches" in window) || Offline.busy || navigator.onLine===false || !(S.dishes&&S.dishes.length)) return;
   Offline.busy=true; Offline.failed=0;
   try{
