@@ -5,7 +5,7 @@ the same map is written into index.html (var VOPT) so the menu uses the copies a
 import json, os, re, subprocess, urllib.request
 U="https://eaxavnixuqgwashplnhz.supabase.co"; K="sb_publishable_gILXDU_L8vepyEbsF87Tcg_hYyMpril"
 H={"apikey":K,"Authorization":"Bearer "+K}
-TAG="-c3"   # bump to rebuild every copy with new settings
+TAG="-c4"   # bump to rebuild every copy with new settings
 VCOL="unsharp=5:5:0.35"
 PCOL="unsharp=5:5:0.3"
 rows=json.load(urllib.request.urlopen(urllib.request.Request(U+"/rest/v1/uno_docs?select=path,data",headers=H),timeout=60))
@@ -21,8 +21,8 @@ def expose(src, video):
     fg=sorted(b for b in raw if b>40)
     if len(fg)<len(raw)*0.04: print("   light: too little dish found -> untouched"); return ""
     n=len(fg); med=fg[n//2]; p97=fg[min(n-1,int(n*0.97))]; clip=sum(1 for b in fg if b>=248)/n
-    if med<88:
-        gain=max(1.0,min(1.35,112.0/med,245.0/max(1,p97))); w=1.0/gain
+    if med<88 or p97<198:          # dish too dark overall, or dull: even its lightest parts (white plate, sauce) look grey
+        gain=max(1.0,min(1.35,max(112.0/med,218.0/max(1,p97)),245.0/max(1,p97))); w=1.0/gain
         print(f"   light: dish median {med}, top {p97}, burnt {clip:.1%} -> TOO DARK, brighten x{gain:.2f}")
         return f"colorlevels=rimax={w:.3f}:gimax={w:.3f}:bimax={w:.3f}," if gain>1.02 else ""
     if med>172 or clip>0.06:
