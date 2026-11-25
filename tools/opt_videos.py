@@ -7,11 +7,11 @@ os.makedirs("media/v",exist_ok=True)
 opt=json.load(open("media/opt.json")) if os.path.exists("media/opt.json") else {}
 for r in rows:
     vid=(r.get("data") or {}).get("videoId")
-    if not vid or "/" in vid or opt.get(vid,"").endswith("-sq.mp4"): continue
-    src="/tmp/"+vid; out="media/v/"+vid.rsplit(".",1)[0]+"-sq.mp4"
+    if not vid or "/" in vid or opt.get(vid,"").endswith("-hq.mp4"): continue
+    src="/tmp/"+vid; out="media/v/"+vid.rsplit(".",1)[0]+"-hq.mp4"
     urllib.request.urlretrieve(U+"/storage/v1/object/public/uno-media/"+urllib.request.quote(vid), src)
-    subprocess.run(["ffmpeg","-y","-loglevel","error","-i",src,"-vf","crop='min(iw,ih)':'min(iw,ih)',scale=720:720,fps=30",
-                    "-c:v","libx264","-preset","slow","-crf","27","-profile:v","high","-pix_fmt","yuv420p","-movflags","+faststart",
+    subprocess.run(["ffmpeg","-y","-loglevel","error","-i",src,"-vf","crop='min(iw,ih)':'min(iw,ih)',scale='min(1080,min(iw,ih))':'min(1080,min(iw,ih))':flags=lanczos,fps=30",
+                    "-c:v","libx264","-preset","slow","-crf","22","-profile:v","high","-pix_fmt","yuv420p","-movflags","+faststart",
                     "-an",out],check=True)
     print(vid, round(os.path.getsize(src)/1e6,1),"MB ->", round(os.path.getsize(out)/1e6,1),"MB")
     old=opt.get(vid)
