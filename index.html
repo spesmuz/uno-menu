@@ -4334,11 +4334,20 @@ Att.saveBlob=function(name, blob){
   if(window.UnoKiosk && window.UnoKiosk.saveFile){
     var fr=new FileReader(); fr.onload=function(){ var r=window.UnoKiosk.saveFile(name, fr.result, blob.type); Att.say("rep", r==="ok"?"Saqlandi: Fayllar → Yuklanmalar (Download) → UNO → "+name : r==="perm"?"Xotiraga yozish uchun ruxsat bering va qayta bosing.":"Saqlab bo'lmadi.", r==="ok"?"ok":"err"); }; fr.readAsDataURL(blob); return;
   }
+  /* iPhone app: opening the file would replace the page with no way back — hand it to the share sheet instead */
+  var inIOSApp=!!(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.unoLang);
+  var file=null; try{ file=new File([blob],name,{type:blob.type}); }catch(_){}
+  if(file && navigator.canShare && navigator.share && navigator.canShare({files:[file]}) && (inIOSApp || /iPhone|iPad|Android/i.test(navigator.userAgent))){
+    navigator.share({files:[file], title:name}).then(function(){ Att.say("rep","Excel fayli tayyor: "+name,"ok"); })
+      .catch(function(e){ if(e&&e.name==="AbortError") return; Att.say("rep","Ulashib bo'lmadi: "+((e&&e.message)||e),"err"); });
+    return;
+  }
+  if(inIOSApp){ Att.say("rep","Bu iPhone'da faylni ilova ichida saqlab bo'lmaydi. Admin panelni Safari'da oching (spesmuz.github.io/uno-menu/#admin) va o'sha yerdan yuklab oling.","err"); return; }
   var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },2000);
   Att.say("rep","Excel fayli yuklab olindi: "+name,"ok");
 };
 Att.csv=function(rows){ return "﻿sep=;\r\n"+rows.map(function(r){ return r.map(function(c){ c=String(c==null?"":c); return /[;"\r\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c; }).join(";"); }).join("\r\n"); };
-Att.download=function(name,text){ var a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type:"text/csv;charset=utf-8"})); a.download=name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1000); };
+Att.download=function(name,text){ if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.unoLang){ return Att.saveBlob(name,new Blob([text],{type:"text/csv"})); } var a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type:"text/csv;charset=utf-8"})); a.download=name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1000); };
 Att.cfgHTML=function(){
   var c=Att.cfg||{}, term=Att.isTerminal(), myDev=""; try{ myDev=localStorage.getItem("uno_att_dev")||""; }catch(_){}
   var h='<h3 style="font-size:14px;margin:0 0 8px">Eshik terminali (shu telefon)</h3>';

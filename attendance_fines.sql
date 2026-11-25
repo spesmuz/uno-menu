@@ -125,7 +125,9 @@ begin
       'fine', (select coalesce(sum(amount),0) from public.uno_att_fines where staff_id = s.id and day = sday and status <> 'excused'));
   end if;
 
-  if last.kind = 'in' and ts - last.at < interval '18 hours' then
+  -- oldingi smenada "ketdi" belgilanmay qolgan bo'lsa, yangi smenaga kelish — ketish emas, KELISH
+  if last.kind = 'in' and ts - last.at < interval '18 hours'
+     and not ((last.at at time zone tz) < sched - interval '6 hours' and loc >= sched - interval '6 hours') then
     -- kirish oynasi: smena boshidan (yoki kelgan vaqtdan, smena bo'lmasa) N daqiqa ichida qayta belgilansa — ketish emas
     anchor := case when scheduled and (last.at at time zone tz) >= sched - interval '6 hours' then sched else (last.at at time zone tz) end;
     if loc < anchor + make_interval(mins => win) and coalesce(current_setting('uno.force_out', true), '') <> '1' then
@@ -243,6 +245,12 @@ begin
       end if;
     end loop;
   end loop;
+  -- kelgan bo'lsa ham yozilib qolgan "kelmadi" jarimalarini olib tashlash
+  delete from public.uno_att_fines f using public.uno_staff sx
+   where f.kind = 'absent' and f.status = 'pending' and sx.id = f.staff_id
+     and exists (select 1 from public.uno_att a where a.staff_id = f.staff_id and a.kind = 'in'
+                  and a.at >= ((f.day + sx.shift_start) - interval '6 hours') at time zone tz
+                  and a.at <  ((f.day + sx.shift_start) + interval '12 hours') at time zone tz);
   if n > 0 then perform public.uno_att_tg('⚠️ <b>Hali ishga kelmadi:</b>' || txt); end if;
   if nf > 0 then perform public.uno_att_tg('💸 <b>Kelmadi — jarima ' || public.uno_money(fa) || ':</b>' || ftxt
                                            || E'\nSababli bo''lsa: admin panel → Davomat → Jarimalar → «Sababli».'); end if;
@@ -254,5 +262,48 @@ begin
 end $$;
 revoke all on function public.uno_att_check_absent() from public, anon;
 grant execute on function public.uno_att_check_absent() to authenticated;
+
+-- ===== bir martalik tuzatish: "ketdi" belgilanmay qolgani uchun KELISH "ketish" bo'lib yozilgan belgilarni qayta hisoblash =====
+do $$
+declare tz text := public.uno_tz(); sr record; ar record; pk text; pat timestamptz; loc timestamp; sched timestamp; scheduled boolean;
+        k text; late int; early int; worked int; send timestamp; fh int := public.uno_att_cfg('fine_hour','50000')::int; nfix int := 0;
+begin
+  for sr in select * from public.uno_staff loop
+    pk := null; pat := null;
+    for ar in select * from public.uno_att where staff_id = sr.id and at >= timestamptz '2026-11-01' order by at loop
+      loc := ar.at at time zone tz;
+      sched := loc::date + sr.shift_start;
+      if loc < sched - interval '12 hours' then sched := sched - interval '1 day'; end if;
+      scheduled := extract(isodow from sched)::int = any(sr.days);
+      if pk = 'in' and ar.at - pat < interval '18 hours'
+         and not ((pat at time zone tz) < sched - interval '6 hours' and loc >= sched - interval '6 hours') then k := 'out'; else k := 'in'; end if;
+      if k <> ar.kind then
+        late := 0; early := 0; worked := null;
+        if k = 'in' then
+          if scheduled then late := greatest(0, floor(extract(epoch from (loc - sched)) / 60))::int; if late > 720 then late := 0; end if; end if;
+        else
+          worked := greatest(0, floor(extract(epoch from (ar.at - pat)) / 60))::int;
+          send := (pat at time zone tz)::date + sr.shift_end; if sr.shift_end <= sr.shift_start then send := send + interval '1 day'; end if;
+          early := greatest(0, floor(extract(epoch from (send - loc)) / 60))::int; if early > 720 then early := 0; end if;
+        end if;
+        update public.uno_att set kind = k, late_min = late, early_min = early, worked_min = worked where id = ar.id;
+        nfix := nfix + 1;
+        if k = 'in' and scheduled and fh > 0 and late >= 60 then
+          insert into public.uno_att_fines(staff_id, day, kind, minutes, amount, att_id) values (sr.id, sched::date, 'late', late, floor(late/60.0)::int * fh, ar.id)
+            on conflict (staff_id, day, kind) do nothing;
+        end if;
+        if k = 'out' then delete from public.uno_att_fines where att_id = ar.id and status = 'pending'; end if;
+      end if;
+      pk := k; pat := ar.at;
+    end loop;
+  end loop;
+  -- kelgan kunlar uchun yozilgan "kelmadi" jarimalari
+  delete from public.uno_att_fines f using public.uno_staff sx
+   where f.kind = 'absent' and f.status = 'pending' and sx.id = f.staff_id
+     and exists (select 1 from public.uno_att a where a.staff_id = f.staff_id and a.kind = 'in'
+                  and a.at >= ((f.day + sx.shift_start) - interval '6 hours') at time zone tz
+                  and a.at <  ((f.day + sx.shift_start) + interval '12 hours') at time zone tz);
+  raise notice 'tuzatildi: % ta belgi', nfix;
+end $$;
 
 notify pgrst, 'reload schema';
