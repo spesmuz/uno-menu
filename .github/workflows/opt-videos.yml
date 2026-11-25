@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt-get install -y ffmpeg >/dev/null 2>&1 || true
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
       - run: python3 tools/opt_videos.py
       - run: |
           git config user.name "uno-bot"; git config user.email "bot@users.noreply.github.com"
