@@ -1,0 +1,14 @@
+name: Optimize dish videos
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  v:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get install -y ffmpeg >/dev/null 2>&1 || true
+      - run: python3 tools/opt_videos.py
+      - run: |
+          git config user.name "uno-bot"; git config user.email "bot@users.noreply.github.com"
+          git add media/v media/opt.json && git commit -m "Optimized dish videos" && git push || echo "nothing new"
