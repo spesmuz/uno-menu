@@ -1,5 +1,8 @@
 name: Optimize dish videos
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 * * * *'
 permissions:
   contents: write
 jobs:
@@ -11,4 +14,4 @@ jobs:
       - run: python3 tools/opt_videos.py
       - run: |
           git config user.name "uno-bot"; git config user.email "bot@users.noreply.github.com"
-          git add media/v media/opt.json && git commit -m "Optimized dish videos" && git push || echo "nothing new"
+          git add -A media/v media/opt.json && git commit -m "Optimized dish videos" && git push || echo "nothing new"
