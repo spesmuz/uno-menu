@@ -179,6 +179,16 @@ input,select,textarea{font-family:inherit}
 .aitab th:first-child,.aitab td:first-child{text-align:left;white-space:normal}
 .aitab th{color:var(--muted);font-weight:700;font-size:12px}
 .aitab tfoot td{font-weight:800;color:var(--gold2);border-bottom:0}
+.aitab.rep{font-size:14px;border-radius:14px;overflow:hidden;table-layout:fixed;width:100%}.aitab.rep th:first-child,.aitab.rep td:first-child{width:34%}
+.aitab.rep th{background:rgba(232,176,75,.14);color:var(--gold2);font-size:12px;letter-spacing:.04em;text-transform:uppercase;padding:10px;white-space:normal}
+.aitab.rep td{padding:10px 8px;text-align:left;white-space:normal}.aitab.rep th{text-align:left;padding:10px 8px}
+.aitab.rep tbody tr:nth-child(even) td{background:rgba(255,255,255,.025)}
+.aitab.rep td.money{color:#FF7A70;font-weight:800;font-variant-numeric:tabular-nums}
+.aitab.rep td.num{font-variant-numeric:tabular-nums}
+.aitab.rep td .s{display:block;color:var(--muted);font-size:11.5px;font-weight:600;margin-top:2px}
+.aitab.rep tr.day td{background:rgba(232,176,75,.08)!important;color:var(--gold2);font-weight:800;font-size:13px;padding:8px 10px}
+.aitab.rep tr.tot td{font-weight:800;border-top:2px solid var(--line)}
+.aitab.rep .late{color:#F08A3C;font-weight:800}.aitab.rep .abs{color:#E5544B;font-weight:800}.aitab.rep .ok{color:#3FBF7F;font-weight:700}
 .add-btn{height:44px;padding:0 20px;border-radius:22px;border:0;background:var(--gold);color:#17130A;font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px}
 .stepper{display:flex;align-items:center;gap:6px;padding:3px;border-radius:24px;background:#2A2C33;border:1px solid var(--line)}
 .stepper button{width:38px;height:38px;border-radius:19px;border:0;background:#3A3C44;display:flex;align-items:center;justify-content:center}
@@ -4094,7 +4104,7 @@ Att.load=async function(what){
       S.sb.rpc("uno_att_check_absent").then(function(){},function(){});
     }
     if(!what||what==="fines"||what==="today"){
-      try{ Att.fines=await Att.q(S.sb.from("uno_att_fines").select("*").gte("day",attDay(Date.now()-62*864e5)).order("day",{ascending:false}).order("id",{ascending:false}).limit(1000)); Att.finesErr=""; }
+      try{ Att.fines=await Att.q(S.sb.from("uno_att_fines").select("*").or("day.gte."+attDay(Date.now()-62*864e5)+",and(paid_at.is.null,status.neq.excused)").order("day",{ascending:false}).order("id",{ascending:false}).limit(1000)); Att.finesErr=""; }
       catch(e){ Att.fines=Att.fines||[]; Att.finesErr=String(e&&e.message||e); }
     }
     if(!what||what==="cfg"){ Att.cfg=await Att.q(S.sb.rpc("uno_att_settings")); Att.devs=await Att.q(S.sb.from("uno_att_devices").select("id,name,revoked,created_at,last_seen").order("created_at")); }
@@ -4149,20 +4159,31 @@ Att.finesHTML=function(){
   var list=all.filter(function(f){ return f.day.slice(0,7)===cur; });
   var pend=all.filter(function(f){ return f.status==="pending"; });
   var money=function(n){ return fmt(n); };
+  var unpaid=function(f){ return f.status!=="excused" && !f.paid_at; };
   var row=function(f){
-    var st=by[f.staff_id]||{name:"?"}, ex=f.status==="excused", ok=f.status==="confirmed";
+    var st=by[f.staff_id]||{name:"?"}, ex=f.status==="excused", paid=!!f.paid_at;
     var what=f.kind==="absent"?'Kelmadi':('Kechikdi '+attDur(f.minutes));
-    return '<div class="drow" style="'+(ex?'opacity:.55':'')+'"><div class="mid"><b>'+esc(st.name)+'</b><small>'+f.day.split("-").reverse().join(".")+' · '+what+(attTeam(st)!=="Jamoasiz"?' · '+esc(attTeam(st)):'')+'</small>'+
-      '<small style="font-size:14px;font-weight:700;color:'+(ex?'var(--muted)':'#E5544B')+(ex?';text-decoration:line-through':'')+'">'+money(f.amount)+'</small></div>'+
-      '<div class="acts">'+(f.status==="pending"?'<button class="btn sm" data-att="fine" data-id="'+f.id+'" data-st="excused">✅ Sababli</button><button class="btn sm danger" data-att="fine" data-id="'+f.id+'" data-st="confirmed">Sababsiz</button>':
-        '<span class="tag" style="font-size:12px">'+(ex?'Sababli — olib tashlandi':'Tasdiqlangan')+'</span><button class="btn sm" data-att="fine" data-id="'+f.id+'" data-st="pending">Qayta ko\'rish</button>')+'</div></div>';
+    var tag=ex?Att.chip("Sababli — olib tashlandi","#8a8f98"):paid?Att.chip("✓ To'langan "+attDay(f.paid_at).split("-").reverse().join("."),"#3FBF7F"):f.status==="confirmed"?Att.chip("To'lanmagan","#E5544B"):"";
+    var acts=f.status==="pending"
+      ? '<button class="btn sm" data-att="fine" data-id="'+f.id+'" data-st="excused">✅ Sababli</button><button class="btn sm danger" data-att="fine" data-id="'+f.id+'" data-st="confirmed">Sababsiz</button><button class="btn sm gold" data-att="finePaid" data-id="'+f.id+'" data-v="1">💰 To\'landi</button>'
+      : ex ? '<button class="btn sm" data-att="fine" data-id="'+f.id+'" data-st="pending">Qayta ko\'rish</button>'
+      : paid ? '<button class="btn sm" data-att="finePaid" data-id="'+f.id+'" data-v="0">To\'lovni bekor qilish</button>'
+      : '<button class="btn sm gold" data-att="finePaid" data-id="'+f.id+'" data-v="1">💰 To\'landi</button><button class="btn sm" data-att="fine" data-id="'+f.id+'" data-st="excused">Sababli</button>';
+    return '<div class="drow" style="'+(ex||paid?'opacity:.6':'')+'"><div class="mid"><b>'+esc(st.name)+'</b><small>'+f.day.split("-").reverse().join(".")+' · '+what+(attTeam(st)!=="Jamoasiz"?' · '+esc(attTeam(st)):'')+'</small>'+
+      '<small style="font-size:15px;font-weight:800;color:'+(ex||paid?'var(--muted)':'#E5544B')+(ex?';text-decoration:line-through':'')+'">'+money(f.amount)+'</small>'+(tag?'<div style="margin-top:4px">'+tag+'</div>':'')+'</div>'+
+      '<div class="acts">'+acts+'</div></div>';
   };
-  var h=Att.teamBar()+(Att.cfg&&Att.cfg.fines?'<p class="help">Qoidalar: smena boshidan '+Math.round((Att.cfg.window||300)/60*10)/10+' soat ichida terminal faqat «keldi» deb oladi. Kechikish — har to\'liq soat uchun '+money(Att.cfg.fine_hour)+', kelmasa — '+money(Att.cfg.fine_absent)+'. «Sababli» bosilsa jarima olib tashlanadi.</p>':'');
-  if(pend.length) h+='<h3 style="font-size:15px;margin:14px 0 8px;color:var(--gold2)">Hal qilinmagan ('+pend.length+')</h3><div style="display:flex;flex-direction:column;gap:8px">'+pend.map(row).join("")+'</div>';
+  var h=Att.teamBar()+(Att.cfg&&Att.cfg.fines?'<p class="help">Kechikish — har to\'liq soat uchun '+money(Att.cfg.fine_hour)+', kelmasa — '+money(Att.cfg.fine_absent)+'. Jarima «To\'landi» bosilmaguncha xodimning qarzi bo\'lib qo\'shilib boradi va terminal har safar eslatadi.</p>':'');
+  /* debts: everything not paid and not excused, any month */
+  var debt={}, cnt={}; all.forEach(function(f){ if(!unpaid(f)) return; debt[f.staff_id]=(debt[f.staff_id]||0)+f.amount; cnt[f.staff_id]=(cnt[f.staff_id]||0)+1; });
+  var dids=Object.keys(debt).sort(function(a,b){ return debt[b]-debt[a]; });
+  h+='<h3 style="font-size:15px;margin:14px 0 8px;color:var(--gold2)">To\'lanmagan jarimalar</h3>';
+  h+=dids.length?'<div style="display:flex;flex-direction:column;gap:8px">'+dids.map(function(i){ var st=by[i]||{name:"?"};
+      return '<div class="drow"><div class="mid"><b>'+esc(st.name)+'</b><small>'+esc(attTeam(st))+' · '+cnt[i]+' ta jarima</small><small style="font-size:17px;font-weight:800;color:#FF7A70">'+money(debt[i])+'</small></div><div class="acts">'+(Att.payAsk===i?'<button class="btn sm gold" data-att="payAll" data-id="'+i+'">Ha, '+money(debt[i])+' to\'landi</button>':'<button class="btn sm gold" data-att="payAsk" data-id="'+i+'">💰 Hammasi to\'landi</button>')+'</div></div>'; }).join("")+
+      '<div style="display:flex;justify-content:space-between;padding:6px 4px;font-weight:800"><span>Jami qarz</span><span style="color:#FF7A70">'+money(dids.reduce(function(a,i){ return a+debt[i]; },0))+'</span></div></div>'
+    :'<div class="msg ok">Hamma jarimalar to\'langan ✅</div>';
+  if(pend.length) h+='<h3 style="font-size:15px;margin:18px 0 8px;color:var(--gold2)">Hal qilinmagan ('+pend.length+')</h3><div style="display:flex;flex-direction:column;gap:8px">'+pend.map(row).join("")+'</div>';
   h+='<div class="a-row" style="margin:18px 0 8px;align-items:center;gap:8px"><b style="font-size:15px">Oy bo\'yicha</b>'+mk.map(function(m){ return '<button class="btn sm'+(m===cur?' gold':'')+'" data-att="fineMon" data-v="'+m+'">'+m.split("-").reverse().join(".")+'</button>'; }).join("")+'</div>';
-  var tot={}; list.forEach(function(f){ if(f.status==="excused") return; tot[f.staff_id]=(tot[f.staff_id]||0)+f.amount; });
-  var ids=Object.keys(tot).sort(function(a,b){ return tot[b]-tot[a]; });
-  if(ids.length) h+='<div style="overflow-x:auto"><table class="aitab"><thead><tr><th>Xodim</th><th>Jami jarima</th></tr></thead><tbody>'+ids.map(function(i){ return '<tr><td>'+esc((by[i]||{name:"?"}).name)+'</td><td><b>'+money(tot[i])+'</b></td></tr>'; }).join("")+'<tr><td><b>Hammasi</b></td><td><b>'+money(ids.reduce(function(a,i){ return a+tot[i]; },0))+'</b></td></tr></tbody></table></div>';
   h+=list.length?'<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">'+list.map(row).join("")+'</div>':'<div class="msg" style="margin-top:10px">Bu oyda jarima yo\'q.</div>';
   return h+Att.msg("fines");
 };
@@ -4244,20 +4265,40 @@ Att.repHTML=function(){
     '<div class="a-row" style="gap:6px;margin-top:8px"><button class="btn sm" data-att="repQuick" data-v="today">Bugun</button><button class="btn sm" data-att="repQuick" data-v="week">Shu hafta</button><button class="btn sm" data-att="repQuick" data-v="month">Shu oy</button><button class="btn sm" data-att="repQuick" data-v="prev">O\'tgan oy</button></div>'+Att.msg("rep");
   if(r.busy) h+='<div class="msg" style="margin-top:12px">Hisoblanmoqda…</div>';
   if(r.data){
-    var rows=r.data.filter(function(x){ return Att.teamOk(x.s); });
+    var rows=r.data.filter(function(x){ return Att.teamOk(x.s); }), g=Att.grace(), money=function(n){ return num(n); };
+    var FN=Att.repFines(r), dd=function(k){ return k.split("-").reverse().join("."); };
     h+='<div style="margin-top:14px">'+Att.teamBar()+'</div>';
-    h+='<div style="overflow-x:auto;margin-top:14px"><table class="aitab"><thead><tr><th>Xodim</th><th>Ish kuni</th><th>Keldi</th><th>Kelmadi</th><th>Kechikdi</th><th>Jami kechikish</th><th>Erta ketdi</th><th>Ishlagan</th></tr></thead><tbody>'+
-      Att.group(rows,function(x){ return x.s; }).map(function(gr){
-        var sum=function(k){ return gr.items.reduce(function(a,x){ return a+x[k]; },0); };
-        return '<tr><td colspan="8" style="color:var(--gold2);font-weight:800;padding-top:14px">'+esc(gr.team)+' <small style="color:var(--muted);font-weight:600">('+gr.items.length+' kishi)</small></td></tr>'+
-        gr.items.map(function(x){ return '<tr style="cursor:pointer" data-att="repOpen" data-id="'+x.s.id+'"><td><b>'+esc(x.s.name)+'</b> <small style="color:var(--muted)">'+(Att.open===x.s.id?'▲':'▼')+'</small><br><small style="color:var(--muted)">'+esc(x.s.role||"")+'</small></td><td>'+x.sched+'</td><td>'+x.came+'</td><td style="color:'+(x.absent?'#E5544B':'inherit')+'">'+x.absent+'</td><td style="color:'+(x.lateN?'#F08A3C':'inherit')+'">'+x.lateN+'</td><td>'+(x.lateSum?attDur(x.lateSum):'—')+'</td><td>'+x.earlyN+'</td><td>'+attDur(x.worked)+'</td></tr>'+
-        (Att.open===x.s.id?'<tr><td colspan="8" style="background:#141519;text-align:left"><table class="aitab" style="font-size:12px"><thead><tr><th>Sana</th><th>Keldi</th><th>Ketdi</th><th>Kechikish</th><th>Ishladi</th></tr></thead><tbody>'+
-          x.days.map(function(d){ return '<tr><td>'+d.key+' '+ATT_DN[attDow(d.key)-1]+'</td><td>'+(d.inAt||(d.sched?'<span style="color:#E5544B">kelmadi</span>':'dam olish'))+'</td><td>'+(d.outAt||'—')+'</td><td>'+(d.late>Att.grace()?'<span style="color:#F08A3C">'+attDur(d.late)+'</span>':'—')+'</td><td>'+(d.worked?attDur(d.worked):'—')+'</td></tr>'; }).join("")+'</tbody></table></td></tr>':''); }).join("")+
-        (gr.items.length>1?'<tr style="color:var(--muted);font-weight:700"><td>Jami: '+esc(gr.team)+'</td><td>'+sum("sched")+'</td><td>'+sum("came")+'</td><td>'+sum("absent")+'</td><td>'+sum("lateN")+'</td><td>'+(sum("lateSum")?attDur(sum("lateSum")):'—')+'</td><td>'+sum("earlyN")+'</td><td>'+attDur(sum("worked"))+'</td></tr>':'');
-      }).join("")+'</tbody></table></div>'+
-      '<p class="help" style="margin-top:8px">Kechikish chegarasi: '+Att.grace()+' daqiqa (undan kam kechikish hisobga olinmaydi). Qatorni bossangiz, kunma-kun ko\'rinadi.</p>';
+    /* 1. per person */
+    var T={came:0,absent:0,lateN:0,lateSum:0,fine:0,debt:0};
+    h+='<h3 style="font-size:15px;margin:16px 0 8px;color:var(--gold2)">Umumiy · '+dd(r.from)+' — '+dd(r.to)+'</h3><div style="overflow-x:auto"><table class="aitab rep"><thead><tr><th>Xodim</th><th>Kechikish</th><th>Jarima, so\'m</th><th>Qarz, so\'m</th></tr></thead><tbody>'+
+      rows.map(function(x){ var f=FN.sum[x.s.id]||{fine:0}, debt=FN.debt[x.s.id]||0;
+        T.came+=x.came; T.absent+=x.absent; T.lateN+=x.lateN; T.lateSum+=x.lateSum; T.fine+=f.fine; T.debt+=debt;
+        return '<tr><td><b>'+esc(x.s.name)+'</b><span class="s">'+esc(x.s.role||attTeam(x.s))+'</span><span class="s">'+x.came+' kun keldi'+(x.absent?' · <span class="abs">'+x.absent+' kun kelmadi</span>':'')+'</span></td><td class="num'+(x.lateN?' late':'')+'">'+(x.lateN?x.lateN+' marta<span class="s">'+attDur(x.lateSum)+'</span>':'—')+'</td><td class="'+(f.fine?'money':'')+'">'+(f.fine?money(f.fine):'—')+'</td><td class="'+(debt?'money':'ok')+'">'+(debt?money(debt):'✓')+'</td></tr>'; }).join("")+
+      '<tr class="tot"><td>Jami<span class="s">'+T.came+' kun keldi'+(T.absent?' · '+T.absent+' kun kelmadi':'')+'</span></td><td>'+(T.lateN?T.lateN+' marta<span class="s">'+attDur(T.lateSum)+'</span>':'—')+'</td><td class="money">'+(T.fine?money(T.fine):'—')+'</td><td class="money">'+(T.debt?money(T.debt):'—')+'</td></tr></tbody></table></div>';
+    /* 2. day by day */
+    var days=Att.repDays(rows,FN);
+    h+='<h3 style="font-size:15px;margin:22px 0 8px;color:var(--gold2)">Kunlik jadval</h3><div style="overflow-x:auto"><table class="aitab rep"><thead><tr><th>Xodim</th><th>Keldi → Ketdi</th><th>Kechikish</th><th>Jarima, so\'m</th></tr></thead><tbody>'+
+      days.map(function(D){ return '<tr class="day"><td colspan="4">'+dd(D.key)+' · '+ATT_DOW_FULL[attDow(D.key)-1]+'</td></tr>'+D.rows.map(function(e){
+        return '<tr><td><b>'+esc(e.s.name)+'</b><span class="s">'+esc(e.s.role||attTeam(e.s))+' · smena '+e.shift+'</span></td><td class="num">'+(e.inAt?e.inAt+' → '+(e.outAt||'…'):'<span class="abs">Kelmadi</span>')+'</td><td class="'+(e.late>g?'late':'')+'">'+(e.late>g?attDur(e.late):(e.inAt?'<span class="ok">vaqtida</span>':'—'))+'</td><td class="'+(e.fineSt==="to\'lanmagan"?'money':'')+'">'+(e.fine?money(e.fine)+'<span class="s">'+e.fineSt+'</span>':'—')+'</td></tr>'; }).join(""); }).join("")+
+      '</tbody></table></div><p class="help" style="margin-top:8px">'+g+' daqiqagacha kechikish hisobga olinmaydi. Jarima «To\'landi» deb belgilanguncha «To\'lanmagan» ustunida qoladi (Jarimalar bo\'limi).</p>';
   }
   return h;
+};
+var ATT_DOW_FULL=["Dushanba","Seshanba","Chorshanba","Payshanba","Juma","Shanba","Yakshanba"];
+/* fines of the report period by person/day, and every unpaid fine (debt) */
+Att.repFines=function(r){
+  var by={}, sum={}, debt={};
+  (r.fines||[]).forEach(function(f){ var k=f.staff_id+"|"+f.day; (by[k]=by[k]||[]).push(f); if(f.status!=="excused"){ var o=sum[f.staff_id]||(sum[f.staff_id]={fine:0}); o.fine+=f.amount; } });
+  (r.unpaid||[]).forEach(function(f){ debt[f.staff_id]=(debt[f.staff_id]||0)+f.amount; });
+  return {by:by,sum:sum,debt:debt};
+};
+Att.repDays=function(rows,FN){
+  var map={};
+  rows.forEach(function(x){ x.days.forEach(function(d){ if(!d.inAt && !d.sched) return;
+    var fs=FN.by[x.s.id+"|"+d.key]||[], live=fs.filter(function(f){ return f.status!=="excused"; }), amt=(live.length?live:fs).reduce(function(a,f){ return a+f.amount; },0);
+    var st=!fs.length?"":!live.length?"sababli":live.every(function(f){ return f.paid_at; })?"to'langan":"to'lanmagan";
+    (map[d.key]=map[d.key]||[]).push({s:x.s, shift:String(x.s.shift_start||"").slice(0,5), inAt:d.inAt, outAt:d.outAt, late:d.late||0, fine:amt, fineSt:st, fineEx:!live.length&&fs.length}); }); });
+  return Object.keys(map).sort().reverse().map(function(k){ return {key:k, rows:map[k].sort(function(a,b){ return attTeam(a.s).localeCompare(attTeam(b.s))||a.s.name.localeCompare(b.s.name); })}; });
 };
 Att.runRep=async function(){
   var f=($("repFrom")||{}).value, t=($("repTo")||{}).value; if(!f||!t||f>t){ Att.say("rep","Sanalarni to'g'ri tanlang.","err"); return; }
@@ -4265,6 +4306,8 @@ Att.runRep=async function(){
   try{
     var all=[], from=new Date(attDayStart(f).getTime()-6*3600e3).toISOString(), to=new Date(attDayStart(attAddDays(t,1)).getTime()+18*3600e3).toISOString();
     for(var off=0;;off+=1000){ var part=await Att.q(S.sb.from("uno_att").select("id,staff_id,kind,at,late_min,early_min,worked_min,offline").gte("at",from).lt("at",to).order("at").range(off,off+999)); all=all.concat(part); if(part.length<1000) break; }
+    try{ Att.rep.fines=await Att.q(S.sb.from("uno_att_fines").select("staff_id,day,kind,minutes,amount,status,paid_at").gte("day",f).lte("day",t).limit(5000));
+         Att.rep.unpaid=await Att.q(S.sb.from("uno_att_fines").select("staff_id,amount").is("paid_at",null).neq("status","excused").limit(5000)); }catch(_){ Att.rep.fines=[]; Att.rep.unpaid=[]; }
     Att.rep.raw=all; Att.rep.data=Att.calc(f,t,all); Att.rep.busy=false;
   }catch(e){ Att.rep.busy=false; Att.say("rep",String(e&&e.message||e),"err"); return; }
   Att.render();
@@ -4310,7 +4353,10 @@ Att.xlsx=function(sheets){
     var rows=[], r=1;
     if(sh.title){ rows.push('<row r="1">'+cell(sh.title,"A1",3)+'</row>'); r=3; }
     var hr=r; rows.push('<row r="'+r+'">'+sh.head.map(function(h,i){ return cell(h,col(i)+r,1); }).join("")+'</row>'); r++;
-    sh.rows.forEach(function(row){ rows.push('<row r="'+r+'">'+row.map(function(v,i){ return cell(v,col(i)+r,row._b?2:0); }).join("")+'</row>'); r++; });
+    var zi=0, M=sh.money||[];
+    sh.rows.forEach(function(row){
+      var z=row._day?0:(zi++%2), mon=function(i,v){ return M.indexOf(i)>=0 && typeof v==="number"; };
+      rows.push('<row r="'+r+'"'+(row._day?' ht="20" customHeight="1"':'')+'>'+row.map(function(v,i){ var st=row._day?9:row._b?(mon(i,v)?8:2):(mon(i,v)?(z?7:6):(z?5:4)); return cell(v,col(i)+r,st); }).join("")+'</row>'); r++; });
     var cols='<cols>'+sh.head.map(function(h,i){ var w=(sh.widths&&sh.widths[i])||Math.max(10,String(h).length+2); return '<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w+'" customWidth="1"/>'; }).join("")+'</cols>';
     return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="'+hr+'" topLeftCell="A'+(hr+1)+'" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'+cols+'<sheetData>'+rows.join("")+'</sheetData>'+
       (sh.rows.length?'<autoFilter ref="A'+hr+':'+col(sh.head.length-1)+(hr+sh.rows.length)+'"/>':'')+'</worksheet>';
@@ -4320,7 +4366,7 @@ Att.xlsx=function(sheets){
     ["_rels/.rels",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
     ["xl/workbook.xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'+sheets.map(function(sh,i){ return '<sheet name="'+x(sh.name)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>'; }).join("")+'</sheets></workbook>'],
     ["xl/_rels/workbook.xml.rels",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+sheets.map(function(_,i){ return '<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>'; }).join("")+'<Relationship Id="rId'+(sheets.length+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
-    ["xl/styles.xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="3"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FF1A1306"/><name val="Calibri"/></font><font><b/><sz val="14"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE8B04B"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border/><border><bottom style="thin"><color rgb="FFBBBBBB"/></bottom></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>']
+    ["xl/styles.xml",'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0 &quot;so\'m&quot;"/></numFmts><fonts count="5"><font><sz val="11"/><color rgb="FF222222"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FF1A1306"/><name val="Calibri"/></font><font><b/><sz val="14"/><color rgb="FF1A1306"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFC62828"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FF7A5410"/><name val="Calibri"/></font></fonts><fills count="6"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE8B04B"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFFFFFFF"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFF5F5F2"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFFBEFD6"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border/><border><left style="thin"><color rgb="FFDDDDDD"/></left><right style="thin"><color rgb="FFDDDDDD"/></right><top style="thin"><color rgb="FFDDDDDD"/></top><bottom style="thin"><color rgb="FFDDDDDD"/></bottom></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="10"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="1" fillId="5" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/><xf numFmtId="0" fontId="2" fillId="3" borderId="0" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="0" fontId="0" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf><xf numFmtId="0" fontId="0" fillId="4" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf><xf numFmtId="164" fontId="3" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/><xf numFmtId="164" fontId="3" fillId="4" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/><xf numFmtId="164" fontId="3" fillId="5" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/><xf numFmtId="0" fontId="4" fillId="5" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'],
   ].concat(sheets.map(function(sh,i){ return ["xl/worksheets/sheet"+(i+1)+".xml", sheetXml(sh)]; }));
   /* stored zip */
   var CRC=Att._crc||(Att._crc=(function(){ var t=[]; for(var i=0;i<256;i++){ var c=i; for(var k=0;k<8;k++) c=c&1?0xEDB88320^(c>>>1):c>>>1; t[i]=c>>>0; } return t; })());
@@ -4420,6 +4466,14 @@ Att.click=async function(ev){
       await Att.q(S.sb.rpc("uno_att_fine_decide",{p_id:+id,p_status:st}));
       (Att.fines||[]).forEach(function(f){ if(f.id===+id) f.status=st; }); Att.render(); return; }
     if(a==="fineMon"){ Att.fineMon=v; Att.render(); return; }
+    if(a==="finePaid"){ b.disabled=true; var pd=v==="1";
+      await Att.q(S.sb.rpc("uno_att_fine_paid",{p_id:+id,p_paid:pd}));
+      (Att.fines||[]).forEach(function(f){ if(f.id===+id){ f.paid_at=pd?new Date().toISOString():null; if(pd&&f.status==="pending") f.status="confirmed"; } }); Att.render(); return; }
+    if(a==="payAsk"){ Att.payAsk=id; Att.render(); setTimeout(function(){ if(Att.payAsk===id){ Att.payAsk=null; Att.render(); } },5000); return; }
+    if(a==="payAll"){ b.disabled=true; Att.payAsk=null;
+      var pr=await Att.q(S.sb.rpc("uno_att_pay_all",{p_staff:id})); var nowIso=new Date().toISOString();
+      (Att.fines||[]).forEach(function(f){ if(f.staff_id===id && f.status!=="excused" && !f.paid_at){ f.paid_at=nowIso; if(f.status==="pending") f.status="confirmed"; } });
+      Att.say("fines",((Att.staff||[]).find(function(x){ return x.id===id; })||{}).name+": "+fmt((pr&&pr.paid)||0)+" to'landi deb belgilandi.","ok"); return; }
     if(a==="photo"){ var rr=await Att.q(S.sb.from("uno_att").select("photo,at,kind,staff_id").eq("id",id).single()); var st=(Att.staff||[]).find(function(s){ return s.id===rr.staff_id; })||{};
       if(!rr.photo){ Att.say("today","Bu belgida surat yo'q (kamera yoqilmagan bo'lgan).",""); return; }
       Att.photo={src:rr.photo,name:st.name||"",when:attDay(rr.at)+" "+attHM(rr.at)+" · "+(rr.kind==="in"?"keldi":"ketdi")}; Att.render(); var ph=$("attPhoto"); if(ph) ph.scrollIntoView({block:"nearest",behavior:"smooth"}); return; }
@@ -4450,19 +4504,19 @@ Att.click=async function(ev){
       $("repFrom").value=f; $("repTo").value=t; await Att.runRep(); return; }
     if(a==="repOpen"){ Att.open=Att.open===id?null:id; Att.render(); return; }
     if(a==="repXlsx"){
-      var R=Att.rep, by={}; Att.staff.forEach(function(st){ by[st.id]=st; });
+      var R=Att.rep, g=Att.grace(), FN=Att.repFines(R), dd=function(k){ return k.split("-").reverse().join("."); };
       var list=Att.group(R.data.filter(function(x){ return Att.teamOk(x.s); }),function(x){ return x.s; }).reduce(function(acc,gr){ return acc.concat(gr.items); },[]);
-      var title="UNO Airways — davomat: "+R.from+" — "+R.to+(Att.fTeam?" ("+Att.fTeam+")":"");
-      var sum={name:"Jami", title:title, head:["Jamoa","Xodim","Lavozim","Ish kuni","Keldi","Kelmadi","Kechikdi (marta)","Jami kechikish (daq)","Erta ketdi (marta)","Ishlagan (soat)"], widths:[18,24,16,10,9,10,16,20,17,15],
-        rows:list.map(function(x){ return [attTeam(x.s),x.s.name,x.s.role||"",x.sched,x.came,x.absent,x.lateN,x.lateSum,x.earlyN,Math.round(x.worked/6)/10]; })};
-      var daily={name:"Kunlik", title:title, head:["Sana","Kun","Jamoa","Xodim","Keldi","Ketdi","Kechikish (daq)","Ishladi (soat)","Holat"], widths:[12,6,18,24,9,9,15,14,14], rows:[]};
-      list.forEach(function(x){ x.days.forEach(function(d){
-        var st=d.inAt?(d.late>Att.grace()?"Kechikdi":"Vaqtida"):(d.sched?"Kelmadi":"Dam olish");
-        daily.rows.push([d.key,ATT_DN[attDow(d.key)-1],attTeam(x.s),x.s.name,d.inAt||"",d.outAt||"",d.inAt&&d.late>Att.grace()?d.late:"",d.worked?Math.round(d.worked/6)/10:"",st]); }); });
-      daily.rows.sort(function(p,q){ return p[0]<q[0]?-1:p[0]>q[0]?1:String(p[3]).localeCompare(q[3]); });
-      var marks={name:"Belgilar", title:title, head:["Sana","Vaqt","Jamoa","Xodim","Lavozim","Belgi","Kechikish (daq)","Erta ketish (daq)","Ishlagan (daq)","Internetsiz"], widths:[12,8,18,24,16,8,15,16,14,11],
-        rows:R.raw.filter(function(r){ var k=attDay(r.at); return k>=R.from && k<=R.to && (!Att.fTeam || Att.teamOk(by[r.staff_id]||{})); }).map(function(r){ var st=by[r.staff_id]||{}; return [attDay(r.at),attHM(r.at),attTeam(st),st.name||"",st.role||"",r.kind==="in"?"Keldi":"Ketdi",r.kind==="in"?r.late_min:"",r.kind==="out"?r.early_min:"",r.worked_min==null?"":r.worked_min,r.offline?"ha":""]; })};
-      Att.saveBlob("UNO_davomat_"+R.from+"_"+R.to+".xlsx", Att.xlsx([sum,daily,marks])); return; }
+      var title="UNO Airways — davomat: "+dd(R.from)+" — "+dd(R.to)+(Att.fTeam?" ("+Att.fTeam+")":"");
+      var daily={name:"Kunlik", title:title, head:["Sana","Xodim","Lavozim","Smena","Keldi","Ketdi","Kechikish","Jarima","Jarima holati"], widths:[22,24,16,9,9,9,18,15,15], money:[7], rows:[]};
+      Att.repDays(list,FN).forEach(function(D){
+        var hd=[dd(D.key)+" · "+ATT_DOW_FULL[attDow(D.key)-1],"","","","","","","",""]; hd._day=1; daily.rows.push(hd);
+        D.rows.forEach(function(e){ daily.rows.push([dd(D.key),e.s.name,e.s.role||attTeam(e.s),e.shift,e.inAt||"Kelmadi",e.outAt||"",e.late>g?attDur(e.late):(e.inAt?"vaqtida":""),e.fine||"",e.fineSt]); }); });
+      var T=[0,0,0,0,0,0];
+      var sum={name:"Umumiy", title:title, head:["Xodim","Lavozim","Keldi (kun)","Kelmadi (kun)","Kechikdi (marta)","Jami kechikish","Jarima (davrda)","To'lanmagan qarz"], widths:[24,16,12,13,15,18,17,18], money:[6,7],
+        rows:list.map(function(x){ var f=(FN.sum[x.s.id]||{fine:0}).fine, debt=FN.debt[x.s.id]||0; T[0]+=x.came; T[1]+=x.absent; T[2]+=x.lateN; T[3]+=x.lateSum; T[4]+=f; T[5]+=debt;
+          return [x.s.name,x.s.role||attTeam(x.s),x.came,x.absent,x.lateN,x.lateSum?attDur(x.lateSum):"",f||"",debt||""]; })};
+      var tr=["Jami","",T[0],T[1],T[2],T[3]?attDur(T[3]):"",T[4]||"",T[5]||""]; tr._b=1; sum.rows.push(tr);
+      Att.saveBlob("UNO_davomat_"+R.from+"_"+R.to+".xlsx", Att.xlsx([daily,sum])); return; }
     if(a==="setTerm"){
       var nm=($("devNameIn")||{}).value||"Eshik"; b.disabled=true;
       var reg=await Att.q(S.sb.rpc("uno_att_register",{p_name:nm}));

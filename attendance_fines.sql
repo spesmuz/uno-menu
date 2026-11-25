@@ -22,6 +22,13 @@ create table if not exists public.uno_att_fines (
   unique (staff_id, day, kind)
 );
 create index if not exists uno_att_fines_day on public.uno_att_fines(day desc);
+-- to'lov: jarima "To'landi" deb belgilanguncha xodimning qarzi bo'lib turadi
+alter table public.uno_att_fines add column if not exists paid_at timestamptz;
+
+create or replace function public.uno_att_debt(p_staff uuid) returns int language sql stable security definer set search_path = public as $$
+  select coalesce(sum(amount),0)::int from public.uno_att_fines where staff_id = p_staff and status <> 'excused' and paid_at is null;
+$$;
+revoke all on function public.uno_att_debt(uuid) from public, anon;
 alter table public.uno_att_fines enable row level security;
 revoke all on public.uno_att_fines from anon;
 grant select, update, delete on public.uno_att_fines to authenticated;
@@ -85,6 +92,41 @@ end $$;
 revoke all on function public.uno_att_fine_decide(bigint,text) from public, anon;
 grant execute on function public.uno_att_fine_decide(bigint,text) to authenticated;
 
+-- ===== admin: jarima to'landi (bitta jarima yoki xodimning hamma qarzi) =====
+create or replace function public.uno_att_fine_paid(p_id bigint, p_paid boolean default true) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare f public.uno_att_fines;
+begin
+  if not public.uno_is_admin() then raise exception 'not_admin' using errcode = '42501'; end if;
+  update public.uno_att_fines set paid_at = case when p_paid then now() end,
+         status = case when p_paid and status = 'pending' then 'confirmed' else status end
+   where id = p_id returning * into f;
+  if f.id is null then return jsonb_build_object('ok', false); end if;
+  return jsonb_build_object('ok', true, 'debt', public.uno_att_debt(f.staff_id));
+end $$;
+revoke all on function public.uno_att_fine_paid(bigint,boolean) from public, anon;
+grant execute on function public.uno_att_fine_paid(bigint,boolean) to authenticated;
+
+create or replace function public.uno_att_pay_all(p_staff uuid) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare s public.uno_staff; total int; n int;
+begin
+  if not public.uno_is_admin() then raise exception 'not_admin' using errcode = '42501'; end if;
+  select * into s from public.uno_staff where id = p_staff;
+  total := public.uno_att_debt(p_staff);
+  update public.uno_att_fines set paid_at = now(), status = case when status = 'pending' then 'confirmed' else status end
+   where staff_id = p_staff and status <> 'excused' and paid_at is null;
+  get diagnostics n = row_count;
+  if n > 0 then
+    begin
+      perform public.uno_att_tg('💰 <b>' || uno_esc2(s.name) || '</b> jarimani to''ladi: <b>' || public.uno_money(total) || '</b> (' || n || ' ta).');
+    exception when others then null; end;
+  end if;
+  return jsonb_build_object('ok', true, 'paid', total, 'count', n);
+end $$;
+revoke all on function public.uno_att_pay_all(uuid) from public, anon;
+grant execute on function public.uno_att_pay_all(uuid) to authenticated;
+
 -- ===== terminal: PIN bilan kelish/ketish (kirish oynasi + jarima) =====
 create or replace function public.uno_att_punch(p_token text, p_pin text, p_photo text default null, p_at timestamptz default null, p_wait boolean default false)
 returns jsonb language plpgsql security definer set search_path = public as $$
@@ -122,7 +164,8 @@ begin
   select * into last from public.uno_att where staff_id = s.id and at <= ts order by at desc limit 1;
   if last.id is not null and ts - last.at < interval '2 minutes' then
     return jsonb_build_object('ok', true, 'dup', true, 'kind', last.kind, 'name', s.name, 'at', last.at, 'late', last.late_min, 'grace', grace, 'worked', last.worked_min,
-      'fine', (select coalesce(sum(amount),0) from public.uno_att_fines where staff_id = s.id and day = sday and status <> 'excused'));
+      'fine', (select coalesce(sum(amount),0) from public.uno_att_fines where staff_id = s.id and day = sday and status <> 'excused'),
+      'debt', public.uno_att_debt(s.id));
   end if;
 
   -- oldingi smenada "ketdi" belgilanmay qolgan bo'lsa, yangi smenaga kelish — ketish emas, KELISH
@@ -133,7 +176,8 @@ begin
     if loc < anchor + make_interval(mins => win) and coalesce(current_setting('uno.force_out', true), '') <> '1' then
       return jsonb_build_object('ok', true, 'dup', true, 'already_in', true, 'kind', 'in', 'name', s.name, 'at', last.at, 'late', last.late_min, 'grace', grace,
         'out_from', (anchor + make_interval(mins => win)) at time zone tz,
-        'fine', (select coalesce(sum(amount),0) from public.uno_att_fines where staff_id = s.id and day = sday and status <> 'excused'));
+        'fine', (select coalesce(sum(amount),0) from public.uno_att_fines where staff_id = s.id and day = sday and status <> 'excused'),
+      'debt', public.uno_att_debt(s.id));
     end if;
     k := 'out';
   else
@@ -190,7 +234,7 @@ begin
   if not p_wait then perform public.uno_att_tg(txt); end if;
 
   return jsonb_build_object('ok', true, 'kind', k, 'name', s.name, 'at', ts, 'late', late, 'grace', grace, 'worked', worked, 'early', early,
-                            'fine', fine, 'fine_hours', fine_h, 'fine_hour', fh,
+                            'fine', fine, 'fine_hours', fine_h, 'fine_hour', fh, 'debt', public.uno_att_debt(s.id),
                             'key', case when p_wait then pkey end);
 end $$;
 revoke all on function public.uno_att_punch(text,text,text,timestamptz,boolean) from public;
