@@ -3279,8 +3279,16 @@ function makeGemini(){
     while(true){
       var res, info="";
       var stream=!!opt.onText && !!(window.ReadableStream&&window.TextDecoder);
-      try{ res=await fetch(GEM_BASE+"/models/"+model+(stream?":streamGenerateContent?alt=sse":":generateContent"),{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":k},body:JSON.stringify(bodyFor(model)),signal:opt.signal}); }
+      /* each attempt gets its own deadline: a model that hangs is dropped and the next one is tried */
+      var ac=new AbortController(), timedOut=false, wd=null;
+      function arm(ms){ clearTimeout(wd); wd=setTimeout(function(){ timedOut=true; ac.abort(); },ms); }
+      if(opt.signal){ if(opt.signal.aborted) throw {code:"cancelled"}; opt.signal.addEventListener("abort",function(){ ac.abort(); },{once:true}); }
+      arm(opt.timeout||(stream?25000:60000));
+      try{ res=await fetch(GEM_BASE+"/models/"+model+(stream?":streamGenerateContent?alt=sse":":generateContent"),{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":k},body:JSON.stringify(bodyFor(model)),signal:ac.signal}); }
       catch(e){
+        clearTimeout(wd);
+        if(timedOut && tried.length<4){ try{ localStorage.removeItem("uno_gem_model"); }catch(_){} var nx=await nextModel(k, tried); if(nx){ tried.push(nx); model=nx; retry5xx=0; continue; } }
+        if(timedOut) throw {code:"network", msg:"javob juda uzoq kutildi"};
         if(e&&e.name==="AbortError") throw {code:"cancelled"};
         last={code:"network", msg:"so'rov yuborilmadi ("+(e&&e.message||"tarmoq")+")"};
         if(retry5xx<1){ retry5xx++; await new Promise(function(r){ setTimeout(r,1500); }); continue; }
@@ -3298,13 +3306,19 @@ function makeGemini(){
       if(res.status===429) throw {code:"rate_limited", msg:info};
       if(res.status===400||res.status===403){ if(/key|API_KEY|PERMISSION/i.test(info)){ keyCache=null; throw {code:"bad_key", msg:info}; } if(/location|region|country/i.test(info)) throw {code:"region", msg:info}; throw {code:"image_rejected", msg:info}; }
       if(!res.ok) throw {code:"network", msg:"HTTP "+res.status+(info?" — "+info:"")};
-      var js=stream?await readStream(res,opt.onText):await res.json();
+      var js;
+      try{ js=stream?await readStream(res,opt.onText,function(){ arm(20000); }):await res.json(); }
+      catch(e){ clearTimeout(wd);
+        if(timedOut && tried.length<4){ try{ localStorage.removeItem("uno_gem_model"); }catch(_){} var nx2=await nextModel(k, tried); if(nx2){ tried.push(nx2); model=nx2; retry5xx=0; continue; } }
+        if(timedOut) throw {code:"network", msg:"javob juda uzoq kutildi"};
+        if(e&&e.name==="AbortError") throw {code:"cancelled"}; throw e; }
+      clearTimeout(wd);
       try{ localStorage.setItem("uno_gem_model",model); }catch(_){}
       return js;
     }
   }
   /* server-sent events → one response like generateContent; text is shown while it arrives */
-  async function readStream(res, onText){
+  async function readStream(res, onText, tick){
     var out={candidates:[{content:{role:"model",parts:[]},finishReason:""}]}, parts=out.candidates[0].content.parts, txt="";
     function take(chunk){
       var c=chunk&&chunk.candidates&&chunk.candidates[0]; if(chunk&&chunk.promptFeedback) out.promptFeedback=chunk.promptFeedback; if(!c) return;
@@ -3320,7 +3334,7 @@ function makeGemini(){
     }
     var reader=res.body.getReader(), dec=new TextDecoder(), buf="";
     while(true){
-      var r=await reader.read(); if(r.done) break;
+      var r=await reader.read(); if(r.done) break; if(tick) tick();
       buf+=dec.decode(r.value,{stream:true});
       var i; while((i=buf.indexOf("\n"))>=0){ var line=buf.slice(0,i).trim(); buf=buf.slice(i+1);
         if(line.indexOf("data:")===0){ try{ take(JSON.parse(line.slice(5))); }catch(_){} } }
@@ -4580,6 +4594,7 @@ var AG_TOOLS=[
  {name:"delete_staff", description:"Delete a staff member AND all their attendance records permanently.", parameters:{type:"OBJECT", properties:{staff_id:{type:"STRING"}}, required:["staff_id"]}},
  {name:"delete_attendance", description:"Delete attendance records (check-ins/check-outs with their selfies) permanently for a date range, optionally only of one staff member and/or one kind.",
   parameters:{type:"OBJECT", properties:{from:{type:"STRING",description:"YYYY-MM-DD (inclusive)"}, to:{type:"STRING",description:"YYYY-MM-DD (inclusive), default = from"}, staff_id:{type:"STRING"}, kind:{type:"STRING",description:"in (keldi) or out (ketdi); omit for both"}}, required:["from"]}},
+ {name:"get_fines", description:"Read staff fines (jarimalar) for lateness and absence: per person totals plus each fine. Dates YYYY-MM-DD; default last 30 days. Status: pending (not decided), confirmed, excused (removed as sababli).", parameters:{type:"OBJECT", properties:{from:{type:"STRING"}, to:{type:"STRING"}, staff_id:{type:"STRING"}}}},
  {name:"get_bookings", description:"Read table bookings made from the iPhone app (newest first).", parameters:{type:"OBJECT", properties:{from:{type:"STRING"}, to:{type:"STRING"}, status:{type:"STRING",description:"new, confirmed or cancelled"}}}},
  {name:"update_booking", description:"Set a booking's status.", parameters:{type:"OBJECT", properties:{booking_id:{type:"INTEGER"}, status:{type:"STRING",description:"new, confirmed or cancelled"}}, required:["booking_id","status"]}},
  {name:"delete_bookings", description:"Delete bookings permanently by ids, or all bookings before a date.", parameters:{type:"OBJECT", properties:{booking_ids:{type:"ARRAY",items:{type:"INTEGER"}}, before:{type:"STRING",description:"YYYY-MM-DD"}}}},
@@ -4924,6 +4939,17 @@ async function agRunRead2(c){
       mine.forEach(function(x){ var k=attDay(x.at); if(x.kind==="in"&&!came[k]){ came[k]=1; if(x.late_min>0){ late++; lateMin+=x.late_min; } } if(x.kind==="out"&&x.worked_min) worked+=x.worked_min; });
       var sched=days.filter(function(k){ return (p.days||[]).indexOf(attDow(k))>=0; });
       return {name:p.name, team:p.team, scheduled_days:sched.length, came_days:Object.keys(came).length, absent_days:sched.filter(function(k){ return !came[k]; }).length, late_times:late, late_minutes:lateMin, worked_hours:Math.round(worked/6)/10}; })};
+  }
+  if(c.name==="get_fines"){
+    if(!AG.staff) await agLoadStaff();
+    var f0=/^\d{4}-\d{2}-\d{2}$/.test(a.from||"")?a.from:attDay(Date.now()-30*864e5), t0=/^\d{4}-\d{2}-\d{2}$/.test(a.to||"")?a.to:agToday();
+    var fq=S.sb.from("uno_att_fines").select("staff_id,day,kind,minutes,amount,status").gte("day",f0).lte("day",t0).order("day").limit(2000); if(a.staff_id) fq=fq.eq("staff_id",a.staff_id);
+    var fr=await fq; if(fr.error) throw fr.error;
+    var by={}; (fr.data||[]).forEach(function(x){ var n=agStaffName(x.staff_id), o=by[n]||(by[n]={name:n,total:0,pending:0,confirmed:0,excused:0,count:0});
+      o.count++; o[x.status]=(o[x.status]||0)+x.amount; if(x.status!=="excused") o.total+=x.amount; });
+    var people=Object.keys(by).map(function(k){ return by[k]; }).sort(function(x,y){ return y.total-x.total; });
+    return {ok:true, from:f0, to:t0, currency:"so'm", grand_total:people.reduce(function(sum,o){ return sum+o.total; },0), people:people,
+      fines:(fr.data||[]).slice(-200).map(function(x){ return {name:agStaffName(x.staff_id), day:x.day, kind:x.kind==="late"?"kechikish":"kelmadi", minutes:x.minutes, amount:x.amount, status:x.status}; })};
   }
   if(c.name==="get_bookings"){
     var q=S.sb.from("uno_bookings").select("id,name,phone,at,guests,zone,occasion,note,status,created_at").order("at",{ascending:false}).limit(60);
