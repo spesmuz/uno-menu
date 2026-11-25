@@ -12,6 +12,8 @@ jobs:
       - uses: actions/checkout@v4
       - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
       - run: python3 tools/opt_videos.py
+      - uses: actions/upload-artifact@v4
+        with: {name: compare, path: /tmp/cmp, if-no-files-found: ignore}
       - run: |
           git config user.name "uno-bot"; git config user.email "bot@users.noreply.github.com"
-          git add -A media/v media/opt.json index.html && git commit -m "Optimized dish videos" && git push || echo "nothing new"
+          git add -A media/v media/p media/opt.json index.html && git commit -m "Optimized dish videos" && git push || echo "nothing new"
