@@ -1,30 +1,36 @@
 """Light, colour-enhanced copies of dish media, served from this site (saves Supabase traffic).
 Videos: square crop (what the menu card shows), no sound, up to 1080x1080 H.264.  Photos: up to 1200 px JPEG.
-Both get a gentle colour boost (saturation, contrast, warmth, sharpness). media/opt.json maps original id -> copy;
+Exposure is checked per file: only too dark or too bright media are corrected; normal ones keep their colours. media/opt.json maps original id -> copy;
 the same map is written into index.html (var VOPT) so the menu uses the copies at once."""
 import json, os, re, subprocess, urllib.request
 U="https://eaxavnixuqgwashplnhz.supabase.co"; K="sb_publishable_gILXDU_L8vepyEbsF87Tcg_hYyMpril"
 H={"apikey":K,"Authorization":"Bearer "+K}
-TAG="-c2"   # bump to rebuild every copy with new settings
-VCOL="eq=saturation=1.22:contrast=1.06,colorbalance=rs=0.03:bs=-0.03:rm=0.02:bm=-0.02,unsharp=5:5:0.6"
-PCOL="eq=saturation=1.12:contrast=1.04,colorbalance=rs=0.02:bs=-0.02,unsharp=5:5:0.45"
+TAG="-c3"   # bump to rebuild every copy with new settings
+VCOL="unsharp=5:5:0.35"
+PCOL="unsharp=5:5:0.3"
 rows=json.load(urllib.request.urlopen(urllib.request.Request(U+"/rest/v1/uno_docs?select=path,data",headers=H),timeout=60))
 for d in ("media/v","media/p","/tmp/cmp"): os.makedirs(d,exist_ok=True)
 opt=json.load(open("media/opt.json")) if os.path.exists("media/opt.json") else {}
 def ff(*a): subprocess.run(["ffmpeg","-y","-loglevel","error",*a],check=True)
 def expose(src, video):
-    """How light is the dish itself (its brightest tenth; the dark background is ignored)?
-    Dark shots are brightened to a common level, already-bright ones are left alone; black stays black."""
+    """Exposure check of the dish itself (pixels of the dark studio background are left out).
+    Normal light -> untouched. Too dark -> brightened. Too bright / burnt-out -> calmed. Black stays black."""
     import math
-    vf=("fps=1," if video else "")+"scale=200:-2,format=gray"
-    raw=subprocess.run(["ffmpeg","-loglevel","error","-i",src,"-vf",vf,"-frames:v","6" if video else "1","-f","rawvideo","-"],capture_output=True,check=True).stdout
-    px=sorted(raw) or [128]; n=len(px); q=lambda f: max(1,px[min(n-1,int(n*f))])
-    p80,p90,p97=q(.80),q(.90),q(.97)
-    gain=max(1.0,min(1.45,200.0/p90,245.0/p97))
-    g=max(1.0,min(1.2,math.log(min(250,p80*gain)/255.0)/math.log(140/255.0)))
-    print(f"   light: p80 {p80}, p90 {p90}, p97 {p97} -> gain {gain:.2f}, gamma {g:.2f}")
-    w=1.0/gain
-    return f"colorlevels=rimin=0.035:gimin=0.035:bimin=0.035:rimax={w:.3f}:gimax={w:.3f}:bimax={w:.3f},eq=gamma={g:.3f}," if gain>1.01 or g>1.01 else ""
+    vf=("fps=1," if video else "")+"scale=240:-2,format=gray"
+    raw=subprocess.run(["ffmpeg","-loglevel","error","-i",src,"-vf",vf,"-frames:v","8" if video else "1","-f","rawvideo","-"],capture_output=True,check=True).stdout
+    fg=sorted(b for b in raw if b>40)
+    if len(fg)<len(raw)*0.04: print("   light: too little dish found -> untouched"); return ""
+    n=len(fg); med=fg[n//2]; p97=fg[min(n-1,int(n*0.97))]; clip=sum(1 for b in fg if b>=248)/n
+    if med<88:
+        gain=max(1.0,min(1.35,112.0/med,245.0/max(1,p97))); w=1.0/gain
+        print(f"   light: dish median {med}, top {p97}, burnt {clip:.1%} -> TOO DARK, brighten x{gain:.2f}")
+        return f"colorlevels=rimax={w:.3f}:gimax={w:.3f}:bimax={w:.3f}," if gain>1.02 else ""
+    if med>172 or clip>0.06:
+        g=max(0.72,min(0.95,math.log(150/255.0)/math.log(min(250,med)/255.0)))
+        print(f"   light: dish median {med}, top {p97}, burnt {clip:.1%} -> TOO BRIGHT, gamma {g:.2f}")
+        return f"eq=gamma={g:.3f},"
+    print(f"   light: dish median {med}, top {p97}, burnt {clip:.1%} -> normal, untouched")
+    return ""
 for r in rows:
     if not r["path"].startswith("dishes/"): continue
     data=r.get("data") or {}
