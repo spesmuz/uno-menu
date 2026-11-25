@@ -14,4 +14,4 @@ jobs:
       - run: python3 tools/opt_videos.py
       - run: |
           git config user.name "uno-bot"; git config user.email "bot@users.noreply.github.com"
-          git add -A media/v media/opt.json && git commit -m "Optimized dish videos" && git push || echo "nothing new"
+          git add -A media/v media/opt.json index.html && git commit -m "Optimized dish videos" && git push || echo "nothing new"

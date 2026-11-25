@@ -1010,7 +1010,10 @@ var $ = function(id){ return document.getElementById(id); };
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
 function fmtUZ(n){ n=Math.round(Number(n)||0); return String(n).replace(/\B(?=(\d{3})+(?!\d))/g," ")+" so'm"; }
 function fmt(n){ n=Math.round(Number(n)||0); return String(n).replace(/\B(?=(\d{3})+(?!\d))/g," ")+" so'm"; }
-function blob(id){ if(!id) return ""; if(/^(https?:|data:|blob:)/.test(id)||id.indexOf("/")>=0) return id; return SB_URL+"/storage/v1/object/public/"+SB_BUCKET+"/"+encodeURIComponent(id); }
+/* light copies of dish videos (square, no sound), served from this site; kept in step by tools/opt_videos.py */
+var VOPT={"mwqjfzft-66exjq.mov":"media/v/mwqjfzft-66exjq-sq.mp4","mwnogf4x-mij44v.mov":"media/v/mwnogf4x-mij44v-sq.mp4","mwqkl81a-e5emhw.mov":"media/v/mwqkl81a-e5emhw-sq.mp4","mwqjt4tk-khe57h.mov":"media/v/mwqjt4tk-khe57h-sq.mp4","mwqk2zuf-u2rp1d.mov":"media/v/mwqk2zuf-u2rp1d-sq.mp4","mws58qzn-7rwumn.mov":"media/v/mws58qzn-7rwumn-sq.mp4"};
+try{ fetch("media/opt.json",{cache:"no-cache"}).then(function(r){ return r.ok?r.json():null; }).then(function(j){ if(!j) return; var add=Object.keys(j).some(function(k){ return VOPT[k]!==j[k]; }); Object.assign(VOPT,j); if(add&&typeof refreshMenu==="function"&&S.view!=="admin") try{ refreshMenu(); }catch(_){} }).catch(function(){}); }catch(_){}
+function blob(id){ if(!id) return ""; if(VOPT[id]) return VOPT[id]; if(/^(https?:|data:|blob:)/.test(id)||id.indexOf("/")>=0) return id; return SB_URL+"/storage/v1/object/public/"+SB_BUCKET+"/"+encodeURIComponent(id); }
 function cats(){ return (S.settings.cats||[]).slice(); }
 function catLabel(id){ var c=cats().find(function(x){return x.id===id;}); return c?c.label:""; }
 function dishesOf(cat){ return S.dishes.filter(function(d){return d.cat===cat;}).sort(function(a,b){return (a.order||0)-(b.order||0) || String(a.name).localeCompare(String(b.name));}); }
@@ -1892,7 +1895,7 @@ function detailStep(dir){
 }
 function detailMediaHTML(d){
   var pic = d.imgId ? '<div class="d-glow"></div><img class="big" data-fit alt="'+esc(dn(d))+'" src="'+blob(d.imgId)+'">' : '<div class="d-glow"></div><span class="plate" style="transform:scale(1.6)"><i></i></span>';
-  if(d.videoId) pic+='<i class="dvid-slot" hidden></i><button class="d-sound" data-d="sound" aria-pressed="false">'+ICON.sound+'<span>'+esc(t("sound"))+'</span></button>';
+  if(d.videoId) pic+='<i class="dvid-slot" hidden></i>'+(VOPT[d.videoId]?'':'<button class="d-sound" data-d="sound" aria-pressed="false">'+ICON.sound+'<span>'+esc(t("sound"))+'</span></button>');
   return pic;
 }
 function detailInfoHTML(d){

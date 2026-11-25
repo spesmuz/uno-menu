@@ -18,3 +18,8 @@ for r in rows:
     if old and old!=out and os.path.exists(old): os.remove(old)
     opt[vid]=out
 json.dump(opt,open("media/opt.json","w"),indent=1)
+
+import re
+h=open("index.html").read()
+h2=re.sub(r"var VOPT=\{.*?\};", "var VOPT="+json.dumps(opt,separators=(",",":"))+";", h, count=1)
+if h2!=h: open("index.html","w").write(h2)
