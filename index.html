@@ -4735,7 +4735,7 @@ var AG_TOOLS=[
  {name:"update_news", description:"Change a news post (only the fields that change); hidden=true hides it from customers.", parameters:{type:"OBJECT", properties:{news_id:{type:"STRING"}, title:{type:"STRING"}, text:{type:"STRING"}, title_ru:{type:"STRING"}, text_ru:{type:"STRING"}, title_en:{type:"STRING"}, text_en:{type:"STRING"}, hidden:{type:"BOOLEAN"}, photo:{type:"STRING"}}, required:["news_id"]}},
  {name:"delete_news", description:"Delete a news post permanently.", parameters:{type:"OBJECT", properties:{news_id:{type:"STRING"}}, required:["news_id"]}},
  {name:"get_rotation", description:"Waiters' table rotation (rotatsiya) for a day: each group's zone (Biznes/Comfort), rotation day, each waiter's tables, who did not come and who got their tables. date YYYY-MM-DD (shift day), default today.", parameters:{type:"OBJECT", properties:{date:{type:"STRING"}}}},
- {name:"redo_rotation", description:"Re-split today's rotation right now by attendance (no-shows' tables to neighbours in their group) and send it to the Telegram group. Normally this happens automatically at 18:00.", parameters:{type:"OBJECT", properties:{}}},
+ {name:"redo_rotation", description:"(«rotatsiyani qayta taqsimla / tushur / yubor», «stollarni qayta taqsimla») Re-split today's rotation right now by attendance (no-shows' tables to neighbours in their group) and send it to the Telegram group. Normally this happens automatically at 18:00.", parameters:{type:"OBJECT", properties:{}}},
  {name:"get_bookings", description:"Read table bookings made from the iPhone app (newest first).", parameters:{type:"OBJECT", properties:{from:{type:"STRING"}, to:{type:"STRING"}, status:{type:"STRING",description:"new, confirmed or cancelled"}}}},
  {name:"update_booking", description:"Set a booking's status.", parameters:{type:"OBJECT", properties:{booking_id:{type:"INTEGER"}, status:{type:"STRING",description:"new, confirmed or cancelled"}}, required:["booking_id","status"]}},
  {name:"delete_bookings", description:"Delete bookings permanently by ids, or all bookings before a date.", parameters:{type:"OBJECT", properties:{booking_ids:{type:"ARRAY",items:{type:"INTEGER"}}, before:{type:"STRING",description:"YYYY-MM-DD"}}}},
@@ -4928,6 +4928,7 @@ function agSendText(){
   inp.value=""; inp.style.height="auto"; agSend({text:txt});
 }
 async function agSend(m){
+  AG._nudged=false; AG._wrote=false;
   if(AG.busy) return;
   var newAtts=AG.atts.filter(function(x){ return !x.sent; });
   /* user bubble */
@@ -4975,6 +4976,14 @@ async function agLoop(){
     if(mt){ txt=txt.slice(mt[0].length).trim(); if(AG._ub){ var v=AG._ub.querySelector(".ag-voice"); if(v) v.insertAdjacentHTML("afterend",'<div class="ag-tr">«'+esc(mt[1])+'»</div>'); }
       if(AG._voiceTurn>=0&&AG.hist[AG._voiceTurn]) AG.hist[AG._voiceTurn].parts=AG.hist[AG._voiceTurn].parts.map(function(p){ return p.inline_data&&/audio/.test(p.inline_data.mime_type)?{text:"(voice message transcript: «"+mt[1]+"»)"}:p; }); AG._voiceTurn=-1; }
     agTyping(false);
+    /* the model said it did something (or promised a list) without a tool / without the data: make it actually do it, once */
+    if(!calls.length && !AG._nudged && txt){
+      var claims=/(qildim|chiqdim|taqsimladim|taqsimlab|yubordim|o'chirdim|qo'shdim|o'zgartirdim|saqladim|ochildi|bajarildi|tayyor)\b/i.test(txt) && !AG._wrote;
+      var dangling=/:\s*$/.test(txt) && txt.length<90;
+      if(claims||dangling){ AG._nudged=true; AG.hist.pop();
+        AG.hist.push(content); AG.hist.push({role:"user",parts:[{text:claims?"(system) You wrote that it was done, but you did not call any tool, so NOTHING happened. Call the right tool now (the admin will confirm it), or say honestly that it was not done.":"(system) You did not show the data. Show it now in full."}]});
+        agTyping(true); continue; }
+    }
     if(txt) agSay("ai",txt);
     if(!calls.length) return;
     var reads=calls.filter(function(c){ return !AG_WRITE[c.name]; }), writes=calls.filter(function(c){ return AG_WRITE[c.name]; });
@@ -5132,7 +5141,11 @@ async function agRunRead2(c){
     return {ok:true, from:f0, to:t0, currency:"so'm", grand_total:people.reduce(function(sum,o){ return sum+o.total; },0), people:people,
       fines:(fr.data||[]).slice(-200).map(function(x){ return {fine_id:x.id, paid:!!x.paid_at, name:agStaffName(x.staff_id), day:x.day, kind:x.kind==="late"?"kechikish":"kelmadi", minutes:x.minutes, amount:x.amount, status:x.status}; })};
   }
-  if(c.name==="get_rotation"){ var gr=await S.sb.rpc("uno_rot_get",{p_day:/^\d{4}-\d{2}-\d{2}$/.test(a.date||"")?a.date:null}); if(gr.error) throw gr.error; return {ok:true, rotation:gr.data}; }
+  if(c.name==="get_rotation"){ var gr=await S.sb.rpc("uno_rot_get",{p_day:/^\d{4}-\d{2}-\d{2}$/.test(a.date||"")?a.date:null}); if(gr.error) throw gr.error;
+    var P=gr.data||{}, lines=[(P.final?"Davomat bo'yicha":"Asosiy reja")+" · "+String(P.day||"").split("-").reverse().join(".")+(P.saved?" (yakuniy, Telegramga yuborilgan)":" (18:00 da yakunlanadi)")];
+    (P.groups||[]).forEach(function(g){ lines.push(""); lines.push(g.group+" · "+g.zone+" · "+g.kun+"-kun");
+      (g.rows||[]).forEach(function(r){ lines.push(r.present?(r.name+" — "+r.base+(r.extra?" + "+r.extra:"")):("❌ "+r.name+" — kelmadi ("+r.base+")")); }); });
+    return {ok:true, text:lines.join("\n"), note:"Show this text to the admin as it is (one line per waiter)."}; }
   if(c.name==="get_news"){ var gn=await S.sb.from("uno_docs").select("path,data").like("path","news/%"); if(gn.error) throw gn.error;
     return {ok:true, news:(gn.data||[]).map(function(x){ var d=x.data||{}; return {news_id:x.path.slice(5), title:d.title||"", text:d.text||"", hidden:!!d.hidden, photo:!!d.imgId, at:String(d.at||"").slice(0,16)}; }).sort(function(p,q){ return q.at.localeCompare(p.at); })}; }
   if(c.name==="get_bookings"){
@@ -5145,6 +5158,7 @@ async function agRunRead2(c){
 }
 /* ---------- extra tools: writes ---------- */
 async function agRunWrite2(c){
+  AG._wrote=true;
   var a=c.args||{}, r;
   if(c.name==="redo_rotation"){ r=await S.sb.rpc("uno_rot_redo",{p_send:true}); if(r.error) return {ok:false,error:r.error.message}; try{ if(typeof Att!=="undefined"){ Att.rot.plan=null; if(Att.el) Att.render(); } }catch(_){} return {ok:true,label:"Rotatsiya qayta taqsimlandi va yuborildi"}; }
   if(c.name==="add_news"||c.name==="update_news"||c.name==="delete_news"){
@@ -5315,7 +5329,7 @@ async function agUpload(att, as){
 var AG_FIELDS=["name","name_ru","name_en","desc","desc_ru","desc_en","ingr","ingr_ru","ingr_en","weight"];
 var AG_NUMS=["price","time","kcal","prot","fat","carb"];
 function agCatId(v){ var cs=cats(); v=String(v||"").trim(); var c=cs.find(function(x){ return x.id===v; })||cs.find(function(x){ return [x.label,x.label_ru,x.label_en].some(function(l){ return l&&l.toLowerCase()===v.toLowerCase(); }); }); return c?c.id:""; }
-async function agRunWrite(c){
+async function agRunWrite(c){ AG._wrote=true;
   var a=c.args||{};
   var ext=await agRunWrite2(c); if(ext) return ext;
   if(c.name==="add_dish"){
