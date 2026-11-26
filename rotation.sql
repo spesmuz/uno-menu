@@ -1,7 +1,7 @@
 -- UNO Airways — ofitsiantlar ROTATSIYASI (stollar taqsimoti), davomat bilan bog'langan
 -- Asos: 4 ta PDF (1/2-guruh × Biznes/Comfort). Guruhlar har kuni hudud almashadi, "Kun" har kuni +1.
 -- Har kuni 18:00 da: kelmagan ofitsiantning stollari shu hududdagi o'z guruhidagi kelganlarga
--- QO'SHNI stollar bo'yicha bo'lib beriladi (faqat o'sha kun uchun; asosiy ro'yxat o'zgarmaydi),
+-- bittadan, eng yaqin (qo'shni) ofitsiantlardan boshlab bo'lib beriladi (faqat o'sha kun uchun; asosiy ro'yxat o'zgarmaydi),
 -- natija Telegram guruhga yuboriladi va terminalda ko'rinadi.
 -- Supabase → SQL Editor → shu faylni to'liq joylab Run. Qayta ishga tushirish xavfsiz.
 
@@ -48,7 +48,7 @@ language plpgsql stable security definer set search_path = public as $$
 declare c jsonb; tz text := public.uno_tz(); g jsonb; gi int := 0; d int; n int; k int; zone text; slots jsonb; mem jsonb;
         out_groups jsonb := '[]'::jsonb; rows jsonb; i int; j int; who int; nm text; sid text; pres boolean[]; unm boolean[];
         h_m int[]; h_t int[]; l_m int[]; l_t text[]; e_m int[]; e_t text[]; ab_t int[]; ab_l text[]; slot text; tok text;
-        best_d int; best_c int; best_m int; best_i int; dd int; cnt int; x int; t int; any_num boolean; ext text; mine text;
+        best_d int; best_c int; best_m int; best_i int; best_x int; ex int; dd int; cnt int; x int; t int; any_num boolean; ext text; mine text;
         st0 timestamptz; st1 timestamptz;
 begin
   select cfg into c from public.uno_rot where id = 1; if c is null then return null; end if;
@@ -77,34 +77,37 @@ begin
         end loop;
       end if;
     end loop;
-    -- kelmaganlarning raqamli stollari: eng yaqin (qo'shni) stol egasiga, teng bo'lsa kamroq stollisiga
+    -- kelmaganlarning stollari BITTADAN turli ofitsiantlarga: avval hali qo'shimcha olmaganlarga, ular orasidan eng yaqin (qo'shni) stol egasiga;
+    -- hamma bittadan olgach — ikkinchi aylana. Masofa ofitsiantning o'z (asosiy) stollaridan hisoblanadi.
     while coalesce(array_length(ab_t,1),0) > 0 loop
-      best_d := null; best_m := null; best_i := null; best_c := null;
+      best_d := null; best_m := null; best_i := null; best_c := null; best_x := null;
       for i in 1..array_length(ab_t,1) loop
         for j in 0..n-1 loop
           if not pres[j+1] then continue; end if;
-          dd := null;
-          for x in 1..coalesce(array_length(h_m,1),0) loop if h_m[x] = j then dd := least(coalesce(dd, 99999), abs(h_t[x] - ab_t[i])); end if; end loop;
-          if dd is null then continue; end if;
-          cnt := 0; for x in 1..coalesce(array_length(h_m,1),0) loop if h_m[x] = j then cnt := cnt + 1; end if; end loop;
+          ex := 0; for x in 1..coalesce(array_length(e_m,1),0) loop if e_m[x] = j then ex := ex + 1; end if; end loop;
+          dd := null; cnt := 0;
+          for x in 1..coalesce(array_length(h_m,1),0) loop if h_m[x] = j then dd := least(coalesce(dd, 99999), abs(h_t[x] - ab_t[i])); cnt := cnt + 1; end if; end loop;
           for x in 1..coalesce(array_length(l_m,1),0) loop if l_m[x] = j then cnt := cnt + 1; end if; end loop;
-          if best_d is null or dd < best_d or (dd = best_d and cnt < best_c) then best_d := dd; best_c := cnt; best_m := j; best_i := i; end if;
+          dd := coalesce(dd, 1000);   -- faqat Balkon/Family/VIP egasi — oxirgi navbatda
+          if best_x is null or ex < best_x or (ex = best_x and (dd < best_d or (dd = best_d and cnt < best_c))) then
+            best_x := ex; best_d := dd; best_c := cnt; best_m := j; best_i := i; end if;
         end loop;
       end loop;
       if best_m is null then exit; end if;
-      h_m := h_m || best_m; h_t := h_t || ab_t[best_i]; e_m := e_m || best_m; e_t := e_t || ab_t[best_i]::text;
+      e_m := e_m || best_m; e_t := e_t || ab_t[best_i]::text;
       ab_t := ab_t[1:best_i-1] || ab_t[best_i+1:];
     end loop;
-    -- Balkon / Family / Konferensiya-VIP: eng kam stolli kelgan ofitsiantga
+    -- Balkon / Family / Konferensiya-VIP: eng kam qo'shimcha (keyin eng kam stol) olgan kelgan ofitsiantga
     for i in 1..coalesce(array_length(ab_l,1),0) loop
-      best_m := null; best_c := null;
+      best_m := null; best_c := null; best_x := null;
       for j in 0..n-1 loop
         if not pres[j+1] then continue; end if;
+        ex := 0; for x in 1..coalesce(array_length(e_m,1),0) loop if e_m[x] = j then ex := ex + 1; end if; end loop;
         cnt := 0; for x in 1..coalesce(array_length(h_m,1),0) loop if h_m[x] = j then cnt := cnt + 1; end if; end loop;
         for x in 1..coalesce(array_length(l_m,1),0) loop if l_m[x] = j then cnt := cnt + 1; end if; end loop;
-        if best_c is null or cnt < best_c then best_c := cnt; best_m := j; end if;
+        if best_x is null or ex < best_x or (ex = best_x and cnt < best_c) then best_x := ex; best_c := cnt; best_m := j; end if;
       end loop;
-      if best_m is not null then l_m := l_m || best_m; l_t := l_t || ab_l[i]; e_m := e_m || best_m; e_t := e_t || ab_l[i]; end if;
+      if best_m is not null then e_m := e_m || best_m; e_t := e_t || ab_l[i]; end if;
     end loop;
     rows := '[]'::jsonb;
     for i in 0..n-1 loop
