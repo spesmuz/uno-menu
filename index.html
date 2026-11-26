@@ -974,6 +974,11 @@ html.in-app .gai-in{padding-bottom:12px}
   gap:2px;padding:5px;border-radius:24px;background:linear-gradient(180deg,rgba(28,34,58,.72),rgba(10,14,30,.82));border:1px solid rgba(255,255,255,.14);
   box-shadow:0 14px 34px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.12);-webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%)}
 html.web-tabs #wtabs{display:flex}
+/* Android WebView: a live blur over the moving carousel costs a frame every time; a solid bar looks the same */
+html.and #wtabs{-webkit-backdrop-filter:none;backdrop-filter:none;background:linear-gradient(180deg,rgba(24,30,52,.97),rgba(9,12,26,.98))}
+/* while Bron / UNO / Profil is open the menu under it is not painted at all (no flash of the menu, no wasted GPU) */
+html.web-tabs.wt-pg #menuView{visibility:hidden}
+html.web-tabs.wt-pg #menuView *{animation-play-state:paused!important}
 #wtabs button{flex:1;min-width:0;border:0;background:transparent;color:rgba(255,255,255,.6);border-radius:19px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
   font:700 12px/1 var(--sans,system-ui);cursor:pointer;position:relative;transition:background .2s,color .2s;-webkit-tap-highlight-color:transparent}
 #wtabs button svg{width:24px;height:24px}
@@ -988,7 +993,7 @@ html.web-tabs #wtabs{display:flex}
 .wpage h1{font:800 32px/1.1 var(--sans,system-ui);margin:6px 2px 4px}
 .wpage h2{font:800 13px/1 var(--sans,system-ui);letter-spacing:.09em;text-transform:uppercase;color:rgba(232,176,75,.92);margin:10px 6px 0}
 .wcard{border-radius:22px;padding:16px;background:linear-gradient(135deg,rgba(255,255,255,.10),rgba(255,255,255,.03) 50%,rgba(255,255,255,.06));border:1px solid rgba(255,255,255,.16);
-  box-shadow:0 16px 34px rgba(0,0,0,.35);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+  box-shadow:0 16px 34px rgba(0,0,0,.35)}
 .wcard.np{padding:0;overflow:hidden}
 .wfld{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}.wfld:last-child{margin-bottom:0}
 .wfld>span{font:600 13px/1.2 var(--sans,system-ui);color:rgba(255,255,255,.62)}
@@ -1402,6 +1407,7 @@ var WT=(function(){
   function source(){ return window.UnoKiosk?"Android ilovasi":"Sayt (telefon)"; }
   function build(){
     if(built) return; built=true;
+    if(/Android/i.test(navigator.userAgent||"")) document.documentElement.classList.add("and");
     var bar=document.createElement("nav"); bar.id="wtabs"; bar.setAttribute("aria-label","UNO");
     document.body.appendChild(bar);
     ["book","about","profile"].forEach(function(id){ var p=document.createElement("section"); p.className="wpage"; p.id="wp-"+id; document.body.appendChild(p); });
@@ -1417,8 +1423,10 @@ var WT=(function(){
   function go(i){
     if(i===tab && i!==0){ var pg=document.querySelector(".wpage.on"); if(pg) pg.scrollTo({top:0,behavior:"smooth"}); return; }
     tab=i; try{ SFX.select(); }catch(_){}
-    ["book","about","profile"].forEach(function(id,k){ var p=$("wp-"+id); if(p) p.classList.toggle("on",tab===k+1); });
     if(tab===1) renderBook(); else if(tab===2) renderAbout(); else if(tab===3){ renderProfile(); loadNews(); }
+    /* the new page is filled first, then shown in the same frame as the old one goes */
+    ["book","about","profile"].forEach(function(id,k){ var p=$("wp-"+id); if(p) p.classList.toggle("on",tab===k+1); });
+    document.documentElement.classList.toggle("wt-pg", tab!==0);
     if(tab===0){ try{ if(S.view==="menu" && !S.detail) resumeCarouselVideo(); }catch(_){} } else { try{ pauseCarouselVideo(); }catch(_){} }
     renderBar();
   }
@@ -1644,7 +1652,15 @@ function actionsHTML(d){
 }
 function buildSlides(){
   curList = S.cat ? dishesOf(S.cat) : [];
-  slidesEl.querySelectorAll("video").forEach(releaseVideo); slidesEl.innerHTML=""; slideNodes=[]; ghostNodes=[]; lastCenterId=null;
+  /* cards of the next category already stand on screen as "ghosts": keep those nodes (already drawn) so crossing
+     into the category does not flash an empty card while new ones are painted */
+  var keepG={}; ghostNodes.forEach(function(el){ if(el._d && !keepG[el.dataset.id]) keepG[el.dataset.id]=el; });
+  var wanted={}; curList.forEach(function(d){ wanted[d.id]=1; });
+  Array.prototype.slice.call(slidesEl.children).forEach(function(el){
+    if(keepG[el.dataset.id]===el && wanted[el.dataset.id]) return;
+    el.querySelectorAll("video").forEach(releaseVideo); el.remove();
+  });
+  slideNodes=[]; ghostNodes=[]; lastCenterId=null;
   var empty=$("emptyMsg");
   if(!curList.length){
     empty.classList.remove("hidden");
@@ -1657,6 +1673,13 @@ function buildSlides(){
   $("prevBtn").classList.toggle("hidden",!many); $("nextBtn").classList.toggle("hidden",!many);
   if(S.idx>=curList.length) S.idx=0;
   curList.forEach(function(d,i){
+    var g=keepG[d.id];
+    if(g && g.isConnected){
+      delete keepG[d.id]; g.className="slide"; g._vi=undefined; g._d=undefined;
+      var gm=g.querySelector(".media"), gb=gm&&gm.querySelector("[data-gsel]");
+      if(gb){ gb.removeAttribute("data-gsel"); gb.setAttribute("data-sel",i); gm.dataset.k="s:"+(d.imgId||"")+":"+S.lang+":"+dn(d)+":"+d.cat; }
+      fillSlide(g,d); slideNodes.push(g); return;
+    }
     var el=document.createElement("div"); el.className="slide"; el.dataset.id=d.id;
     el.innerHTML='<div class="glow" aria-hidden="true"></div><article class="card">'+
       '<div class="media"></div>'+
