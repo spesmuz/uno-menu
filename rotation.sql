@@ -1,7 +1,7 @@
 -- UNO Airways — ofitsiantlar ROTATSIYASI (stollar taqsimoti), davomat bilan bog'langan
 -- Asos: 4 ta PDF (1/2-guruh × Biznes/Comfort). Guruhlar har kuni hudud almashadi, "Kun" har kuni +1.
 -- Har kuni 18:00 da: kelmagan ofitsiantning stollari shu hududdagi o'z guruhidagi kelganlarga
--- zanjir bo'yicha bo'lib beriladi: eng yaqin ofitsiantlar bittadan qo'shni stol oladi, hammaning stollari ketma-ket qoladi (faqat o'sha kun uchun; asosiy ro'yxat o'zgarmaydi),
+-- guruhning barcha stollari kelgan ofitsiantlarga teng va ketma-ket qayta bo'linadi (faqat o'sha kun uchun; asosiy ro'yxat o'zgarmaydi),
 -- natija Telegram guruhga yuboriladi va terminalda ko'rinadi.
 -- Supabase → SQL Editor → shu faylni to'liq joylab Run. Qayta ishga tushirish xavfsiz.
 
@@ -86,25 +86,13 @@ begin
     foreach who in array pw loop
       pcnt := pcnt || (select count(*)::int from generate_subscripts(nums,1) q where nums_m[q] = who); pext := pext || 0;
     end loop;
-    -- har kelmagan ofitsiantning stollari: zanjir bo'yicha eng yaqinlarga bittadan (chap-1, o'ng-1, chap-2, o'ng-2 …)
+    -- kimdir kelmagan bo'lsa: guruhdagi BARCHA raqamli stollar kelganlarga TENG va ketma-ket qayta bo'linadi
+    -- (masalan 24 stol / 7 kishi → 4,4,4,3,3,3,3; ortiqcha stollar ro'yxat boshidagilarga)
     if coalesce(array_length(pw,1),0) > 0 then
-      for who in 0..n-1 loop
-        if pres[who+1] then continue; end if;
-        select min(nums[q]), count(*) into amin, acnt from generate_subscripts(nums,1) q where nums_m[q] = who;
-        if coalesce(acnt,0) = 0 then continue; end if;
-        pos := 0; for x in 1..array_length(pw,1) loop
-          if (select min(nums[q]) from generate_subscripts(nums,1) q where nums_m[q] = pw[x]) < amin then pos := x; end if; end loop;
-        cand := '{}'; for x in 1..array_length(pw,1) loop
-          if pos - x + 1 >= 1 then cand := cand || (pos - x + 1); end if;
-          if pos + x <= array_length(pw,1) then cand := cand || (pos + x); end if; end loop;
-        for t in 1..acnt loop
-          r := 0; got := false;
-          while not got loop
-            foreach idx in array cand loop if pext[idx] = r then pext[idx] := pext[idx] + 1; got := true; exit; end if; end loop;
-            r := r + 1;
-          end loop;
-        end loop;
-      end loop;
+      if exists (select 1 from generate_subscripts(nums,1) q where not pres[nums_m[q]+1]) then
+        mc := array_length(nums,1) / array_length(pw,1); mn := array_length(nums,1) % array_length(pw,1);
+        for idx in 1..array_length(pw,1) loop pext[idx] := mc + case when idx <= mn then 1 else 0 end - pcnt[idx]; end loop;
+      end if;
       -- yangi ketma-ket bo'linish: har kim (asosiy soni + qo'shimcha) tadan, stol tartibida
       x := 1;
       for idx in 1..array_length(pw,1) loop
@@ -116,7 +104,7 @@ begin
           if not exists (select 1 from generate_subscripts(nums,1) q where nums_m[q] = pw[idx] and nums[q] = t) then
             xtra[pw[idx]+1] := xtra[pw[idx]+1] || case when xtra[pw[idx]+1] = '' then '' else ',' end || t; end if;
         end loop;
-        fin[pw[idx]+1] := tail; xcnt[pw[idx]+1] := pext[idx];
+        fin[pw[idx]+1] := tail; xcnt[pw[idx]+1] := greatest(pext[idx], 0);
       end loop;
     end if;
     -- Balkon / Family / Konferensiya-VIP: eng kam qo'shimcha olgan kelgan ofitsiantga
