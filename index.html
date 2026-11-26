@@ -583,6 +583,7 @@ canvas.frost{position:absolute;inset:0;image-rendering:auto;width:100%;height:10
 .ag-rec button{height:44px;padding:0 14px;border-radius:22px;border:1px solid rgba(255,255,255,.14);background:#222328;color:#eee;font:800 14px Manrope,system-ui,sans-serif;cursor:pointer}
 .ag-rec button.go{background:#E8B04B;border-color:#E8B04B;color:#1a1306;padding:0 20px}
 html.ag-open #adminView{overflow:hidden}
+@media (max-width:600px){html.ag-open,html.ag-open body{overflow:hidden;overscroll-behavior:none}}
 html.ag-fab #adminView .adm-page,html.ag-fab #adminView .a-wrap{padding-bottom:84px}
 /* ================= THEME: Aurora — liquid glass over a night sea with the northern lights ================= */
 html.th-aurora{--gold:#FFE3D6;--gold2:#FFFFFF;--ink:#14204F;--panel:rgba(255,255,255,.14);--card:rgba(255,255,255,.12);--line:rgba(255,255,255,.42);--text:#FFFFFF;--muted:rgba(255,255,255,.82);
@@ -4754,14 +4755,17 @@ function agShow(v){
 function agFit(){
   var p=$("agPanel"), vv=window.visualViewport; if(!p) return;
   if(!vv || !AG.open || window.innerWidth>600){ p.style.top=""; p.style.height=""; p.style.bottom=""; p.classList.remove("kb"); return; }
-  if(window.scrollY||document.documentElement.scrollTop||document.body.scrollTop){ window.scrollTo(0,0); document.documentElement.scrollTop=0; document.body.scrollTop=0; }
+  /* a fixed panel lives in the layout viewport; the visible part (above the keyboard) starts at vv.offsetTop */
   var kb=vv.height < window.innerHeight-120;
   p.classList.toggle("kb",kb);
-  if(kb){ p.style.setProperty("top",vv.offsetTop+"px","important"); p.style.setProperty("height",vv.height+"px","important"); p.style.setProperty("bottom","auto","important"); agScroll(); }
+  if(kb){ p.style.setProperty("top",Math.max(0,vv.offsetTop)+"px","important"); p.style.setProperty("height",Math.round(vv.height)+"px","important"); p.style.setProperty("bottom","auto","important"); agScroll(); }
   else { p.style.top=""; p.style.height=""; p.style.bottom=""; }
 }
-if(window.visualViewport){ visualViewport.addEventListener("resize",agFit); visualViewport.addEventListener("scroll",agFit); }
+function agFitSoon(){ agFit(); requestAnimationFrame(agFit); setTimeout(agFit,250); }
+if(window.visualViewport){ visualViewport.addEventListener("resize",agFitSoon); visualViewport.addEventListener("scroll",agFit); }
 window.addEventListener("scroll",function(){ if(AG.open) agFit(); },{passive:true});
+document.addEventListener("focusin",function(e){ if(AG.open&&e.target&&e.target.id==="agIn") agFitSoon(); });
+document.addEventListener("focusout",function(e){ if(AG.open&&e.target&&e.target.id==="agIn") setTimeout(agFitSoon,80); });
 function agScroll(){ var l=$("agLog"); if(l) requestAnimationFrame(function(){ l.scrollTop=l.scrollHeight; }); }
 function agSay(who, html, raw){ AG.msgs.push({who:who,html:html}); var l=$("agLog"); if(!l) return null;
   var d=document.createElement("div"); d.className="ag-m "+who; d.innerHTML=raw?html:esc(html).replace(/\n/g,"<br>"); l.appendChild(d); agScroll(); return d; }
