@@ -918,6 +918,7 @@ html.in-app #adminView:not(.paged){padding-bottom:var(--appB,0px)}
 html.in-app #agFab{bottom:calc(var(--appB,0px) + 12px)}
 html.in-app #agPanel{bottom:var(--appB,0px)!important;padding-bottom:0!important}
 #agPanel.kb{padding-bottom:0!important;padding-top:0!important}
+html.in-app #agPanel.typing{bottom:0!important}
 /* menu: panels opened over the menu end above the tab bar (their dim backdrop still runs under it) */
 .overlay>.drawer{border-bottom:var(--insB,0px) solid transparent;background-clip:border-box}
 .detail{border-bottom:var(--insB,0px) solid transparent}
@@ -4758,16 +4759,15 @@ function agFit(){
   /* a fixed panel lives in the layout viewport; the visible part (above the keyboard) starts at vv.offsetTop */
   var kb=vv.height < window.innerHeight-120;
   p.classList.toggle("kb",kb);
-  /* inside the iPhone app the visible area is also short by the app's tab bar, which the keyboard already covers */
-  var extra=0; if(document.documentElement.classList.contains("in-app")){ extra=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--appB"))||0; }
-  if(kb){ p.style.setProperty("top",Math.max(0,vv.offsetTop)+"px","important"); p.style.setProperty("height",Math.round(vv.height+extra)+"px","important"); p.style.setProperty("bottom","auto","important"); agScroll(); }
+  if(kb){ p.style.setProperty("top",Math.max(0,vv.offsetTop)+"px","important"); p.style.setProperty("height",Math.round(vv.height)+"px","important"); p.style.setProperty("bottom","auto","important"); agScroll(); }
   else { p.style.top=""; p.style.height=""; p.style.bottom=""; }
 }
 function agFitSoon(){ agFit(); requestAnimationFrame(agFit); setTimeout(agFit,250); }
 if(window.visualViewport){ visualViewport.addEventListener("resize",agFitSoon); visualViewport.addEventListener("scroll",agFit); }
 window.addEventListener("scroll",function(){ if(AG.open) agFit(); },{passive:true});
-document.addEventListener("focusin",function(e){ if(AG.open&&e.target&&e.target.id==="agIn") agFitSoon(); });
-document.addEventListener("focusout",function(e){ if(AG.open&&e.target&&e.target.id==="agIn") setTimeout(agFitSoon,80); });
+/* while typing, the app's tab bar is under the keyboard: the panel must not keep room for it */
+document.addEventListener("focusin",function(e){ if(e.target&&e.target.id==="agIn"){ var p=$("agPanel"); if(p) p.classList.add("typing"); if(AG.open) agFitSoon(); } });
+document.addEventListener("focusout",function(e){ if(e.target&&e.target.id==="agIn"){ var p=$("agPanel"); if(p) p.classList.remove("typing"); if(AG.open) setTimeout(agFitSoon,80); } });
 function agScroll(){ var l=$("agLog"); if(l) requestAnimationFrame(function(){ l.scrollTop=l.scrollHeight; }); }
 function agSay(who, html, raw){ AG.msgs.push({who:who,html:html}); var l=$("agLog"); if(!l) return null;
   var d=document.createElement("div"); d.className="ag-m "+who; d.innerHTML=raw?html:esc(html).replace(/\n/g,"<br>"); l.appendChild(d); agScroll(); return d; }
