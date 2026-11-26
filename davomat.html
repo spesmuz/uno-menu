@@ -60,6 +60,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer
 #res .tm{font-size:clamp(40px,13vw,70px);font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
 #res .st{font-size:20px;font-weight:800;padding:10px 20px;border-radius:16px}
 #res .sub{color:var(--muted);font-size:15px;max-width:420px;line-height:1.5}
+#res .rot{margin-top:4px;max-width:440px;padding:12px 20px;border-radius:18px;background:rgba(232,176,75,.14);border:2px solid #E8B04B;color:#ffe3a8;font-size:17px;line-height:1.4;font-weight:600}#res .rot b{display:block;color:#fff;font-size:24px;font-weight:800;margin-top:2px}
 #res .debt{margin-top:6px;max-width:440px;padding:14px 20px;border-radius:18px;background:rgba(229,84,75,.14);border:2px solid #E5544B;color:#ffb3ad;font-size:17px;line-height:1.45;font-weight:600}#res .debt b{display:block;color:#fff;font-size:26px;font-weight:800;margin:2px 0}
 #res.ok{color:var(--ok)} #res.late{color:var(--late)} #res.out{color:var(--out)} #res.bad{color:var(--bad)} #res.queued{color:var(--gold)}
 #res h1,#res .tm{color:var(--text)}
@@ -113,7 +114,7 @@ button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer
     <button type="button" data-app="app3"><span class="pl">+</span><span id="app3n">Plus</span></button>
   </div>
 </div>
-<div id="res"><div class="ic" id="rIc"></div><h1 id="rName"></h1><div class="tm" id="rTime"></div><div class="st" id="rSt"></div><div class="sub" id="rSub"></div><div class="debt" id="rDebt" hidden></div></div>
+<div id="res"><div class="ic" id="rIc"></div><h1 id="rName"></h1><div class="tm" id="rTime"></div><div class="st" id="rSt"></div><div class="sub" id="rSub"></div><div class="rot" id="rRot" hidden></div><div class="debt" id="rDebt" hidden></div></div>
 <div id="msg"><div><h2 id="mT"></h2><p id="mP"></p><a href="index.html#admin" id="mA">Admin panelga kirish</a></div></div>
 <canvas id="cv" width="480" height="480" style="display:none"></canvas>
 <script>
@@ -261,9 +262,12 @@ function money(n){ return String(Math.round(n||0)).replace(/\B(?=(\d{3})+(?!\d))
 function show(cls, ic, name, time, st, sub){
   var r=$("res"); r.className="show "+cls; var ob=$("outBtn"); if(ob) ob.remove();
   $("rIc").innerHTML=ic; $("rName").textContent=name; $("rTime").textContent=time; $("rSt").textContent=st; $("rSub").textContent=sub||"";
-  $("rSt").style.display=st?"":"none"; $("rDebt").hidden=true;
+  $("rSt").style.display=st?"":"none"; $("rDebt").hidden=true; $("rRot").hidden=true;
   clearTimeout(resT); resT=setTimeout(function(){ r.className=""; busy=false; hint("Shaxsiy PIN-kodingizni tering"); },/Jarima/.test(String(st)+String(sub))?7000:4200);
 }
+/* today's tables from the rotation (final after 18:00) */
+function rotNote(t){ var el=$("rRot"); if(!t){ el.hidden=true; return; } var m=/^(\S+) · stollar: (.+)$/.exec(t);
+  el.innerHTML='Bugun: '+(m?m[1]+' hududi':'')+'<b>'+(m?'Stollar: '+m[2]:t)+'</b>'; el.hidden=false; }
 /* unpaid fines keep adding up until the admin marks them paid: remind at every check */
 function debtNote(n){
   var el=$("rDebt"); if(!(n>0)){ el.hidden=true; return; }
@@ -300,7 +304,7 @@ function submit(){
       beep(late?"late":"ok");
       show(late||r.fine>0?"late":"ok", face||(late?"⏰":"✓"), "Xush kelibsiz, "+first+"!", t,
         late?("Kechikdingiz: "+dur(r.late)):"Vaqtida keldingiz", fine?(fine+". Sababli bo'lsa rahbarga ayting."):(r.dup?"Siz allaqachon belgilangansiz.":"Ish kuningiz xayrli o'tsin!"));
-      debtNote(r.debt);
+      rotNote(r.rot); debtNote(r.debt);
     } else {
       beep("ok");
       show("out", face||"👋", "Xayr, "+first+"!", t, r.worked!=null?("Bugun ishladingiz: "+dur(r.worked)):"Ketish belgilandi", r.dup?"Siz allaqachon belgilangansiz.":"Maroqli hordiq tilaymiz! 🌙");

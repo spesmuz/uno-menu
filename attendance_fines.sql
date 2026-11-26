@@ -142,6 +142,11 @@ revoke all on function public.uno_att_pay_all(uuid) from public, anon;
 grant execute on function public.uno_att_pay_all(uuid) to authenticated;
 
 -- ===== terminal: PIN bilan kelish/ketish (kirish oynasi + jarima) =====
+-- rotatsiya (rotation.sql) o'rnatilgan bo'lsa — xodimning bugungi stollari, aks holda null
+create or replace function public.uno_att_rot(p_staff uuid) returns text language plpgsql stable security definer set search_path = public as $$
+begin return public.uno_rot_for(p_staff); exception when others then return null; end $$;
+revoke all on function public.uno_att_rot(uuid) from public, anon, authenticated;
+
 create or replace function public.uno_att_punch(p_token text, p_pin text, p_photo text default null, p_at timestamptz default null, p_wait boolean default false)
 returns jsonb language plpgsql security definer set search_path = public as $$
 declare
@@ -150,7 +155,7 @@ declare
   ts timestamptz := now(); tz text := public.uno_tz(); loc timestamp; sched timestamp; send timestamp; anchor timestamp;
   k text; late int := 0; early int := 0; worked int; grace int := public.uno_att_cfg('grace','10')::int;
   win int := public.uno_att_cfg('window','300')::int; fh int := public.uno_att_cfg('fine_hour','50000')::int;
-  fine int := 0; fine_h int := 0; sday date; scheduled boolean := false;
+  fine int := 0; fine_h int := 0; sday date; scheduled boolean := false; rot text;
   txt text; offline boolean := false; fails int;
 begin
   select * into d from public.uno_att_devices where token = p_token and not revoked;
@@ -179,7 +184,7 @@ begin
   if last.id is not null and ts - last.at < interval '2 minutes' then
     return jsonb_build_object('ok', true, 'dup', true, 'kind', last.kind, 'name', s.name, 'at', last.at, 'late', last.late_min, 'grace', grace, 'worked', last.worked_min,
       'fine', (select coalesce(sum(amount),0) from public.uno_att_fines where staff_id = s.id and day = sday and status <> 'excused'),
-      'debt', public.uno_att_debt(s.id));
+      'debt', public.uno_att_debt(s.id), 'rot', public.uno_att_rot(s.id));
   end if;
 
   -- oldingi smenada "ketdi" belgilanmay qolgan bo'lsa, yangi smenaga kelish — ketish emas, KELISH
@@ -191,7 +196,7 @@ begin
       return jsonb_build_object('ok', true, 'dup', true, 'already_in', true, 'kind', 'in', 'name', s.name, 'at', last.at, 'late', last.late_min, 'grace', grace,
         'out_from', (anchor + make_interval(mins => win)) at time zone tz,
         'fine', (select coalesce(sum(amount),0) from public.uno_att_fines where staff_id = s.id and day = sday and status <> 'excused'),
-      'debt', public.uno_att_debt(s.id));
+      'debt', public.uno_att_debt(s.id), 'rot', public.uno_att_rot(s.id));
     end if;
     k := 'out';
   else
@@ -249,7 +254,7 @@ begin
   if not p_wait then perform public.uno_att_tg(txt); end if;
 
   return jsonb_build_object('ok', true, 'kind', k, 'name', s.name, 'at', ts, 'late', late, 'grace', grace, 'worked', worked, 'early', early,
-                            'fine', fine, 'fine_hours', fine_h, 'fine_hour', fh, 'debt', public.uno_att_debt(s.id),
+                            'fine', fine, 'fine_hours', fine_h, 'fine_hour', fh, 'debt', public.uno_att_debt(s.id), 'rot', public.uno_att_rot(s.id),
                             'key', case when p_wait then pkey end);
 end $$;
 revoke all on function public.uno_att_punch(text,text,text,timestamptz,boolean) from public;
