@@ -7,6 +7,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/menu-192.png">
 <link rel="apple-touch-icon" href="icons/menu-180.png">
+<meta name="apple-itunes-app" content="app-id=6837930683">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -967,6 +968,59 @@ html.in-app .gai-in{padding-bottom:12px}
 .gai-in button:disabled{opacity:.45}
 .slide.gai-hl .card{animation:gaiHl 1.6s ease 2}
 @keyframes gaiHl{50%{box-shadow:0 0 0 3px #FFC94D,0 0 40px rgba(255,201,77,.55)}}
+
+/* ===== phone tabs outside the iPhone app (Android app, phone browsers): Menyu · Bron · UNO · Profil ===== */
+#wtabs{position:fixed;left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));bottom:max(8px,calc(env(safe-area-inset-bottom) - 12px));height:62px;z-index:880;display:none;
+  gap:2px;padding:5px;border-radius:24px;background:linear-gradient(180deg,rgba(28,34,58,.72),rgba(10,14,30,.82));border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 14px 34px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.12);-webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%)}
+html.web-tabs #wtabs{display:flex}
+#wtabs button{flex:1;min-width:0;border:0;background:transparent;color:rgba(255,255,255,.6);border-radius:19px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  font:700 12px/1 var(--sans,system-ui);cursor:pointer;position:relative;transition:background .2s,color .2s;-webkit-tap-highlight-color:transparent}
+#wtabs button svg{width:24px;height:24px}
+#wtabs button.on{color:#E8B04B;background:rgba(255,255,255,.09);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+#wtabs button i.dot{position:absolute;top:7px;right:calc(50% - 18px);width:8px;height:8px;border-radius:50%;background:#E8B04B;box-shadow:0 0 0 2px rgba(10,14,30,.9)}
+@media (orientation:landscape){ #wtabs{height:50px;left:50%;right:auto;transform:translateX(-50%);width:min(520px,70vw);bottom:6px} #wtabs button{flex-direction:row;gap:7px;font-size:13px} #wtabs button svg{width:20px;height:20px} }
+.wpage{position:fixed;left:0;right:0;top:0;bottom:0;z-index:870;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;color:#fff;
+  padding:max(18px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) calc(var(--appB,80px) + 18px) max(16px,env(safe-area-inset-left));
+  background:radial-gradient(80% 40% at 18% 8%,rgba(79,110,255,.18),transparent 70%),radial-gradient(70% 35% at 90% 16%,rgba(255,170,90,.10),transparent 70%),linear-gradient(180deg,#02040C,#06102A 55%,#081634)}
+.wpage.on{display:block}
+.wpage .wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.wpage h1{font:800 32px/1.1 var(--sans,system-ui);margin:6px 2px 4px}
+.wpage h2{font:800 13px/1 var(--sans,system-ui);letter-spacing:.09em;text-transform:uppercase;color:rgba(232,176,75,.92);margin:10px 6px 0}
+.wcard{border-radius:22px;padding:16px;background:linear-gradient(135deg,rgba(255,255,255,.10),rgba(255,255,255,.03) 50%,rgba(255,255,255,.06));border:1px solid rgba(255,255,255,.16);
+  box-shadow:0 16px 34px rgba(0,0,0,.35);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.wcard.np{padding:0;overflow:hidden}
+.wfld{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}.wfld:last-child{margin-bottom:0}
+.wfld>span{font:600 13px/1.2 var(--sans,system-ui);color:rgba(255,255,255,.62)}
+.wfld input,.wfld select,.wfld textarea{height:46px;border-radius:13px;border:1px solid rgba(255,255,255,.16);background:rgba(2,8,20,.55);color:#fff;padding:0 14px;font:500 16px var(--sans,system-ui);width:100%;box-sizing:border-box;color-scheme:dark}
+.wfld textarea{height:auto;min-height:70px;padding:12px 14px;resize:vertical}
+.wrow2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.wstep{display:flex;align-items:center;gap:8px}.wstep button{width:46px;height:46px;border-radius:13px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);color:#E8B04B;font:800 22px/1 system-ui}
+.wstep b{flex:1;text-align:center;font:800 20px/46px var(--sans,system-ui);color:#E8B04B;border-radius:13px;background:rgba(2,8,20,.55);border:1px solid rgba(255,255,255,.16)}
+.wbtn{height:50px;border-radius:15px;border:0;width:100%;font:800 16px var(--sans,system-ui);color:#1A1306;background:linear-gradient(180deg,#FFE08A,#FFC94D);box-shadow:0 10px 24px rgba(255,190,70,.25);cursor:pointer}
+.wbtn:disabled{opacity:.45;box-shadow:none}
+.wbtn.ghost{background:rgba(255,255,255,.07);color:#E8B04B;border:1px solid rgba(255,255,255,.16);box-shadow:none}
+.wmsg{border-radius:14px;padding:12px 14px;font:600 14px/1.45 var(--sans,system-ui)}.wmsg.ok{background:rgba(63,191,127,.14);border:1px solid rgba(63,191,127,.4);color:#bff0d6}.wmsg.err{background:rgba(229,84,75,.14);border:1px solid rgba(229,84,75,.45);color:#ffc9c4}
+.wlist .it{padding:14px 16px;border-top:1px solid rgba(255,255,255,.08);display:flex;gap:12px;align-items:center}.wlist .it:first-child{border-top:0}
+.wlist .it b{display:block;font:700 15px var(--sans,system-ui)}.wlist .it small{color:rgba(255,255,255,.6);font-size:13px}
+.wlist .it .x{margin-left:auto;border:0;background:rgba(255,255,255,.07);color:rgba(255,255,255,.7);width:34px;height:34px;border-radius:50%;font-size:18px}
+.wabout-top{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding-top:6px}
+.wabout-top img{width:120px;height:120px;border-radius:28px;box-shadow:0 0 36px rgba(232,176,75,.25)}
+.wabout-top h1{font-family:Georgia,serif;color:#E8B04B;margin:4px 0 0}.wabout-top p{color:rgba(255,255,255,.6);margin:0}
+.wacts{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.wacts a,.wacts button{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 4px;border-radius:18px;color:#E8B04B;text-decoration:none;font:600 12px var(--sans,system-ui);
+  background:linear-gradient(135deg,rgba(255,255,255,.10),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.16)}
+.wacts svg{width:22px;height:22px}
+.winfo .it svg{width:22px;height:22px;color:#E8B04B;flex:none}
+.wpf{display:flex;gap:14px;align-items:center}
+.wava{width:78px;height:78px;border-radius:50%;flex:none;position:relative;border:1.5px solid rgba(232,176,75,.6);background:linear-gradient(135deg,rgba(232,176,75,.35),rgba(232,176,75,.12));
+  display:flex;align-items:center;justify-content:center;font:800 24px var(--sans,system-ui);color:#E8B04B;cursor:pointer}
+.wava img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+.wava i{position:absolute;right:-2px;bottom:-2px;width:26px;height:26px;border-radius:50%;background:#E8B04B;color:#1A1306;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:13px;border:1.5px solid rgba(0,0,0,.4)}
+.wnews img{display:block;width:100%;aspect-ratio:8.5/2.8;object-fit:cover;background:rgba(255,255,255,.06)}
+.wnews .tx{padding:16px}.wnews b{display:block;font:800 18px var(--sans,system-ui);margin-bottom:6px}.wnews p{margin:0;color:rgba(255,255,255,.82);font-size:15px;line-height:1.45;white-space:pre-line}
+.wnews small{display:block;margin-top:8px;color:rgba(232,176,75,.85);font-size:12px}
+.whint{color:rgba(255,255,255,.6);font-size:13px;line-height:1.45;margin:0 6px}
 </style>
 </head>
 <body>
@@ -1074,10 +1128,29 @@ function safeInsets(){
   if(window.UNO_INSETS){ var U=window.UNO_INSETS; return {t:+U.t||0, b:+U.b||0, l:+U.l||0, r:+U.r||0, island:U.island||null}; }   /* iPhone app: clock + tab bar sizes sent by the app */
   var cs=getComputedStyle(_safe), o={t:parseFloat(cs.paddingTop)||0, b:parseFloat(cs.paddingBottom)||0, l:parseFloat(cs.paddingLeft)||0, r:parseFloat(cs.paddingRight)||0};
   if(/UNOAirwaysApp/.test(navigator.userAgent||"")) o.b=Math.max(o.b, (window.innerWidth>window.innerHeight)?62:90);   /* iPhone app before it reports its tab bar */
+  else if(webTabsOn()) o.b=webTabsH(o.b);   /* Android app / phone browser: our own Menyu·Bron·UNO·Profil bar */
   return o;
 }
 /* the iPhone app is recognised by its name in the user agent even before it reports its bar size */
+/* phones outside the iPhone app get the same four tabs as the iPhone app, drawn by the page itself
+   (not on restaurant tablets, the door terminal or kiosk mode) */
+function webTabsOn(){
+  if(window.UNO_INSETS || /UNOAirwaysApp/.test(navigator.userAgent||"")) return false;
+  if(Math.min(window.innerWidth||0, window.innerHeight||0) >= 600) return false;
+  try{ if(localStorage.getItem("uno_device_mode")==="att") return false; }catch(_){}
+  try{ if(window.UnoKiosk && UnoKiosk.kioskOn && UnoKiosk.kioskOn()) return false; }catch(_){}
+  return true;
+}
+function webTabsH(safeB){ var land=(window.innerWidth||0)>(window.innerHeight||0); return (land?50:62)+(land?6:Math.max(8,(safeB||0)-12))+6; }
 function appFallback(){
+  var de=document.documentElement;
+  if(!window.UNO_INSETS && !/UNOAirwaysApp/.test(navigator.userAgent||"")){
+    var on=webTabsOn();
+    de.classList.toggle("web-tabs",on); de.classList.toggle("in-app",on);
+    if(on){ if(!_safe) safeInsets(); var sb=parseFloat(getComputedStyle(_safe).paddingBottom)||0; de.style.setProperty("--appB", webTabsH(sb)+"px"); } else de.style.removeProperty("--appB");
+    try{ WT.sync(); }catch(_){}
+    return;
+  }
   if(window.UNO_INSETS || !/UNOAirwaysApp/.test(navigator.userAgent||"")) return;
   var land=(window.innerWidth||0)>(window.innerHeight||0);
   document.documentElement.classList.add("in-app");
@@ -1302,10 +1375,180 @@ function tellAppLang(){
   try{ if(window.webkit&&webkit.messageHandlers&&webkit.messageHandlers.unoLang) webkit.messageHandlers.unoLang.postMessage(S.lang); }catch(_){}
 }
 setTimeout(tellAppLang,300);
+
+/* ===== WT: Bron, UNO, Profil pages + bottom tabs for phones outside the iPhone app (same as the iPhone app) ===== */
+var WT=(function(){
+  var D={"uz": {"done": "Tayyor", "tab.profile": "Profil", "pf.photo": "Surat qo'yish", "pf.photoChange": "Suratni almashtirish", "pf.photoDel": "Suratni olib tashlash", "pf.me": "Mening ma'lumotlarim", "pf.name": "Ism familiya", "pf.hint": "Bir marta yozib qo'ying: bron, yetkazib berish va fikr qoldirishda ism va telefon o'zi to'ldiriladi.", "pf.save": "Saqlash", "pf.saved": "Saqlandi", "pf.news": "Yangiliklar", "pf.noNews": "Hozircha yangilik yo'q.", "tab.menu": "Menyu", "tab.book": "Bron", "tab.about": "UNO", "offline.title": "Internet yo'q", "offline.text": "Menyuni ochish uchun internetga ulaning.", "retry": "Qayta urinish", "book.title": "Stol bron qilish", "book.guest": "Mehmon", "book.name": "Ismingiz", "book.phone": "Telefon raqamingiz", "book.when": "Qachon", "book.date": "Sana va vaqt", "book.guests": "Mehmonlar soni", "book.zone": "Joy", "book.occasion": "Sabab", "book.note": "Izoh (ixtiyoriy)", "book.remind": "2 soat oldin eslatish", "book.send": "Bron qilish", "book.call": "Yoki qo'ng'iroq qiling", "book.call24": "Operatorlar 24 soat ishlaydi", "book.ok.t": "Rahmat!", "book.ok": "Broningiz qabul qilindi. Operatorimiz tez orada siz bilan bog'lanib, tasdiqlaydi.", "book.err.t": "Yuborilmadi", "book.err": "Internetni tekshirib, qayta urinib ko'ring yoki qo'ng'iroq qiling.", "book.err.name": "Ismingizni yozing.", "book.err.phone": "Telefon raqamini to'liq yozing.", "book.err.time": "Kelajakdagi vaqtni tanlang.", "book.err.many": "Juda ko'p urinish. Birozdan keyin qayta urinib ko'ring yoki qo'ng'iroq qiling.", "book.mine": "Mening bronlarim", "book.people": "kishi", "ok": "Yaxshi", "callNow": "Qo'ng'iroq qilish", "remind.title": "UNO Airways", "remind.body": "Bugun soat %@ da stolingiz bron qilingan. Sizni kutamiz! ✈️", "z.any": "Farqi yo'q", "z.family": "Oilaviy", "z.comfort": "Komfort", "z.business": "Biznes", "z.terrace": "Terassa", "z.vip": "VIP xona", "z.conf": "Konferensiya zali", "o.visit": "Oddiy tashrif", "o.bday": "Tug'ilgan kun", "o.wedding": "To'y / marosim", "o.conf": "Konferensiya", "o.meeting": "Biznes uchrashuv", "about.sub": "Turk va Yevropa oshxonasi", "about.story.t": "Bizning hikoya", "about.story": "UNO — uch aka-uka: Ubaydillo, Nodirbek va Ozodbek ismlarining bosh harflari. «Airways» esa asoschimiz Nodirbekning bolalikdagi uchuvchi bo'lish orzusidan. Shuning uchun ofitsiantlarimiz uchuvchi libosida, bino tepasida esa katta samolyot maketi turadi. Ichkarida ko'plab daraxtlar va tabiiy o'simliklar sizni kutadi.", "about.call": "Qo'ng'iroq", "about.map": "Xarita", "about.insta": "Instagram", "about.share": "Ulashish", "about.address": "Manzil", "about.music": "Har kuni jonli musiqa", "about.music.t": "Kechqurun jonli musiqa, shou va konsertlar", "about.seats": "350 o'rin", "about.seats.t": "Oilaviy, Komfort, Biznes, Terassa, Konferensiya va VIP xonalar", "about.events": "Tadbirlar", "about.events.t": "Tug'ilgan kun, to'y, marosim va konferensiyalar", "about.op": "24/7 operator", "about.privacy": "Maxfiylik siyosati", "about.version": "Versiya", "share.text": "UNO Airways Restaurante — Farg'ona. Menyu:"}, "ru": {"done": "Готово", "tab.profile": "Профиль", "pf.photo": "Добавить фото", "pf.photoChange": "Сменить фото", "pf.photoDel": "Удалить фото", "pf.me": "Мои данные", "pf.name": "Имя и фамилия", "pf.hint": "Заполните один раз: имя и телефон подставятся сами при брони, доставке и отзывах.", "pf.save": "Сохранить", "pf.saved": "Сохранено", "pf.news": "Новости", "pf.noNews": "Пока новостей нет.", "tab.menu": "Меню", "tab.book": "Бронь", "tab.about": "UNO", "offline.title": "Нет интернета", "offline.text": "Подключитесь к интернету, чтобы открыть меню.", "retry": "Повторить", "book.title": "Бронь столика", "book.guest": "Гость", "book.name": "Ваше имя", "book.phone": "Ваш телефон", "book.when": "Когда", "book.date": "Дата и время", "book.guests": "Количество гостей", "book.zone": "Место", "book.occasion": "Повод", "book.note": "Комментарий (необязательно)", "book.remind": "Напомнить за 2 часа", "book.send": "Забронировать", "book.call": "Или позвоните", "book.call24": "Операторы работают круглосуточно", "book.ok.t": "Спасибо!", "book.ok": "Бронь принята. Наш оператор скоро свяжется с вами для подтверждения.", "book.err.t": "Не отправлено", "book.err": "Проверьте интернет и попробуйте снова или позвоните нам.", "book.err.name": "Укажите имя.", "book.err.phone": "Укажите полный номер телефона.", "book.err.time": "Выберите время в будущем.", "book.err.many": "Слишком много попыток. Попробуйте позже или позвоните.", "book.mine": "Мои брони", "book.people": "чел.", "ok": "Хорошо", "callNow": "Позвонить", "remind.title": "UNO Airways", "remind.body": "Сегодня в %@ у вас забронирован столик. Ждём вас! ✈️", "z.any": "Неважно", "z.family": "Семейный", "z.comfort": "Комфорт", "z.business": "Бизнес", "z.terrace": "Терраса", "z.vip": "VIP-комната", "z.conf": "Конференц-зал", "o.visit": "Обычный визит", "o.bday": "День рождения", "o.wedding": "Свадьба / торжество", "o.conf": "Конференция", "o.meeting": "Деловая встреча", "about.sub": "Турецкая и европейская кухня", "about.story.t": "Наша история", "about.story": "UNO — первые буквы имён трёх братьев: Убайдилло, Нодирбек и Озодбек. «Airways» — детская мечта основателя Нодирбека стать пилотом. Поэтому наши официанты в форме пилотов, а над зданием — большой макет самолёта. Внутри вас ждут деревья и живые растения.", "about.call": "Позвонить", "about.map": "Карта", "about.insta": "Instagram", "about.share": "Поделиться", "about.address": "Адрес", "about.music": "Живая музыка каждый день", "about.music.t": "Вечером живая музыка, шоу и концерты", "about.seats": "350 мест", "about.seats.t": "Семейный, Комфорт, Бизнес, Терраса, конференц-зал и VIP-комнаты", "about.events": "Мероприятия", "about.events.t": "Дни рождения, свадьбы, торжества и конференции", "about.op": "Оператор 24/7", "about.privacy": "Политика конфиденциальности", "about.version": "Версия", "share.text": "UNO Airways Restaurante — Фергана. Меню:"}, "en": {"done": "Done", "tab.profile": "Profile", "pf.photo": "Add photo", "pf.photoChange": "Change photo", "pf.photoDel": "Remove photo", "pf.me": "My details", "pf.name": "Full name", "pf.hint": "Fill in once: your name and phone are filled in automatically for bookings, delivery and reviews.", "pf.save": "Save", "pf.saved": "Saved", "pf.news": "News", "pf.noNews": "No news yet.", "tab.menu": "Menu", "tab.book": "Book", "tab.about": "UNO", "offline.title": "No internet", "offline.text": "Connect to the internet to open the menu.", "retry": "Try again", "book.title": "Book a table", "book.guest": "Guest", "book.name": "Your name", "book.phone": "Your phone", "book.when": "When", "book.date": "Date and time", "book.guests": "Guests", "book.zone": "Seating", "book.occasion": "Occasion", "book.note": "Note (optional)", "book.remind": "Remind me 2 hours before", "book.send": "Book now", "book.call": "Or call us", "book.call24": "Operators available 24/7", "book.ok.t": "Thank you!", "book.ok": "Your booking was received. Our operator will contact you shortly to confirm.", "book.err.t": "Not sent", "book.err": "Check your internet and try again, or call us.", "book.err.name": "Please enter your name.", "book.err.phone": "Please enter a full phone number.", "book.err.time": "Please choose a future time.", "book.err.many": "Too many attempts. Please try later or call us.", "book.mine": "My bookings", "book.people": "guests", "ok": "OK", "callNow": "Call", "remind.title": "UNO Airways", "remind.body": "Your table is booked today at %@. See you soon! ✈️", "z.any": "No preference", "z.family": "Family", "z.comfort": "Comfort", "z.business": "Business", "z.terrace": "Terrace", "z.vip": "VIP room", "z.conf": "Conference hall", "o.visit": "Regular visit", "o.bday": "Birthday", "o.wedding": "Wedding / ceremony", "o.conf": "Conference", "o.meeting": "Business meeting", "about.sub": "Turkish and European cuisine", "about.story.t": "Our story", "about.story": "UNO stands for the first letters of three brothers: Ubaydillo, Nodirbek and Ozodbek. “Airways” comes from founder Nodirbek's childhood dream of becoming a pilot — so our waiters wear pilot uniforms and a large airplane model sits on top of the building. Inside, trees and live plants are waiting for you.", "about.call": "Call", "about.map": "Map", "about.insta": "Instagram", "about.share": "Share", "about.address": "Address", "about.music": "Live music every day", "about.music.t": "Live music, shows and concerts every evening", "about.seats": "350 seats", "about.seats.t": "Family, Comfort, Business, Terrace, Conference and VIP rooms", "about.events": "Events", "about.events.t": "Birthdays, weddings, ceremonies and conferences", "about.op": "24/7 operator", "about.privacy": "Privacy policy", "about.version": "Version", "share.text": "UNO Airways Restaurante — Fergana. Menu:"}};
+  var ZONES=["z.any","z.family","z.comfort","z.business","z.terrace","z.vip","z.conf"], OCC=["o.visit","o.bday","o.wedding","o.conf","o.meeting"];
+  var PHONE="+998918816979", PHONE_P="+998 91 881 69 79", INSTA="uno_airways_restaurante", ADDR="Farg'ona sh., Sohibqiron Temur ko'chasi, 30";
+  var IC={menu:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8a2 2 0 0 0 2 2v8M5 3v5M9 3v5M17 3c-2 2-2 6 0 8v10"/></svg>',
+    book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 9h18M12 13v5M9.5 15.5h5"/></svg>',
+    plane:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 15.5v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V8.5l-8 5v2l8-2.5V18l-2 1.5V21l3.5-1 3.5 1v-1.5L13 18v-5z"/></svg>',
+    user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="10" r="3.2"/><path d="M6 18.5c1.5-2.4 3.6-3.5 6-3.5s4.5 1.1 6 3.5"/></svg>',
+    phone:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg>',
+    map:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
+    cam:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>',
+    share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>',
+    music:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+    seats:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c3 0 6 2 6 5.5"/></svg>',
+    gift:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v9h14v-9M12 8v13M12 8S10.5 3 8 3.5 7.5 8 12 8zm0 0s1.5-5 4-4.5S16.5 8 12 8z"/></svg>'};
+  var tab=0, built=false, news=[], newsKey="", timer=null;
+  function T(k){ var l=S.lang||"uz"; return (D[l]&&D[l][k])||D.uz[k]||k; }
+  function store(k,v){ try{ if(v===undefined) return localStorage.getItem(k); if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(_){ return null; } }
+  function profile(){ try{ var p=JSON.parse(store("uno_profile")||"null")||{}; return {name:p.name||"", phone:p.phone||""}; }catch(_){ return {name:"",phone:""}; } }
+  function saveProfile(n,ph){ store("uno_profile", JSON.stringify({name:n, phone:ph})); }
+  function device(){ var d=store("uno_device"); if(!d){ d=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2)); store("uno_device",d); } return d; }
+  function platform(){ return window.UnoKiosk?"android":"web"; }
+  function source(){ return window.UnoKiosk?"Android ilovasi":"Sayt (telefon)"; }
+  function build(){
+    if(built) return; built=true;
+    var bar=document.createElement("nav"); bar.id="wtabs"; bar.setAttribute("aria-label","UNO");
+    document.body.appendChild(bar);
+    ["book","about","profile"].forEach(function(id){ var p=document.createElement("section"); p.className="wpage"; p.id="wp-"+id; document.body.appendChild(p); });
+    bar.addEventListener("click",function(e){ var b=e.target.closest("button[data-t]"); if(b) go(+b.dataset.t); });
+    document.addEventListener("click",onClick);
+    document.addEventListener("change",onChange);
+  }
+  function renderBar(){
+    var bar=$("wtabs"); if(!bar) return;
+    var items=[["tab.menu",IC.menu],["tab.book",IC.book],["tab.about",IC.plane],["tab.profile",IC.user]];
+    bar.innerHTML=items.map(function(it,i){ return '<button type="button" data-t="'+i+'" class="'+(tab===i?"on":"")+'" aria-label="'+esc(T(it[0]))+'">'+it[1]+'<span>'+esc(T(it[0]))+'</span>'+(i===3&&tab!==3&&unseen()?'<i class="dot"></i>':'')+'</button>'; }).join("");
+  }
+  function go(i){
+    if(i===tab && i!==0){ var pg=document.querySelector(".wpage.on"); if(pg) pg.scrollTo({top:0,behavior:"smooth"}); return; }
+    tab=i; try{ SFX.select(); }catch(_){}
+    ["book","about","profile"].forEach(function(id,k){ var p=$("wp-"+id); if(p) p.classList.toggle("on",tab===k+1); });
+    if(tab===1) renderBook(); else if(tab===2) renderAbout(); else if(tab===3){ renderProfile(); loadNews(); }
+    if(tab===0){ try{ if(S.view==="menu" && !S.detail) resumeCarouselVideo(); }catch(_){} } else { try{ pauseCarouselVideo(); }catch(_){} }
+    renderBar();
+  }
+  /* ---------- Bron ---------- */
+  var mine=[]; try{ mine=JSON.parse(store("uno_bookings")||"[]")||[]; }catch(_){ mine=[]; }
+  function defDate(){ var d=new Date(Date.now()+36e5); var m=d.getMinutes(); if(m===0){} else if(m<=30) d.setMinutes(30); else { d.setHours(d.getHours()+1); d.setMinutes(0); } d.setSeconds(0,0); return d; }
+  function local(d){ var z=function(n){ return ("0"+n).slice(-2); }; return d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate())+"T"+z(d.getHours())+":"+z(d.getMinutes()); }
+  function fmtDT(ms){ try{ return new Date(ms).toLocaleString(S.lang==="uz"?"uz-Latn-UZ":S.lang,{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}); }catch(_){ return new Date(ms).toLocaleString(); } }
+  var B={guests:2,msg:null,busy:false};
+  function renderBook(){
+    var p=profile(), pg=$("wp-book"), up=mine.filter(function(b){ return b.at>Date.now()-3*36e5; }).sort(function(a,b){ return a.at-b.at; });
+    pg.innerHTML='<div class="wrap"><h1>'+esc(T("book.title"))+'</h1>'+
+      '<h2>'+esc(T("book.guest"))+'</h2><div class="wcard"><label class="wfld"><span>'+esc(T("book.name"))+'</span><input id="wbName" autocomplete="name" value="'+esc(p.name)+'"></label>'+
+      '<label class="wfld"><span>'+esc(T("book.phone"))+'</span><input id="wbPhone" type="tel" inputmode="tel" autocomplete="tel" value="'+esc(p.phone||"+998 ")+'"></label></div>'+
+      '<h2>'+esc(T("book.when"))+'</h2><div class="wcard"><label class="wfld"><span>'+esc(T("book.date"))+'</span><input id="wbAt" type="datetime-local" value="'+local(defDate())+'" min="'+local(new Date())+'"></label>'+
+      '<div class="wfld"><span>'+esc(T("book.guests"))+'</span><div class="wstep"><button type="button" data-wb="-">−</button><b id="wbG">'+B.guests+'</b><button type="button" data-wb="+">+</button></div></div>'+
+      '<div class="wrow2"><label class="wfld"><span>'+esc(T("book.zone"))+'</span><select id="wbZone">'+ZONES.map(function(z,i){ return '<option value="'+i+'">'+esc(T(z))+'</option>'; }).join("")+'</select></label>'+
+      '<label class="wfld"><span>'+esc(T("book.occasion"))+'</span><select id="wbOcc">'+OCC.map(function(z,i){ return '<option value="'+i+'">'+esc(T(z))+'</option>'; }).join("")+'</select></label></div>'+
+      '<label class="wfld"><span>'+esc(T("book.note"))+'</span><textarea id="wbNote" rows="2"></textarea></label></div>'+
+      (B.msg?'<div class="wmsg '+B.msg[0]+'">'+esc(B.msg[1])+'</div>':'')+
+      '<button class="wbtn" type="button" data-wb="send"'+(B.busy?' disabled':'')+'>'+(B.busy?'…':'✓ '+esc(T("book.send")))+'</button>'+
+      '<h2>'+esc(T("book.call"))+'</h2><a class="wbtn ghost" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none" href="tel:'+PHONE+'">'+IC.phone.replace('<svg','<svg width="18" height="18"')+' '+PHONE_P+'</a><p class="whint">'+esc(T("book.call24"))+'</p>'+
+      (up.length?'<h2>'+esc(T("book.mine"))+'</h2><div class="wcard np wlist">'+up.map(function(b){ return '<div class="it"><div><b>'+esc(fmtDT(b.at))+'</b><small>'+b.guests+' '+esc(T("book.people"))+' · '+esc(T(b.zone))+' · '+esc(T(b.occasion))+'</small></div><button class="x" type="button" data-wbdel="'+b.id+'" aria-label="×">×</button></div>'; }).join("")+'</div>':'')+
+      '</div>';
+  }
+  async function sendBook(){
+    var nm=$("wbName").value.trim(), ph=$("wbPhone").value.trim(), at=new Date($("wbAt").value), zi=+$("wbZone").value, oi=+$("wbOcc").value, note=$("wbNote").value.trim();
+    var err=nm.length<2?"book.err.name":ph.replace(/\D/g,"").length<9?"book.err.phone":(!(at>new Date()))?"book.err.time":null;
+    if(err){ B.msg=["err",T(err)]; keepRender(); return; }
+    B.busy=true; B.msg=null; keepRender();
+    saveProfile(nm,ph);
+    var r=await sbRpc("uno_booking_create",{p_name:nm,p_phone:ph,p_at:at.toISOString(),p_guests:B.guests,p_zone:zi===0?null:D.uz[ZONES[zi]],p_occasion:D.uz[OCC[oi]],p_note:note,p_source:source()});
+    B.busy=false;
+    if(r.error){ var m=r.error.message||""; B.msg=["err",T(/bad_phone/.test(m)?"book.err.phone":/bad_name/.test(m)?"book.err.name":/bad_time/.test(m)?"book.err.time":/too_many/.test(m)?"book.err.many":"book.err")]; }
+    else { mine.push({id:(r.data&&r.data.id)||Date.now(), at:at.getTime(), guests:B.guests, zone:ZONES[zi], occasion:OCC[oi]}); store("uno_bookings",JSON.stringify(mine.slice(-30))); B.msg=["ok",T("book.ok.t")+" "+T("book.ok")]; try{ SFX.ok&&SFX.ok(); }catch(_){} }
+    renderBook();
+  }
+  function keepRender(){ var keep={}; ["wbName","wbPhone","wbAt","wbZone","wbOcc","wbNote"].forEach(function(k){ var el=$(k); if(el) keep[k]=el.value; }); renderBook(); Object.keys(keep).forEach(function(k){ var el=$(k); if(el) el.value=keep[k]; }); }
+  /* ---------- UNO (about) ---------- */
+  function renderAbout(){
+    var logo=S.settings&&S.settings.logoId?blob(S.settings.logoId):"icons/menu-512.png";
+    var row=function(ic,t1,t2,href){ var inner=IC[ic]+'<div><b>'+esc(t1)+'</b><small>'+esc(t2)+'</small></div>'; return href?'<a class="it" style="color:inherit;text-decoration:none" href="'+href+'" target="_blank" rel="noopener">'+inner+'</a>':'<div class="it">'+inner+'</div>'; };
+    var map="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent("UNO Airways Restaurante, "+ADDR);
+    $("wp-about").innerHTML='<div class="wrap"><div class="wabout-top"><img src="'+esc(logo)+'" alt=""><h1>UNO Airways</h1><p>'+esc(T("about.sub"))+'</p></div>'+
+      '<div class="wacts"><a href="tel:'+PHONE+'">'+IC.phone+esc(T("about.call"))+'</a><a href="'+map+'" target="_blank" rel="noopener">'+IC.map+esc(T("about.map"))+'</a>'+
+      '<a href="https://www.instagram.com/'+INSTA+'/" target="_blank" rel="noopener">'+IC.cam+esc(T("about.insta"))+'</a><button type="button" data-wa="share">'+IC.share+esc(T("about.share"))+'</button></div>'+
+      '<div class="wcard"><b style="color:#E8B04B;font-size:17px">'+esc(T("about.story.t"))+'</b><p style="margin:8px 0 0;line-height:1.55;color:rgba(255,255,255,.88)">'+esc(T("about.story"))+'</p></div>'+
+      '<div class="wcard np wlist winfo">'+row("map",T("about.address"),ADDR,map)+row("phone",T("about.op"),PHONE_P,"tel:"+PHONE)+row("music",T("about.music"),T("about.music.t"))+row("seats",T("about.seats"),T("about.seats.t"))+row("gift",T("about.events"),T("about.events.t"))+'</div>'+
+      '<p style="text-align:center;margin:4px 0 0"><a href="privacy.html" target="_blank" rel="noopener" style="color:#E8B04B;font-size:13px">'+esc(T("about.privacy"))+'</a></p></div>';
+  }
+  /* ---------- Profil ---------- */
+  var P={msg:null};
+  function photo(){ return store("uno_photo")||""; }
+  function initials(n){ var s=String(n||"").trim().split(/\s+/).slice(0,2).map(function(w){ return w.charAt(0); }).join("").toUpperCase(); return s||"?"; }
+  function ready(n,ph){ return String(n).trim().length>=2 && String(ph).replace(/\D/g,"").length>=9; }
+  function renderProfile(){
+    var p=profile(), ph=photo(), pg=$("wp-profile");
+    pg.innerHTML='<div class="wrap"><h1>'+esc(T("tab.profile"))+'</h1><h2>'+esc(T("pf.me"))+'</h2>'+
+      '<div class="wcard"><div class="wpf"><label class="wava" title="'+esc(T(ph?"pf.photoChange":"pf.photo"))+'">'+(ph?'<img src="'+ph+'" alt="">':esc(initials(p.name)))+'<i>📷</i><input id="wpPhoto" type="file" accept="image/*" hidden></label>'+
+      '<div style="flex:1;min-width:0"><label class="wfld"><input id="wpName" placeholder="'+esc(T("pf.name"))+'" autocomplete="name" value="'+esc(p.name)+'"></label>'+
+      '<label class="wfld"><input id="wpPhone" type="tel" inputmode="tel" placeholder="'+esc(T("book.phone"))+'" autocomplete="tel" value="'+esc(p.phone||"+998 ")+'"></label></div></div>'+
+      (ph?'<button type="button" data-wp="delphoto" style="margin:10px 0 0;border:0;background:none;color:rgba(255,160,150,.9);font-size:13px">'+esc(T("pf.photoDel"))+'</button>':'')+
+      '<button class="wbtn" type="button" data-wp="save" style="margin-top:12px">'+(P.msg?'✓ '+esc(T("pf.saved")):esc(T("pf.save")))+'</button></div>'+
+      '<p class="whint">'+esc(T("pf.hint"))+'</p>'+
+      '<h2 style="display:flex;align-items:center;justify-content:space-between">'+esc(T("pf.news"))+'<button type="button" data-wp="reload" style="border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#E8B04B;width:34px;height:34px;border-radius:50%;font-size:16px">↻</button></h2>'+
+      '<div id="wpNews">'+newsHTML()+'</div></div>';
+  }
+  function newsHTML(){
+    if(!news.length) return '<div class="wcard" style="text-align:center;color:rgba(255,255,255,.6)">'+esc(T("pf.noNews"))+'</div>';
+    return news.map(function(n){ return '<div class="wcard np wnews">'+(n.img?'<img src="'+esc(n.img)+'" alt="" loading="lazy">':'')+'<div class="tx">'+(n.title?'<b>'+esc(n.title)+'</b>':'')+(n.text?'<p>'+esc(n.text)+'</p>':'')+(n.at?'<small>📅 '+esc(new Date(n.at).toLocaleDateString(S.lang==="uz"?"uz-Latn-UZ":S.lang,{day:"numeric",month:"long",year:"numeric"}))+'</small>':'')+'</div></div>'; }).join("");
+  }
+  function pick(d,k){ var v=d[k+"_"+S.lang]; return (S.lang!=="uz"&&v)?v:(d[k]||""); }
+  async function loadNews(){
+    try{
+      var r=await fetch(SB_URL+"/rest/v1/uno_docs?select=path,data&path=like.news/*",{headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY},cache:"no-store"});
+      if(!r.ok) return; var rows=await r.json();
+      news=rows.filter(function(x){ return x.data && !x.data.hidden; }).map(function(x){ var d=x.data; return {id:x.path, title:pick(d,"title"), text:pick(d,"text"), img:d.imgId?blob(d.imgId):"", at:Date.parse(d.at||"")||0}; })
+        .sort(function(a,b){ return b.at-a.at; });
+      newsKey=news.length?news[0].id+"|"+news[0].at:"";
+      if(tab===3){ store("uno_newsSeen",newsKey); var box=$("wpNews"); if(box) box.innerHTML=newsHTML(); }
+      renderBar();
+    }catch(_){}
+  }
+  function unseen(){ return !!newsKey && store("uno_newsSeen")!==newsKey; }
+  function syncCustomer(withPhoto){
+    var p=profile(); if(!ready(p.name,p.phone)) return;
+    var a={p_device:device(),p_name:p.name,p_phone:p.phone,p_platform:platform(),p_lang:S.lang};
+    if(withPhoto) a.p_photo=photo()||"";
+    sbRpc("uno_customer_save",a).then(function(r){ if(!r.error) store("uno_custSynced","1"); });
+  }
+  function squarePhoto(file){
+    return new Promise(function(res,rej){
+      var url=URL.createObjectURL(file), im=new Image();
+      im.onload=function(){ var side=360, s=Math.min(im.naturalWidth,im.naturalHeight), c=document.createElement("canvas"); c.width=c.height=side;
+        c.getContext("2d").drawImage(im,(im.naturalWidth-s)/2,(im.naturalHeight-s)/2,s,s,0,0,side,side); URL.revokeObjectURL(url); res(c.toDataURL("image/jpeg",.72)); };
+      im.onerror=function(){ URL.revokeObjectURL(url); rej(new Error("img")); }; im.src=url; });
+  }
+  /* ---------- events ---------- */
+  function onClick(e){
+    var b=e.target.closest("[data-wb],[data-wbdel],[data-wa],[data-wp]"); if(!b || !b.closest(".wpage")) return;
+    if(b.dataset.wb==="+"||b.dataset.wb==="-"){ B.guests=Math.max(1,Math.min(350,B.guests+(b.dataset.wb==="+"?1:-1))); $("wbG").textContent=B.guests; return; }
+    if(b.dataset.wb==="send"){ sendBook(); return; }
+    if(b.dataset.wbdel){ mine=mine.filter(function(x){ return String(x.id)!==b.dataset.wbdel; }); store("uno_bookings",JSON.stringify(mine)); renderBook(); return; }
+    if(b.dataset.wa==="share"){ var u=location.origin+location.pathname; if(navigator.share) navigator.share({title:"UNO Airways",text:T("share.text"),url:u}).catch(function(){}); else { try{ navigator.clipboard.writeText(T("share.text")+" "+u); }catch(_){} } return; }
+    if(b.dataset.wp==="save"){ var n=$("wpName").value.trim(), ph=$("wpPhone").value.trim(); if(!ready(n,ph)) { $("wpName").focus(); return; }
+      saveProfile(n,ph); syncCustomer(true); P.msg=1; renderProfile(); setTimeout(function(){ P.msg=null; if(tab===3) renderProfile(); },2000); return; }
+    if(b.dataset.wp==="delphoto"){ store("uno_photo",null); syncCustomer(true); renderProfile(); return; }
+    if(b.dataset.wp==="reload"){ loadNews(); return; }
+  }
+  function onChange(e){
+    if(e.target.id==="wpPhoto" && e.target.files && e.target.files[0]){
+      squarePhoto(e.target.files[0]).then(function(d){ var n=$("wpName").value.trim(), ph=$("wpPhone").value.trim(); store("uno_photo",d); if(ready(n,ph)) saveProfile(n,ph); syncCustomer(true); renderProfile(); }).catch(function(){});
+    }
+  }
+  return {
+    sync:function(){
+      var on=document.documentElement.classList.contains("web-tabs");
+      if(on){ build(); renderBar(); if(!timer){ loadNews(); timer=setInterval(function(){ if(!document.hidden) loadNews(); },60000);
+          if(!store("uno_custSynced")) syncCustomer(true); } }
+      else if(built){ if(tab!==0) go(0); }
+    },
+    relang:function(){ if(!built) return; renderBar(); if(tab===1) keepRender(); else if(tab===2) renderAbout(); else if(tab===3){ renderProfile(); loadNews(); } },
+    menu:function(){ if(built && tab!==0) go(0); }
+  };
+})();
+try{ appFallback(); fit(); }catch(_){}
 function setLang(l){
   if(!T[l]||l===S.lang) return;
   S.lang=l; try{ localStorage.setItem("uno_lang",l); }catch(_){}
-  tellAppLang();
+  tellAppLang(); try{ WT.relang(); }catch(_){}
   applyStatic(); renderTabs();
   var keep=S.idx; buildSlides(); S.idx=keep; layout(true);
   refreshCartUI(); if(S.query) renderResults(); if(S.detail) renderDetail(true);
@@ -2327,7 +2570,7 @@ function setTableNo(v){ try{ v=String(v||"").trim().slice(0,12); if(v){ localSto
   var APK = "https://github.com/spesmuz/uno-menu/releases/download/apk/UNO-Airways.apk";
   function skip(){
     if(standalone || window.UnoKiosk) return true;                          /* already an app / restaurant tablet */
-    if(ios) return true;                                                    /* iPhone: no install offer for now (Android keeps the APK offer) */
+    if(/UNOAirwaysApp/.test(navigator.userAgent||"")) return true;          /* inside our iPhone app */
     try{ if(localStorage.getItem("uno_device_mode")==="att") return true;
          /* every QR scan offers the app again (unless it is installed); otherwise "Later" waits a day */
          if(window.__fromQR || /[?&]install=1/.test(location.search)) return false;
@@ -2347,7 +2590,12 @@ function setTableNo(v){ try{ v=String(v||"").trim().slice(0,12); if(v){ localSto
     bar=document.createElement("div"); bar.id="instBar"; bar.setAttribute("role","dialog");
     var SHARE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
     var PLUS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg>';
-    if(iosAny && !deferred){
+    if(iosAny){
+      /* iPhone: the UNO app is on the App Store */
+      bar.innerHTML='<img src="icons/menu-192.png" alt=""><div class="tx"><b>'+esc(t("instApkT"))+'</b><small>App Store</small></div>'+
+        '<div class="bt"><a class="go apk" href="https://apps.apple.com/app/id6837930683" target="_blank" rel="noopener">'+esc(t("instApk"))+'</a><button class="no" type="button">'+esc(t("instLater"))+'</button></div>';
+      bar.querySelector(".apk").onclick=function(){ try{ SFX.select(); }catch(_){} setTimeout(function(){ hide(true); },1200); };
+    } else if(false){
       /* iPhone: Apple allows no install button — two big picture steps instead of text */
       bar.className="iosc"+(iosOther?" top":"");
       bar.innerHTML='<div class="ih"><img src="icons/menu-192.png" alt=""><b>'+esc(t("instIosT"))+'</b><button class="x" type="button" aria-label="'+esc(t("instLater"))+'">×</button></div>'+
