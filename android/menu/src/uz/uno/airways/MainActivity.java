@@ -264,7 +264,36 @@ public class MainActivity extends Activity {
         return b.append(']').toString();
       } catch (Exception e) { return "[]"; }
     }
+    /* the page asks to open a link outside the app (tel:, maps, Instagram...) */
+    @JavascriptInterface public void openUrl(final String u) {
+      if (u == null || kioskOn()) return;
+      runOnUiThread(new Runnable() { public void run() { openExternal(u); } });
+    }
+    /* Android share sheet (WebView has no navigator.share) */
+    @JavascriptInterface public void share(final String text) {
+      if (text == null || kioskOn()) return;
+      runOnUiThread(new Runnable() { public void run() {
+        try {
+          Intent i = new Intent(Intent.ACTION_SEND); i.setType("text/plain"); i.putExtra(Intent.EXTRA_TEXT, text);
+          startActivity(Intent.createChooser(i, "UNO Airways"));
+        } catch (Exception e) { }
+      } });
+    }
     @JavascriptInterface public void retry() { runOnUiThread(new Runnable() { public void run() { failed = false; web.loadUrl(URL); } }); }
+  }
+
+  void openExternal(String u) {
+    try {
+      Uri uri = Uri.parse(u);
+      String sc = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase();
+      Intent i;
+      if ("tel".equals(sc)) i = new Intent(Intent.ACTION_DIAL, uri);
+      else if ("intent".equals(sc)) { i = Intent.parseUri(u, Intent.URI_INTENT_SCHEME); i.addCategory(Intent.CATEGORY_BROWSABLE); i.setComponent(null); i.setSelector(null); }
+      else if (sc.equals("http") || sc.equals("https") || sc.equals("mailto") || sc.equals("geo") || sc.equals("sms") || sc.equals("tg") || sc.equals("whatsapp")) i = new Intent(Intent.ACTION_VIEW, uri);
+      else return;
+      i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+      startActivity(i);
+    } catch (Exception e) { }
   }
 
   void immersive() {
@@ -322,7 +351,10 @@ public class MainActivity extends Activity {
       }
       @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
         String u = r.getUrl().toString();
-        return !(u.startsWith(URL) || u.startsWith("about:"));
+        if (u.startsWith(URL) || u.startsWith("about:")) return false;
+        /* call, map, Instagram, Telegram...: open in the phone's own app (never while the tablet is locked in kiosk mode) */
+        if (!kioskOn()) openExternal(u);
+        return true;
       }
     });
 

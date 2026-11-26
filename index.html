@@ -1530,7 +1530,9 @@ var WT=(function(){
     if(b.dataset.wb==="+"||b.dataset.wb==="-"){ B.guests=Math.max(1,Math.min(350,B.guests+(b.dataset.wb==="+"?1:-1))); $("wbG").textContent=B.guests; return; }
     if(b.dataset.wb==="send"){ sendBook(); return; }
     if(b.dataset.wbdel){ mine=mine.filter(function(x){ return String(x.id)!==b.dataset.wbdel; }); store("uno_bookings",JSON.stringify(mine)); renderBook(); return; }
-    if(b.dataset.wa==="share"){ var u=location.origin+location.pathname; if(navigator.share) navigator.share({title:"UNO Airways",text:T("share.text"),url:u}).catch(function(){}); else { try{ navigator.clipboard.writeText(T("share.text")+" "+u); }catch(_){} } return; }
+    if(b.dataset.wa==="share"){ var u=location.origin+location.pathname;
+      if(window.UnoKiosk && UnoKiosk.share){ try{ UnoKiosk.share(T("share.text")+" "+u); return; }catch(_){} }
+      if(navigator.share) navigator.share({title:"UNO Airways",text:T("share.text"),url:u}).catch(function(){}); else { try{ navigator.clipboard.writeText(T("share.text")+" "+u); }catch(_){} } return; }
     if(b.dataset.wp==="save"){ var n=$("wpName").value.trim(), ph=$("wpPhone").value.trim(); if(!ready(n,ph)) { $("wpName").focus(); return; }
       saveProfile(n,ph); syncCustomer(true); P.msg=1; renderProfile(); setTimeout(function(){ P.msg=null; if(tab===3) renderProfile(); },2000); return; }
     if(b.dataset.wp==="delphoto"){ store("uno_photo",null); syncCustomer(true); renderProfile(); return; }
