@@ -131,6 +131,7 @@ public class MainActivity extends Activity {
   /* called from the admin panel (only after admin login) */
   public class Kiosk {
     @JavascriptInterface public boolean isApp() { return true; }
+    @JavascriptInterface public String appVersion() { try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception e) { return ""; } }
     @JavascriptInterface public String mode() { return !kioskOn() ? "off" : owner() ? "owner" : "pin"; }
     @JavascriptInterface public boolean kioskOn() { return MainActivity.this.kioskOn(); }
     @JavascriptInterface public void setKiosk(final boolean on) { runOnUiThread(new Runnable() { public void run() { setKioskNow(on); } }); }
@@ -293,7 +294,9 @@ public class MainActivity extends Activity {
       else return;
       i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
       startActivity(i);
-    } catch (Exception e) { }
+    } catch (Exception e) {
+      try { android.widget.Toast.makeText(this, "Ochib bo'lmadi: " + u, android.widget.Toast.LENGTH_LONG).show(); } catch (Exception t) { }
+    }
   }
 
   void immersive() {
