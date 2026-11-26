@@ -138,6 +138,30 @@ public class MainActivity extends Activity {
   /* called from the admin panel (only after admin login) */
   public class Kiosk {
     @JavascriptInterface public boolean isApp() { return true; }
+    /* booking reminder two hours before (as in the iPhone app) */
+    @JavascriptInterface public String remind(String id, String atMs, String title, String body) {
+      try {
+        if (id == null || !id.matches("[A-Za-z0-9_.-]{1,60}")) return "err";
+        long at = Long.parseLong(atMs);
+        if (at < System.currentTimeMillis() + 60000) return "past";
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS") != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+          runOnUiThread(new Runnable() { public void run() { requestPermissions(new String[] { "android.permission.POST_NOTIFICATIONS" }, 21); } });
+        }
+        RemindReceiver.schedule(MainActivity.this, "b" + id, at, title == null ? "UNO Airways" : title, body == null ? "" : body);
+        return "ok";
+      } catch (Exception e) { return "err"; }
+    }
+    @JavascriptInterface public void cancelRemind(String id) { if (id != null) RemindReceiver.cancel(MainActivity.this, "b" + id); }
+    /* light tap feedback, like the iPhone app: tick (tabs), ok (sent / saved), err (failed) */
+    @JavascriptInterface public void haptic(final String kind) {
+      runOnUiThread(new Runnable() { public void run() {
+        int k = android.view.HapticFeedbackConstants.VIRTUAL_KEY;
+        if ("ok".equals(kind)) k = Build.VERSION.SDK_INT >= 30 ? android.view.HapticFeedbackConstants.CONFIRM : android.view.HapticFeedbackConstants.VIRTUAL_KEY;
+        else if ("err".equals(kind)) k = Build.VERSION.SDK_INT >= 30 ? android.view.HapticFeedbackConstants.REJECT : android.view.HapticFeedbackConstants.LONG_PRESS;
+        else if (Build.VERSION.SDK_INT >= 27) k = android.view.HapticFeedbackConstants.KEYBOARD_TAP;
+        try { web.performHapticFeedback(k); } catch (Exception e) { }
+      } });
+    }
     @JavascriptInterface public String appVersion() { try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception e) { return ""; } }
     @JavascriptInterface public String mode() { return !kioskOn() ? "off" : owner() ? "owner" : "pin"; }
     @JavascriptInterface public boolean kioskOn() { return MainActivity.this.kioskOn(); }

@@ -1,6 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="uz.uno.airways" android:versionCode="__VERSION__" android:versionName="1.__VERSION__">
   <uses-sdk android:minSdkVersion="23" android:targetSdkVersion="35"/>
   <uses-permission android:name="android.permission.INTERNET"/>
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
   <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
   <uses-permission android:name="android.permission.CAMERA"/>
@@ -31,6 +32,13 @@
         <category android:name="android.intent.category.DEFAULT"/>
       </intent-filter>
     </activity-alias>
+    <!-- booking reminders (2 hours before), restored after a restart -->
+    <receiver android:name=".RemindReceiver" android:exported="true">
+      <intent-filter>
+        <action android:name="android.intent.action.BOOT_COMPLETED"/>
+        <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+      </intent-filter>
+    </receiver>
     <receiver android:name=".AdminReceiver" android:exported="true" android:permission="android.permission.BIND_DEVICE_ADMIN">
       <meta-data android:name="android.app.device_admin" android:resource="@xml/device_admin"/>
       <intent-filter>

@@ -1007,6 +1007,10 @@ html.web-tabs.wt-pg #menuView *{animation-play-state:paused!important}
   box-shadow:0 16px 34px rgba(0,0,0,.35)}
 .wcard.np{padding:0;overflow:hidden}
 .wfld{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}.wfld:last-child{margin-bottom:0}
+.wrem{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 2px 0;margin-top:4px;border-top:1px solid rgba(255,255,255,.08);font:600 15px var(--sans,system-ui);color:#fff}
+.wrem input{appearance:none;-webkit-appearance:none;width:50px;height:30px;border-radius:15px;background:rgba(255,255,255,.18);position:relative;flex:none;transition:background .2s;margin:0}
+.wrem input::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 2px 4px rgba(0,0,0,.3)}
+.wrem input:checked{background:#3FBF7F}.wrem input:checked::after{transform:translateX(20px)}
 .wfld>span{font:600 13px/1.2 var(--sans,system-ui);color:rgba(255,255,255,.62)}
 .wfld input,.wfld select,.wfld textarea{height:46px;border-radius:13px;border:1px solid rgba(255,255,255,.16);background:rgba(2,8,20,.55);color:#fff;padding:0 14px;font:500 16px var(--sans,system-ui);width:100%;box-sizing:border-box;color-scheme:dark}
 .wfld textarea{height:auto;min-height:70px;padding:12px 14px;resize:vertical}
@@ -1434,7 +1438,7 @@ var WT=(function(){
   }
   function go(i){
     if(i===tab && i!==0){ var pg=document.querySelector(".wpage.on"); if(pg) pg.scrollTo({top:0,behavior:"smooth"}); return; }
-    tab=i; try{ SFX.select(); }catch(_){}
+    tab=i; hap("tick"); try{ SFX.select(); }catch(_){}
     if(tab===1) renderBook(); else if(tab===2) renderAbout(); else if(tab===3){ renderProfile(); loadNews(); }
     /* the new page is filled first, then shown in the same frame as the old one goes */
     ["book","about","profile"].forEach(function(id,k){ var p=$("wp-"+id); if(p) p.classList.toggle("on",tab===k+1); });
@@ -1448,7 +1452,9 @@ var WT=(function(){
   function defDate(){ var d=new Date(Date.now()+36e5); var m=d.getMinutes(); if(m===0){} else if(m<=30) d.setMinutes(30); else { d.setHours(d.getHours()+1); d.setMinutes(0); } d.setSeconds(0,0); return d; }
   function local(d){ var z=function(n){ return ("0"+n).slice(-2); }; return d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate())+"T"+z(d.getHours())+":"+z(d.getMinutes()); }
   function fmtDT(ms){ try{ return new Date(ms).toLocaleString(S.lang==="uz"?"uz-Latn-UZ":S.lang,{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}); }catch(_){ return new Date(ms).toLocaleString(); } }
-  var B={guests:2,msg:null,busy:false};
+  var B={guests:2,msg:null,busy:false,rem:store("uno_remind")!=="0"};
+  function canRemind(){ return !!(window.UnoKiosk && UnoKiosk.remind); }
+  function hap(k){ try{ if(window.UnoKiosk && UnoKiosk.haptic) UnoKiosk.haptic(k||"tick"); }catch(_){} }
   function renderBook(){
     var p=profile(), pg=$("wp-book"), up=mine.filter(function(b){ return b.at>Date.now()-3*36e5; }).sort(function(a,b){ return a.at-b.at; });
     pg.innerHTML='<div class="wrap"><h1>'+esc(T("book.title"))+'</h1>'+
@@ -1458,7 +1464,8 @@ var WT=(function(){
       '<div class="wfld"><span>'+esc(T("book.guests"))+'</span><div class="wstep"><button type="button" data-wb="-">−</button><b id="wbG">'+B.guests+'</b><button type="button" data-wb="+">+</button></div></div>'+
       '<div class="wrow2"><label class="wfld"><span>'+esc(T("book.zone"))+'</span><select id="wbZone">'+ZONES.map(function(z,i){ return '<option value="'+i+'">'+esc(T(z))+'</option>'; }).join("")+'</select></label>'+
       '<label class="wfld"><span>'+esc(T("book.occasion"))+'</span><select id="wbOcc">'+OCC.map(function(z,i){ return '<option value="'+i+'">'+esc(T(z))+'</option>'; }).join("")+'</select></label></div>'+
-      '<label class="wfld"><span>'+esc(T("book.note"))+'</span><textarea id="wbNote" rows="2"></textarea></label></div>'+
+      '<label class="wfld"><span>'+esc(T("book.note"))+'</span><textarea id="wbNote" rows="2"></textarea></label>'+
+      (canRemind()?'<label class="wrem"><span>🔔 '+esc(T("book.remind"))+'</span><input type="checkbox" id="wbRem"'+(B.rem?' checked':'')+'></label>':'')+'</div>'+
       (B.msg?'<div class="wmsg '+B.msg[0]+'">'+esc(B.msg[1])+'</div>':'')+
       '<button class="wbtn" type="button" data-wb="send"'+(B.busy?' disabled':'')+'>'+(B.busy?'…':'✓ '+esc(T("book.send")))+'</button>'+
       '<h2>'+esc(T("book.call"))+'</h2><a class="wbtn ghost" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none" href="tel:'+PHONE+'">'+IC.phone.replace('<svg','<svg width="18" height="18"')+' '+PHONE_P+'</a><p class="whint">'+esc(T("book.call24"))+'</p>'+
@@ -1468,16 +1475,19 @@ var WT=(function(){
   async function sendBook(){
     var nm=$("wbName").value.trim(), ph=$("wbPhone").value.trim(), at=new Date($("wbAt").value), zi=+$("wbZone").value, oi=+$("wbOcc").value, note=$("wbNote").value.trim();
     var err=nm.length<2?"book.err.name":ph.replace(/\D/g,"").length<9?"book.err.phone":(!(at>new Date()))?"book.err.time":null;
-    if(err){ B.msg=["err",T(err)]; keepRender(); return; }
+    if(err){ hap("err"); B.msg=["err",T(err)]; keepRender(); return; }
     B.busy=true; B.msg=null; keepRender();
     saveProfile(nm,ph);
     var r=await sbRpc("uno_booking_create",{p_name:nm,p_phone:ph,p_at:at.toISOString(),p_guests:B.guests,p_zone:zi===0?null:D.uz[ZONES[zi]],p_occasion:D.uz[OCC[oi]],p_note:note,p_source:source()});
     B.busy=false;
-    if(r.error){ var m=r.error.message||""; B.msg=["err",T(/bad_phone/.test(m)?"book.err.phone":/bad_name/.test(m)?"book.err.name":/bad_time/.test(m)?"book.err.time":/too_many/.test(m)?"book.err.many":"book.err")]; }
-    else { mine.push({id:(r.data&&r.data.id)||Date.now(), at:at.getTime(), guests:B.guests, zone:ZONES[zi], occasion:OCC[oi]}); store("uno_bookings",JSON.stringify(mine.slice(-30))); B.msg=["ok",T("book.ok.t")+" "+T("book.ok")]; try{ SFX.ok&&SFX.ok(); }catch(_){} }
+    var remEl=$("wbRem"); if(remEl){ B.rem=remEl.checked; store("uno_remind",B.rem?"1":"0"); }
+    if(r.error){ hap("err"); var m=r.error.message||""; B.msg=["err",T(/bad_phone/.test(m)?"book.err.phone":/bad_name/.test(m)?"book.err.name":/bad_time/.test(m)?"book.err.time":/too_many/.test(m)?"book.err.many":"book.err")]; }
+    else { hap("ok"); var bid=(r.data&&r.data.id)||Date.now();
+      if(B.rem && canRemind()){ try{ var hm=("0"+at.getHours()).slice(-2)+":"+("0"+at.getMinutes()).slice(-2); UnoKiosk.remind(String(bid), String(at.getTime()-2*36e5), T("remind.title"), T("remind.body").replace("%@",hm)); }catch(_){} }
+      mine.push({id:bid, at:at.getTime(), guests:B.guests, zone:ZONES[zi], occasion:OCC[oi]}); store("uno_bookings",JSON.stringify(mine.slice(-30))); B.msg=["ok",T("book.ok.t")+" "+T("book.ok")]; try{ SFX.ok&&SFX.ok(); }catch(_){} }
     renderBook();
   }
-  function keepRender(){ var keep={}; ["wbName","wbPhone","wbAt","wbZone","wbOcc","wbNote"].forEach(function(k){ var el=$(k); if(el) keep[k]=el.value; }); renderBook(); Object.keys(keep).forEach(function(k){ var el=$(k); if(el) el.value=keep[k]; }); }
+  function keepRender(){ var rm=$("wbRem"); if(rm) B.rem=rm.checked; var keep={}; ["wbName","wbPhone","wbAt","wbZone","wbOcc","wbNote"].forEach(function(k){ var el=$(k); if(el) keep[k]=el.value; }); renderBook(); Object.keys(keep).forEach(function(k){ var el=$(k); if(el) el.value=keep[k]; }); }
   /* ---------- UNO (about) ---------- */
   function renderAbout(){
     var logo=S.settings&&S.settings.logoId?blob(S.settings.logoId):"icons/menu-512.png";
@@ -1560,12 +1570,12 @@ var WT=(function(){
     var b=e.target.closest("[data-wb],[data-wbdel],[data-wa],[data-wp]"); if(!b || !b.closest(".wpage")) return;
     if(b.dataset.wb==="+"||b.dataset.wb==="-"){ B.guests=Math.max(1,Math.min(350,B.guests+(b.dataset.wb==="+"?1:-1))); $("wbG").textContent=B.guests; return; }
     if(b.dataset.wb==="send"){ sendBook(); return; }
-    if(b.dataset.wbdel){ mine=mine.filter(function(x){ return String(x.id)!==b.dataset.wbdel; }); store("uno_bookings",JSON.stringify(mine)); renderBook(); return; }
+    if(b.dataset.wbdel){ try{ if(window.UnoKiosk&&UnoKiosk.cancelRemind) UnoKiosk.cancelRemind(String(b.dataset.wbdel)); }catch(_){} mine=mine.filter(function(x){ return String(x.id)!==b.dataset.wbdel; }); store("uno_bookings",JSON.stringify(mine)); renderBook(); return; }
     if(b.dataset.wa==="share"){ var u=location.origin+location.pathname;
       if(window.UnoKiosk && UnoKiosk.share){ try{ UnoKiosk.share(T("share.text")+" "+u); return; }catch(_){} }
       if(navigator.share) navigator.share({title:"UNO Airways",text:T("share.text"),url:u}).catch(function(){}); else { try{ navigator.clipboard.writeText(T("share.text")+" "+u).catch(function(){}); }catch(_){} } return; }
     if(b.dataset.wp==="save"){ var n=$("wpName").value.trim(), ph=$("wpPhone").value.trim(); if(!ready(n,ph)) { $("wpName").focus(); return; }
-      saveProfile(n,ph); syncCustomer(true); P.msg=1; renderProfile(); setTimeout(function(){ P.msg=null; if(tab===3) renderProfile(); },2000); return; }
+      hap("ok"); saveProfile(n,ph); syncCustomer(true); P.msg=1; renderProfile(); setTimeout(function(){ P.msg=null; if(tab===3) renderProfile(); },2000); return; }
     if(b.dataset.wp==="delphoto"){ store("uno_photo",null); syncCustomer(true); renderProfile(); return; }
     if(b.dataset.wp==="reload"){ loadNews(); return; }
   }
