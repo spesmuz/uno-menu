@@ -4758,7 +4758,9 @@ function agFit(){
   /* a fixed panel lives in the layout viewport; the visible part (above the keyboard) starts at vv.offsetTop */
   var kb=vv.height < window.innerHeight-120;
   p.classList.toggle("kb",kb);
-  if(kb){ p.style.setProperty("top",Math.max(0,vv.offsetTop)+"px","important"); p.style.setProperty("height",Math.round(vv.height)+"px","important"); p.style.setProperty("bottom","auto","important"); agScroll(); }
+  /* inside the iPhone app the visible area is also short by the app's tab bar, which the keyboard already covers */
+  var extra=0; if(document.documentElement.classList.contains("in-app")){ extra=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--appB"))||0; }
+  if(kb){ p.style.setProperty("top",Math.max(0,vv.offsetTop)+"px","important"); p.style.setProperty("height",Math.round(vv.height+extra)+"px","important"); p.style.setProperty("bottom","auto","important"); agScroll(); }
   else { p.style.top=""; p.style.height=""; p.style.bottom=""; }
 }
 function agFitSoon(){ agFit(); requestAnimationFrame(agFit); setTimeout(agFit,250); }
