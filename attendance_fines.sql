@@ -54,6 +54,7 @@ begin
     'window', public.uno_att_cfg('window','300')::int,
     'fine_hour', public.uno_att_cfg('fine_hour','50000')::int,
     'fine_absent', public.uno_att_cfg('fine_absent','200000')::int,
+    'since', public.uno_priv('att_fines_since'),
     'fines', true);
 end $$;
 
@@ -69,6 +70,19 @@ begin
 end $$;
 revoke all on function public.uno_att_set_fines(int,int,int) from public, anon;
 grant execute on function public.uno_att_set_fines(int,int,int) to authenticated;
+
+-- ===== admin: davomatni "yangidan boshlash" — shu paytdan oldingi smenalar uchun "kelmadi" jarimasi yozilmaydi =====
+create or replace function public.uno_att_restart() returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare t text := to_char(now() at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"');
+begin
+  if not public.uno_is_admin() then raise exception 'not_admin' using errcode = '42501'; end if;
+  insert into public.uno_private(key, value) values ('att_fines_since', t) on conflict (key) do update set value = excluded.value;
+  delete from public.uno_att_alerts;
+  return jsonb_build_object('ok', true, 'since', t);
+end $$;
+revoke all on function public.uno_att_restart() from public, anon;
+grant execute on function public.uno_att_restart() to authenticated;
 
 -- ===== admin: jarimani hal qilish =====
 create or replace function public.uno_att_fine_decide(p_id bigint, p_status text) returns jsonb

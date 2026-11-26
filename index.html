@@ -4324,9 +4324,9 @@ Att.calc=function(f,t,all){
     /* each "out" belongs to the day of the "in" before it */
     var cur=null; mine.forEach(function(r){ if(r.kind==="in") cur=r; else if(cur && byDay[cur._day]) byDay[cur._day].outs.push(r); });
     var res={s:s,sched:0,came:0,absent:0,lateN:0,lateSum:0,earlyN:0,worked:0,days:[]};
-    var created=attDay(s.created_at||Date.now());
+    var created=attDay(s.created_at||Date.now()), since=Att.cfg&&Att.cfg.since?attDay(Date.parse(Att.cfg.since)):"0000";
     for(var k=f;k<=t && k<=today;k=attAddDays(k,1)){
-      var sc=Att.sched(s,k) && k>=created, d=byDay[k], row={key:k,sched:sc};
+      var sc=Att.sched(s,k) && k>=created && k>=since, d=byDay[k], row={key:k,sched:sc};
       if(sc) res.sched++;
       if(d && d.ins.length){
         res.came++; var fi=d.ins[0]; row.inAt=attHM(fi.at); row.late=fi.late_min;
@@ -5062,10 +5062,14 @@ async function agRunWrite2(c){
   if(c.name==="delete_fines"||c.name==="decide_fines"){
     var fr=await agFineQuery(c.name==="delete_fines"&&a.all?{}:a,"id"); if(fr.error) return {ok:false,error:fr.error.message};
     var fids=(fr.data||[]).map(function(x){ return x.id; });
+    if(c.name==="delete_fines" && (a.all||!(a.from||a.to||a.staff_id||(a.fine_ids&&a.fine_ids.length)))){
+      /* starting from zero: shifts before now must not get "absent" fines again */
+      var rs=await S.sb.rpc("uno_att_restart"); if(rs.error) return {ok:false,error:/uno_att_restart|function/.test(rs.error.message)?"Avval attendance_fines.sql ni Supabase'da qayta ishga tushiring":rs.error.message};
+      fr=await agFineQuery({},"id"); if(fr.error) return {ok:false,error:fr.error.message}; fids=(fr.data||[]).map(function(x){ return x.id; }); }
     if(c.name==="delete_fines"){ for(var q1=0;q1<fids.length;q1+=200){ r=await S.sb.from("uno_att_fines").delete().in("id",fids.slice(q1,q1+200)); if(r.error) return {ok:false,error:r.error.message}; } }
     else { if(["excused","confirmed","pending"].indexOf(a.status)<0) return {ok:false,error:"status noto'g'ri"};
       for(var q2=0;q2<fids.length;q2++){ r=await S.sb.rpc("uno_att_fine_decide",{p_id:fids[q2],p_status:a.status}); if(r.error) return {ok:false,error:r.error.message}; } }
-    try{ if(typeof Att!=="undefined"&&Att.el){ Att.load(); } }catch(_){}
+    try{ if(typeof Att!=="undefined"&&Att.el){ Promise.resolve(Att.load()).then(function(){ if(Att.rep&&Att.rep.data) Att.runRep(); }); } }catch(_){}
     return {ok:true, count:fids.length, label:(c.name==="delete_fines"?"Jarimalar o'chirildi: ":"Jarimalar yangilandi: ")+fids.length+" ta"};
   }
   if(c.name==="mark_fines_paid"){
@@ -5073,7 +5077,7 @@ async function agRunWrite2(c){
     if(a.fine_ids&&a.fine_ids.length){ for(var q3=0;q3<a.fine_ids.length;q3++){ r=await S.sb.rpc("uno_att_fine_paid",{p_id:a.fine_ids[q3],p_paid:paid}); if(r.error) return {ok:false,error:r.error.message}; n++; } }
     else if(a.staff_id && paid){ r=await S.sb.rpc("uno_att_pay_all",{p_staff:a.staff_id}); if(r.error) return {ok:false,error:r.error.message}; n=(r.data&&r.data.count)||0; total=(r.data&&r.data.paid)||0; }
     else return {ok:false,error:"qaysi jarima ekanini ayting"};
-    try{ if(typeof Att!=="undefined"&&Att.el){ Att.load(); } }catch(_){}
+    try{ if(typeof Att!=="undefined"&&Att.el){ Promise.resolve(Att.load()).then(function(){ if(Att.rep&&Att.rep.data) Att.runRep(); }); } }catch(_){}
     return {ok:true, count:n, paid_total:total, label:(paid?"To'landi deb belgilandi: ":"To'lov bekor qilindi: ")+n+" ta"+(total?" ("+fmt(total)+")":"")};
   }
   if(c.name==="set_attendance_rules"){
@@ -5097,7 +5101,7 @@ async function agRunWrite2(c){
       if(!pi.error&&pi.data&&pi.data[0]){ var w=Math.round((when-new Date(pi.data[0].at))/6e4); if(w>=0&&w<24*60) row2.worked_min=w; } }
     r=old2?await S.sb.from("uno_att").update(row2).eq("id",old2.id):await S.sb.from("uno_att").insert(Object.assign({notified:true,tg_text:"",manual:true},row2));
     if(r.error) return {ok:false,error:r.error.message};
-    try{ if(typeof Att!=="undefined"&&Att.el){ Att.load(); } }catch(_){}
+    try{ if(typeof Att!=="undefined"&&Att.el){ Promise.resolve(Att.load()).then(function(){ if(Att.rep&&Att.rep.data) Att.runRep(); }); } }catch(_){}
     return {ok:true, label:(old2?"Belgi o'zgartirildi: ":"Belgi qo'shildi: ")+p2.name+" — "+(kind==="in"?"keldi":"ketdi")+" "+attDay(when.getTime())+" "+attHM(when.getTime())};
   }
   if(c.name==="delete_attendance"){
@@ -5105,7 +5109,7 @@ async function agRunWrite2(c){
     var ids=(rows.data||[]).map(function(x){ return x.id; }), keys=(rows.data||[]).map(function(x){ return x.photo_key; }).filter(Boolean);
     for(var i=0;i<ids.length;i+=200){ r=await S.sb.from("uno_att").delete().in("id",ids.slice(i,i+200)); if(r.error) return {ok:false,error:r.error.message}; }
     for(var j=0;j<keys.length;j+=100){ try{ await S.sb.storage.from("uno-att").remove(keys.slice(j,j+100).map(function(k){ return /\./.test(k)?k:k+".jpg"; })); }catch(_){} }
-    try{ if(typeof Att!=="undefined"&&Att.el){ Att.load(); } }catch(_){}
+    try{ if(typeof Att!=="undefined"&&Att.el){ Promise.resolve(Att.load()).then(function(){ if(Att.rep&&Att.rep.data) Att.runRep(); }); } }catch(_){}
     return {ok:true, deleted:ids.length, label:"Davomat o'chirildi: "+ids.length+" ta belgi ("+(R.from===R.to?R.from:R.from+" — "+R.to)+")"};
   }
   if(c.name==="delete_reviews"){
@@ -5143,7 +5147,7 @@ async function agRunWrite2(c){
   if(c.name==="delete_staff"){
     if(!AG.staff) await agLoadStaff(); var p=(AG.staff||[]).find(function(x){ return x.id===a.staff_id; }); if(!p) return {ok:false,error:"xodim topilmadi"};
     r=await S.sb.from("uno_staff").delete().eq("id",p.id); if(r.error) return {ok:false,error:r.error.message};
-    await agLoadStaff(); try{ if(typeof Att!=="undefined"&&Att.el){ Att.load(); } }catch(_){}
+    await agLoadStaff(); try{ if(typeof Att!=="undefined"&&Att.el){ Promise.resolve(Att.load()).then(function(){ if(Att.rep&&Att.rep.data) Att.runRep(); }); } }catch(_){}
     return {ok:true, label:"Xodim o'chirildi: "+p.name};
   }
   if(c.name==="teach_guest_ai"){
