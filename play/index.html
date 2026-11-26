@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>UNO Airways — Google Play materiallari</title>
+<style>
+:root{color-scheme:dark}
+body{margin:0;background:#0b0905;color:#f1e6c8;font:16px/1.45 -apple-system,system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:22px;color:#E8C77A;margin:0 0 4px}
+h2{font-size:18px;color:#E8C77A;margin:28px 0 8px;border-top:1px solid #3a3020;padding-top:18px}
+.hint{color:#bfae86;font-size:14px;margin:0 0 10px}
+.box{background:#17130b;border:1px solid #3a3020;border-radius:12px;padding:12px;margin:8px 0}
+.box b{display:block;font-size:13px;color:#bfae86;margin-bottom:4px}
+.box pre{white-space:pre-wrap;margin:0;font:inherit}
+button{background:#E8C77A;color:#1a1408;border:0;border-radius:9px;padding:8px 14px;font:600 14px system-ui;margin-top:8px}
+button.ok{background:#5bbf6a}
+img{max-width:100%;border-radius:10px;display:block}
+.row{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}
+.row a{flex:0 0 42%}
+.tabs{display:flex;gap:6px;margin:8px 0}
+.tabs button{margin:0;background:#2a2314;color:#f1e6c8}
+.tabs button.on{background:#E8C77A;color:#1a1408}
+a{color:#E8C77A}
+</style></head><body><main>
+<h1>Google Play materiallari</h1>
+<p class="hint">Rasmni saqlash uchun ustiga bosib turing → «Saqlash». Matnni «Nusxa olish» bilan ko'chirib, Play Console'ga qo'ying.</p>
+
+<h2>1. Ikonka (512×512)</h2>
+<a href="icon-512.png"><img src="icon-512.png" style="width:160px"></a>
+
+<h2>2. Banner — «Графическое оформление» (1024×500)</h2>
+<div class="tabs" data-g="fg"></div>
+<a id="fgA" href="feature-ru.png"><img id="fgI" src="feature-ru.png"></a>
+
+<h2>3. Skrinshotlar — «Скриншоты телефона» (1080×1920)</h2>
+<p class="hint">Kamida 2 ta, ko'pi bilan 8 ta. Hammasini yuklasangiz bo'ladi.</p>
+<div class="tabs" data-g="sh"></div>
+<div class="row" id="shots"><p class="hint">Tayyorlanmoqda…</p></div>
+
+<h2>4. Matnlar</h2>
+<div class="tabs" data-g="tx"></div>
+<div id="texts"></div>
+
+<h2>5. Boshqa ma'lumotlar</h2>
+<div id="other"></div>
+</main>
+<script>
+var L=null, S={}, cur={fg:"ru",sh:"ru",tx:"ru"};
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function copyBox(label,val){return '<div class="box"><b>'+esc(label)+'</b><pre>'+esc(val)+'</pre><button data-c="'+esc(val)+'">Nusxa olish</button></div>'}
+document.addEventListener("click",function(e){var b=e.target.closest("button[data-c]"); if(!b)return;
+  var v=b.getAttribute("data-c"), done=function(){b.textContent="Nusxa olindi ✓";b.classList.add("ok");setTimeout(function(){b.textContent="Nusxa olish";b.classList.remove("ok")},1800)};
+  if(navigator.clipboard) navigator.clipboard.writeText(v).then(done,function(){fallback(v);done()}); else {fallback(v);done()}});
+function fallback(v){var t=document.createElement("textarea");t.value=v;document.body.appendChild(t);t.select();try{document.execCommand("copy")}catch(_){}t.remove()}
+function tabs(){document.querySelectorAll(".tabs").forEach(function(el){var g=el.dataset.g, ls=g==="fg"?["ru","uz"]:g==="sh"?Object.keys(S):Object.keys(L.langs);
+  el.innerHTML=ls.map(function(l){return '<button class="'+(cur[g]===l?"on":"")+'" data-l="'+l+'">'+l.toUpperCase()+'</button>'}).join("");
+  el.onclick=function(e){var b=e.target.closest("button[data-l]"); if(!b)return; cur[g]=b.dataset.l; render()}})}
+function render(){tabs();
+  document.getElementById("fgI").src=document.getElementById("fgA").href="feature-"+cur.fg+".png";
+  var sh=S[cur.sh]||[]; document.getElementById("shots").innerHTML=sh.length?sh.map(function(f){var u="shots/"+cur.sh+"/"+f; return '<a href="'+u+'"><img src="'+u+'" loading="lazy"></a>'}).join(""):'<p class="hint">Tayyorlanmoqda…</p>';
+  var t=L.langs[cur.tx]; document.getElementById("texts").innerHTML='<p class="hint">'+esc(t.name)+'</p>'+copyBox("Название приложения (30)",L.title)+copyBox("Краткое описание (80)",t.short)+copyBox("Полное описание (4000)",t.full);
+  document.getElementById("other").innerHTML=copyBox("Эл. почта",L.email)+copyBox("Телефон",L.phone)+copyBox("Веб-сайт",L.website)+copyBox("Политика конфиденциальности",L.privacy)+copyBox("Категория","Еда и напитки")}
+Promise.all([fetch("listing.json").then(function(r){return r.json()}),fetch("shots/list.json").then(function(r){return r.ok?r.json():{}}).catch(function(){return{}})])
+.then(function(a){L=a[0];S=a[1];if(!S.ru&&S.uz)cur.sh="uz";render()});
+</script></body></html>
