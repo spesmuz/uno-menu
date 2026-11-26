@@ -1,7 +1,7 @@
 -- UNO Airways — ofitsiantlar ROTATSIYASI (stollar taqsimoti), davomat bilan bog'langan
 -- Asos: 4 ta PDF (1/2-guruh × Biznes/Comfort). Guruhlar har kuni hudud almashadi, "Kun" har kuni +1.
 -- Har kuni 18:00 da: kelmagan ofitsiantning stollari shu hududdagi o'z guruhidagi kelganlarga
--- bittadan, eng yaqin (qo'shni) ofitsiantlardan boshlab bo'lib beriladi (faqat o'sha kun uchun; asosiy ro'yxat o'zgarmaydi),
+-- zanjir bo'yicha bo'lib beriladi: eng yaqin ofitsiantlar bittadan qo'shni stol oladi, hammaning stollari ketma-ket qoladi (faqat o'sha kun uchun; asosiy ro'yxat o'zgarmaydi),
 -- natija Telegram guruhga yuboriladi va terminalda ko'rinadi.
 -- Supabase → SQL Editor → shu faylni to'liq joylab Run. Qayta ishga tushirish xavfsiz.
 
@@ -46,9 +46,12 @@ $$;
 create or replace function public.uno_rot_plan(p_day date, p_final boolean default true) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 declare c jsonb; tz text := public.uno_tz(); g jsonb; gi int := 0; d int; n int; k int; zone text; slots jsonb; mem jsonb;
-        out_groups jsonb := '[]'::jsonb; rows jsonb; i int; j int; who int; nm text; sid text; pres boolean[]; unm boolean[];
-        h_m int[]; h_t int[]; l_m int[]; l_t text[]; e_m int[]; e_t text[]; ab_t int[]; ab_l text[]; slot text; tok text;
-        best_d int; best_c int; best_m int; best_i int; best_x int; ex int; dd int; cnt int; x int; t int; any_num boolean; ext text; mine text;
+        out_groups jsonb := '[]'::jsonb; rows jsonb; i int; j int; r int; who int; nm text; sid text; tok text; t int; x int;
+        pres boolean[]; unm boolean[]; bslot text[]; ownr int[];          -- ownr[slot] = a'zo
+        nums int[]; nums_m int[];                                          -- barcha raqamli stollar va asosiy egasi
+        pw int[]; pcnt int[]; pext int[];                                  -- kelgan "raqamli" ofitsiantlar (stol tartibida), soni, qo'shimcha
+        xcnt int[];                                                        -- har a'zoning qo'shimchalari soni (Balkon/Family uchun ham)
+        fin text[]; xtra text[]; lbl_absent text[]; amin int; acnt int; pos int; cand int[]; got boolean; mn int; mc int; idx int; tail text;
         st0 timestamptz; st1 timestamptz;
 begin
   select cfg into c from public.uno_rot where id = 1; if c is null then return null; end if;
@@ -58,65 +61,83 @@ begin
     mem := g->'members'; n := jsonb_array_length(mem);
     zone := case when ((d % 2 + 2) % 2 = 0) = (gi = coalesce((c->>'biznes_first')::int,0)) then 'Biznes' else 'Comfort' end;
     slots := g->'zones'->zone; k := ((d % n) + n) % n;
-    pres := '{}'; unm := '{}';
+    pres := '{}'; unm := '{}'; bslot := array_fill(''::text, array[n]); fin := array_fill(''::text, array[n]); xtra := array_fill(''::text, array[n]); xcnt := array_fill(0, array[n]);
     for j in 0..n-1 loop
       sid := c->'map'->>(mem->>j);
       unm := unm || (sid is null);
       pres := pres || (not p_final or sid is null or exists (select 1 from public.uno_att a where a.staff_id = sid::uuid and a.kind = 'in' and a.at >= st0 and a.at < st1));
     end loop;
     -- asosiy taqsimot: i-slot → (i-k) mod n-a'zo
-    h_m := '{}'; h_t := '{}'; l_m := '{}'; l_t := '{}'; e_m := '{}'; e_t := '{}'; ab_t := '{}'; ab_l := '{}';
+    nums := '{}'; nums_m := '{}'; lbl_absent := '{}';
     for i in 0..n-1 loop
-      who := ((i - k) % n + n) % n; slot := slots->>i;
-      if slot ~ '[[:alpha:]]' then
-        if pres[who+1] then l_m := l_m || who; l_t := l_t || slot; else ab_l := ab_l || slot; end if;
+      who := ((i - k) % n + n) % n; bslot[who+1] := slots->>i;
+      if (slots->>i) ~ '[[:alpha:]]' then
+        if pres[who+1] then fin[who+1] := slots->>i; else lbl_absent := lbl_absent || (slots->>i); end if;
       else
-        foreach tok in array string_to_array(slot, ',') loop
-          t := nullif(trim(tok),'')::int; if t is null then continue; end if;
-          if pres[who+1] then h_m := h_m || who; h_t := h_t || t; else ab_t := ab_t || t; end if;
+        foreach tok in array string_to_array(slots->>i, ',') loop
+          t := nullif(trim(tok),'')::int; if t is null then continue; end if; nums := nums || t; nums_m := nums_m || who;
         end loop;
       end if;
     end loop;
-    -- kelmaganlarning stollari BITTADAN turli ofitsiantlarga: avval hali qo'shimcha olmaganlarga, ular orasidan eng yaqin (qo'shni) stol egasiga;
-    -- hamma bittadan olgach — ikkinchi aylana. Masofa ofitsiantning o'z (asosiy) stollaridan hisoblanadi.
-    while coalesce(array_length(ab_t,1),0) > 0 loop
-      best_d := null; best_m := null; best_i := null; best_c := null; best_x := null;
-      for i in 1..array_length(ab_t,1) loop
-        for j in 0..n-1 loop
-          if not pres[j+1] then continue; end if;
-          ex := 0; for x in 1..coalesce(array_length(e_m,1),0) loop if e_m[x] = j then ex := ex + 1; end if; end loop;
-          dd := null; cnt := 0;
-          for x in 1..coalesce(array_length(h_m,1),0) loop if h_m[x] = j then dd := least(coalesce(dd, 99999), abs(h_t[x] - ab_t[i])); cnt := cnt + 1; end if; end loop;
-          for x in 1..coalesce(array_length(l_m,1),0) loop if l_m[x] = j then cnt := cnt + 1; end if; end loop;
-          dd := coalesce(dd, 1000);   -- faqat Balkon/Family/VIP egasi — oxirgi navbatda
-          if best_x is null or ex < best_x or (ex = best_x and (dd < best_d or (dd = best_d and cnt < best_c))) then
-            best_x := ex; best_d := dd; best_c := cnt; best_m := j; best_i := i; end if;
+    -- kelgan raqamli ofitsiantlar stol tartibida
+    select coalesce(array_agg(zm order by zmn), '{}') into pw from (
+      select nums_m[q] zm, min(nums[q]) zmn from generate_subscripts(nums, 1) q where pres[nums_m[q]+1] group by nums_m[q]) z;
+    pcnt := '{}'; pext := '{}';
+    foreach who in array pw loop
+      pcnt := pcnt || (select count(*)::int from generate_subscripts(nums,1) q where nums_m[q] = who); pext := pext || 0;
+    end loop;
+    -- har kelmagan ofitsiantning stollari: zanjir bo'yicha eng yaqinlarga bittadan (chap-1, o'ng-1, chap-2, o'ng-2 …)
+    if coalesce(array_length(pw,1),0) > 0 then
+      for who in 0..n-1 loop
+        if pres[who+1] then continue; end if;
+        select min(nums[q]), count(*) into amin, acnt from generate_subscripts(nums,1) q where nums_m[q] = who;
+        if coalesce(acnt,0) = 0 then continue; end if;
+        pos := 0; for x in 1..array_length(pw,1) loop
+          if (select min(nums[q]) from generate_subscripts(nums,1) q where nums_m[q] = pw[x]) < amin then pos := x; end if; end loop;
+        cand := '{}'; for x in 1..array_length(pw,1) loop
+          if pos - x + 1 >= 1 then cand := cand || (pos - x + 1); end if;
+          if pos + x <= array_length(pw,1) then cand := cand || (pos + x); end if; end loop;
+        for t in 1..acnt loop
+          r := 0; got := false;
+          while not got loop
+            foreach idx in array cand loop if pext[idx] = r then pext[idx] := pext[idx] + 1; got := true; exit; end if; end loop;
+            r := r + 1;
+          end loop;
         end loop;
       end loop;
-      if best_m is null then exit; end if;
-      e_m := e_m || best_m; e_t := e_t || ab_t[best_i]::text;
-      ab_t := ab_t[1:best_i-1] || ab_t[best_i+1:];
-    end loop;
-    -- Balkon / Family / Konferensiya-VIP: eng kam qo'shimcha (keyin eng kam stol) olgan kelgan ofitsiantga
-    for i in 1..coalesce(array_length(ab_l,1),0) loop
-      best_m := null; best_c := null; best_x := null;
-      for j in 0..n-1 loop
-        if not pres[j+1] then continue; end if;
-        ex := 0; for x in 1..coalesce(array_length(e_m,1),0) loop if e_m[x] = j then ex := ex + 1; end if; end loop;
-        cnt := 0; for x in 1..coalesce(array_length(h_m,1),0) loop if h_m[x] = j then cnt := cnt + 1; end if; end loop;
-        for x in 1..coalesce(array_length(l_m,1),0) loop if l_m[x] = j then cnt := cnt + 1; end if; end loop;
-        if best_x is null or ex < best_x or (ex = best_x and cnt < best_c) then best_x := ex; best_c := cnt; best_m := j; end if;
+      -- yangi ketma-ket bo'linish: har kim (asosiy soni + qo'shimcha) tadan, stol tartibida
+      x := 1;
+      for idx in 1..array_length(pw,1) loop
+        tail := '';
+        for r in 1..(pcnt[idx] + pext[idx]) loop
+          t := (select v from unnest(nums) v order by v offset x - 1 limit 1); x := x + 1;
+          if t is null then exit; end if;
+          tail := tail || case when tail = '' then '' else ',' end || t;
+          if not exists (select 1 from generate_subscripts(nums,1) q where nums_m[q] = pw[idx] and nums[q] = t) then
+            xtra[pw[idx]+1] := xtra[pw[idx]+1] || case when xtra[pw[idx]+1] = '' then '' else ',' end || t; end if;
+        end loop;
+        fin[pw[idx]+1] := tail; xcnt[pw[idx]+1] := pext[idx];
       end loop;
-      if best_m is not null then e_m := e_m || best_m; e_t := e_t || ab_l[i]; end if;
+    end if;
+    -- Balkon / Family / Konferensiya-VIP: eng kam qo'shimcha olgan kelgan ofitsiantga
+    foreach tok in array lbl_absent loop
+      mn := null; mc := null;
+      for j in 0..n-1 loop
+        if pres[j+1] and (mc is null or xcnt[j+1] < mc) then mc := xcnt[j+1]; mn := j; end if;
+      end loop;
+      if mn is not null then xcnt[mn+1] := xcnt[mn+1] + 1;
+        fin[mn+1] := fin[mn+1] || case when fin[mn+1] = '' then '' else ', ' end || tok;
+        xtra[mn+1] := xtra[mn+1] || case when xtra[mn+1] = '' then '' else ', ' end || tok; end if;
     end loop;
     rows := '[]'::jsonb;
     for i in 0..n-1 loop
       who := ((i - k) % n + n) % n; nm := mem->>who;
-      ext := null; for x in 1..coalesce(array_length(e_m,1),0) loop if e_m[x] = who then ext := coalesce(ext || ',', '') || e_t[x]; end if; end loop;
-      rows := rows || jsonb_build_object('name', nm, 'staff_id', c->'map'->>nm, 'base', slots->>i, 'present', pres[who+1], 'unmapped', unm[who+1], 'extra', ext);
+      rows := rows || jsonb_build_object('name', nm, 'staff_id', c->'map'->>nm, 'base', bslot[who+1], 'present', pres[who+1], 'unmapped', unm[who+1],
+        'tables', case when pres[who+1] then fin[who+1] end, 'extra', nullif(xtra[who+1], ''),
+        'changed', pres[who+1] and replace(fin[who+1],' ','') <> replace(bslot[who+1],' ',''));
     end loop;
     out_groups := out_groups || jsonb_build_object('group', g->>'name', 'zone', zone, 'kun', k + 1, 'days', n, 'rows', rows,
-      'left', (select coalesce(string_agg(v::text, ','), '') from unnest(ab_t) v) || case when coalesce(array_length(ab_l,1),0) > 0 and not exists(select 1 from unnest(pres) p where p) then ',' || array_to_string(ab_l, ',') else '' end);
+      'left', case when coalesce(array_length(pw,1),0) = 0 and exists (select 1 from unnest(pres) p where not p) then 'hech kim kelmadi' else '' end);
     gi := gi + 1;
   end loop;
   return jsonb_build_object('day', p_day, 'final', p_final, 'groups', out_groups);
@@ -131,7 +152,8 @@ begin
     txt := txt || E'\n\n<b>' || uno_esc2(g->>'group') || ' · ' || (g->>'zone') || ' · ' || (g->>'kun') || '-kun</b>';
     for r in select * from jsonb_array_elements(g->'rows') loop
       if (r->>'present')::boolean then
-        txt := txt || E'\n' || uno_esc2(r->>'name') || ' — ' || uno_esc2(r->>'base') || case when coalesce(r->>'extra','') <> '' then ' <b>+ ' || uno_esc2(r->>'extra') || '</b>' else '' end;
+        txt := txt || E'\n' || uno_esc2(r->>'name') || ' — ' || case when coalesce((r->>'changed')::boolean,false)
+          then '<b>' || uno_esc2(r->>'tables') || '</b> <i>(asosiy: ' || uno_esc2(r->>'base') || ')</i>' else uno_esc2(coalesce(r->>'tables', r->>'base')) end;
       else
         txt := txt || E'\n❌ <s>' || uno_esc2(r->>'name') || '</s> — kelmadi (' || uno_esc2(r->>'base') || ')';
       end if;
@@ -211,7 +233,7 @@ begin
   for g in select * from jsonb_array_elements(p->'groups') loop
     for r in select * from jsonb_array_elements(g->'rows') loop
       if r->>'staff_id' = p_staff::text then
-        return (g->>'zone') || ' · stollar: ' || (r->>'base') || coalesce(' + ' || (r->>'extra'), '');
+        return (g->>'zone') || ' · stollar: ' || coalesce(r->>'tables', r->>'base');
       end if;
     end loop;
   end loop;

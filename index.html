@@ -4177,8 +4177,9 @@ Att.rotHTML=function(){
   if(isToday) h+='<div class="a-row" style="margin:6px 0 12px">'+(R.ask?'<button class="btn gold" data-att="rotRedo">Ha, qayta taqsimla va yubor</button><button class="btn" data-att="rotAsk" data-v="0">Bekor</button>':'<button class="btn'+(after18?' gold':'')+'" data-att="rotAsk" data-v="1">🔄 Hozir qayta taqsimlash</button>')+'</div>';
   (P.groups||[]).forEach(function(g){
     h+='<h3 style="font-size:15px;margin:14px 0 8px;color:var(--gold2)">'+esc(g.group)+' · '+esc(g.zone)+' · '+g.kun+'-kun <small style="color:var(--muted);font-weight:600">('+g.days+' kunlik aylana)</small></h3>';
-    h+='<table class="aitab rep"><thead><tr><th>Ofitsiant</th><th>Stollar</th><th>Qo\'shimcha</th></tr></thead><tbody>'+(g.rows||[]).map(function(r){
-      return '<tr><td><b'+(r.present?'':' class="abs" style="text-decoration:line-through"')+'>'+esc(r.name)+'</b>'+(r.unmapped?'<span class="s" style="color:#F08A3C">xodimga bog\'lanmagan</span>':(!r.present?'<span class="s abs">kelmadi</span>':''))+'</td><td class="num">'+esc(r.base)+'</td><td class="'+(r.extra?'late':'')+'">'+(r.present?(r.extra?'+ '+esc(r.extra):'—'):'<span class="s">stollari bo\'lindi</span>')+'</td></tr>'; }).join("")+'</tbody></table>'+
+    h+='<table class="aitab rep"><thead><tr><th>Ofitsiant</th><th>Bugungi stollar</th></tr></thead><tbody>'+(g.rows||[]).map(function(r){
+      var tb=r.tables||r.base;
+      return '<tr><td><b'+(r.present?'':' class="abs" style="text-decoration:line-through"')+'>'+esc(r.name)+'</b>'+(r.unmapped?'<span class="s" style="color:#F08A3C">xodimga bog\'lanmagan</span>':(!r.present?'<span class="s abs">kelmadi</span>':''))+'</td><td class="num">'+(r.present?(r.changed?'<b class="late">'+esc(tb)+'</b><span class="s">asosiy: '+esc(r.base)+'</span>':esc(tb)):'<span class="s">'+esc(r.base)+' — bo\'lib berildi</span>')+'</td></tr>'; }).join("")+'</tbody></table>'+
       (g.left?'<div class="msg err" style="margin-top:6px">Taqsimlanmagan stollar: '+esc(g.left)+'</div>':'');
   });
   /* settings: start day + who is who */
@@ -4763,7 +4764,7 @@ function agSystem(){
    "Today is "+agToday()+" (Asia/Tashkent).\n\n"+
    "RESTAURANT SETTINGS: name="+(st.name||"UNO Airways")+"; service="+svcPct(st)+"%; soundOn="+(st.soundOn!==false)+"; callsOn="+!!st.callsOn+"; zonePick="+!!st.zonePick+"; theme="+(st.theme||"classic")+"\n\n"+
    "ADMIN PANEL SECTIONS: Taomlar, Kategoriyalar, AI, Davomat, Yetkazish (delivery orders), Yangiliklar (news / announcements = e'lonlar, shown to customers in the iPhone app), Mijozlar, Baholar, Stollar va QR, Telegram, Restoran, Oflayn, Parol. News: get_news, add_news, update_news, delete_news — «e'lon joyla», «yangilik qo'sh» means add_news.\n"+
-   "ROTATION (rotatsiya): two waiter groups swap zones Biznes/Comfort every day; each waiter's tables shift daily by the base list; at 18:00 the no-shows' tables go to neighbouring waiters of the same group (that day only). get_rotation shows it, redo_rotation re-splits now.\n"+
+   "ROTATION (rotatsiya): two waiter groups swap zones Biznes/Comfort every day; each waiter's tables shift daily by the base list; at 18:00 the no-shows' tables are shared along the chain: the nearest waiters of the same group each take one neighbouring table and everyone's tables stay consecutive (that day only). get_rotation shows it, redo_rotation re-splits now.\n"+
    "ATTENDANCE: you manage all of it with tools — read (get_attendance, get_fines, get_staff), staff (add/update/delete_staff), records (add_attendance, update_attendance, delete_attendance), fines (decide_fines, mark_fines_paid, delete_fines) and rules (set_attendance_rules). Fines stay as the staff member's debt until marked paid. «Hammasini yangidan boshlash» / start from zero = delete_attendance for the whole period AND delete_fines with all=true (call both at once).\n"+
    "Deleting is allowed when the admin asks (dishes, categories, reviews, staff, attendance records, fines, bookings): call the delete tool with the exact scope; the confirmation card shows how many items will be removed. Relative dates: «bugun» = today, «kecha» = yesterday, «o'tgan hafta» = the previous Monday–Sunday.\n"+
    "There are TWO assistants: you (admin panel) and the customer-facing «UNO AI» inside the guest menu. You cannot talk to it directly; the ONLY way to pass it information is the teach_guest_ai tool (it is saved and the guest AI reads it in every conversation). Never say you passed, told or taught it something unless you called teach_guest_ai and the admin confirmed the card.\n"+
@@ -5144,7 +5145,7 @@ async function agRunRead2(c){
   if(c.name==="get_rotation"){ var gr=await S.sb.rpc("uno_rot_get",{p_day:/^\d{4}-\d{2}-\d{2}$/.test(a.date||"")?a.date:null}); if(gr.error) throw gr.error;
     var P=gr.data||{}, lines=[(P.final?"Davomat bo'yicha":"Asosiy reja")+" · "+String(P.day||"").split("-").reverse().join(".")+(P.saved?" (yakuniy, Telegramga yuborilgan)":" (18:00 da yakunlanadi)")];
     (P.groups||[]).forEach(function(g){ lines.push(""); lines.push(g.group+" · "+g.zone+" · "+g.kun+"-kun");
-      (g.rows||[]).forEach(function(r){ lines.push(r.present?(r.name+" — "+r.base+(r.extra?" + "+r.extra:"")):("❌ "+r.name+" — kelmadi ("+r.base+")")); }); });
+      (g.rows||[]).forEach(function(r){ lines.push(r.present?(r.name+" — "+(r.tables||r.base)+(r.changed?" (asosiy: "+r.base+")":"")):("❌ "+r.name+" — kelmadi ("+r.base+")")); }); });
     return {ok:true, text:lines.join("\n"), note:"Show this text to the admin as it is (one line per waiter)."}; }
   if(c.name==="get_news"){ var gn=await S.sb.from("uno_docs").select("path,data").like("path","news/%"); if(gn.error) throw gn.error;
     return {ok:true, news:(gn.data||[]).map(function(x){ var d=x.data||{}; return {news_id:x.path.slice(5), title:d.title||"", text:d.text||"", hidden:!!d.hidden, photo:!!d.imgId, at:String(d.at||"").slice(0,16)}; }).sort(function(p,q){ return q.at.localeCompare(p.at); })}; }
