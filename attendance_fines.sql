@@ -5,7 +5,7 @@
 --   * smena boshlanishidan 5 soat ichida terminalga kelgan har bir belgi faqat KELISH deb olinadi (ikkinchi marta bossa "allaqachon belgilangan");
 --     5 soatdan keyin (yoki smena bo'lmagan kunda kelgandan 5 soat o'tgach) belgi KETISH deb olinadi;
 --   * kechikish: har to'liq soat uchun 50 000 so'm (1 soat — 50 000, 2 soat 10 daq — 100 000);
---   * smena kuni kelmasa (5 soat ichida belgilanmasa): 200 000 so'm;
+--   * 1 smena = 1 kun: smena tugaguncha (masalan 14:00–02:00) umuman kelmasa: 200 000 so'm (kechikish jarimasi bundan oshmaydi);
 --   * har bir jarima admin panelda "Sababli" (o'chadi) yoki "Tasdiqlash" deb hal qilinadi.
 
 create table if not exists public.uno_att_fines (
@@ -78,7 +78,7 @@ declare t text := to_char(now() at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'
 begin
   if not public.uno_is_admin() then raise exception 'not_admin' using errcode = '42501'; end if;
   insert into public.uno_private(key, value) values ('att_fines_since', t) on conflict (key) do update set value = excluded.value;
-  delete from public.uno_att_alerts;
+  delete from public.uno_att_alerts where true;
   return jsonb_build_object('ok', true, 'since', t);
 end $$;
 revoke all on function public.uno_att_restart() from public, anon;
@@ -216,6 +216,7 @@ begin
   -- har to'liq kechikkan soat uchun (1 soat kechiksa — 1 × summa, 2 soat 10 daqiqa — 2 × summa)
   if k = 'in' and fh > 0 and late >= 60 then
     fine_h := floor(late / 60.0)::int; fine := fine_h * fh;
+    if public.uno_att_cfg('fine_absent','200000')::int > 0 then fine := least(fine, public.uno_att_cfg('fine_absent','200000')::int); end if;
   end if;
 
   if k = 'in' then
@@ -273,13 +274,13 @@ language plpgsql security definer set search_path = public as $$
 declare tz text := public.uno_tz(); loc timestamp := now() at time zone public.uno_tz(); absent int := public.uno_att_cfg('absent','30')::int;
         win int := public.uno_att_cfg('window','300')::int; fa int := public.uno_att_cfg('fine_absent','200000')::int;
         since timestamptz := coalesce(nullif(public.uno_priv('att_fines_since'),'')::timestamptz, now());
-        r record; sched timestamp; n int := 0; txt text := ''; ftxt text := ''; nf int := 0; fid bigint;
+        r record; sched timestamp; send timestamp; n int := 0; txt text := ''; ftxt text := ''; nf int := 0; fid bigint;
 begin
   for r in select * from public.uno_staff where active loop
     for sched in select (loc::date + r.shift_start) union all select (loc::date - 1 + r.shift_start) loop
       if not (extract(isodow from sched)::int = any(r.days)) then continue; end if;
       if exists (select 1 from public.uno_att a where a.staff_id = r.id and a.kind = 'in'
-                  and a.at >= (sched - interval '6 hours') at time zone tz and a.at < (sched + interval '12 hours') at time zone tz) then continue; end if;
+                  and a.at >= (sched - interval '6 hours') at time zone tz and a.at < (sched + interval '20 hours') at time zone tz) then continue; end if;
       -- ogohlantirish: smenadan N daqiqa o'tdi, hali yo'q (faqat bugungi smena)
       if sched::date = loc::date and loc >= sched + make_interval(mins => absent) and loc <= sched + interval '6 hours' then
         begin
@@ -290,9 +291,10 @@ begin
         exception when unique_violation then null;
         end;
       end if;
-      -- jarima: kirish oynasi tugadi, kelmadi
-      if fa > 0 and loc >= sched + make_interval(mins => win) and loc < sched + interval '30 hours'
-         and (sched + make_interval(mins => win)) at time zone tz >= since then
+      -- jarima: 1 smena = 1 kun. Smena tugadi (masalan 14:00–02:00 bo'lsa, 02:00 da) va shu smenada umuman kelmadi
+      send := sched::date + r.shift_end; if r.shift_end <= r.shift_start then send := send + interval '1 day'; end if;
+      if fa > 0 and loc >= send and loc < send + interval '30 hours'
+         and send at time zone tz >= since then
         fid := null;
         insert into public.uno_att_fines(staff_id, day, kind, minutes, amount) values (r.id, sched::date, 'absent', 0, fa)
           on conflict (staff_id, day, kind) do nothing returning id into fid;

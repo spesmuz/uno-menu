@@ -916,6 +916,7 @@ html.in-app #adminView.paged .adm-dots{padding-bottom:8px}
 html.in-app #adminView:not(.paged){padding-bottom:var(--appB,0px)}
 html.in-app #agFab{bottom:calc(var(--appB,0px) + 12px)}
 html.in-app #agPanel{bottom:var(--appB,0px)!important;padding-bottom:0!important}
+#agPanel.kb{padding-bottom:0!important;padding-top:0!important}
 /* menu: panels opened over the menu end above the tab bar (their dim backdrop still runs under it) */
 .overlay>.drawer{border-bottom:var(--insB,0px) solid transparent;background-clip:border-box}
 .detail{border-bottom:var(--insB,0px) solid transparent}
@@ -4747,7 +4748,20 @@ function agShow(v){
   AG.open=v; if(v&&!AG.staff) agLoadStaff(); var p=$("agPanel"), f=$("agFab"); if(!p) return;
   p.hidden=!v; if(f) f.hidden=v; document.documentElement.classList.toggle("ag-open",v);
   if(v){ agScroll(); setTimeout(function(){ if(!/Mobi|Android|iPhone|iPad/.test(navigator.userAgent)) $("agIn").focus(); },50); }
+  setTimeout(agFit,60);
 }
+/* phone keyboard: pin the panel to the visible area (no gap for the app's tab bar, no page jump) */
+function agFit(){
+  var p=$("agPanel"), vv=window.visualViewport; if(!p) return;
+  if(!vv || !AG.open || window.innerWidth>600){ p.style.top=""; p.style.height=""; p.style.bottom=""; p.classList.remove("kb"); return; }
+  if(window.scrollY||document.documentElement.scrollTop||document.body.scrollTop){ window.scrollTo(0,0); document.documentElement.scrollTop=0; document.body.scrollTop=0; }
+  var kb=vv.height < window.innerHeight-120;
+  p.classList.toggle("kb",kb);
+  if(kb){ p.style.setProperty("top",vv.offsetTop+"px","important"); p.style.setProperty("height",vv.height+"px","important"); p.style.setProperty("bottom","auto","important"); agScroll(); }
+  else { p.style.top=""; p.style.height=""; p.style.bottom=""; }
+}
+if(window.visualViewport){ visualViewport.addEventListener("resize",agFit); visualViewport.addEventListener("scroll",agFit); }
+window.addEventListener("scroll",function(){ if(AG.open) agFit(); },{passive:true});
 function agScroll(){ var l=$("agLog"); if(l) requestAnimationFrame(function(){ l.scrollTop=l.scrollHeight; }); }
 function agSay(who, html, raw){ AG.msgs.push({who:who,html:html}); var l=$("agLog"); if(!l) return null;
   var d=document.createElement("div"); d.className="ag-m "+who; d.innerHTML=raw?html:esc(html).replace(/\n/g,"<br>"); l.appendChild(d); agScroll(); return d; }
