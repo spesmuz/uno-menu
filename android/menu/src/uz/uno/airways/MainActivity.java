@@ -39,8 +39,15 @@ public class MainActivity extends Activity {
         android.content.pm.PackageManager.DONT_KILL_APP);
     } catch (Exception e) { }
   }
+  /* the screen stays on only on the restaurant's kiosk tablets; a guest's phone sleeps as usual */
+  void screenOn() {
+    if (kioskOn()) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+  }
+
   void setKioskNow(boolean on) {
     getSharedPreferences("uno", MODE_PRIVATE).edit().putBoolean("kiosk", on).commit();
+    screenOn();
     homeAlias(on);
     if (on) { exiting = false; lastPin = 0; setupOwner(); pin(); }
     else {
@@ -308,7 +315,7 @@ public class MainActivity extends Activity {
 
   @Override public void onCreate(Bundle b) {
     super.onCreate(b);
-    getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    screenOn();
     dpm = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
     admin = new ComponentName(this, AdminReceiver.class);
     setupOwner();
@@ -458,11 +465,12 @@ public class MainActivity extends Activity {
 
   @Override public void onWindowFocusChanged(boolean f) { super.onWindowFocusChanged(f); if (f) { immersive(); if (kioskOn()) { lastPin = 0; pin(); } } }
   @Override protected void onResume() {
-    super.onResume(); web.onResume(); immersive(); pin();
+    super.onResume(); web.onResume(); web.resumeTimers(); screenOn(); immersive(); pin();
     /* the lock can only start once the window is really in front: try again shortly after returning */
     if (kioskOn()) { h.removeCallbacks(pinLater); h.postDelayed(pinLater, 700); if (repin) { h.postDelayed(pinLater, 1800); repin = false; } }
   }
-  @Override protected void onPause() { web.onPause(); super.onPause(); }
+  /* in the background the page stops completely (timers, animations, polling): no work while the phone is in a pocket */
+  @Override protected void onPause() { web.onPause(); if (!kioskOn()) web.pauseTimers(); super.onPause(); }
 
   @Override public void onBackPressed() {
     String cur = web.getUrl();

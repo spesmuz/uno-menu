@@ -532,9 +532,10 @@ canvas.frost{position:absolute;inset:0;image-rendering:auto;width:100%;height:10
 /* ---------- UNO AI assistant ---------- */
 #agFab{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(18px,calc(env(safe-area-inset-bottom) + 12px));z-index:900;height:54px;padding:0 20px 0 16px;border-radius:27px;border:1px solid rgba(255,214,140,.5);
   background:linear-gradient(135deg,#F3C66B,#C98E2B);color:#1A1306;font:800 15px/1 Manrope,system-ui,sans-serif;display:flex;align-items:center;gap:8px;cursor:pointer;
-  box-shadow:0 10px 30px rgba(0,0,0,.45),0 0 0 6px rgba(232,176,75,.12);animation:agPulse 2.8s ease-in-out infinite}
+  box-shadow:0 10px 30px rgba(0,0,0,.45)}
+#agFab::before{content:"";position:absolute;inset:-6px;border-radius:33px;border:6px solid rgba(232,176,75,.12);pointer-events:none;animation:agRing 2.8s ease-in-out infinite;will-change:transform,opacity}
 #agFab svg{width:22px;height:22px}#agFab[hidden]{display:none}
-@keyframes agPulse{0%,100%{box-shadow:0 10px 30px rgba(0,0,0,.45),0 0 0 6px rgba(232,176,75,.12)}50%{box-shadow:0 10px 30px rgba(0,0,0,.45),0 0 0 12px rgba(232,176,75,.05)}}
+@keyframes agRing{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.06,1.18);opacity:.4}}
 #agPanel{position:fixed;z-index:950;right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));width:min(440px,calc(100vw - 24px));height:min(720px,calc(100dvh - 24px));
   display:flex;flex-direction:column;background:#121316;border:1px solid rgba(232,176,75,.28);border-radius:24px;box-shadow:0 30px 80px rgba(0,0,0,.6);overflow:hidden;
   font-family:Manrope,system-ui,sans-serif;color:#EFEBE3;animation:agIn .28s cubic-bezier(.2,.8,.2,1)}
@@ -926,9 +927,10 @@ html.in-app #agPanel.typing{bottom:0!important}
 
 /* ================= UNO AI for guests ================= */
 .gai-fab{position:absolute;left:32px;bottom:17px;z-index:260;width:54px;height:54px;border-radius:50%;border:1px solid rgba(255,214,120,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
-  color:#1A1306;background:radial-gradient(circle at 35% 30%,#FFF1C2,#FFC94D 55%,#D99A22);box-shadow:0 0 0 4px rgba(255,201,77,.14),0 10px 26px rgba(0,0,0,.45);cursor:pointer;margin-bottom:var(--insB,0px);animation:gaiPulse 3.2s ease-in-out infinite}
+  color:#1A1306;background:radial-gradient(circle at 35% 30%,#FFF1C2,#FFC94D 55%,#D99A22);box-shadow:0 10px 26px rgba(0,0,0,.45);cursor:pointer;margin-bottom:var(--insB,0px)}
+.gai-fab::before{content:"";position:absolute;inset:-5px;border-radius:50%;border:4px solid rgba(255,201,77,.16);pointer-events:none;animation:gaiRing 3.2s ease-in-out infinite;will-change:transform,opacity}
 .gai-fab svg{width:22px;height:22px}.gai-fab b{font-family:inherit;font-weight:800;font-size:10px;line-height:1;letter-spacing:.08em;margin-top:1px}
-@keyframes gaiPulse{0%,100%{box-shadow:0 0 0 4px rgba(255,201,77,.14),0 10px 26px rgba(0,0,0,.45)}50%{box-shadow:0 0 0 10px rgba(255,201,77,.05),0 10px 26px rgba(0,0,0,.45)}}
+@keyframes gaiRing{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.13);opacity:.35}}
 #stage.phone .gai-fab{left:12px;bottom:6px;width:48px;height:48px}
 #stage.phoneL .gai-fab{bottom:4px;width:44px;height:44px}
 #gai{position:fixed;left:0;right:0;top:0;height:100%;z-index:9000;display:flex;align-items:flex-end;justify-content:center;background:rgba(2,5,16,.45);opacity:0;pointer-events:none;transition:opacity .25s}
@@ -982,6 +984,7 @@ html.and :is(.card,.badge,.tabs,.langs,.search-box,.cart-btn,.icon-btn,.stepper,
 html.and.th-boarding .card{-webkit-mask:none;mask:none;background-color:rgba(12,24,58,.62);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.85),inset 0 -1px 0 rgba(255,255,255,.3)}
 html.and.th-boarding .slide.center .card{background-color:rgba(14,28,68,.82)}
 html.and.th-boarding .badge{background:rgba(3,8,22,.78)}
+html.and.th-boarding #menuView::before{animation:none;opacity:.85}
 html.and.th-boarding .tabs{background:rgba(3,6,16,.8)}
 html.and.th-boarding :is(.langs,.search-box,.cart-btn,.icon-btn,.stepper,.arrow){background-color:rgba(8,16,40,.78)}
 html.and.th-aurora .card{background-color:rgba(10,14,40,.7)}
@@ -1415,7 +1418,7 @@ var WT=(function(){
   function source(){ return window.UnoKiosk?"Android ilovasi":"Sayt (telefon)"; }
   function build(){
     if(built) return; built=true;
-    if(/Android/i.test(navigator.userAgent||"")) document.documentElement.classList.add("and");
+    if(/Android/i.test(navigator.userAgent||"")){ document.documentElement.classList.add("and"); try{ skySync(); }catch(_){} }
     var bar=document.createElement("nav"); bar.id="wtabs"; bar.setAttribute("aria-label","UNO");
     document.body.appendChild(bar);
     ["book","about","profile"].forEach(function(id){ var p=document.createElement("section"); p.className="wpage"; p.id="wp-"+id; document.body.appendChild(p); });
@@ -1436,7 +1439,7 @@ var WT=(function(){
     /* the new page is filled first, then shown in the same frame as the old one goes */
     ["book","about","profile"].forEach(function(id,k){ var p=$("wp-"+id); if(p) p.classList.toggle("on",tab===k+1); });
     document.documentElement.classList.toggle("wt-pg", tab!==0);
-    try{ var sv=document.querySelector("#sky svg"); if(sv&&sv.pauseAnimations){ if(tab!==0) sv.pauseAnimations(); else sv.unpauseAnimations(); } }catch(_){}
+    try{ skySync(); }catch(_){}
     if(tab===0){ try{ if(S.view==="menu" && !S.detail) resumeCarouselVideo(); }catch(_){} } else { try{ pauseCarouselVideo(); }catch(_){} }
     renderBar();
   }
@@ -2043,7 +2046,7 @@ var dragRaf=0, skyT=0;
 function skyHold(ms){
   var sv=document.querySelector("#sky svg"); if(!sv || !sv.pauseAnimations) return;
   if(!skyT) try{ sv.pauseAnimations(); }catch(_){}
-  clearTimeout(skyT); skyT=setTimeout(function(){ skyT=0; if(document.documentElement.classList.contains("wt-pg")) return; try{ sv.unpauseAnimations(); }catch(_){} }, ms||900);
+  clearTimeout(skyT); skyT=setTimeout(function(){ skyT=0; if(skyStill()) return; try{ sv.unpauseAnimations(); }catch(_){} }, ms||900);
 }
 track.addEventListener("pointerdown",function(e){
   if(e.button!==undefined&&e.button!==0) return; if(e.target.closest(".arrow")) return;
@@ -2605,11 +2608,15 @@ function liquidSky(sky, adm){
   }
   requestAnimationFrame(frame);
 }
+/* Android phones: the flight-route sky stands still (its SVG animation kept the processor busy every frame and
+   heated the phone); elsewhere it only stops while a tab page covers the menu or cards are moving */
+function skyStill(){ var de=document.documentElement; return de.classList.contains("and") || de.classList.contains("wt-pg"); }
+function skySync(){ try{ var sv=document.querySelector("#sky svg"); if(!sv||!sv.pauseAnimations) return; if(skyStill()) sv.pauseAnimations(); else if(!skyT) sv.unpauseAnimations(); }catch(_){} }
 function applyTheme(){
   var url=(location.search.match(/[?&]theme=(\w+)/)||[])[1], t=url||(S.settings&&S.settings.theme)||"classic", root=document.documentElement;
   if(!THEMES[t] && !(url && PREVIEW_THEMES[t])) t=THEMES[t]?t:"classic";
   Object.keys(THEMES).concat(Object.keys(PREVIEW_THEMES)).forEach(function(k){ root.classList.toggle("th-"+k, k===t && k!=="classic"); });
-  var sky=document.getElementById("sky"); if(sky && sky.dataset.t!==t){ sky.dataset.t=t; sky.innerHTML=SKY_HTML[t]||""; sky.classList.remove("gl"); if(t==="liquid") liquidSky(sky); }
+  var sky=document.getElementById("sky"); if(sky && sky.dataset.t!==t){ sky.dataset.t=t; sky.innerHTML=SKY_HTML[t]||""; sky.classList.remove("gl"); if(t==="liquid") liquidSky(sky); skySync(); }
   /* the admin panel gets its own glass canvas behind it */
   var as=document.getElementById("admSky");
   if(t==="liquid"){ if(!as){ as=document.createElement("div"); as.id="admSky"; as.innerHTML='<canvas></canvas>'; document.body.insertBefore(as, document.body.firstChild); } if(as.dataset.t!=="liquid"){ as.dataset.t="liquid"; liquidSky(as, true); } }
@@ -3138,14 +3145,17 @@ function makeBackend(){
   function snapDoc(p,fc){ var d=cache[p]; return {exists:!!d, data:function(){ return clone(d); }, metadata:{fromCache:fc}}; }
   function snapCol(c,fc){ var pre=c+"/"; var docs=Object.keys(cache).filter(function(k){ return k.indexOf(pre)===0 && k.slice(pre.length).indexOf("/")<0; }).map(function(k){ return {id:k.slice(pre.length), data:function(){ return clone(cache[k]); }}; }); return {docs:docs, size:docs.length, metadata:{fromCache:fc}}; }
   function emit(fc){ docL.forEach(function(l){ try{ l.cb(snapDoc(l.p,fc)); }catch(e){ console.error(e); } }); colL.forEach(function(l){ try{ l.cb(snapCol(l.c,fc)); }catch(e){ console.error(e); } }); }
-  var fetching=null;
+  var fetching=null, lastJs=null;
   function fetchAll(){
     if(fetching) return fetching;
     fetching=sb.from(SB_TABLE).select("path,data").then(function(r){
       fetching=null;
       if(r.error) throw r.error;
       var n={}; (r.data||[]).forEach(function(row){ n[row.path]=row.data||{}; });
-      cache=n; fresh=true; window.__unoFresh=true; save(); emit(false);
+      /* nothing changed since the last check: don't rewrite storage or repaint the menu */
+      var js=JSON.stringify(n), same=(js===lastJs); lastJs=js;
+      cache=n; window.__unoFresh=true;
+      if(!same || !fresh){ fresh=true; try{ localStorage.setItem(CACHE_KEY,js); }catch(_){} emit(false); }
       try{ window.dispatchEvent(new CustomEvent("uno-db-ok")); }catch(_){}
     }).catch(function(e){ fetching=null; console.warn("fetch",e); emit(true);
       try{ window.dispatchEvent(new CustomEvent("uno-db-error",{detail:(e&&(e.message||e.code))||String(e)})); }catch(_){}
@@ -3157,7 +3167,8 @@ function makeBackend(){
     else if(pl.new&&pl.new.path){ cache[pl.new.path]=pl.new.data||{}; }
     save(); emit(false);
   }).subscribe(function(st){ if(st==="SUBSCRIBED") fetchAll(); });
-  setInterval(fetchAll,60000);
+  /* live changes arrive through the realtime channel; the timer is only a safety net (and sleeps in the background) */
+  setInterval(function(){ if(!document.hidden) fetchAll(); },180000);
   document.addEventListener("visibilitychange",function(){ if(!document.hidden) fetchAll(); });
   window.addEventListener("online",fetchAll);
   fetchAll();
@@ -5048,8 +5059,8 @@ var AG_TOOLS=[
  {name:"update_staff", description:"Change a staff member (only the fields that change). active=false means dismissed (keeps history).",
   parameters:{type:"OBJECT", properties:{staff_id:{type:"STRING"}, name:{type:"STRING"}, role:{type:"STRING"}, team:{type:"STRING"}, pin:{type:"STRING"}, shift_start:{type:"STRING"}, shift_end:{type:"STRING"}, days:{type:"ARRAY",items:{type:"INTEGER"}}, active:{type:"BOOLEAN"}}, required:["staff_id"]}},
  {name:"delete_staff", description:"Delete a staff member AND all their attendance records permanently.", parameters:{type:"OBJECT", properties:{staff_id:{type:"STRING"}}, required:["staff_id"]}},
- {name:"delete_attendance", description:"Delete attendance records (check-ins/check-outs with their selfies) permanently for a date range, optionally only of one staff member and/or one kind.",
-  parameters:{type:"OBJECT", properties:{from:{type:"STRING",description:"YYYY-MM-DD (inclusive)"}, to:{type:"STRING",description:"YYYY-MM-DD (inclusive), default = from"}, staff_id:{type:"STRING"}, kind:{type:"STRING",description:"in (keldi) or out (ketdi); omit for both"}}, required:["from"]}},
+ {name:"delete_attendance", description:"Delete attendance records (check-ins/check-outs with their selfies) permanently: all of them (all=true) or for a date range, optionally only of one staff member and/or one kind.",
+  parameters:{type:"OBJECT", properties:{all:{type:"BOOLEAN",description:"true = every record ever (no date limit); use it when the admin says all / hammasi / start from zero"}, from:{type:"STRING",description:"YYYY-MM-DD (inclusive)"}, to:{type:"STRING",description:"YYYY-MM-DD (inclusive), default = from"}, staff_id:{type:"STRING"}, kind:{type:"STRING",description:"in (keldi) or out (ketdi); omit for both"}}}},
  {name:"get_fines", description:"Read staff fines (jarimalar) for lateness and absence: per person totals plus each fine. Dates YYYY-MM-DD; default last 30 days. Status: pending (not decided), confirmed, excused (removed as sababli).", parameters:{type:"OBJECT", properties:{from:{type:"STRING"}, to:{type:"STRING"}, staff_id:{type:"STRING"}}}},
  {name:"delete_fines", description:"Delete staff fines (jarimalar) permanently: all of them (all=true), or for a date range, optionally of one staff member. Use when the admin wants to clear fines or start from zero.", parameters:{type:"OBJECT", properties:{all:{type:"BOOLEAN"}, from:{type:"STRING"}, to:{type:"STRING"}, staff_id:{type:"STRING"}}}},
  {name:"decide_fines", description:"Decide fines: status excused (sababli — the fine is removed), confirmed (sababsiz — stays as debt) or pending (decide later). Target by fine ids (from get_fines) or by staff and/or date range.", parameters:{type:"OBJECT", properties:{fine_ids:{type:"ARRAY",items:{type:"INTEGER"}}, staff_id:{type:"STRING"}, from:{type:"STRING"}, to:{type:"STRING"}, status:{type:"STRING",description:"excused, confirmed or pending"}}, required:["status"]}},
@@ -5091,7 +5102,7 @@ function agSystem(){
    "RESTAURANT SETTINGS: name="+(st.name||"UNO Airways")+"; service="+svcPct(st)+"%; soundOn="+(st.soundOn!==false)+"; callsOn="+!!st.callsOn+"; zonePick="+!!st.zonePick+"; theme="+(st.theme||"classic")+"\n\n"+
    "ADMIN PANEL SECTIONS: Taomlar, Kategoriyalar, AI, Davomat, Yetkazish (delivery orders), Yangiliklar (news / announcements = e'lonlar, shown to customers in the iPhone app), Mijozlar, Baholar, Stollar va QR, Telegram, Restoran, Oflayn, Parol. News: get_news, add_news, update_news, delete_news — «e'lon joyla», «yangilik qo'sh» means add_news.\n"+
    "ROTATION (rotatsiya): two waiter groups swap zones Biznes/Comfort every day; each waiter's tables shift daily by the base list; at 18:00, if someone is missing, all numbered tables of that group are re-split equally and consecutively among the waiters who came (that day only). get_rotation shows it, redo_rotation re-splits now.\n"+
-   "ATTENDANCE: you manage all of it with tools — read (get_attendance, get_fines, get_staff), staff (add/update/delete_staff), records (add_attendance, update_attendance, delete_attendance), fines (decide_fines, mark_fines_paid, delete_fines) and rules (set_attendance_rules). Fines stay as the staff member's debt until marked paid. «Hammasini yangidan boshlash» / start from zero = delete_attendance for the whole period AND delete_fines with all=true (call both at once).\n"+
+   "ATTENDANCE: you manage all of it with tools — read (get_attendance, get_fines, get_staff), staff (add/update/delete_staff), records (add_attendance, update_attendance, delete_attendance), fines (decide_fines, mark_fines_paid, delete_fines) and rules (set_attendance_rules). Fines stay as the staff member's debt until marked paid. «Hammasini yangidan boshlash» / start from zero = delete_attendance with all=true AND delete_fines with all=true (call both at once). After a delete, say how many records were actually deleted (the tool result's count); never say everything is cleared if the count was 0 or only one day was deleted.\n"+
    "Deleting is allowed when the admin asks (dishes, categories, reviews, staff, attendance records, fines, bookings): call the delete tool with the exact scope; the confirmation card shows how many items will be removed. Relative dates: «bugun» = today, «kecha» = yesterday, «o'tgan hafta» = the previous Monday–Sunday.\n"+
    "There are TWO assistants: you (admin panel) and the customer-facing «UNO AI» inside the guest menu. You cannot talk to it directly; the ONLY way to pass it information is the teach_guest_ai tool (it is saved and the guest AI reads it in every conversation). Never say you passed, told or taught it something unless you called teach_guest_ai and the admin confirmed the card.\n"+
    "FACTS ALREADY PASSED TO THE GUEST UNO AI (id | text):\n"+(aiNotesOf(st).map(function(n){ return n.id+" | "+n.text; }).join("\n")||"(none)")+"\n\n"+
@@ -5398,7 +5409,7 @@ async function agConfirm(yes){
 /* ---------- extra tools: previews (how many items a delete will touch) ---------- */
 function agRange(a){ var f=/^\d{4}-\d{2}-\d{2}$/.test(a.from||"")?a.from:(/^\d{4}-\d{2}-\d{2}$/.test(a.date||"")?a.date:agToday()), t=/^\d{4}-\d{2}-\d{2}$/.test(a.to||"")?a.to:f; if(t<f){ var x=f; f=t; t=x; } return {from:f,to:t,s:attDayStart(f).toISOString(),e:new Date(attDayStart(t).getTime()+864e5).toISOString()}; }
 function agStaffName(id){ var p=(AG.staff||[]).find(function(x){ return x.id===id; }); return p?p.name:id; }
-function agAttQuery(a, sel, head){ var R=agRange(a), q=S.sb.from("uno_att").select(sel, head?{count:"exact",head:true}:undefined).gte("at",R.s).lt("at",R.e); if(a.staff_id) q=q.eq("staff_id",a.staff_id); if(a.kind==="in"||a.kind==="out") q=q.eq("kind",a.kind); return q; }
+function agAttQuery(a, sel, head){ var R=agRange(a), q=S.sb.from("uno_att").select(sel, head?{count:"exact",head:true}:undefined); if(a.all!==true) q=q.gte("at",R.s).lt("at",R.e); if(a.staff_id) q=q.eq("staff_id",a.staff_id); if(a.kind==="in"||a.kind==="out") q=q.eq("kind",a.kind); return q; }
 function agRevQuery(a, sel, head){ var q=S.sb.from("uno_reviews").select(sel, head?{count:"exact",head:true}:undefined); if(a.review_ids&&a.review_ids.length) q=q.in("id",a.review_ids); else if(a.dish_id) q=q.eq("dish_id",a.dish_id); else if(a.only_hidden) q=q.eq("hidden",true); else q=q.eq("id",-1); return q; }
 var AG_PREVIEW={
   delete_attendance:async function(a){ var r=await agAttQuery(a,"id").limit(10000); if(r.error) throw r.error; return {n:(r.data||[]).length}; },
@@ -5430,7 +5441,7 @@ function agDescribe2(c){
     return '<div class="ag-act"><div><em>Davomat qoidalari</em>'+Object.keys(RL).filter(function(k){ return a[k]!==undefined; }).map(function(k){ return '<p class="sm"><i>'+RL[k]+':</i> <b>'+num(a[k])+'</b></p>'; }).join("")+'</div></div>'; }
   if(c.name==="add_attendance"){ return '<div class="ag-act"><div><em>Qo\'lda belgi</em><b>'+esc(agStaffName(a.staff_id))+'</b><p class="sm">'+(a.kind==="out"?"Ketdi":"Keldi")+' · '+esc(a.at)+'</p></div></div>'; }
   if(c.name==="update_attendance"){ return '<div class="ag-act"><div><em>Belgini o\'zgartirish</em><b>#'+a.record_id+'</b><p class="sm">'+[a.at?"vaqt: "+esc(a.at):"",a.kind?(a.kind==="out"?"ketdi":"keldi"):""].filter(Boolean).join(" · ")+'</p></div></div>'; }
-  if(c.name==="delete_attendance"){ R=agRange(a); return '<div class="ag-act del"><div><em>Davomatni o\'chirish</em><b>'+esc(R.from===R.to?R.from:R.from+" — "+R.to)+'</b><p class="sm">'+(a.staff_id?esc(agStaffName(a.staff_id)):"Barcha xodimlar")+(a.kind?" · faqat «"+(a.kind==="in"?"keldi":"ketdi")+"»":"")+' · selfilar bilan</p>'+agPvText(c)+'</div></div>'; }
+  if(c.name==="delete_attendance"){ R=agRange(a); return '<div class="ag-act del"><div><em>Davomatni o\'chirish</em><b>'+(a.all===true?"Butun davomat (barcha kunlar)":esc(R.from===R.to?R.from:R.from+" — "+R.to))+'</b><p class="sm">'+(a.staff_id?esc(agStaffName(a.staff_id)):"Barcha xodimlar")+(a.kind?" · faqat «"+(a.kind==="in"?"keldi":"ketdi")+"»":"")+' · selfilar bilan</p>'+agPvText(c)+'</div></div>'; }
   if(c.name==="delete_reviews"){ var d=a.dish_id&&agDish(a.dish_id); return '<div class="ag-act del"><div><em>Izohlarni o\'chirish</em><b>'+(a.review_ids&&a.review_ids.length?"#"+a.review_ids.join(", #"):d?esc(d.name)+" — barcha izohlar":a.only_hidden?"Barcha yashirilgan izohlar":"?")+'</b>'+agPvText(c)+'</div></div>'; }
   if(c.name==="delete_category"){ var n=(c._pv&&c._pv.n)||0; return '<div class="ag-act del"><div><em>Kategoriyani o\'chirish</em><b>'+esc(agCatName(a.cat_id))+'</b><p class="sm">'+(n?(a.delete_dishes?'Ichidagi <b class="gold">'+n+' ta taom</b> ham o\'chiriladi.':'Ichida '+n+' ta taom bor — avval ularni ko\'chirish kerak.'):'Kategoriya bo\'sh.')+'</p></div></div>'; }
   if(c.name==="add_staff"){ return '<div class="ag-act"><div><em>Yangi xodim</em><b>'+esc(a.name)+'</b><p class="sm">'+esc([a.team,a.role,(a.shift_start||"10:00")+"–"+(a.shift_end||"23:00"),"PIN "+(a.pin||"avtomatik")].filter(Boolean).join(" · "))+'</p>'+(a.days?'<p class="sm muted">Kunlar: '+esc(a.days.map(function(x){ return ATT_DN[x-1]||x; }).join(", "))+'</p>':'')+'</div></div>'; }
@@ -5550,7 +5561,7 @@ async function agRunWrite2(c){
     for(var i=0;i<ids.length;i+=200){ r=await S.sb.from("uno_att").delete().in("id",ids.slice(i,i+200)); if(r.error) return {ok:false,error:r.error.message}; }
     for(var j=0;j<keys.length;j+=100){ try{ await S.sb.storage.from("uno-att").remove(keys.slice(j,j+100).map(function(k){ return /\./.test(k)?k:k+".jpg"; })); }catch(_){} }
     try{ if(typeof Att!=="undefined"&&Att.el){ Promise.resolve(Att.load()).then(function(){ if(Att.rep&&Att.rep.data) Att.runRep(); }); } }catch(_){}
-    return {ok:true, deleted:ids.length, label:"Davomat o'chirildi: "+ids.length+" ta belgi ("+(R.from===R.to?R.from:R.from+" — "+R.to)+")"};
+    return {ok:true, deleted:ids.length, label:"Davomat o'chirildi: "+ids.length+" ta belgi ("+(a.all===true?"barcha kunlar":R.from===R.to?R.from:R.from+" — "+R.to)+")"};
   }
   if(c.name==="delete_reviews"){
     var rv=await agRevQuery(a,"id"); if(rv.error) return {ok:false,error:rv.error.message};
