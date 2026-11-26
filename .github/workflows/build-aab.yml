@@ -47,7 +47,7 @@ jobs:
           "$B/aapt2" link --proto-format -I "$J" --manifest $W/AndroidManifest.xml -o $W/linked.zip $W/res.zip --auto-add-overlay
           (cd $W && unzip -q linked.zip -d base_tmp && mv base_tmp/AndroidManifest.xml base/manifest/ && cp -r base_tmp/* base/ && cp dex/classes.dex base/dex/ && cd base && zip -qr ../base.zip .)
           java -jar bundletool.jar build-bundle --modules=$W/base.zip --output=UNO-Airways-unsigned.aab
-          jarsigner -sigalg SHA256withRSA -digestalg SHA-256 -keystore build.jks -storepass android -keypass android -signedjar UNO-Airways.aab UNO-Airways-unsigned.aab "$(keytool -list -keystore build.jks -storepass android | awk -F, '/PrivateKeyEntry/{print $1; exit}')"
+          jarsigner -keystore build.jks -storepass android -keypass android -signedjar UNO-Airways.aab UNO-Airways-unsigned.aab "$(keytool -list -keystore build.jks -storepass android | awk -F, '/PrivateKeyEntry/{print $1; exit}')"
           jarsigner -verify UNO-Airways.aab | tail -1
           java -jar bundletool.jar validate --bundle=UNO-Airways.aab | head -5
           ls -la UNO-Airways.aab
