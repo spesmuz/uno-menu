@@ -985,6 +985,8 @@ html.and.th-boarding .card{-webkit-mask:none;mask:none;background-color:rgba(12,
 html.and.th-boarding .slide.center .card{background-color:rgba(14,28,68,.82)}
 html.and.th-boarding .badge{background:rgba(3,8,22,.78)}
 html.and.th-boarding #menuView::before{animation:none;opacity:.85}
+html.and .gai-fab::before,html.and #agFab::before{animation:none;opacity:.8}
+html.and.th-boarding .slide.center .media::after{animation:none;display:none}
 html.and.th-boarding .tabs{background:rgba(3,6,16,.8)}
 html.and.th-boarding :is(.langs,.search-box,.cart-btn,.icon-btn,.stepper,.arrow){background-color:rgba(8,16,40,.78)}
 html.and.th-aurora .card{background-color:rgba(10,14,40,.7)}
@@ -1267,7 +1269,10 @@ var slideNodes=[], ghostNodes=[], prevOff={}, lastCenterId=null, curList=[];
    iPhone/iPad to "playback" mode so Web Audio is heard even when the device is on silent.
    If Web Audio is unavailable, WAV blobs are played through <audio> instead. */
 var SFX=(function(){
-  var SR=44100, AC=null, out=null, bufs={}, urls={}, unlocked=false, keepAlive=null;
+  var SR=44100, AC=null, out=null, bufs={}, urls={}, unlocked=false, keepAlive=null, idleT=0;
+  var IOS=/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+  /* outside iOS the audio engine is put to sleep a few seconds after the last sound (a running one keeps the phone busy) */
+  function idleSoon(){ if(IOS) return; clearTimeout(idleT); idleT=setTimeout(function(){ try{ if(AC && AC.state==="running") AC.suspend(); }catch(_){} }, 4000); }
   function arr(sec){ return new Float32Array(Math.ceil(SR*sec)); }
   // soft mallet / marimba-like note
   function mallet(b,t0,f,dur,peak){
@@ -1319,11 +1324,13 @@ var SFX=(function(){
   }
   function unlock(){
     var c=ensureCtx();
-    if(c && c.state==="suspended"){ try{ var rp=c.resume(); if(rp&&rp.then) rp.then(function(){},function(){}); }catch(_){} }
+    if(c && c.state==="suspended" && (IOS || !unlocked)){ try{ var rp=c.resume(); if(rp&&rp.then) rp.then(function(){},function(){}); }catch(_){} }
+    idleSoon();
     if(unlocked) return;
     unlocked = !c || c.state==="running" || !!window.UnoKiosk;   /* browser still blocking: the next touch tries again */
-    // silent loop: puts iOS into media playback mode (ignores the silent switch)
-    if(!keepAlive) try{
+    // silent loop: puts iOS into media playback mode (ignores the silent switch) - iPhone/iPad only
+    if(!IOS){}
+    else if(!keepAlive) try{
       keepAlive=new Audio(blobUrl(new Float32Array(SR/2)));
       keepAlive.loop=true; keepAlive.setAttribute("playsinline",""); keepAlive.volume=1;
       var p=keepAlive.play(); if(p&&p.catch) p.catch(function(){});
@@ -1333,10 +1340,10 @@ var SFX=(function(){
     try{ if(c){ var s=c.createBufferSource(); s.buffer=c.createBuffer(1,1,22050); s.connect(c.destination); s.start(0); } }catch(_){}
   }
   ["pointerdown","touchstart","keydown"].forEach(function(ev){ document.addEventListener(ev,unlock,{capture:true,passive:true}); });
-  document.addEventListener("visibilitychange",function(){ try{ if(document.hidden){ pauseCarouselVideo(); } else if(S.view==="menu" && !S.detail){ resumeCarouselVideo(); } }catch(_){} if(!document.hidden && AC && AC.state!=="running"){ try{ AC.resume(); }catch(_){} } if(!document.hidden && keepAlive && keepAlive.paused){ var p=keepAlive.play(); if(p&&p.catch) p.catch(function(){}); } });
+  document.addEventListener("visibilitychange",function(){ try{ if(document.hidden){ pauseCarouselVideo(); } else if(S.view==="menu" && !S.detail){ resumeCarouselVideo(); } }catch(_){} if(!document.hidden && AC && AC.state!=="running" && IOS){ try{ AC.resume(); }catch(_){} } if(!document.hidden && keepAlive && keepAlive.paused){ var p=keepAlive.play(); if(p&&p.catch) p.catch(function(){}); } });
   function play(k){
     if(S.settings && S.settings.soundOn===false) return;
-    unlock();
+    unlock(); idleSoon();
     var c=AC;
     if(c){
       if(c.state==="suspended"){
@@ -1889,9 +1896,15 @@ function pooledVideo(kind){
   var v=VPOOL[kind]; if(v) return v;
   v=document.createElement("video"); v.muted=true; v.defaultMuted=true; v.loop=true; v.playsInline=true; v.preload="auto";
   ["muted","loop","playsinline","webkit-playsinline","disablepictureinpicture"].forEach(function(a){ v.setAttribute(a,""); });
+  /* Android phones: the dish video in the card plays three times and then rests on its last frame,
+     instead of decoding video non-stop while the guest just looks at the menu */
+  if(kind==="car" && /Android/i.test(navigator.userAgent||"")){
+    v.loop=false; v.removeAttribute("loop"); v._plays=0;
+    v.addEventListener("ended",function(){ v._plays=(v._plays||0)+1; if(v._plays<3){ try{ v.currentTime=0; var p=v.play(); if(p&&p.catch) p.catch(function(){}); }catch(_){} } });
+  }
   VPOOL[kind]=v; return v;
 }
-function loadPooled(v, url){ v.pause(); v._want=false; if(v.getAttribute("src")!==url){ v.src=url; try{ v.load(); }catch(_){} } else { try{ v.currentTime=0; }catch(_){} } }
+function loadPooled(v, url){ v.pause(); v._want=false; v._plays=0; if(v.getAttribute("src")!==url){ v.src=url; try{ v.load(); }catch(_){} } else { try{ v.currentTime=0; }catch(_){} } }
 function parkPooled(v){ try{ v.pause(); v._want=false; }catch(_){} if(v.parentNode) v.parentNode.removeChild(v); }
 (function(){
   function bless(){
@@ -4999,7 +5012,9 @@ function mediaUrls(){
   return out;
 }
 /* downloading every photo and video in advance costs traffic: only on menu tablets / kiosks, never on guests' phones */
-function offlineDevice(){ try{ if(localStorage.getItem("uno_offline")==="1") return true; }catch(_){} return !!(window.UnoKiosk); }
+/* only the restaurant's kiosk tablets (or a device where the admin pressed "save for offline") keep every photo and
+   video; a guest's phone with the Android app must not download the whole menu media in the background */
+function offlineDevice(){ try{ if(localStorage.getItem("uno_offline")==="1") return true; }catch(_){} try{ return !!(window.UnoKiosk && UnoKiosk.kioskOn && UnoKiosk.kioskOn()); }catch(_){ return false; } }
 async function syncMedia(force){
   if(!force && !offlineDevice()) return;
   if(!("caches" in window) || Offline.busy || navigator.onLine===false || !(S.dishes&&S.dishes.length)) return;
