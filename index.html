@@ -1059,6 +1059,11 @@ html.web-tabs.wt-pg #menuView *{animation-play-state:paused!important}
 .wpass .pcode span{font:700 12px ui-monospace,monospace;letter-spacing:1.5px;color:rgba(255,255,255,.75)}
 .wbonus .how{margin:10px 2px 0;color:rgba(255,255,255,.75);font-size:14px;line-height:1.45}
 .wpre{margin-top:4px;padding:12px;border-radius:14px;background:rgba(255,201,77,.08);border:1px solid rgba(255,201,77,.28)}.wpre small{color:rgba(255,255,255,.7)}.wpre p{margin:6px 0 0;font-size:14px;line-height:1.45;color:rgba(255,255,255,.88)}
+.gxpv{position:fixed;inset:0;z-index:2147483200;background:rgba(3,6,16,.86);display:flex;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.gxpv .gxbox{max-width:520px;width:100%;max-height:100%;display:flex;flex-direction:column;gap:10px;align-items:center}
+.gxpv img{max-width:100%;max-height:62vh;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.6);-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto}
+.gxpv p{margin:0;color:rgba(255,255,255,.85);font-size:14px;line-height:1.45;text-align:center}
+.gxpv .gxacts{display:flex;gap:10px;width:100%}.gxpv .gxacts .btn{flex:1;justify-content:center}
 .kassa{position:fixed;inset:0;z-index:2147483100;background:linear-gradient(180deg,#0b1022,#05070f);color:#fff;overflow:auto;-webkit-overflow-scrolling:touch;font-family:var(--sans,system-ui)}
 .kassa .kwrap{max-width:520px;margin:0 auto;padding:calc(16px + env(safe-area-inset-top,0px)) 16px 40px}
 .kassa .khead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.kassa .khead b{font:800 22px var(--sans,system-ui)}.kassa .khead button{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);color:#fff;font-size:18px}
@@ -5013,12 +5018,27 @@ window.addEventListener("hashchange",ksSync); setTimeout(ksSync,0);
 function gxImg(src){ return new Promise(function(res){ if(!src){ res(null); return; } var im=new Image(); im.crossOrigin="anonymous"; im.onload=function(){ res(im); }; im.onerror=function(){ res(null); }; im.src=src; setTimeout(function(){ res(null); },8000); }); }
 function gxWrap(x, text, maxW){ var w=String(text||"").split(/\s+/), lines=[], cur=""; w.forEach(function(t){ var n=cur?cur+" "+t:t; if(x.measureText(n).width>maxW && cur){ lines.push(cur); cur=t; } else cur=n; }); if(cur) lines.push(cur); return lines; }
 function gxCover(x, im, X, Y, W, H){ var r=Math.max(W/im.naturalWidth, H/im.naturalHeight), w=im.naturalWidth*r, h=im.naturalHeight*r; x.drawImage(im, X+(W-w)/2, Y+(H-h)/2, w, h); }
+/* the finished picture opens in its own window with Save/Share and Close: never as a page of its own
+   (inside the iPhone app a downloaded picture replaced the whole app with no way back) */
 async function gxSaveCanvas(c, name){
-  var blobP=new Promise(function(res){ try{ c.toBlob(function(b){ res(b); },"image/png"); }catch(_){ res(null); } }); var b=await blobP;
-  if(!b){ alert("Rasmni saqlab bo'lmadi."); return; }
-  if(window.UnoKiosk && UnoKiosk.saveFile){ var fr=new FileReader(); fr.onload=function(){ try{ var r=UnoKiosk.saveFile(name, String(fr.result).split(",")[1], "image/png"); alert(r&&String(r).indexOf("err")<0?"Rasm saqlandi: Yuklanmalar (Download) papkasida.":"Saqlab bo'lmadi."); }catch(_){ alert("Saqlab bo'lmadi."); } }; fr.readAsDataURL(b); return; }
-  try{ var f=new File([b], name, {type:"image/png"}); if(navigator.canShare && navigator.canShare({files:[f]})){ await navigator.share({files:[f]}); return; } }catch(_){}
-  var a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1500);
+  var url=""; try{ url=c.toDataURL("image/png"); }catch(_){ alert("Rasmni yasab bo'lmadi."); return; }
+  var ios=/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1) || /UNOAirwaysApp/.test(navigator.userAgent||"");
+  var ov=document.createElement("div"); ov.className="gxpv";
+  ov.innerHTML='<div class="gxbox"><img alt="" src="'+url+'"><p>'+(ios?'Rasmni barmoq bilan bosib turing → <b>«Rasmlarga saqlash»</b>. Yoki pastdagi tugma orqali ulashing.':'Rasmni saqlab, Instagram yoki Telegram\'ga joylang.')+'</p>'+
+    '<div class="gxacts"><button type="button" class="btn gold" data-gx="save">'+(ios?'📤 Ulashish':'⬇️ Saqlash')+'</button><button type="button" class="btn" data-gx="close">✕ Yopish</button></div></div>';
+  document.body.appendChild(ov);
+  var close=function(){ ov.remove(); document.removeEventListener("keydown",esc1); }, esc1=function(e){ if(e.key==="Escape") close(); };
+  document.addEventListener("keydown",esc1);
+  ov.addEventListener("click",async function(e){
+    if(e.target===ov){ close(); return; }
+    var b=e.target.closest("[data-gx]"); if(!b) return;
+    if(b.dataset.gx==="close"){ close(); return; }
+    var b64=url.split(",")[1];
+    if(window.UnoKiosk && UnoKiosk.saveFile){ try{ var r=UnoKiosk.saveFile(name, b64, "image/png"); b.textContent=(r&&String(r).indexOf("err")<0)?"✓ Download papkasiga saqlandi":"Saqlab bo'lmadi"; }catch(_){ b.textContent="Saqlab bo'lmadi"; } return; }
+    try{ var bl=await (await fetch(url)).blob(), f=new File([bl], name, {type:"image/png"}); if(navigator.canShare && navigator.canShare({files:[f]})){ await navigator.share({files:[f]}); return; } }catch(_){}
+    if(ios){ b.textContent="Rasmni bosib turing va saqlang"; return; }
+    var a=document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); b.textContent="✓ Saqlandi";
+  });
 }
 async function gxStory(ev){
   var c=document.createElement("canvas"); c.width=1080; c.height=1920; var x=c.getContext("2d");
