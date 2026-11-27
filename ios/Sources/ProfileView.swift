@@ -99,6 +99,7 @@ struct ProfileView: View {
     @AppStorage("uno.name") private var name = ""
     @AppStorage("uno.phone") private var phone = "+998 "
     @AppStorage("uno.bday") private var bday = ""          /* YYYY-MM-DD, empty = not given */
+    @AppStorage("uno.bdayLocked") private var bdayLocked = false   /* saved on the server: only the restaurant can change it */
     @ObservedObject private var news = NewsModel.shared
     @State private var photo: UIImage? = nil
     @State private var photoRead = false
@@ -201,6 +202,7 @@ struct ProfileView: View {
         .onAppear {
             news.start(); CustomerAPI.syncOnLaunch()
             if !photoRead { photoRead = true; photo = CustomerAPI.localPhoto() }
+            refreshBday()
         }
         .sheet(isPresented: $picking) { PhotoPicker { img in if let img = img { setPhoto(img) } } }
         .toolbar {
@@ -281,7 +283,10 @@ struct ProfileView: View {
             HStack(spacing: 10) {
                 Text("🎂 " + L.t("pf.bday")).font(.system(size: 15, weight: .semibold)).foregroundColor(.white)
                 Spacer(minLength: 6)
-                if bday.isEmpty {
+                if bdayLocked && !bday.isEmpty {
+                    Text(ProfileView.longDay(bday)).font(.system(size: 15, weight: .bold)).foregroundColor(.white)
+                    Image(systemName: "lock.fill").font(.system(size: 13)).foregroundColor(Color.white.opacity(0.45))
+                } else if bday.isEmpty {
                     Button { bday = ProfileView.isoDay.string(from: bdayDate.wrappedValue) } label: {
                         Text(L.t("pf.bdayAdd")).font(.system(size: 14, weight: .bold)).foregroundColor(Config.gold)
                             .padding(.horizontal, 14).frame(height: 36)
@@ -295,17 +300,42 @@ struct ProfileView: View {
                         .buttonStyle(.plain)
                 }
             }
-            if bday.isEmpty { Text(L.t("pf.bdayHint")).font(.footnote).foregroundColor(Color.white.opacity(0.6)) }
+            if bdayLocked && !bday.isEmpty {
+                Text(L.t("pf.bdayLocked")).font(.footnote).foregroundColor(Color.white.opacity(0.6))
+            } else {
+                Text((bday.isEmpty ? L.t("pf.bdayHint") + " " : "") + L.t("pf.bdayOnce")).font(.footnote).foregroundColor(Color.white.opacity(0.6))
+            }
         }
         .padding(.horizontal, 14).padding(.vertical, 10)
         .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.black.opacity(0.22)))
         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color.white.opacity(0.08), lineWidth: 1))
     }
 
+    /* the server keeps the date per phone number: show what it has (also after a reinstall) */
+    private func refreshBday() {
+        guard ready else { return }
+        CustomerAPI.myBirthday { v in
+            guard let v = v else { return }          /* no answer: keep what we have */
+            if let d = v { bday = d; bdayLocked = true }
+            else if bdayLocked { bday = ""; bdayLocked = false }   /* the restaurant cleared it: may be entered again */
+        }
+    }
+    static func longDay(_ iso: String) -> String {
+        guard let d = isoDay.date(from: iso) else { return iso }
+        let f = DateFormatter(); f.dateStyle = .long; f.timeStyle = .none; f.locale = L.locale
+        return f.string(from: d)
+    }
+
     private func save() {
-        let b = bday
+        let b = bdayLocked ? "" : bday
         CustomerAPI.sync(name: name.trimmingCharacters(in: .whitespacesAndNewlines), phone: phone.trimmingCharacters(in: .whitespacesAndNewlines), photoChanged: true) {
-            if !b.isEmpty { CustomerAPI.birthday(b) }
+            if !b.isEmpty {
+                CustomerAPI.birthday(b) { server in
+                    DispatchQueue.main.async {
+                        if let s = server { bday = s; bdayLocked = true; CustomerAPI.scheduleBirthday(s) } else { refreshBday() }
+                    }
+                }
+            } else { DispatchQueue.main.async { refreshBday() } }
         }
         CustomerAPI.scheduleBirthday(b)
         focus = false
@@ -408,7 +438,7 @@ enum CustomerAPI {
         }
     }
     /* birthday to the restaurant (admin → "Tug'ilgan kunlar"); needs growth.sql */
-    static func birthday(_ iso: String) {
+    static func birthday(_ iso: String, done: ((String?) -> Void)? = nil) {
         guard let url = URL(string: Config.supabaseURL + "/rest/v1/rpc/uno_customer_extra") else { return }
         var r = URLRequest(url: url, timeoutInterval: 25)
         r.httpMethod = "POST"
@@ -416,7 +446,30 @@ enum CustomerAPI {
         r.setValue(Config.supabaseKey, forHTTPHeaderField: "apikey")
         r.setValue("Bearer " + Config.supabaseKey, forHTTPHeaderField: "Authorization")
         r.httpBody = try? JSONSerialization.data(withJSONObject: ["p_device": device, "p_birthday": iso])
-        URLSession.shared.dataTask(with: r).resume()
+        /* answer: the date the server keeps (an earlier one if it was already given: "bday_locked") */
+        URLSession.shared.dataTask(with: r) { data, resp, _ in
+            let ok = ((resp as? HTTPURLResponse)?.statusCode ?? 0) < 300
+            let j = data.flatMap { try? JSONSerialization.jsonObject(with: $0) } as? [String: Any]
+            done?(ok ? (j?["birthday"] as? String) : nil)
+        }.resume()
+    }
+    /* nil = no answer; .some(nil) = no date on the server; .some(date) = the locked date */
+    static func myBirthday(_ done: @escaping (String??) -> Void) {
+        guard let url = URL(string: Config.supabaseURL + "/rest/v1/rpc/uno_my_birthday") else { return }
+        var r = URLRequest(url: url, timeoutInterval: 20)
+        r.httpMethod = "POST"
+        r.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        r.setValue(Config.supabaseKey, forHTTPHeaderField: "apikey")
+        r.setValue("Bearer " + Config.supabaseKey, forHTTPHeaderField: "Authorization")
+        r.httpBody = try? JSONSerialization.data(withJSONObject: ["p_device": device])
+        URLSession.shared.dataTask(with: r) { data, resp, err in
+            var out: String?? = nil
+            if err == nil, ((resp as? HTTPURLResponse)?.statusCode ?? 0) < 300, let data = data,
+               let v = try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) {
+                if let s = v as? String, s.count == 10 { out = .some(s) } else if v is NSNull { out = .some(nil) }
+            }
+            DispatchQueue.main.async { done(out) }
+        }.resume()
     }
     /* a week before the birthday at 11:00, every year - only when the admin turned the birthday offer on */
     static func scheduleBirthday(_ iso: String) {

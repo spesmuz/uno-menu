@@ -1524,7 +1524,7 @@ var WT=(function(){
   function go(i){
     if(i===tab && i!==0){ var pg=document.querySelector(".wpage.on"); if(pg) pg.scrollTo({top:0,behavior:"smooth"}); return; }
     tab=i; hap("tick"); try{ SFX.select(); }catch(_){}
-    if(tab===1) renderBook(); else if(tab===2) renderAbout(); else if(tab===3){ renderProfile(); loadNews(); loadBonus(); }
+    if(tab===1) renderBook(); else if(tab===2) renderAbout(); else if(tab===3){ renderProfile(); loadNews(); loadBonus(); syncBday(); }
     /* the new page is filled first, then shown in the same frame as the old one goes */
     ["book","about","profile"].forEach(function(id,k){ var p=$("wp-"+id); if(p) p.classList.toggle("on",tab===k+1); });
     document.documentElement.classList.toggle("wt-pg", tab!==0);
@@ -1620,7 +1620,8 @@ var WT=(function(){
       '<div class="wcard"><div class="wpf"><label class="wava" title="'+esc(T(ph?"pf.photoChange":"pf.photo"))+'">'+(ph?'<img src="'+ph+'" alt="">':esc(initials(p.name)))+'<i>📷</i><input id="wpPhoto" type="file" accept="image/*" hidden></label>'+
       '<div style="flex:1;min-width:0"><label class="wfld"><input id="wpName" placeholder="'+esc(T("pf.name"))+'" autocomplete="name" value="'+esc(p.name)+'"></label>'+
       '<label class="wfld"><input id="wpPhone" type="tel" inputmode="tel" placeholder="'+esc(T("book.phone"))+'" autocomplete="tel" value="'+esc(p.phone||"+998 ")+'"></label></div></div>'+
-      '<label class="wfld" style="margin-top:12px"><span>🎂 '+esc(T("pf.bday"))+'</span><input id="wpBday" type="date" max="'+todayISO()+'" value="'+esc(bday())+'"></label>'+(G().bdayOn&&!bday()?'<p class="whint" style="margin:4px 0 0">'+esc(T("pf.bdayHint"))+'</p>':'')+
+      (bday()?'<div class="wfld" style="margin-top:12px"><span>🎂 '+esc(T("pf.bday"))+'</span><div style="display:flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.22);font-weight:700">'+esc(bdayText(bday()))+'<span style="margin-left:auto;opacity:.6">🔒</span></div></div><p class="whint" style="margin:4px 0 0">'+esc(T("pf.bdayLocked"))+'</p>'
+        :'<label class="wfld" style="margin-top:12px"><span>🎂 '+esc(T("pf.bday"))+'</span><input id="wpBday" type="date" max="'+todayISO()+'" value=""></label><p class="whint" style="margin:4px 0 0">'+(G().bdayOn?esc(T("pf.bdayHint"))+' ':'')+esc(T("pf.bdayOnce"))+'</p>')+
       (ph?'<button type="button" data-wp="delphoto" style="margin:10px 0 0;border:0;background:none;color:rgba(255,160,150,.9);font-size:13px">'+esc(T("pf.photoDel"))+'</button>':'')+
       '<button class="wbtn" type="button" data-wp="save" style="margin-top:12px">'+(P.msg?'✓ '+esc(T("pf.saved")):esc(T("pf.save")))+'</button></div>'+
       '<p class="whint">'+esc(T("pf.hint"))+'</p>'+
@@ -1664,7 +1665,7 @@ var WT=(function(){
       "bq.t.wed":"To'y","bq.t.bday":"Tug'ilgan kun","bq.t.corp":"Korporativ","bq.t.conf":"Konferensiya","bq.t.other":"Boshqa","bq.send":"Ariza yuborish",
       "bq.ok":"Arizangiz qabul qilindi! Menejerimiz tez orada siz bilan bog'lanadi.","bq.hint":"Menyu, bezak va narxni menejer siz bilan alohida kelishib oladi.",
       "ab.events":"Afisha","ab.halls":"Zallarimiz","ab.cap":"%@ kishigacha","ab.bookEv":"Stol band qilish","ab.banq":"To'y yoki banket uchun ariza",
-      "pf.bday":"Tug'ilgan kun","pf.bdayHint":"Tug'ilgan kuningizda sizni maxsus taklif kutadi 🎁",
+      "pf.bday":"Tug'ilgan kun","pf.bdayHint":"Tug'ilgan kuningizda sizni maxsus taklif kutadi 🎁","pf.bdayOnce":"Diqqat: sana bir marta kiritiladi, keyin o'zgartirib bo'lmaydi.","pf.bdayLocked":"Sanani o'zgartirish uchun restoranga murojaat qiling (pasport bilan).",
       "bd.title":"Tug'ilgan kuningiz yaqinlashmoqda! 🎂","bd.today":"Tug'ilgan kuningiz muborak! 🎉","bd.book":"Bayramni bron qilish","bd.def":"UNO Airways'da nishonlang — sizga maxsus sovg'a tayyorlab qo'yamiz.","bd.push":"Tug'ilgan kuningiz yaqin! 🎂",
       "bn.title":"Bonuslarim","bn.how":"Har tashrifda chekdan %@% bonus yig'iladi. Kassada telefon raqamingizni ayting.","bn.need":"Bonuslarni ko'rish uchun yuqorida ism va telefon raqamingizni saqlang.",
       "bn.earn":"Yig'ildi","bn.spend":"Ishlatildi","bn.ref":"Do'st taklifi",
@@ -1677,7 +1678,7 @@ var WT=(function(){
       "bq.t.wed":"Свадьба","bq.t.bday":"День рождения","bq.t.corp":"Корпоратив","bq.t.conf":"Конференция","bq.t.other":"Другое","bq.send":"Отправить заявку",
       "bq.ok":"Заявка принята! Наш менеджер скоро свяжется с вами.","bq.hint":"Меню, оформление и стоимость менеджер обсудит с вами отдельно.",
       "ab.events":"Афиша","ab.halls":"Наши залы","ab.cap":"до %@ гостей","ab.bookEv":"Забронировать стол","ab.banq":"Заявка на свадьбу или банкет",
-      "pf.bday":"День рождения","pf.bdayHint":"В ваш день рождения вас ждёт особое предложение 🎁",
+      "pf.bday":"День рождения","pf.bdayHint":"В ваш день рождения вас ждёт особое предложение 🎁","pf.bdayOnce":"Внимание: дата указывается один раз, изменить её потом нельзя.","pf.bdayLocked":"Чтобы изменить дату, обратитесь в ресторан (с паспортом).",
       "bd.title":"Скоро ваш день рождения! 🎂","bd.today":"С днём рождения! 🎉","bd.book":"Забронировать праздник","bd.def":"Отметьте в UNO Airways — мы приготовим для вас особый подарок.","bd.push":"Скоро ваш день рождения! 🎂",
       "bn.title":"Мои бонусы","bn.how":"С каждого чека начисляется %@% бонусов. Назовите номер телефона на кассе.","bn.need":"Сохраните имя и телефон выше, чтобы видеть бонусы.",
       "bn.earn":"Начислено","bn.spend":"Списано","bn.ref":"Приглашение друга",
@@ -1690,7 +1691,7 @@ var WT=(function(){
       "bq.t.wed":"Wedding","bq.t.bday":"Birthday","bq.t.corp":"Corporate","bq.t.conf":"Conference","bq.t.other":"Other","bq.send":"Send request",
       "bq.ok":"Request received! Our manager will contact you soon.","bq.hint":"The manager will agree the menu, decor and price with you.",
       "ab.events":"What's on","ab.halls":"Our halls","ab.cap":"up to %@ guests","ab.bookEv":"Book a table","ab.banq":"Wedding or banquet request",
-      "pf.bday":"Birthday","pf.bdayHint":"A special offer awaits you on your birthday 🎁",
+      "pf.bday":"Birthday","pf.bdayHint":"A special offer awaits you on your birthday 🎁","pf.bdayOnce":"Note: the date can be entered only once and cannot be changed later.","pf.bdayLocked":"To change the date, please contact the restaurant (with your passport).",
       "bd.title":"Your birthday is coming! 🎂","bd.today":"Happy birthday! 🎉","bd.book":"Book the celebration","bd.def":"Celebrate at UNO Airways — we'll have a special gift for you.","bd.push":"Your birthday is coming! 🎂",
       "bn.title":"My bonuses","bn.how":"Get %@% back in bonuses from every bill. Tell your phone number at the cashier.","bn.need":"Save your name and phone above to see your bonuses.",
       "bn.earn":"Earned","bn.spend":"Spent","bn.ref":"Friend invite",
@@ -1780,6 +1781,10 @@ var WT=(function(){
 
   /* ---- birthday ---- */
   function bday(){ return store("uno_bday")||""; }
+  function bdayText(iso){ var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||""); if(!m) return iso||""; try{ return new Date(+m[1],+m[2]-1,+m[3]).toLocaleDateString(S.lang==="uz"?"uz-Latn-UZ":S.lang,{day:"numeric",month:"long",year:"numeric"}); }catch(_){ return m[3]+"."+m[2]+"."+m[1]; } }
+  /* the date is locked on the server (by phone number): take it from there, also after a reinstall */
+  function syncBday(){ var p=profile(); if(!ready(p.name,p.phone)) return;
+    sbRpc("uno_my_birthday",{p_device:device()}).then(function(r){ if(r.error) return; var v=r.data||""; if(v!==bday()){ store("uno_bday",v||null); if(tab===3) renderProfile(); scheduleBday(); } },function(){}); }   /* empty on the server = the admin cleared it: the guest may enter it again */
   function nextBday(iso, from){
     var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||""); if(!m) return null;
     var now=from||new Date(), y=now.getFullYear(), d=new Date(y,+m[2]-1,+m[3]); var t0=new Date(now.getFullYear(),now.getMonth(),now.getDate());
@@ -1960,8 +1965,9 @@ var WT=(function(){
       if(window.UnoKiosk && UnoKiosk.share){ try{ UnoKiosk.share(T("share.text")+" "+u); return; }catch(_){} }
       if(navigator.share) navigator.share({title:"UNO Airways",text:T("share.text"),url:u}).catch(function(){}); else { try{ navigator.clipboard.writeText(T("share.text")+" "+u).catch(function(){}); }catch(_){} } return; }
     if(b.dataset.wp==="save"){ var n=$("wpName").value.trim(), ph=$("wpPhone").value.trim(); if(!ready(n,ph)) { $("wpName").focus(); return; }
-      hap("ok"); saveProfile(n,ph); var bdv=($("wpBday")||{}).value||""; store("uno_bday",bdv||null);
-      syncCustomer(true, function(){ var after=function(){ BN.data=null; loadBonus(); }; if(bdv) sbRpc("uno_customer_extra",{p_device:device(),p_birthday:bdv}).then(after,after); else after(); }); scheduleBday(); P.msg=1; renderProfile(); setTimeout(function(){ P.msg=null; if(tab===3) renderProfile(); },2000); return; }
+      hap("ok"); saveProfile(n,ph); var bdv=bday()?"":(($("wpBday")||{}).value||""); if(bdv) store("uno_bday",bdv);
+      syncCustomer(true, function(){ var after=function(){ BN.data=null; loadBonus(); syncBday(); };
+        if(bdv) sbRpc("uno_customer_extra",{p_device:device(),p_birthday:bdv}).then(function(r){ if(r && r.data && r.data.birthday) store("uno_bday",r.data.birthday); after(); },after); else after(); }); scheduleBday(); P.msg=1; renderProfile(); setTimeout(function(){ P.msg=null; if(tab===3) renderProfile(); },2000); return; }
     if(b.dataset.wp==="delphoto"){ store("uno_photo",null); syncCustomer(true); renderProfile(); return; }
     if(b.dataset.wp==="reload"){ loadNews(); return; }
   }
@@ -1975,7 +1981,7 @@ var WT=(function(){
       var on=document.documentElement.classList.contains("web-tabs");
       if(on){ build(); renderBar(); if(!timer){ loadNews(); timer=setInterval(function(){ if(!document.hidden) loadNews(); },60000);
           if(!store("uno_custSynced")) syncCustomer(true);
-          setTimeout(rateCheck, 2500); scheduleBday();
+          setTimeout(rateCheck, 2500); scheduleBday(); setTimeout(syncBday, 4000);
           document.addEventListener("visibilitychange",function(){ if(!document.hidden) setTimeout(rateCheck, 1200); }); } }
       else if(built){ if(tab!==0) go(0); }
     },
@@ -4930,11 +4936,22 @@ Bday.render=function(){
   if(Bday.rows===null){ Bday.el.innerHTML=h+'<div class="msg">Yuklanmoqda…</div>'; return; }
   var up=Bday.rows.map(function(c){ return Object.assign({d:Bday.days(c.birthday)},c); }).filter(function(c){ return c.d<=30; }).sort(function(a,b){ return a.d-b.d; });
   h+='<div class="help" style="margin-top:14px">Tug\'ilgan kunini kiritgan mehmonlar: <b style="color:var(--text)">'+Bday.rows.length+'</b> · yaqin 30 kunda: <b style="color:var(--text)">'+up.length+'</b></div>';
+  h+='<h3 style="margin:18px 0 6px;font-size:15px">🔒 Sanani tuzatish</h3><p class="help" style="margin:0 0 8px">Mehmon sanani faqat bir marta kiritadi, keyin ilovada o\'zgartira olmaydi (shu raqam bilan boshqa telefondan kirsa ham). Xato kiritgan bo\'lsa, pasportini ko\'rib shu yerda tuzating. Sanani bo\'sh qoldirib saqlasangiz, sana o\'chadi va mehmon uni qayta kirita oladi.</p>'+
+    '<div class="a-row" style="gap:8px;flex-wrap:wrap"><label class="fld"><span>Telefon raqami</span><input id="bdFixPh" type="tel" inputmode="tel" placeholder="+998 90 123 45 67"></label><label class="fld"><span>To\'g\'ri sana</span><input id="bdFixD" type="date" max="'+new Date().toISOString().slice(0,10)+'"></label><button class="btn gold" data-bd="fix">Tuzatish</button></div>'+(Bday.fixMsg?'<div class="msg '+(Bday.fixOk?'ok':'err')+'">'+esc(Bday.fixMsg)+'</div>':'');
   up.forEach(function(c){ var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(c.birthday)||[]; h+='<div class="drow" style="margin-top:8px"><div class="mid"><b>'+esc(c.name||"—")+'</b><small style="display:block">🎂 '+(m[3]||"")+'.'+(m[2]||"")+' · '+(c.d===0?'<b style="color:var(--gold)">bugun</b>':c.d+' kundan keyin')+'</small></div><div class="acts"><a class="btn sm" href="tel:'+esc(c.phone)+'">📞 '+esc(c.phone)+'</a></div></div>'; });
   Bday.el.innerHTML=h;
 };
 Bday.click=async function(e){
   var b=e.target.closest("[data-bd]"); if(!b) return;
+  if(b.dataset.bd==="fix"){
+    var ph=$("bdFixPh").value.replace(/\D/g,""), dv=$("bdFixD").value||null;
+    if(ph.length<9){ Bday.fixOk=false; Bday.fixMsg="Telefon raqamini to'liq kiriting."; Bday.render(); return; }
+    var r=await S.sb.rpc("uno_admin_set_birthday",{p_phone:ph,p_birthday:dv});
+    if(r.error){ Bday.fixOk=false; Bday.fixMsg=/uno_admin_set_birthday|function/.test(r.error.message)?"Avval bday_lock.sql ni ishga tushiring.":/bad_birthday/.test(r.error.message)?"Sana noto'g'ri.":errText(r.error); }
+    else if(!r.data){ Bday.fixOk=false; Bday.fixMsg="Bu raqam bilan mehmon topilmadi."; }
+    else { Bday.fixOk=true; Bday.fixMsg=dv?"Sana tuzatildi: "+dv.split("-").reverse().join(".")+". Mehmon ilovasida keyingi ochilishda yangilanadi.":"Sana o'chirildi. Mehmon uni qayta kirita oladi."; Bday.load&&Bday.load(); }
+    Bday.render(); return;
+  }
   try{ await gxSaveGrow({bdayOn:$("bdOn").checked, bdayText:$("bdTx").value.trim(), bdayText_ru:$("bdTxRu").value.trim(), bdayText_en:$("bdTxEn").value.trim()}); Bday.msg="Saqlandi."; Bday.err=""; }catch(err){ Bday.err=gxErr(err); }
   Bday.render();
 };
