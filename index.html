@@ -1042,6 +1042,20 @@ html.web-tabs.wt-pg #menuView *{animation-play-state:paused!important}
 .wnews img{display:block;width:100%;aspect-ratio:8.5/2.8;object-fit:cover;background:rgba(255,255,255,.06)}
 .wnews .tx{padding:16px}.wnews b{display:block;font:800 18px var(--sans,system-ui);margin-bottom:6px}.wnews p{margin:0;color:rgba(255,255,255,.82);font-size:15px;line-height:1.45;white-space:pre-line}
 .wnews small{display:block;margin-top:8px;color:rgba(232,176,75,.85);font-size:12px}
+.wseg{display:flex;gap:6px;padding:4px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);margin:0 0 14px}
+.wseg button{flex:1;height:40px;border:0;border-radius:11px;background:none;color:rgba(255,255,255,.75);font:700 14px var(--sans,system-ui)}
+.wseg button.on{background:linear-gradient(180deg,#FFE08A,#FFC94D);color:#1A1306}
+.wbtn.wsm{height:44px;font-size:15px;margin-top:12px;border-radius:13px}
+h2.wsec{margin-top:22px}
+.wbday{background:linear-gradient(135deg,rgba(255,201,77,.22),rgba(232,120,160,.16));border-color:rgba(255,201,77,.4)}.wbday b{display:block;font:800 18px var(--sans,system-ui);margin-bottom:6px}.wbday p{margin:0;color:rgba(255,255,255,.88);line-height:1.45}
+.wbonus .big{font:800 34px var(--sans,system-ui);color:#FFD27A;letter-spacing:-.5px}.wbonus .how{margin:4px 0 0;color:rgba(255,255,255,.75);font-size:14px;line-height:1.45}.wbonus .wlist{margin-top:12px}
+.wcode{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.07);border:1px dashed rgba(255,201,77,.5)}.wcode span{font-size:13px;color:rgba(255,255,255,.65)}.wcode b{font:800 20px ui-monospace,monospace;letter-spacing:1.5px;color:#FFD27A}
+.wmodal{position:fixed;inset:0;z-index:2147483000;background:rgba(3,6,16,.62);display:flex;align-items:flex-end;justify-content:center;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));opacity:0;transition:opacity .22s}
+.wmodal.on{opacity:1}.wmodal .wbox{width:100%;max-width:460px;background:linear-gradient(180deg,#141b33,#0b1022);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:22px 18px 14px;color:#fff;text-align:center;transform:translateY(20px);transition:transform .22s}
+.wmodal.on .wbox{transform:none}.wmodal .t{display:block;font:800 20px var(--sans,system-ui)}.wmodal p{margin:8px 0 12px;color:rgba(255,255,255,.78);line-height:1.45}
+.wmodal textarea{width:100%;box-sizing:border-box;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#fff;padding:10px;font:15px var(--sans,system-ui)}
+.wstars{display:flex;justify-content:center;gap:6px;margin:10px 0 6px}.wstars button{border:0;background:none;font-size:40px;line-height:1;color:rgba(255,255,255,.22);padding:2px}.wstars button.on{color:#FFC94D}
+.wlater{display:block;margin:10px auto 0;border:0;background:none;color:rgba(255,255,255,.55);font:600 14px var(--sans,system-ui);padding:8px}
 .whint{color:rgba(255,255,255,.6);font-size:13px;line-height:1.45;margin:0 6px}
 </style>
 </head>
@@ -1446,7 +1460,7 @@ var WT=(function(){
   function go(i){
     if(i===tab && i!==0){ var pg=document.querySelector(".wpage.on"); if(pg) pg.scrollTo({top:0,behavior:"smooth"}); return; }
     tab=i; hap("tick"); try{ SFX.select(); }catch(_){}
-    if(tab===1) renderBook(); else if(tab===2) renderAbout(); else if(tab===3){ renderProfile(); loadNews(); }
+    if(tab===1) renderBook(); else if(tab===2) renderAbout(); else if(tab===3){ renderProfile(); loadNews(); loadBonus(); }
     /* the new page is filled first, then shown in the same frame as the old one goes */
     ["book","about","profile"].forEach(function(id,k){ var p=$("wp-"+id); if(p) p.classList.toggle("on",tab===k+1); });
     document.documentElement.classList.toggle("wt-pg", tab!==0);
@@ -1464,7 +1478,9 @@ var WT=(function(){
   function hap(k){ try{ if(window.UnoKiosk && UnoKiosk.haptic) UnoKiosk.haptic(k||"tick"); }catch(_){} }
   function renderBook(){
     var p=profile(), pg=$("wp-book"), up=mine.filter(function(b){ return b.at>Date.now()-3*36e5; }).sort(function(a,b){ return a.at-b.at; });
-    pg.innerHTML='<div class="wrap"><h1>'+esc(T("book.title"))+'</h1>'+
+    var seg='<div class="wseg"><button type="button" data-wx="mode" data-v="t" class="'+(B.mode!=="b"?"on":"")+'">'+esc(T("seg.table"))+'</button><button type="button" data-wx="mode" data-v="b" class="'+(B.mode==="b"?"on":"")+'">💍 '+esc(T("seg.banq"))+'</button></div>';
+    if(B.mode==="b"){ if(!EX.loaded) loadExtra(); pg.innerHTML='<div class="wrap"><h1>'+esc(T("book.title"))+'</h1>'+seg+banqHTML(p)+'</div>'; return; }
+    pg.innerHTML='<div class="wrap"><h1>'+esc(T("book.title"))+'</h1>'+seg+
       '<h2>'+esc(T("book.guest"))+'</h2><div class="wcard"><label class="wfld"><span>'+esc(T("book.name"))+'</span><input id="wbName" autocomplete="name" value="'+esc(p.name)+'"></label>'+
       '<label class="wfld"><span>'+esc(T("book.phone"))+'</span><input id="wbPhone" type="tel" inputmode="tel" autocomplete="tel" value="'+esc(p.phone||"+998 ")+'"></label></div>'+
       '<h2>'+esc(T("book.when"))+'</h2><div class="wcard"><label class="wfld"><span>'+esc(T("book.date"))+'</span><input id="wbAt" type="datetime-local" value="'+local(defDate())+'" min="'+local(new Date())+'"></label>'+
@@ -1478,6 +1494,7 @@ var WT=(function(){
       '<h2>'+esc(T("book.call"))+'</h2><a class="wbtn ghost" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none" href="tel:'+PHONE+'">'+IC.phone.replace('<svg','<svg width="18" height="18"')+' '+PHONE_P+'</a><p class="whint">'+esc(T("book.call24"))+'</p>'+
       (up.length?'<h2>'+esc(T("book.mine"))+'</h2><div class="wcard np wlist">'+up.map(function(b){ return '<div class="it"><div><b>'+esc(fmtDT(b.at))+'</b><small>'+b.guests+' '+esc(T("book.people"))+' · '+esc(T(b.zone))+' · '+esc(T(b.occasion))+'</small></div><button class="x" type="button" data-wbdel="'+b.id+'" aria-label="×">×</button></div>'; }).join("")+'</div>':'')+
       '</div>';
+    if(B.pre){ var pr=B.pre; B.pre=null; if(pr.at && $("wbAt")) $("wbAt").value=pr.at; if(pr.occ!=null && $("wbOcc")) $("wbOcc").value=String(pr.occ); }
   }
   async function sendBook(){
     var nm=$("wbName").value.trim(), ph=$("wbPhone").value.trim(), at=new Date($("wbAt").value), zi=+$("wbZone").value, oi=+$("wbOcc").value, note=$("wbNote").value.trim();
@@ -1491,10 +1508,11 @@ var WT=(function(){
     if(r.error){ hap("err"); var m=r.error.message||""; B.msg=["err",T(/bad_phone/.test(m)?"book.err.phone":/bad_name/.test(m)?"book.err.name":/bad_time/.test(m)?"book.err.time":/too_many/.test(m)?"book.err.many":"book.err")]; }
     else { hap("ok"); var bid=(r.data&&r.data.id)||Date.now();
       if(B.rem && canRemind()){ try{ var hm=("0"+at.getHours()).slice(-2)+":"+("0"+at.getMinutes()).slice(-2); UnoKiosk.remind(String(bid), String(at.getTime()-2*36e5), T("remind.title"), T("remind.body").replace("%@",hm)); }catch(_){} }
+      if(G().rateOn!==false){ var rd=new Date(at.getTime()); rd.setDate(rd.getDate()+1); rd.setHours(12,0,0,0); if(rd.getTime()<at.getTime()+3*36e5) rd=new Date(at.getTime()+3*36e5); remindAt("r"+bid, rd.getTime(), T("rt.push.t"), T("rt.push.b")); }
       mine.push({id:bid, at:at.getTime(), guests:B.guests, zone:ZONES[zi], occasion:OCC[oi]}); store("uno_bookings",JSON.stringify(mine.slice(-30))); B.msg=["ok",T("book.ok.t")+" "+T("book.ok")]; try{ SFX.ok&&SFX.ok(); }catch(_){} }
     renderBook();
   }
-  function keepRender(){ var rm=$("wbRem"); if(rm) B.rem=rm.checked; var keep={}; ["wbName","wbPhone","wbAt","wbZone","wbOcc","wbNote"].forEach(function(k){ var el=$(k); if(el) keep[k]=el.value; }); renderBook(); Object.keys(keep).forEach(function(k){ var el=$(k); if(el) el.value=keep[k]; }); }
+  function keepRender(){ var rm=$("wbRem"); if(rm) B.rem=rm.checked; var keep={}; ["wbName","wbPhone","wbAt","wbZone","wbOcc","wbNote","wqName","wqPhone","wqDate","wqG","wqType","wqHall","wqNote"].forEach(function(k){ var el=$(k); if(el) keep[k]=el.value; }); renderBook(); Object.keys(keep).forEach(function(k){ var el=$(k); if(el) el.value=keep[k]; }); }
   /* ---------- UNO (about) ---------- */
   function renderAbout(){
     var logo=S.settings&&S.settings.logoId?blob(S.settings.logoId):"icons/menu-512.png";
@@ -1503,7 +1521,7 @@ var WT=(function(){
     $("wp-about").innerHTML='<div class="wrap"><div class="wabout-top"><img src="'+esc(logo)+'" alt=""><h1>UNO Airways</h1><p>'+esc(T("about.sub"))+'</p></div>'+
       '<div class="wacts"><a href="tel:'+PHONE+'">'+IC.phone+esc(T("about.call"))+'</a><a href="'+map+'" target="_blank" rel="noopener">'+IC.map+esc(T("about.map"))+'</a>'+
       '<a href="https://www.instagram.com/'+INSTA+'/" target="_blank" rel="noopener">'+IC.cam+esc(T("about.insta"))+'</a><button type="button" data-wa="share">'+IC.share+esc(T("about.share"))+'</button></div>'+
-      '<div class="wcard"><b style="color:#E8B04B;font-size:17px">'+esc(T("about.story.t"))+'</b><p style="margin:8px 0 0;line-height:1.55;color:rgba(255,255,255,.88)">'+esc(T("about.story"))+'</p></div>'+
+      '<div class="wcard"><b style="color:#E8B04B;font-size:17px">'+esc(T("about.story.t"))+'</b><p style="margin:8px 0 0;line-height:1.55;color:rgba(255,255,255,.88)">'+esc(T("about.story"))+'</p></div>'+aboutExtra()+
       '<div class="wcard np wlist winfo">'+row("map",T("about.address"),ADDR,map)+row("phone",T("about.op"),PHONE_P,"tel:"+PHONE)+row("music",T("about.music"),T("about.music.t"))+row("seats",T("about.seats"),T("about.seats.t"))+row("gift",T("about.events"),T("about.events.t"))+'</div>'+
       '<p style="text-align:center;margin:4px 0 0"><a href="privacy.html" target="_blank" rel="noopener" style="color:#E8B04B;font-size:13px">'+esc(T("about.privacy"))+'</a></p>'+appVer()+'</div>';
   }
@@ -1536,9 +1554,11 @@ var WT=(function(){
       '<div class="wcard"><div class="wpf"><label class="wava" title="'+esc(T(ph?"pf.photoChange":"pf.photo"))+'">'+(ph?'<img src="'+ph+'" alt="">':esc(initials(p.name)))+'<i>📷</i><input id="wpPhoto" type="file" accept="image/*" hidden></label>'+
       '<div style="flex:1;min-width:0"><label class="wfld"><input id="wpName" placeholder="'+esc(T("pf.name"))+'" autocomplete="name" value="'+esc(p.name)+'"></label>'+
       '<label class="wfld"><input id="wpPhone" type="tel" inputmode="tel" placeholder="'+esc(T("book.phone"))+'" autocomplete="tel" value="'+esc(p.phone||"+998 ")+'"></label></div></div>'+
+      '<label class="wfld" style="margin-top:12px"><span>🎂 '+esc(T("pf.bday"))+'</span><input id="wpBday" type="date" max="'+todayISO()+'" value="'+esc(bday())+'"></label>'+(G().bdayOn&&!bday()?'<p class="whint" style="margin:4px 0 0">'+esc(T("pf.bdayHint"))+'</p>':'')+
       (ph?'<button type="button" data-wp="delphoto" style="margin:10px 0 0;border:0;background:none;color:rgba(255,160,150,.9);font-size:13px">'+esc(T("pf.photoDel"))+'</button>':'')+
       '<button class="wbtn" type="button" data-wp="save" style="margin-top:12px">'+(P.msg?'✓ '+esc(T("pf.saved")):esc(T("pf.save")))+'</button></div>'+
       '<p class="whint">'+esc(T("pf.hint"))+'</p>'+
+      '<div id="wpGrow">'+growHTML()+'</div>'+
       '<h2 style="display:flex;align-items:center;justify-content:space-between">'+esc(T("pf.news"))+'<button type="button" data-wp="reload" style="border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#E8B04B;width:34px;height:34px;border-radius:50%;font-size:16px">↻</button></h2>'+
       '<div id="wpNews">'+newsHTML()+'</div></div>';
   }
@@ -1559,11 +1579,11 @@ var WT=(function(){
     }catch(_){}
   }
   function unseen(){ return !!newsKey && store("uno_newsSeen")!==newsKey; }
-  function syncCustomer(withPhoto){
+  function syncCustomer(withPhoto, then){
     var p=profile(); if(!ready(p.name,p.phone)) return;
     var a={p_device:device(),p_name:p.name,p_phone:p.phone,p_platform:platform(),p_lang:S.lang};
     if(withPhoto) a.p_photo=photo()||"";
-    sbRpc("uno_customer_save",a).then(function(r){ if(!r.error) store("uno_custSynced","1"); });
+    sbRpc("uno_customer_save",a).then(function(r){ if(!r.error){ store("uno_custSynced","1"); if(then) then(); } });
   }
   function squarePhoto(file){
     return new Promise(function(res,rej){
@@ -1572,17 +1592,250 @@ var WT=(function(){
         c.getContext("2d").drawImage(im,(im.naturalWidth-s)/2,(im.naturalHeight-s)/2,s,s,0,0,side,side); URL.revokeObjectURL(url); res(c.toDataURL("image/jpeg",.72)); };
       im.onerror=function(){ URL.revokeObjectURL(url); rej(new Error("img")); }; im.src=url; });
   }
+  /* ================= growth: afisha, halls, banquet requests, birthday, bonus, invite a friend, rate the visit ================= */
+  var DX={
+    uz:{"seg.table":"Stol","seg.banq":"To'y / banket","bq.title":"Tadbir uchun ariza","bq.date":"Sana","bq.type":"Tadbir turi","bq.hall":"Zal","bq.any":"Farqi yo'q","bq.guests":"Mehmonlar soni",
+      "bq.t.wed":"To'y","bq.t.bday":"Tug'ilgan kun","bq.t.corp":"Korporativ","bq.t.conf":"Konferensiya","bq.t.other":"Boshqa","bq.send":"Ariza yuborish",
+      "bq.ok":"Arizangiz qabul qilindi! Menejerimiz tez orada siz bilan bog'lanadi.","bq.hint":"Menyu, bezak va narxni menejer siz bilan alohida kelishib oladi.",
+      "ab.events":"Afisha","ab.halls":"Zallarimiz","ab.cap":"%@ kishigacha","ab.bookEv":"Stol band qilish","ab.banq":"To'y yoki banket uchun ariza",
+      "pf.bday":"Tug'ilgan kun","pf.bdayHint":"Tug'ilgan kuningizda sizni maxsus taklif kutadi 🎁",
+      "bd.title":"Tug'ilgan kuningiz yaqinlashmoqda! 🎂","bd.today":"Tug'ilgan kuningiz muborak! 🎉","bd.book":"Bayramni bron qilish","bd.def":"UNO Airways'da nishonlang — sizga maxsus sovg'a tayyorlab qo'yamiz.","bd.push":"Tug'ilgan kuningiz yaqin! 🎂",
+      "bn.title":"Bonuslarim","bn.how":"Har tashrifda chekdan %@% bonus yig'iladi. Kassada telefon raqamingizni ayting.","bn.need":"Bonuslarni ko'rish uchun yuqorida ism va telefon raqamingizni saqlang.",
+      "bn.earn":"Yig'ildi","bn.spend":"Ishlatildi","bn.ref":"Do'st taklifi",
+      "rf.title":"Do'stingizni taklif qiling","rf.how":"Do'stingiz ilovada sizning kodingizni kiritib, birinchi marta kelsa, sizga %@ bonus beriladi.","rf.code":"Sizning kodingiz","rf.share":"Kodni ulashish",
+      "rf.text":"UNO Airways'ga keling! Ilovada mening kodimni kiriting: %@","rf.enter":"Do'stingiz kodi bormi?","rf.ph":"Do'stingiz kodi (telefon raqami)","rf.ok":"Kod qabul qilindi ✓","rf.bad":"Bunday kod topilmadi","rf.self":"O'z kodingizni kiritib bo'lmaydi","rf.apply":"Qo'llash",
+      "rt.title":"Tashrifingiz qanday o'tdi?","rt.sub":"Fikringiz biz uchun juda muhim","rt.thanks":"Rahmat! 🙏","rt.ask":"Boshqalarga ham tavsiya qilasizmi? Sharhingiz bizga katta yordam beradi.",
+      "rt.google":"Google'da sharh qoldirish","rt.gis":"2GIS'da sharh qoldirish","rt.bad":"Nima yoqmadi? Rahbariyat albatta o'qiydi.","rt.send":"Yuborish","rt.later":"Keyinroq","rt.close":"Yopish",
+      "rt.sent":"Rahmat! Fikringiz rahbariyatga yetkazildi.","rt.push.t":"Tashrifingiz qanday o'tdi? ⭐","rt.push.b":"UNO Airways'ga baho bering — bir daqiqa vaqt oladi."},
+    ru:{"seg.table":"Столик","seg.banq":"Свадьба / банкет","bq.title":"Заявка на мероприятие","bq.date":"Дата","bq.type":"Тип мероприятия","bq.hall":"Зал","bq.any":"Без разницы","bq.guests":"Количество гостей",
+      "bq.t.wed":"Свадьба","bq.t.bday":"День рождения","bq.t.corp":"Корпоратив","bq.t.conf":"Конференция","bq.t.other":"Другое","bq.send":"Отправить заявку",
+      "bq.ok":"Заявка принята! Наш менеджер скоро свяжется с вами.","bq.hint":"Меню, оформление и стоимость менеджер обсудит с вами отдельно.",
+      "ab.events":"Афиша","ab.halls":"Наши залы","ab.cap":"до %@ гостей","ab.bookEv":"Забронировать стол","ab.banq":"Заявка на свадьбу или банкет",
+      "pf.bday":"День рождения","pf.bdayHint":"В ваш день рождения вас ждёт особое предложение 🎁",
+      "bd.title":"Скоро ваш день рождения! 🎂","bd.today":"С днём рождения! 🎉","bd.book":"Забронировать праздник","bd.def":"Отметьте в UNO Airways — мы приготовим для вас особый подарок.","bd.push":"Скоро ваш день рождения! 🎂",
+      "bn.title":"Мои бонусы","bn.how":"С каждого чека начисляется %@% бонусов. Назовите номер телефона на кассе.","bn.need":"Сохраните имя и телефон выше, чтобы видеть бонусы.",
+      "bn.earn":"Начислено","bn.spend":"Списано","bn.ref":"Приглашение друга",
+      "rf.title":"Пригласите друга","rf.how":"Если друг введёт ваш код в приложении и придёт впервые, вы получите %@ бонусов.","rf.code":"Ваш код","rf.share":"Поделиться кодом",
+      "rf.text":"Приходите в UNO Airways! Введите мой код в приложении: %@","rf.enter":"Есть код друга?","rf.ph":"Код друга (номер телефона)","rf.ok":"Код принят ✓","rf.bad":"Такой код не найден","rf.self":"Нельзя ввести свой код","rf.apply":"Применить",
+      "rt.title":"Как прошёл ваш визит?","rt.sub":"Ваше мнение очень важно для нас","rt.thanks":"Спасибо! 🙏","rt.ask":"Порекомендуете нас другим? Ваш отзыв нам очень поможет.",
+      "rt.google":"Оставить отзыв в Google","rt.gis":"Оставить отзыв в 2GIS","rt.bad":"Что не понравилось? Руководство обязательно прочитает.","rt.send":"Отправить","rt.later":"Позже","rt.close":"Закрыть",
+      "rt.sent":"Спасибо! Ваш отзыв передан руководству.","rt.push.t":"Как прошёл визит? ⭐","rt.push.b":"Оцените UNO Airways — это займёт минуту."},
+    en:{"seg.table":"Table","seg.banq":"Wedding / banquet","bq.title":"Event request","bq.date":"Date","bq.type":"Event type","bq.hall":"Hall","bq.any":"Any","bq.guests":"Number of guests",
+      "bq.t.wed":"Wedding","bq.t.bday":"Birthday","bq.t.corp":"Corporate","bq.t.conf":"Conference","bq.t.other":"Other","bq.send":"Send request",
+      "bq.ok":"Request received! Our manager will contact you soon.","bq.hint":"The manager will agree the menu, decor and price with you.",
+      "ab.events":"What's on","ab.halls":"Our halls","ab.cap":"up to %@ guests","ab.bookEv":"Book a table","ab.banq":"Wedding or banquet request",
+      "pf.bday":"Birthday","pf.bdayHint":"A special offer awaits you on your birthday 🎁",
+      "bd.title":"Your birthday is coming! 🎂","bd.today":"Happy birthday! 🎉","bd.book":"Book the celebration","bd.def":"Celebrate at UNO Airways — we'll have a special gift for you.","bd.push":"Your birthday is coming! 🎂",
+      "bn.title":"My bonuses","bn.how":"Get %@% back in bonuses from every bill. Tell your phone number at the cashier.","bn.need":"Save your name and phone above to see your bonuses.",
+      "bn.earn":"Earned","bn.spend":"Spent","bn.ref":"Friend invite",
+      "rf.title":"Invite a friend","rf.how":"When a friend enters your code in the app and visits for the first time, you get %@ in bonuses.","rf.code":"Your code","rf.share":"Share code",
+      "rf.text":"Come to UNO Airways! Enter my code in the app: %@","rf.enter":"Have a friend's code?","rf.ph":"Friend's code (phone number)","rf.ok":"Code accepted ✓","rf.bad":"Code not found","rf.self":"You can't use your own code","rf.apply":"Apply",
+      "rt.title":"How was your visit?","rt.sub":"Your opinion matters to us","rt.thanks":"Thank you! 🙏","rt.ask":"Would you recommend us? A review helps us a lot.",
+      "rt.google":"Review on Google","rt.gis":"Review on 2GIS","rt.bad":"What went wrong? The management will read it.","rt.send":"Send","rt.later":"Later","rt.close":"Close",
+      "rt.sent":"Thank you! Your feedback reached the management.","rt.push.t":"How was your visit? ⭐","rt.push.b":"Rate UNO Airways — it takes a minute."}
+  };
+  Object.keys(DX).forEach(function(l){ D[l]=D[l]||{}; Object.keys(DX[l]).forEach(function(k){ D[l][k]=DX[l][k]; }); });
+  function G(){ return (S.settings&&S.settings.grow)||{}; }
+  function gtxt(o,k){ var v=o[k+"_"+S.lang]; return (S.lang!=="uz"&&v)?v:(o[k]||""); }
+  function openOut(u){ if(!u) return; if(window.UnoKiosk && UnoKiosk.openUrl){ try{ UnoKiosk.openUrl(u); return; }catch(_){} } try{ window.open(u,"_blank","noopener"); }catch(_){ location.href=u; } }
+  function remindAt(id, at, title, body){ if(!canRemind() || !(at>Date.now()+60000)) return; try{ UnoKiosk.remind(String(id), String(Math.round(at)), title, body); }catch(_){} }
+  function shareText(t){ if(window.UnoKiosk && UnoKiosk.share){ try{ UnoKiosk.share(t); return; }catch(_){} } if(navigator.share) navigator.share({text:t}).catch(function(){}); else { try{ navigator.clipboard.writeText(t).catch(function(){}); }catch(_){} } }
+
+  /* ---- halls and events (admin keeps them as docs "halls/*" and "events/*") ---- */
+  var EX={halls:[], events:[], loaded:false, busy:false};
+  function todayISO(){ var d=new Date(), z=function(n){ return ("0"+n).slice(-2); }; return d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate()); }
+  async function loadExtra(){
+    if(EX.busy) return; EX.busy=true;
+    try{
+      var r=await fetch(SB_URL+"/rest/v1/uno_docs?select=path,data&or=(path.like.halls/*,path.like.events/*)",{headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY},cache:"no-store"});
+      if(r.ok){
+        var rows=await r.json(), t=todayISO();
+        EX.halls=rows.filter(function(x){ return /^halls\//.test(x.path) && x.data && !x.data.hidden; }).map(function(x){ return Object.assign({id:x.path.slice(6)},x.data); })
+          .sort(function(a,b){ return (+a.order||0)-(+b.order||0) || (+b.cap||0)-(+a.cap||0); });
+        EX.events=rows.filter(function(x){ return /^events\//.test(x.path) && x.data && !x.data.hidden && String(x.data.date||"")>=t; }).map(function(x){ return Object.assign({id:x.path.slice(7)},x.data); })
+          .sort(function(a,b){ return (String(a.date)+String(a.time||"")).localeCompare(String(b.date)+String(b.time||"")); }).slice(0,12);
+        EX.loaded=true;
+        if(tab===2) renderAbout(); else if(tab===1 && B.mode==="b") keepRender();
+      }
+    }catch(_){}
+    EX.busy=false;
+  }
+  function evDate(e){
+    try{ var d=new Date(e.date+"T"+(e.time||"12:00")); return d.toLocaleDateString(S.lang==="uz"?"uz-Latn-UZ":S.lang,{weekday:"short",day:"numeric",month:"long"})+(e.time?" · "+e.time:""); }catch(_){ return e.date+(e.time?" · "+e.time:""); }
+  }
+  function aboutExtra(){
+    if(!EX.loaded){ loadExtra(); return ""; }
+    var h="";
+    if(EX.events.length){
+      h+='<h2 class="wsec">🎶 '+esc(T("ab.events"))+'</h2>'+EX.events.map(function(e){
+        return '<div class="wcard np wnews">'+(e.imgId?'<img src="'+esc(blob(e.imgId))+'" alt="" loading="lazy">':'')+'<div class="tx"><small style="margin:0 0 6px;font-size:13px;font-weight:700">📅 '+esc(evDate(e))+'</small>'+
+          '<b>'+esc(gtxt(e,"title"))+'</b>'+(gtxt(e,"text")?'<p>'+esc(gtxt(e,"text"))+'</p>':'')+
+          '<button class="wbtn wsm" type="button" data-wx="evbook" data-d="'+esc(e.date)+'" data-t="'+esc(e.time||"19:00")+'">'+esc(T("ab.bookEv"))+'</button></div></div>'; }).join("");
+    }
+    if(EX.halls.length){
+      h+='<h2 class="wsec">🏛 '+esc(T("ab.halls"))+'</h2>'+EX.halls.map(function(x){
+        return '<div class="wcard np wnews">'+(x.imgId?'<img src="'+esc(blob(x.imgId))+'" alt="" loading="lazy">':'')+'<div class="tx"><b>'+esc(gtxt(x,"name"))+'</b>'+
+          (+x.cap?'<small style="margin:0 0 6px;font-size:13px;font-weight:700">👥 '+esc(T("ab.cap").replace("%@",x.cap))+'</small>':'')+(gtxt(x,"desc")?'<p>'+esc(gtxt(x,"desc"))+'</p>':'')+'</div></div>'; }).join("")+
+        '<button class="wbtn" type="button" data-wx="banq" style="margin-top:4px">💍 '+esc(T("ab.banq"))+'</button>';
+    }
+    return h;
+  }
+
+  /* ---- banquet / wedding request (goes to the operator like a booking, with the hall and the event type) ---- */
+  var BQ_T=["bq.t.wed","bq.t.bday","bq.t.corp","bq.t.conf","bq.t.other"];
+  function banqHTML(p){
+    var t=new Date(Date.now()+864e5), z=function(n){ return ("0"+n).slice(-2); }, min=t.getFullYear()+"-"+z(t.getMonth()+1)+"-"+z(t.getDate());
+    return '<h2>'+esc(T("book.guest"))+'</h2><div class="wcard"><label class="wfld"><span>'+esc(T("book.name"))+'</span><input id="wqName" autocomplete="name" value="'+esc(p.name)+'"></label>'+
+      '<label class="wfld"><span>'+esc(T("book.phone"))+'</span><input id="wqPhone" type="tel" inputmode="tel" autocomplete="tel" value="'+esc(p.phone||"+998 ")+'"></label></div>'+
+      '<h2>'+esc(T("bq.title"))+'</h2><div class="wcard"><div class="wrow2"><label class="wfld"><span>'+esc(T("bq.date"))+'</span><input id="wqDate" type="date" min="'+min+'" value="'+min+'"></label>'+
+      '<label class="wfld"><span>'+esc(T("bq.guests"))+'</span><input id="wqG" type="number" inputmode="numeric" min="10" max="350" step="5" value="'+(B.bg||50)+'"></label></div>'+
+      '<div class="wrow2"><label class="wfld"><span>'+esc(T("bq.type"))+'</span><select id="wqType">'+BQ_T.map(function(k,i){ return '<option value="'+i+'"'+(B.bt===i?' selected':'')+'>'+esc(T(k))+'</option>'; }).join("")+'</select></label>'+
+      '<label class="wfld"><span>'+esc(T("bq.hall"))+'</span><select id="wqHall"><option value="">'+esc(T("bq.any"))+'</option>'+EX.halls.map(function(x){ return '<option value="'+esc(x.id)+'">'+esc(gtxt(x,"name"))+(+x.cap?' · '+x.cap:'')+'</option>'; }).join("")+'</select></label></div>'+
+      '<label class="wfld"><span>'+esc(T("book.note"))+'</span><textarea id="wqNote" rows="3"></textarea></label></div>'+
+      '<p class="whint" style="margin-top:-4px">'+esc(T("bq.hint"))+'</p>'+
+      (B.msg?'<div class="wmsg '+B.msg[0]+'">'+esc(B.msg[1])+'</div>':'')+
+      '<button class="wbtn" type="button" data-wx="bqsend"'+(B.busy?' disabled':'')+'>'+(B.busy?'…':'💍 '+esc(T("bq.send")))+'</button>';
+  }
+  async function sendBanq(){
+    var nm=$("wqName").value.trim(), ph=$("wqPhone").value.trim(), dt=$("wqDate").value, g=Math.round(+$("wqG").value||0), ti=+$("wqType").value, hid=$("wqHall").value, note=$("wqNote").value.trim();
+    var hall=EX.halls.find(function(x){ return x.id===hid; });
+    var at=dt?new Date(dt+"T18:00"):null;
+    var err=nm.length<2?"book.err.name":ph.replace(/\D/g,"").length<9?"book.err.phone":(!at||!(at>new Date()))?"book.err.time":null;
+    if(!err && (g<1||g>350)) err="book.err";
+    B.bg=g; B.bt=ti;
+    if(err){ hap("err"); B.msg=["err",T(err)]; keepRender(); return; }
+    B.busy=true; B.msg=null; keepRender(); saveProfile(nm,ph);
+    var r=await sbRpc("uno_booking_create",{p_name:nm,p_phone:ph,p_at:at.toISOString(),p_guests:g,p_zone:hall?(hall.name||"").slice(0,40):"Banket",p_occasion:D.uz[BQ_T[ti]],p_note:("💍 BANKET ARIZASI (sana: "+dt+")"+(note?". "+note:"")).slice(0,500),p_source:source()});
+    B.busy=false;
+    if(r.error){ hap("err"); var m=r.error.message||""; B.msg=["err",T(/bad_phone/.test(m)?"book.err.phone":/bad_name/.test(m)?"book.err.name":/bad_time/.test(m)?"book.err.time":/too_many/.test(m)?"book.err.many":"book.err")]; }
+    else { hap("ok"); B.msg=["ok",T("bq.ok")]; try{ SFX.ok&&SFX.ok(); }catch(_){} }
+    renderBook();
+  }
+
+  /* ---- birthday ---- */
+  function bday(){ return store("uno_bday")||""; }
+  function nextBday(iso, from){
+    var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||""); if(!m) return null;
+    var now=from||new Date(), y=now.getFullYear(), d=new Date(y,+m[2]-1,+m[3]); var t0=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    if(d<t0) d=new Date(y+1,+m[2]-1,+m[3]); return d;
+  }
+  function bdayDays(){ var n=nextBday(bday()); if(!n) return null; var t=new Date(); t=new Date(t.getFullYear(),t.getMonth(),t.getDate()); return Math.round((n-t)/864e5); }
+  function bdayBanner(){
+    var g=G(); if(!g.bdayOn) return ""; var dd=bdayDays(); if(dd===null || dd>7) return "";
+    var tx=gtxt(g,"bdayText")||T("bd.def");
+    return '<div class="wcard wbday"><b>'+esc(T(dd===0?"bd.today":"bd.title"))+'</b><p>'+esc(tx)+'</p><button class="wbtn wsm" type="button" data-wx="bdbook">🎉 '+esc(T("bd.book"))+'</button></div>';
+  }
+  function scheduleBday(){
+    var g=G(); if(!g.bdayOn || !canRemind()) return; var n=nextBday(bday()); if(!n) return;
+    var at=new Date(n.getFullYear(),n.getMonth(),n.getDate()-7,11,0,0).getTime(); if(at<Date.now()+60000) at=new Date(n.getFullYear(),n.getMonth(),n.getDate(),10,0,0).getTime();
+    remindAt("bday", at, T("bd.push"), gtxt(g,"bdayText")||T("bd.def"));
+  }
+
+  /* ---- bonus and invite a friend ---- */
+  var BN={data:null, busy:false, refMsg:null};
+  function ph9(p){ return String(p||"").replace(/\D/g,"").slice(-9); }
+  async function loadBonus(){
+    var g=G(); if(!g.bonusOn || BN.busy) return; var p=profile(); if(!ready(p.name,p.phone)) return;
+    BN.busy=true;
+    try{ var r=await sbRpc("uno_bonus_me",{p_device:device()}); if(!r.error && r.data){ BN.data=r.data; if(tab===3){ var box=$("wpGrow"); if(box) box.innerHTML=growHTML(); } } }catch(_){}
+    BN.busy=false;
+  }
+  function growHTML(){
+    var g=G(), p=profile(), h=bdayBanner();
+    if(g.bonusOn){
+      var pct=+(BN.data&&BN.data.pct)||+g.bonusPct||5;
+      h+='<h2>💳 '+esc(T("bn.title"))+'</h2><div class="wcard wbonus">';
+      if(!ready(p.name,p.phone)) h+='<p style="margin:0;color:rgba(255,255,255,.75)">'+esc(T("bn.need"))+'</p>';
+      else {
+        h+='<div class="big">'+esc(fmtL(+(BN.data&&BN.data.balance)||0))+'</div><p class="how">'+esc(T("bn.how").replace("%@",pct))+'</p>';
+        var tx=(BN.data&&BN.data.tx)||[];
+        if(tx.length) h+='<div class="wlist">'+tx.slice(0,5).map(function(t){ return '<div class="it"><div><b>'+esc(T(t.kind==="spend"?"bn.spend":t.kind==="ref"?"bn.ref":"bn.earn"))+'</b><small>'+esc(new Date(t.at).toLocaleDateString(S.lang==="uz"?"uz-Latn-UZ":S.lang,{day:"numeric",month:"short"}))+'</small></div><b style="color:'+(t.amount<0?'#ff9a8a':'#7CE0A6')+'">'+(t.amount>0?'+':'')+esc(fmtL(t.amount))+'</b></div>'; }).join("")+'</div>';
+      }
+      h+='</div>';
+      var rb=+(BN.data&&BN.data.ref)||+g.refBonus||0;
+      if(rb>0 && ready(p.name,p.phone)){
+        h+='<h2>🤝 '+esc(T("rf.title"))+'</h2><div class="wcard"><p style="margin:0 0 10px;color:rgba(255,255,255,.82);line-height:1.45">'+esc(T("rf.how").replace("%@",fmtL(rb)))+'</p>'+
+          '<div class="wcode"><span>'+esc(T("rf.code"))+'</span><b>'+esc(ph9(p.phone))+'</b></div>'+
+          '<button class="wbtn wsm" type="button" data-wx="refshare">'+IC.share.replace('<svg','<svg width="18" height="18" style="vertical-align:-4px;margin-right:6px"')+esc(T("rf.share"))+'</button>';
+        if(!store("uno_refSet")) h+='<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)"><span style="display:block;font-size:13px;color:rgba(255,255,255,.65);margin-bottom:6px">'+esc(T("rf.enter"))+'</span>'+
+          '<div style="display:flex;gap:8px"><input id="wpRef" inputmode="numeric" placeholder="'+esc(T("rf.ph"))+'" style="flex:1;min-width:0"><button class="wbtn wsm" type="button" data-wx="ref" style="width:auto;margin:0;padding:0 16px">'+esc(T("rf.apply"))+'</button></div></div>';
+        if(BN.refMsg) h+='<div class="wmsg '+BN.refMsg[0]+'" style="margin-top:10px">'+esc(BN.refMsg[1])+'</div>';
+        h+='</div>';
+      }
+    }
+    return h;
+  }
+  async function applyRef(){
+    var v=($("wpRef")||{}).value||""; if(ph9(v).length<9){ BN.refMsg=["err",T("rf.bad")]; renderProfile(); return; }
+    var r=await sbRpc("uno_customer_extra",{p_device:device(),p_ref:v});
+    if(r.error){ var m=r.error.message||""; BN.refMsg=["err",T(/self_ref/.test(m)?"rf.self":"rf.bad")]; }
+    else { store("uno_refSet","1"); BN.refMsg=["ok",T("rf.ok")]; hap("ok"); }
+    renderProfile();
+  }
+
+  /* ---- rate the visit: shown once after a booked visit; good marks are invited to Google/2GIS, low ones go to the management only ---- */
+  var RT={b:null, stars:0, step:0, el:null};
+  function rateCandidate(){
+    if(G().rateOn===false) return null; var now=Date.now();
+    return mine.filter(function(b){ return !b.rated && !b.banq && b.at<now-2*36e5 && b.at>now-4*864e5; }).sort(function(a,b){ return b.at-a.at; })[0]||null;
+  }
+  var bdaySched=false;
+  function rateCheck(){ if(!bdaySched && S.loadedSettings){ bdaySched=true; scheduleBday(); } if(RT.el || S.view!=="menu") return; var b=rateCandidate(); if(!b) return; RT.b=b; RT.stars=0; RT.step=0; rateOpen(); }
+  function rateMark(){ if(!RT.b) return; mine.forEach(function(x){ if(String(x.id)===String(RT.b.id)) x.rated=1; }); store("uno_bookings",JSON.stringify(mine.slice(-30))); }
+  function rateOpen(){
+    var el=document.createElement("div"); el.className="wmodal"; el.setAttribute("role","dialog"); document.body.appendChild(el); RT.el=el;
+    el.addEventListener("click",rateClick); rateRender(); requestAnimationFrame(function(){ el.classList.add("on"); });
+  }
+  function rateClose(){ var el=RT.el; if(!el) return; RT.el=null; el.classList.remove("on"); setTimeout(function(){ el.remove(); },250); }
+  function rateRender(){
+    if(!RT.el) return; var g=G(), s=RT.stars, h='<div class="wbox">';
+    var stars='<div class="wstars">'+[1,2,3,4,5].map(function(i){ return '<button type="button" data-wr="'+i+'" class="'+(i<=s?'on':'')+'" aria-label="'+i+'">★</button>'; }).join("")+'</div>';
+    if(RT.step===0) h+='<b class="t">'+esc(T("rt.title"))+'</b><p>'+esc(T("rt.sub"))+'</p>'+stars+'<button class="wlater" type="button" data-wr="later">'+esc(T("rt.later"))+'</button>';
+    else if(RT.step===1 && s>=4){
+      var gl=g.reviewG||("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent("UNO Airways Restaurante, "+ADDR));
+      h+='<b class="t">'+esc(T("rt.thanks"))+'</b>'+stars+'<p>'+esc(T("rt.ask"))+'</p><button class="wbtn" type="button" data-wr="g" data-u="'+esc(gl)+'">⭐ '+esc(T("rt.google"))+'</button>'+
+        (g.review2gis?'<button class="wbtn ghost" type="button" data-wr="g" data-u="'+esc(g.review2gis)+'" style="margin-top:10px">'+esc(T("rt.gis"))+'</button>':'')+
+        '<button class="wlater" type="button" data-wr="close">'+esc(T("rt.close"))+'</button>';
+    }
+    else if(RT.step===1){ h+='<b class="t">'+esc(T("rt.title"))+'</b>'+stars+'<p>'+esc(T("rt.bad"))+'</p><textarea id="wrNote" rows="4"></textarea><button class="wbtn" type="button" data-wr="send" style="margin-top:12px">'+esc(T("rt.send"))+'</button><button class="wlater" type="button" data-wr="close">'+esc(T("rt.close"))+'</button>'; }
+    else h+='<b class="t">'+esc(T("rt.thanks"))+'</b><p>'+esc(T("rt.sent"))+'</p><button class="wbtn" type="button" data-wr="close">'+esc(T("rt.close"))+'</button>';
+    RT.el.innerHTML=h+'</div>';
+  }
+  function rateSend(note){
+    var p=profile(); sbRpc("uno_feedback_add",{p_device:device(),p_stars:RT.stars,p_comment:note||null,p_name:p.name||null,p_phone:p.phone||null,p_booking:(typeof RT.b.id==="number"&&RT.b.id<1e12)?RT.b.id:null}).then(function(){},function(){});
+  }
+  function rateClick(e){
+    if(e.target===RT.el){ rateMark(); rateClose(); return; }
+    var b=e.target.closest("[data-wr]"); if(!b) return; var a=b.dataset.wr;
+    if(/^[1-5]$/.test(a)){ RT.stars=+a; hap("tick"); if(RT.step===0){ RT.step=1; rateMark(); if(RT.stars>=4) rateSend(""); } rateRender(); return; }
+    if(a==="later"){ rateClose(); return; }
+    if(a==="close"){ rateMark(); rateClose(); return; }
+    if(a==="g"){ openOut(b.dataset.u); rateMark(); rateClose(); return; }
+    if(a==="send"){ rateSend((($("wrNote")||{}).value||"").trim()); hap("ok"); RT.step=2; rateRender(); return; }
+  }
+  function onGx(b){
+    var a=b.dataset.wx;
+    if(a==="mode"){ B.mode=b.dataset.v; B.msg=null; keepRender(); return; }
+    if(a==="bqsend"){ sendBanq(); return; }
+    if(a==="banq"){ B.mode="b"; B.msg=null; go(1); return; }
+    if(a==="evbook"){ B.mode="t"; B.msg=null; B.pre={at:b.dataset.d+"T"+b.dataset.t}; go(1); return; }
+    if(a==="bdbook"){ B.mode="t"; B.msg=null; B.pre={occ:1}; go(1); return; }
+    if(a==="refshare"){ shareText(T("rf.text").replace("%@",ph9(profile().phone))+" "+location.origin+location.pathname); return; }
+    if(a==="ref"){ applyRef(); return; }
+  }
   /* ---------- events ---------- */
   function onClick(e){
-    var b=e.target.closest("[data-wb],[data-wbdel],[data-wa],[data-wp]"); if(!b || !b.closest(".wpage")) return;
+    var b=e.target.closest("[data-wb],[data-wbdel],[data-wa],[data-wp],[data-wx]"); if(!b || !b.closest(".wpage")) return;
+    if(b.dataset.wx){ onGx(b); return; }
     if(b.dataset.wb==="+"||b.dataset.wb==="-"){ B.guests=Math.max(1,Math.min(350,B.guests+(b.dataset.wb==="+"?1:-1))); $("wbG").textContent=B.guests; return; }
     if(b.dataset.wb==="send"){ sendBook(); return; }
-    if(b.dataset.wbdel){ try{ if(window.UnoKiosk&&UnoKiosk.cancelRemind) UnoKiosk.cancelRemind(String(b.dataset.wbdel)); }catch(_){} mine=mine.filter(function(x){ return String(x.id)!==b.dataset.wbdel; }); store("uno_bookings",JSON.stringify(mine)); renderBook(); return; }
+    if(b.dataset.wbdel){ try{ if(window.UnoKiosk&&UnoKiosk.cancelRemind){ UnoKiosk.cancelRemind(String(b.dataset.wbdel)); UnoKiosk.cancelRemind("r"+b.dataset.wbdel); } }catch(_){} mine=mine.filter(function(x){ return String(x.id)!==b.dataset.wbdel; }); store("uno_bookings",JSON.stringify(mine)); renderBook(); return; }
     if(b.dataset.wa==="share"){ var u=location.origin+location.pathname;
       if(window.UnoKiosk && UnoKiosk.share){ try{ UnoKiosk.share(T("share.text")+" "+u); return; }catch(_){} }
       if(navigator.share) navigator.share({title:"UNO Airways",text:T("share.text"),url:u}).catch(function(){}); else { try{ navigator.clipboard.writeText(T("share.text")+" "+u).catch(function(){}); }catch(_){} } return; }
     if(b.dataset.wp==="save"){ var n=$("wpName").value.trim(), ph=$("wpPhone").value.trim(); if(!ready(n,ph)) { $("wpName").focus(); return; }
-      hap("ok"); saveProfile(n,ph); syncCustomer(true); P.msg=1; renderProfile(); setTimeout(function(){ P.msg=null; if(tab===3) renderProfile(); },2000); return; }
+      hap("ok"); saveProfile(n,ph); var bdv=($("wpBday")||{}).value||""; store("uno_bday",bdv||null);
+      syncCustomer(true, function(){ var after=function(){ BN.data=null; loadBonus(); }; if(bdv) sbRpc("uno_customer_extra",{p_device:device(),p_birthday:bdv}).then(after,after); else after(); }); scheduleBday(); P.msg=1; renderProfile(); setTimeout(function(){ P.msg=null; if(tab===3) renderProfile(); },2000); return; }
     if(b.dataset.wp==="delphoto"){ store("uno_photo",null); syncCustomer(true); renderProfile(); return; }
     if(b.dataset.wp==="reload"){ loadNews(); return; }
   }
@@ -1595,7 +1848,9 @@ var WT=(function(){
     sync:function(){
       var on=document.documentElement.classList.contains("web-tabs");
       if(on){ build(); renderBar(); if(!timer){ loadNews(); timer=setInterval(function(){ if(!document.hidden) loadNews(); },60000);
-          if(!store("uno_custSynced")) syncCustomer(true); } }
+          if(!store("uno_custSynced")) syncCustomer(true);
+          setTimeout(rateCheck, 2500); scheduleBday();
+          document.addEventListener("visibilitychange",function(){ if(!document.hidden) setTimeout(rateCheck, 1200); }); } }
       else if(built){ if(tab!==0) go(0); }
     },
     relang:function(){ if(!built) return; renderBar(); if(tab===1) keepRender(); else if(tab===2) renderAbout(); else if(tab===3){ renderProfile(); loadNews(); } },
@@ -2008,8 +2263,20 @@ function resumeCarouselVideo(){
   if(el.querySelector(".vidwrap.show")){ var pr=v.play(); if(pr&&pr.catch) pr.catch(function(){}); }
   else scheduleVideo(el.querySelector(".media"), curList[S.idx].id);
 }
+/* dish statistics for the admin: a dish "seen" = stayed in the middle 2+ s; "opened" = details opened.
+   Counted in memory and sent in small batches (no timers): every 25 events and when the app goes to the background */
+var STAT={c:{}, n:0, cid:null, t0:0};
+function statCenter(id){
+  var now=Date.now();
+  if(STAT.cid && now-STAT.t0>=2000 && !document.hidden) statBump(STAT.cid,"v");
+  STAT.cid=(S.view==="menu")?id:null; STAT.t0=now;
+}
+function statBump(id,k){ if(!id) return; var e=STAT.c[id]||(STAT.c[id]={v:0,o:0}); e[k]++; if(++STAT.n>=25) statFlush(); }
+function statFlush(){ if(!STAT.n) return; var c=STAT.c; STAT.c={}; STAT.n=0; try{ sbRpc("uno_stat_add",{p_counts:c}).then(function(){},function(){}); }catch(_){} }
+document.addEventListener("visibilitychange",function(){ if(document.hidden){ statCenter(null); statFlush(); } else { STAT.t0=Date.now(); } });
 function updateMedia(){
   var multi=catSeq().length>1;
+  var cd=curList[S.idx]; if((cd&&cd.id)!==STAT.cid) statCenter(cd&&cd.id);
   slideNodes.forEach(function(el,i){
     var d=curList[i], center=offOf(i,multi)===0, m=el.querySelector(".media");
     var want = (center ? "c:"+d.id+":"+(d.imgId||"")+":"+(d.videoId||"") : "s:"+(d.imgId||""))+":"+S.lang+":"+dn(d)+":"+d.cat;
@@ -2267,6 +2534,7 @@ $("detailHost").addEventListener("click",function(e){
 });
 $("detailHost").addEventListener("input",function(e){ var sec=e.target.closest&&e.target.closest(".d-rev"); if(sec) rvKeepDraft(sec); });
 function openDetail(id){
+  statBump(id,"o");
   var i=curList.findIndex(function(d){return d.id===id;});
   if(i>=0 && i!==S.idx) go(i);
   S.detail=id; S.detailMuted=true; pauseCarouselVideo(); renderDetail();
@@ -3334,7 +3602,7 @@ function renderAdmin(){
       '<button class="btn gold" data-a="tgSave">Saqlash</button>'+(tg.configured?'<button class="btn" data-a="tgTest">Sinov xabari</button>':'')+'</div>'+
       '<div id="tgMsg"></div></section>';
   }
-  if(!ro && S.sb && sessionOK()) h+='<div id="attSlot"></div><div id="dlvSlot"></div><div id="newsSlot"></div><div id="custSlot"></div><div id="revSlot"></div>';
+  if(!ro && S.sb && sessionOK()) h+='<div id="attSlot"></div><div id="dlvSlot"></div><div id="newsSlot"></div><div id="custSlot"></div><div id="revSlot"></div><div id="hallSlot"></div><div id="evSlot"></div><div id="bonusSlot"></div><div id="bdaySlot"></div><div id="fbSlot"></div><div id="statSlot"></div>';
   // categories
   h+='<section class="a-sec"><h2>Kategoriyalar</h2><p class="help" style="margin-bottom:10px">Har bir kategoriya nomini o\'zbek, rus va ingliz tilida yozing. Rus/ingliz bo\'sh qolsa, o\'zbekchasi ko\'rsatiladi.</p>';
   cats().forEach(function(c,i){
@@ -3400,7 +3668,7 @@ function renderAdmin(){
       '<p class="help" style="margin-top:10px">"Vaqtincha chiqish" ilovani yopadi, uy tugmasi bosilsa yoki planshet qayta yoqilsa menyu yana ochiladi. "Butunlay o\'chirish" ilovani oddiy ilovaga aylantiradi, keyin uni o\'chirib tashlash ham mumkin.</p>')+'</section>';
   }
   h+='</div>';
-  var y=window.scrollY, keep=admKeep(); if(Att.el && Att.el.parentNode) Att.el.remove(); if(Rev.el && Rev.el.parentNode) Rev.el.remove(); if(Dlv.el && Dlv.el.parentNode) Dlv.el.remove(); if(News.el && News.el.parentNode) News.el.remove(); if(Cust.el && Cust.el.parentNode) Cust.el.remove(); A.innerHTML=h; Att.mount(); Dlv.mount(); News.mount(); Cust.mount(); atrWatch(); if(ATR.lang!=="uz"){ ATR.dirty=true; atrLoad().then(atrApply); } Rev.mount(); if(!admPager(keep)) window.scrollTo(0,y); agSync();
+  var y=window.scrollY, keep=admKeep(); if(Att.el && Att.el.parentNode) Att.el.remove(); if(Rev.el && Rev.el.parentNode) Rev.el.remove(); if(Dlv.el && Dlv.el.parentNode) Dlv.el.remove(); if(News.el && News.el.parentNode) News.el.remove(); if(Cust.el && Cust.el.parentNode) Cust.el.remove(); GROW_MODS.forEach(function(m){ if(m.el && m.el.parentNode) m.el.remove(); }); A.innerHTML=h; Att.mount(); Dlv.mount(); News.mount(); Cust.mount(); GROW_MODS.forEach(function(m){ m.mount(); }); atrWatch(); if(ATR.lang!=="uz"){ ATR.dirty=true; atrLoad().then(atrApply); } Rev.mount(); if(!admPager(keep)) window.scrollTo(0,y); agSync();
   var lf=$("logoFile"); if(lf) lf.onchange=function(){ var f=this.files[0]; this.value=""; if(f) uploadLogo(f); };
   if(S.aiBulk && $("aiBulkBox")) renderAiBulk();
   offlineUI(); if(!Offline.last && !Offline.busy) syncMedia();
@@ -3411,7 +3679,7 @@ function renderAdmin(){
   if(S.editing) renderEditor();
 }
 /* ---------- admin sections as swipeable cards ---------- */
-var ADM_PAGES=[["Taomlar",/^Taomlar/],["Kategoriyalar",/^Kategoriyalar/],["AI",/intellekt/i],["Davomat",/davomati/i],["Yetkazish",/^Yetkazib berish/],["Yangiliklar",/^Yangiliklar/],["Mijozlar",/^Mijozlar/],["Baholar",/^Baholar/],["Stollar va QR",/^Stollar/],["Telegram",/^Telegram/],["Restoran",/^Restoran/],["Oflayn",/^Oflayn/],["Planshet",/^Planshet/],["Parol",/^Parol/]];
+var ADM_PAGES=[["Taomlar",/^Taomlar/],["Kategoriyalar",/^Kategoriyalar/],["AI",/intellekt/i],["Davomat",/davomati/i],["Yetkazish",/^Yetkazib berish/],["Yangiliklar",/^Yangiliklar/],["Afisha",/^Afisha/],["Zallar",/^Zallar/],["Bonus",/^Bonus/],["Tug'ilgan kun",/^Tug.ilgan kunlar/],["Fikrlar",/^Mehmon fikrlari/],["Statistika",/^Statistika/],["Mijozlar",/^Mijozlar/],["Baholar",/^Baholar/],["Stollar va QR",/^Stollar/],["Telegram",/^Telegram/],["Restoran",/^Restoran/],["Oflayn",/^Oflayn/],["Planshet",/^Planshet/],["Parol",/^Parol/]];
 function admKeep(){
   var pg=A.querySelector(".adm-pager"); if(!pg) return null;
   var tops={}; pg.querySelectorAll(".adm-page").forEach(function(p){ tops[p.dataset.k]=p.scrollTop; });
@@ -3474,7 +3742,7 @@ function errText(e){
 }
 async function saveSettings(patch){
   var next=Object.assign({}, S.settings, patch);
-  await S.db.doc("settings/main").set({name:next.name||"", cats:next.cats||[], logoId:next.logoId||"", soundOn:next.soundOn!==false, service:svcPct(next), zones:Array.isArray(next.zones)?next.zones:[], zonePick:!!next.zonePick, callsOn:!!next.callsOn, theme:THEMES[next.theme]?next.theme:"classic", delivery:next.delivery||{}, aiNotes:aiNotesOf(next)});
+  await S.db.doc("settings/main").set({name:next.name||"", cats:next.cats||[], logoId:next.logoId||"", soundOn:next.soundOn!==false, service:svcPct(next), zones:Array.isArray(next.zones)?next.zones:[], zonePick:!!next.zonePick, callsOn:!!next.callsOn, theme:THEMES[next.theme]?next.theme:"classic", delivery:next.delivery||{}, grow:next.grow||{}, aiNotes:aiNotesOf(next)});
 }
 /* short facts the admin taught the guests' UNO AI: [{id, text, at}] */
 function aiNotesOf(st){
@@ -4337,6 +4605,7 @@ News.render=function(){
     '<details style="margin-top:8px"><summary style="cursor:pointer;color:var(--muted);font-size:13px">Ruscha / inglizcha (ixtiyoriy)</summary>'+
     '<input id="nwTitleRu" maxlength="80" placeholder="Заголовок (RU)" style="margin-top:6px"><textarea id="nwTextRu" rows="2" maxlength="600" placeholder="Текст (RU)" style="width:100%;box-sizing:border-box;margin-top:6px"></textarea>'+
     '<input id="nwTitleEn" maxlength="80" placeholder="Title (EN)" style="margin-top:6px"><textarea id="nwTextEn" rows="2" maxlength="600" placeholder="Text (EN)" style="width:100%;box-sizing:border-box;margin-top:6px"></textarea></details>'+
+    '<label class="a-row" style="gap:10px;align-items:center;margin-top:10px"><input type="checkbox" id="nwPush" checked><span>📲 <b>Telefonlarga xabar qilib yuborish</b> <small style="color:var(--muted)">(Android ilovasi o\'rnatilgan mehmonlarga, 30 daqiqa ichida)</small></span></label>'+
     '<div class="a-row" style="margin-top:10px;gap:8px;align-items:center;flex-wrap:wrap"><label class="btn"><input type="file" id="nwFile" accept="image/*" hidden>📷 '+(News.file?esc(News.file.name).slice(0,28):'Surat tanlash')+'</label>'+
     '<button class="btn gold" data-nw="add">'+(News.busy?'Joylanmoqda…':'Joylash')+'</button></div>'+(News.msg?'<div class="msg ok">'+esc(News.msg)+'</div>':'')+(News.err?'<div class="msg err">'+esc(News.err)+'</div>':'');
   var rows=News.rows;
@@ -4356,7 +4625,7 @@ News.click=async function(e){
   News.busy=true; News.msg=""; News.err="";
   try{
     if(a==="add"){
-      var d={title:$("nwTitle").value.trim(), text:$("nwText").value.trim(), title_ru:$("nwTitleRu").value.trim(), text_ru:$("nwTextRu").value.trim(), title_en:$("nwTitleEn").value.trim(), text_en:$("nwTextEn").value.trim(), imgId:"", at:new Date().toISOString(), hidden:false};
+      var d={title:$("nwTitle").value.trim(), text:$("nwText").value.trim(), title_ru:$("nwTitleRu").value.trim(), text_ru:$("nwTextRu").value.trim(), title_en:$("nwTitleEn").value.trim(), text_en:$("nwTextEn").value.trim(), push:!!($("nwPush")&&$("nwPush").checked), imgId:"", at:new Date().toISOString(), hidden:false};
       if(!d.title&&!d.text&&!News.file){ News.busy=false; News.err="Sarlavha, matn yoki surat kiriting."; News.render(); return; }
       b.textContent="Joylanmoqda…"; b.disabled=true;
       if(News.file){ var body=News.file; try{ body=await enhanceImage(News.file); }catch(_){} var up=await netRetry(function(){ return S.assets.upload(body); },3); d.imgId=up.id; }
@@ -4368,6 +4637,183 @@ News.click=async function(e){
   }catch(err){ News.err=String((err&&(err.message||err.msg))||err); }
   News.busy=false; await News.load();
 };
+/* ================= admin: growth sections (halls, afisha, bonus, birthdays, guest feedback, statistics) ================= */
+function gxSqlMsg(err){ return /uno_bonus|uno_feedback|uno_stats|uno_customer_extra|birthday|does not exist|schema cache|Could not find the function/i.test(String(err||""))
+  ? '<div class="msg err">Bazani tayyorlang: Supabase → SQL Editor da <b>growth.sql</b> faylini bir marta ishga tushiring (Run).</div>' : '<div class="msg err">'+esc(String(err))+'</div>'; }
+function gxGrow(){ return Object.assign({}, (S.settings&&S.settings.grow)||{}); }
+async function gxSaveGrow(patch){ var g=Object.assign(gxGrow(), patch); await saveSettings({grow:g}); S.settings.grow=g; }
+function gxMount(M, slotId){ var slot=$(slotId); if(!slot) return; if(!M.el){ M.el=document.createElement("section"); M.el.className="a-sec"; M.el.addEventListener("click",function(e){ M.click(e); }); if(M.change) M.el.addEventListener("change",function(e){ M.change(e); }); M.render(); if(M.load) M.load(); } slot.replaceWith(M.el); }
+function gxErr(e){ return String((e&&(e.message||e.msg))||e); }
+
+/* a list of docs with a photo (halls, events) */
+function DocList(cfg){
+  var M={el:null, rows:null, err:"", msg:"", busy:false, file:null, del:null};
+  M.mount=function(){ gxMount(M, cfg.slot); };
+  M.load=async function(){ var r=await S.sb.from("uno_docs").select("path,data").like("path",cfg.key+"/%"); if(r.error){ M.err=gxErr(r.error); M.rows=M.rows||[]; } else { M.err=""; M.rows=(r.data||[]).map(function(x){ return Object.assign({id:x.path.slice(cfg.key.length+1)},x.data||{}); }).sort(cfg.sort); } M.render(); };
+  M.render=function(){
+    if(!M.el) return;
+    var h='<h2>'+cfg.title+'</h2><p class="help">'+cfg.help+'</p><div class="a-row" style="flex-direction:column;gap:8px;align-items:stretch;margin-top:10px">'+
+      cfg.fields.map(function(f){ return '<label class="fld" style="max-width:none"><span>'+f.label+'</span>'+(f.type==="area"?'<textarea id="'+cfg.key+'_'+f.k+'" rows="3" maxlength="600" style="width:100%;box-sizing:border-box;height:auto;padding:10px 14px" placeholder="'+esc(f.ph||"")+'"></textarea>':'<input id="'+cfg.key+'_'+f.k+'" type="'+(f.type||"text")+'" '+(f.type==="number"?'min="0" step="1"':'maxlength="80"')+' placeholder="'+esc(f.ph||"")+'">')+'</label>'; }).join("")+
+      '<details><summary style="cursor:pointer;color:var(--muted);font-size:13px">Ruscha / inglizcha (ixtiyoriy)</summary>'+cfg.fields.filter(function(f){ return f.tr; }).map(function(f){ return ['ru','en'].map(function(l){ return f.type==="area"?'<textarea id="'+cfg.key+'_'+f.k+'_'+l+'" rows="2" maxlength="600" style="width:100%;box-sizing:border-box;margin-top:6px;height:auto;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:#1F2126;color:var(--text)" placeholder="'+esc(f.label+' ('+l.toUpperCase()+')')+'"></textarea>':'<input id="'+cfg.key+'_'+f.k+'_'+l+'" maxlength="80" style="margin-top:6px;width:100%;box-sizing:border-box;height:44px;padding:0 14px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:#1F2126;color:var(--text)" placeholder="'+esc(f.label+' ('+l.toUpperCase()+')')+'">'; }).join(""); }).join("")+'</details>'+
+      '<div class="a-row" style="gap:8px;align-items:center;flex-wrap:wrap"><label class="btn"><input type="file" id="'+cfg.key+'_file" accept="image/*" hidden>📷 '+(M.file?esc(M.file.name).slice(0,28):'Surat tanlash')+'</label><button class="btn gold" data-dl2="add">'+(M.busy?'Saqlanmoqda…':'Qo\'shish')+'</button></div></div>'+
+      (M.msg?'<div class="msg ok">'+esc(M.msg)+'</div>':'')+(M.err?'<div class="msg err">'+esc(M.err)+'</div>':'');
+    if(M.rows===null){ M.el.innerHTML=h+'<div class="msg">Yuklanmoqda…</div>'; return; }
+    if(!M.rows.length) h+='<div class="msg" style="margin-top:14px">'+cfg.empty+'</div>';
+    M.rows.forEach(function(x){
+      var dim=x.hidden||(cfg.past&&cfg.past(x));
+      h+='<div class="drow" style="align-items:flex-start;margin-top:10px;'+(dim?'opacity:.55':'')+'">'+(x.imgId?'<img src="'+blob(x.imgId)+'" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:12px;flex:none">':'')+
+        '<div class="mid">'+cfg.line(x)+(x.hidden?'<small style="display:block">yashirilgan</small>':'')+'</div>'+
+        '<div class="acts"><button class="btn sm" data-dl2="'+(x.hidden?'show':'hide')+'" data-id="'+esc(x.id)+'">'+(x.hidden?'Ko\'rsatish':'Yashirish')+'</button><button class="btn sm danger" data-dl2="del" data-id="'+esc(x.id)+'">'+(M.del===x.id?'Tasdiqlang':'O\'chirish')+'</button></div></div>';
+    });
+    M.el.innerHTML=h;
+  };
+  M.change=function(e){ if(e.target.id===cfg.key+"_file"){ M.file=e.target.files&&e.target.files[0]||null; var keep={}; M.el.querySelectorAll("input:not([type=file]),textarea").forEach(function(i){ keep[i.id]=i.value; }); M.render(); Object.keys(keep).forEach(function(k){ var i=$(k); if(i) i.value=keep[k]; }); } };
+  M.click=async function(e){
+    var b=e.target.closest("[data-dl2]"); if(!b||M.busy) return; var a=b.dataset.dl2, id=b.dataset.id;
+    if(a==="del" && M.del!==id){ M.del=id; M.render(); return; }
+    M.busy=true; M.msg=""; M.err="";
+    try{
+      if(a==="add"){
+        var d={at:new Date().toISOString(), imgId:""};
+        cfg.fields.forEach(function(f){ var v=($(cfg.key+"_"+f.k)||{}).value||""; d[f.k]=f.type==="number"?Math.max(0,Math.round(+v||0)):v.trim(); if(f.tr){ ["ru","en"].forEach(function(l){ var w=($(cfg.key+"_"+f.k+"_"+l)||{}).value||""; if(w.trim()) d[f.k+"_"+l]=w.trim(); }); } });
+        var bad=cfg.check(d); if(bad){ M.busy=false; M.err=bad; M.render(); return; }
+        b.textContent="Saqlanmoqda…"; b.disabled=true;
+        if(M.file){ var body=M.file; try{ body=await enhanceImage(M.file); }catch(_){} var up=await netRetry(function(){ return S.assets.upload(body); },3); d.imgId=up.id; }
+        var ref=S.db.collection(cfg.key).doc(); await netRetry(function(){ return ref.set(d); });
+        M.file=null; M.msg=cfg.added;
+      }
+      if(a==="hide"||a==="show"){ await S.db.doc(cfg.key+"/"+id).update({hidden:a==="hide"}); }
+      if(a==="del"){ var x=(M.rows||[]).find(function(r){ return r.id===id; }); await S.db.doc(cfg.key+"/"+id).delete(); if(x&&x.imgId) S.assets.delete(x.imgId).catch(function(){}); M.del=null; }
+    }catch(err){ M.err=gxErr(err); }
+    M.busy=false; await M.load();
+  };
+  return M;
+}
+var Halls=DocList({key:"halls", slot:"hallSlot", title:"Zallar", empty:"Hozircha zal qo'shilmagan.", added:"Zal qo'shildi. Ilovada «UNO» bo'limida ko'rinadi.",
+  help:"Restoran zallari (Oilaviy, Komfort, Biznes, Terassa, Konferensiya, VIP…): surat, sig'im va qisqa tavsif. Mehmon ilovaning <b>«UNO»</b> bo'limida ko'radi va <b>«To'y / banket»</b> arizasida zalni tanlaydi. Ariza Telegram guruhga bron sifatida keladi.",
+  fields:[{k:"name",label:"Zal nomi",ph:"Masalan: Katta zal",tr:1},{k:"cap",label:"Sig'imi (kishi)",type:"number",ph:"350"},{k:"desc",label:"Tavsif",type:"area",ph:"Sahna, jonli musiqa, to'ylar uchun…",tr:1},{k:"order",label:"Tartib raqami (kichigi oldinda)",type:"number",ph:"1"}],
+  check:function(d){ return d.name?"":"Zal nomini yozing."; },
+  sort:function(a,b){ return (+a.order||0)-(+b.order||0); },
+  line:function(x){ return '<b>'+esc(x.name||"")+'</b><small style="display:block;margin:2px 0">'+(+x.cap?'👥 '+x.cap+' kishigacha':'')+'</small>'+(x.desc?'<p style="margin:2px 0;font-size:13px;line-height:1.45">'+esc(x.desc)+'</p>':''); }});
+var Afisha=DocList({key:"events", slot:"evSlot", title:"Afisha", empty:"Hozircha tadbir yo'q.", added:"Tadbir qo'shildi. Ilovada «UNO» bo'limida, Afisha ichida ko'rinadi.",
+  help:"Jonli musiqa, shou, konsertlar jadvali. Mehmon ilovaning <b>«UNO»</b> bo'limida ko'radi va <b>«Stol band qilish»</b> tugmasi bilan o'sha kunga bron qiladi. O'tib ketgan tadbirlar mehmonlarga ko'rinmaydi.",
+  fields:[{k:"date",label:"Sana",type:"date"},{k:"time",label:"Vaqt",type:"time",ph:"20:00"},{k:"title",label:"Sarlavha",ph:"Masalan: Jonli jazz kechasi",tr:1},{k:"text",label:"Tavsif",type:"area",ph:"Kim chiqadi, nima bo'ladi…",tr:1}],
+  check:function(d){ return !/^\d{4}-\d{2}-\d{2}$/.test(d.date)?"Sanani tanlang.":(!d.title?"Sarlavha yozing.":""); },
+  sort:function(a,b){ return (String(a.date)+String(a.time||"")).localeCompare(String(b.date)+String(b.time||"")); },
+  past:function(x){ var t=new Date(), z=function(n){ return ("0"+n).slice(-2); }; return String(x.date||"")<t.getFullYear()+"-"+z(t.getMonth()+1)+"-"+z(t.getDate()); },
+  line:function(x){ return '<b>'+esc(x.title||"")+'</b><small style="display:block;margin:2px 0">📅 '+esc(x.date||"")+(x.time?' · '+esc(x.time):'')+(Afisha.cfgPast(x)?' · o\'tgan':'')+'</small>'+(x.text?'<p style="margin:2px 0;font-size:13px;line-height:1.45">'+esc(x.text)+'</p>':''); }});
+Afisha.cfgPast=function(x){ var t=new Date(), z=function(n){ return ("0"+n).slice(-2); }; return String(x.date||"")<t.getFullYear()+"-"+z(t.getMonth()+1)+"-"+z(t.getDate()); };
+
+/* ---- bonus: settings + cashier ---- */
+var Bonus={el:null, msg:"", err:"", busy:false, look:null, lookTx:null};
+Bonus.mount=function(){ gxMount(Bonus,"bonusSlot"); };
+Bonus.render=function(){
+  if(!Bonus.el) return; var g=gxGrow();
+  var h='<h2>Bonus va do\'st taklifi</h2><p class="help">Yoqilsa, mehmon ilovaning <b>«Profil»</b> bo\'limida bonus balansini ko\'radi. Kassir mehmonning telefon raqami va chek summasini kiritadi, bonus foizga qarab avtomatik yoziladi. Mehmon keyingi safar bonus bilan to\'lashi mumkin.<br>Do\'st taklifi: mehmon do\'stining kodini (telefon raqamini) kiritadi. Yangi mehmonga birinchi bonus yozilganda, uni taklif qilgan do\'stiga ham bonus beriladi.</p>'+
+    '<label class="a-row" style="gap:10px;align-items:center;margin:8px 0"><input type="checkbox" id="bnOn" '+(g.bonusOn?'checked':'')+'><b>Bonus tizimi yoqilgan</b></label>'+
+    '<div class="a-row" style="gap:10px;flex-wrap:wrap"><label class="fld" style="flex:1;min-width:140px;max-width:none"><span>Bonus foizi (%)</span><input id="bnPct" type="number" min="0" max="50" step="1" value="'+(g.bonusPct!=null?g.bonusPct:5)+'"></label>'+
+    '<label class="fld" style="flex:1;min-width:140px;max-width:none"><span>Taklif bonusi (so\'m)</span><input id="bnRef" type="number" min="0" step="1000" value="'+(g.refBonus!=null?g.refBonus:20000)+'"></label></div>'+
+    '<button class="btn gold" data-bn="save" style="margin-top:10px">Saqlash</button>'+
+    '<h3 style="margin:22px 0 8px">Kassa</h3><div class="a-row" style="gap:10px;flex-wrap:wrap"><label class="fld" style="flex:1;min-width:150px;max-width:none"><span>Mehmon telefoni</span><input id="bnPhone" type="tel" inputmode="tel" placeholder="+998 91 123 45 67"></label>'+
+    '<label class="fld" style="flex:1;min-width:150px;max-width:none"><span>Summa (so\'m)</span><input id="bnSum" type="number" min="0" step="1000" placeholder="Chek summasi yoki ishlatiladigan bonus"></label></div>'+
+    '<div class="a-row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn gold" data-bn="earn">➕ Chekdan bonus yozish</button><button class="btn" data-bn="spend">➖ Bonusdan to\'lash</button><button class="btn" data-bn="look">🔍 Balansni ko\'rish</button></div>'+
+    (Bonus.msg?'<div class="msg ok">'+Bonus.msg+'</div>':'')+(Bonus.err?gxSqlMsg(Bonus.err):'');
+  if(Bonus.look) h+='<div class="drow" style="margin-top:12px"><div class="mid"><b>'+esc(Bonus.look.phone)+'</b><small style="display:block">Balans: <b style="color:var(--gold)">'+fmtL(Bonus.look.balance)+'</b></small>'+
+    (Bonus.lookTx&&Bonus.lookTx.length?'<p style="margin:6px 0 0;font-size:13px;line-height:1.6">'+Bonus.lookTx.map(function(t){ return rvDate(t.created_at)+' · '+(t.kind==="spend"?"ishlatildi":t.kind==="ref"?"taklif":"yig'ildi")+' <b>'+(t.amount>0?'+':'')+fmtL(t.amount)+'</b>'+(t.check_sum?' (chek '+fmtL(t.check_sum)+')':''); }).join("<br>")+'</p>':'')+'</div></div>';
+  Bonus.el.innerHTML=h;
+};
+Bonus.click=async function(e){
+  var b=e.target.closest("[data-bn]"); if(!b||Bonus.busy) return; var a=b.dataset.bn; Bonus.msg=""; Bonus.err="";
+  var keep={p:($("bnPhone")||{}).value||"", s:($("bnSum")||{}).value||""};
+  Bonus.busy=true;
+  try{
+    if(a==="save"){ await gxSaveGrow({bonusOn:$("bnOn").checked, bonusPct:Math.max(0,Math.min(50,Math.round(+$("bnPct").value||0))), refBonus:Math.max(0,Math.round(+$("bnRef").value||0))}); Bonus.msg="Saqlandi."; }
+    else {
+      var ph=keep.p.replace(/\D/g,"").slice(-9), sum=Math.round(+keep.s||0);
+      if(ph.length<9) throw new Error("Telefon raqamini to'liq kiriting.");
+      if(a==="earn"||a==="spend"){
+        if(sum<=0) throw new Error("Summani kiriting.");
+        var r=await S.sb.rpc(a==="earn"?"uno_bonus_earn":"uno_bonus_spend",a==="earn"?{p_phone:ph,p_sum:sum}:{p_phone:ph,p_amount:sum});
+        if(r.error){ if(/not_enough/.test(r.error.message||"")) throw new Error("Bonus yetarli emas."); if(/function.*does not exist|Could not find/i.test(r.error.message||"")) throw r.error; throw r.error; }
+        Bonus.msg=a==="earn"?('Yozildi: <b>+'+fmtL(r.data.amount)+'</b> ('+r.data.pct+'%). Yangi balans: <b>'+fmtL(r.data.balance)+'</b>'+(r.data.ref&&r.data.ref_bonus?'. Taklif qilgan do\'stga ham '+fmtL(r.data.ref_bonus)+' yozildi.':'')):('Ishlatildi: <b>−'+fmtL(sum)+'</b>. Qoldiq: <b>'+fmtL(r.data.balance)+'</b>');
+        keep.s="";
+      }
+      var q=await S.sb.from("uno_bonus").select("*").eq("phone",ph).maybeSingle(); if(q.error) throw q.error;
+      var t=await S.sb.from("uno_bonus_tx").select("*").eq("phone",ph).order("created_at",{ascending:false}).limit(10);
+      Bonus.look={phone:ph, balance:(q.data&&q.data.balance)||0}; Bonus.lookTx=t.data||[];
+    }
+  }catch(err){ Bonus.err=gxErr(err); }
+  Bonus.busy=false; Bonus.render(); if($("bnPhone")) $("bnPhone").value=keep.p; if($("bnSum")) $("bnSum").value=keep.s;
+};
+
+/* ---- birthdays ---- */
+var Bday={el:null, rows:null, err:"", msg:""};
+Bday.mount=function(){ gxMount(Bday,"bdaySlot"); };
+Bday.load=async function(){ var r=await S.sb.from("uno_customers").select("name,phone,birthday").not("birthday","is",null).limit(5000); if(r.error){ Bday.err=gxErr(r.error); Bday.rows=[]; } else { Bday.err=""; Bday.rows=r.data||[]; } Bday.render(); };
+Bday.days=function(iso){ var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(iso||""); if(!m) return 999; var t=new Date(); t=new Date(t.getFullYear(),t.getMonth(),t.getDate()); var d=new Date(t.getFullYear(),+m[2]-1,+m[3]); if(d<t) d=new Date(t.getFullYear()+1,+m[2]-1,+m[3]); return Math.round((d-t)/864e5); };
+Bday.render=function(){
+  if(!Bday.el) return; var g=gxGrow();
+  var h='<h2>Tug\'ilgan kunlar</h2><p class="help">Mehmon ilovaning «Profil» bo\'limida tug\'ilgan kunini kiritadi. Yoqilsa, tug\'ilgan kunidan bir hafta oldin unga taklif ko\'rinadi (Android ilovada telefonga xabar ham keladi) va «Bayramni bron qilish» tugmasi chiqadi. Pastda yaqin 30 kunda tug\'ilgan kuni bo\'lgan mehmonlar: qo\'ng\'iroq qilib, banketni taklif qiling.</p>'+
+    '<label class="a-row" style="gap:10px;align-items:center;margin:8px 0"><input type="checkbox" id="bdOn" '+(g.bdayOn?'checked':'')+'><b>Tug\'ilgan kun taklifi yoqilgan</b></label>'+
+    '<label class="fld" style="max-width:none"><span>Taklif matni</span><input id="bdTx" maxlength="160" value="'+esc(g.bdayText||"")+'" placeholder="Masalan: Tug\'ilgan kuningizni UNO Airways\'da nishonlang — 10% chegirma!"></label>'+
+    '<details style="margin-top:6px"><summary style="cursor:pointer;color:var(--muted);font-size:13px">Ruscha / inglizcha (ixtiyoriy)</summary><input id="bdTxRu" maxlength="160" style="margin-top:6px;width:100%;box-sizing:border-box;height:44px;padding:0 14px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:#1F2126;color:var(--text)" value="'+esc(g.bdayText_ru||"")+'" placeholder="Текст (RU)"><input id="bdTxEn" maxlength="160" style="margin-top:6px;width:100%;box-sizing:border-box;height:44px;padding:0 14px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:#1F2126;color:var(--text)" value="'+esc(g.bdayText_en||"")+'" placeholder="Text (EN)"></details>'+
+    '<button class="btn gold" data-bd="save" style="margin-top:10px">Saqlash</button>'+(Bday.msg?'<div class="msg ok">'+esc(Bday.msg)+'</div>':'')+(Bday.err?gxSqlMsg(Bday.err):'');
+  if(Bday.rows===null){ Bday.el.innerHTML=h+'<div class="msg">Yuklanmoqda…</div>'; return; }
+  var up=Bday.rows.map(function(c){ return Object.assign({d:Bday.days(c.birthday)},c); }).filter(function(c){ return c.d<=30; }).sort(function(a,b){ return a.d-b.d; });
+  h+='<div class="help" style="margin-top:14px">Tug\'ilgan kunini kiritgan mehmonlar: <b style="color:var(--text)">'+Bday.rows.length+'</b> · yaqin 30 kunda: <b style="color:var(--text)">'+up.length+'</b></div>';
+  up.forEach(function(c){ var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(c.birthday)||[]; h+='<div class="drow" style="margin-top:8px"><div class="mid"><b>'+esc(c.name||"—")+'</b><small style="display:block">🎂 '+(m[3]||"")+'.'+(m[2]||"")+' · '+(c.d===0?'<b style="color:var(--gold)">bugun</b>':c.d+' kundan keyin')+'</small></div><div class="acts"><a class="btn sm" href="tel:'+esc(c.phone)+'">📞 '+esc(c.phone)+'</a></div></div>'; });
+  Bday.el.innerHTML=h;
+};
+Bday.click=async function(e){
+  var b=e.target.closest("[data-bd]"); if(!b) return;
+  try{ await gxSaveGrow({bdayOn:$("bdOn").checked, bdayText:$("bdTx").value.trim(), bdayText_ru:$("bdTxRu").value.trim(), bdayText_en:$("bdTxEn").value.trim()}); Bday.msg="Saqlandi."; Bday.err=""; }catch(err){ Bday.err=gxErr(err); }
+  Bday.render();
+};
+
+/* ---- guest feedback after a visit ---- */
+var Fb={el:null, rows:null, err:"", msg:""};
+Fb.mount=function(){ gxMount(Fb,"fbSlot"); };
+Fb.load=async function(){ var r=await S.sb.from("uno_feedback").select("*").order("created_at",{ascending:false}).limit(200); if(r.error){ Fb.err=gxErr(r.error); Fb.rows=[]; } else { Fb.err=""; Fb.rows=r.data||[]; } Fb.render(); };
+Fb.render=function(){
+  if(!Fb.el) return; var g=gxGrow();
+  var h='<h2>Mehmon fikrlari</h2><p class="help">Bron qilgan mehmondan tashrifdan keyin ilovada «Tashrifingiz qanday o\'tdi?» deb so\'raladi (Android ilovada keyingi kuni telefonga xabar ham keladi). <b>4–5 yulduz</b> qo\'ygan mehmonga Google yoki 2GIS\'da sharh qoldirish taklif qilinadi, shu bilan internetdagi reytingingiz ko\'tariladi. <b>1–3 yulduz</b> va izohlar faqat shu yerga va Telegram guruhga keladi.</p>'+
+    '<label class="a-row" style="gap:10px;align-items:center;margin:8px 0"><input type="checkbox" id="fbOn" '+(g.rateOn!==false?'checked':'')+'><b>Tashrifdan keyin baho so\'rash</b></label>'+
+    '<label class="fld" style="max-width:none"><span>Google sharh havolasi</span><input id="fbG" value="'+esc(g.reviewG||"")+'" placeholder="https://g.page/r/…/review"></label><p class="help" style="margin:4px 0 8px">Google Maps → restoraningiz → «Sharh so\'rash / Ask for reviews» → havolani nusxalang. Bo\'sh qolsa, restoran Google Maps\'da qidiruv orqali ochiladi.</p>'+
+    '<label class="fld" style="max-width:none"><span>2GIS havolasi (ixtiyoriy)</span><input id="fbGis" value="'+esc(g.review2gis||"")+'" placeholder="https://2gis.uz/fergana/firm/…"></label>'+
+    '<button class="btn gold" data-fb="save" style="margin-top:10px">Saqlash</button>'+(Fb.msg?'<div class="msg ok">'+esc(Fb.msg)+'</div>':'')+(Fb.err?gxSqlMsg(Fb.err):'');
+  if(Fb.rows===null){ Fb.el.innerHTML=h+'<div class="msg">Yuklanmoqda…</div>'; return; }
+  var n=Fb.rows.length, avg=n?Fb.rows.reduce(function(s,r){ return s+r.stars; },0)/n:0;
+  h+='<div class="help" style="margin-top:14px">Jami: <b style="color:var(--text)">'+n+'</b>'+(n?' · o\'rtacha: <b style="color:var(--gold)">'+avg.toFixed(1)+' ⭐</b>':'')+'</div>';
+  Fb.rows.forEach(function(r){ h+='<div class="drow" style="align-items:flex-start;margin-top:8px"><div class="mid"><b>'+'⭐'.repeat(r.stars)+'<span style="color:var(--muted)">'+'☆'.repeat(5-r.stars)+'</span> · '+esc(r.name||"Mehmon")+'</b><small style="display:block">'+rvDate(r.created_at)+(r.phone?' · <a href="tel:'+esc(r.phone)+'" style="color:var(--gold)">'+esc(r.phone)+'</a>':'')+(r.booking_id?' · bron #'+r.booking_id:'')+'</small>'+(r.comment?'<p style="margin:4px 0 0;font-size:14px;line-height:1.45;white-space:pre-wrap">'+esc(r.comment)+'</p>':'')+'</div></div>'; });
+  Fb.el.innerHTML=h;
+};
+Fb.click=async function(e){
+  var b=e.target.closest("[data-fb]"); if(!b) return;
+  try{ await gxSaveGrow({rateOn:$("fbOn").checked, reviewG:$("fbG").value.trim(), review2gis:$("fbGis").value.trim()}); Fb.msg="Saqlandi."; Fb.err=""; }catch(err){ Fb.err=gxErr(err); }
+  Fb.render();
+};
+
+/* ---- statistics: most viewed / opened dishes ---- */
+var Stat={el:null, rows:null, err:"", days:7};
+Stat.mount=function(){ gxMount(Stat,"statSlot"); };
+Stat.load=async function(){ var d=new Date(Date.now()-(Stat.days-1)*864e5), z=function(n){ return ("0"+n).slice(-2); }; var from=d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate());
+  var r=await S.sb.from("uno_stats").select("dish,views,opens,day").gte("day",from).limit(20000); if(r.error){ Stat.err=gxErr(r.error); Stat.rows=[]; } else { Stat.err=""; Stat.rows=r.data||[]; } Stat.render(); };
+Stat.render=function(){
+  if(!Stat.el) return;
+  var h='<h2>Statistika</h2><p class="help">Qaysi taomlarni mehmonlar ko\'proq ko\'radi va ochadi. <b>Ko\'rildi</b>: taom menyuda o\'rtada 2 soniyadan ko\'p turdi. <b>Ochildi</b>: batafsil oynasi ochildi. Ko\'p ko\'rilib, kam buyurtma qilinayotgan taomning narxi yoki surati haqida o\'ylab ko\'ring. Eng ko\'p ko\'rilganlarini Instagram\'da reklama qiling.</p>'+
+    '<div class="a-row" style="gap:6px;margin:8px 0 10px">'+[7,30,90].map(function(n){ return '<button class="btn sm'+(Stat.days===n?' gold':'')+'" data-st="'+n+'">'+n+' kun</button>'; }).join("")+'</div>'+(Stat.err?gxSqlMsg(Stat.err):'');
+  if(Stat.rows===null){ Stat.el.innerHTML=h+'<div class="msg">Yuklanmoqda…</div>'; return; }
+  var agg={}; Stat.rows.forEach(function(r){ var a=agg[r.dish]||(agg[r.dish]={v:0,o:0}); a.v+=r.views; a.o+=r.opens; });
+  var names={}; (S.dishes||[]).forEach(function(d){ names[d.id]=d.name; });
+  var list=Object.keys(agg).filter(function(k){ return names[k]; }).map(function(k){ return {id:k, name:names[k], v:agg[k].v, o:agg[k].o}; }).sort(function(a,b){ return b.v-a.v||b.o-a.o; });
+  var max=list.length?Math.max(1,list[0].v):1, tv=list.reduce(function(s,x){ return s+x.v; },0), to=list.reduce(function(s,x){ return s+x.o; },0);
+  h+='<div class="help">Jami: <b style="color:var(--text)">'+tv+'</b> ko\'rish · <b style="color:var(--text)">'+to+'</b> ochish</div>';
+  if(!list.length) h+='<div class="msg" style="margin-top:10px">Hozircha ma\'lumot yo\'q. Mehmonlar menyuni ko\'rgan sari shu yerda paydo bo\'ladi.</div>';
+  list.slice(0,30).forEach(function(x,i){ h+='<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;gap:10px;font-size:14px"><span><b>'+(i+1)+'.</b> '+esc(x.name)+'</span><span style="color:var(--muted);white-space:nowrap">👁 '+x.v+' · 📖 '+x.o+'</span></div><div style="height:8px;border-radius:4px;background:rgba(255,255,255,.08);margin-top:4px;overflow:hidden"><i style="display:block;height:100%;width:'+Math.round(100*x.v/max)+'%;background:linear-gradient(90deg,#E8B04B,#FFD27A)"></i></div></div>'; });
+  Stat.el.innerHTML=h;
+};
+Stat.click=function(e){ var b=e.target.closest("[data-st]"); if(!b) return; Stat.days=+b.dataset.st; Stat.rows=null; Stat.render(); Stat.load(); };
+var GROW_MODS=[Halls,Afisha,Bonus,Bday,Fb,Stat];
 /* ---- admin: delivery settings + incoming delivery orders ---- */
 var Dlv={el:null, rows:null, err:"", f:"active", busy:false, msg:""};
 Dlv.ST={new:"Yangi",accepted:"Qabul qilindi",onway:"Yo'lda",done:"Yetkazildi",cancelled:"Bekor qilindi"};
@@ -5812,7 +6258,7 @@ async function init(){
     S.loadedDishes=true; onData(); if(!cc) setTimeout(function(){ location.reload(); },30000); return;
   }
   S.db.doc("settings/main").onSnapshot(function(snap){
-    var d=snap.exists?snap.data():{}; S.settings={name:(d&&d.name)||"", logoId:String((d&&d.logoId)||""), soundOn:!(d&&d.soundOn===false), service:d&&d.service, cats:Array.isArray(d&&d.cats)?d.cats.filter(function(c){return c&&c.id&&c.label;}):[], zones:Array.isArray(d&&d.zones)?d.zones:[], zonePick:!!(d&&d.zonePick), callsOn:!!(d&&d.callsOn), theme:(d&&d.theme)||"classic", delivery:(d&&d.delivery)||{}, aiNotes:aiNotesOf(d)};
+    var d=snap.exists?snap.data():{}; S.settings={name:(d&&d.name)||"", logoId:String((d&&d.logoId)||""), soundOn:!(d&&d.soundOn===false), service:d&&d.service, cats:Array.isArray(d&&d.cats)?d.cats.filter(function(c){return c&&c.id&&c.label;}):[], zones:Array.isArray(d&&d.zones)?d.zones:[], zonePick:!!(d&&d.zonePick), callsOn:!!(d&&d.callsOn), theme:(d&&d.theme)||"classic", delivery:(d&&d.delivery)||{}, grow:(d&&d.grow)||{}, aiNotes:aiNotesOf(d)};
     applyTheme(); S.loadedSettings=true; onData(); try{ refreshCallUI(); }catch(_){}
   });
   S.db.collection("dishes").onSnapshot(function(snap){

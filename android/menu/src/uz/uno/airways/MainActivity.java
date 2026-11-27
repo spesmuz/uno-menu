@@ -48,6 +48,15 @@ public class MainActivity extends Activity {
   void setKioskNow(boolean on) {
     getSharedPreferences("uno", MODE_PRIVATE).edit().putBoolean("kiosk", on).commit();
     screenOn();
+    /* guests' phones check for news marked "send to phones" about every 30 min; kiosk tablets don't */
+    if (kioskOn()) NewsJob.cancel(this); else NewsJob.schedule(this);
+    if (Build.VERSION.SDK_INT >= 33 && !kioskOn() && !getSharedPreferences("uno", MODE_PRIVATE).getBoolean("askedNotif", false)
+        && checkSelfPermission("android.permission.POST_NOTIFICATIONS") != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+      getSharedPreferences("uno", MODE_PRIVATE).edit().putBoolean("askedNotif", true).apply();
+      new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(new Runnable() { public void run() {
+        try { requestPermissions(new String[] { "android.permission.POST_NOTIFICATIONS" }, 22); } catch (Exception e) { }
+      } }, 6000);
+    }
     homeAlias(on);
     if (on) { exiting = false; lastPin = 0; setupOwner(); pin(); }
     else {
