@@ -1086,6 +1086,42 @@ html.web-tabs.wt-pg #menuView *{animation-play-state:paused!important}
 .wseg button.on{background:linear-gradient(180deg,#FFE08A,#FFC94D);color:#1A1306}
 .wbtn.wsm{height:44px;font-size:15px;margin-top:12px;border-radius:13px}
 h2.wsec{margin-top:22px}
+.bgc{position:relative;overflow:hidden;border-radius:22px;padding:16px 16px 16px;margin:0 0 14px;text-align:center;color:#fff;
+  background:radial-gradient(130% 90% at 50% 0%,#ffb03a 0%,#ff4f6d 48%,#7b2ff7 100%);border:1px solid rgba(255,255,255,.4);box-shadow:0 12px 30px rgba(255,70,110,.35)}
+.bgc::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.55;background-image:
+  radial-gradient(circle,#fff6 2px,transparent 2.5px),radial-gradient(circle,#ffe08a 2px,transparent 2.5px),radial-gradient(circle,#7cf5ff99 1.6px,transparent 2px);
+  background-size:46px 46px,62px 62px,38px 38px;background-position:0 0,20px 30px,10px 18px}
+.bgc>*{position:relative}
+.bgc h3{margin:0 0 2px;font:800 21px/1.2 var(--sans,system-ui);text-shadow:0 2px 8px rgba(0,0,0,.25)}
+.bgc p{margin:4px 0 0;font-size:14px;line-height:1.4;color:rgba(255,255,255,.95)}
+.bgc .bgd{display:inline-block;margin-top:8px;padding:6px 14px;border-radius:999px;background:rgba(0,0,0,.25);font-weight:800;color:#FFE08A;font-size:14px}
+.bgc .wbtn{margin-top:12px;background:#fff;color:#c2185b}
+.bgbtn{border:0;background:none;padding:0;cursor:pointer;display:block;margin:4px auto 6px;width:156px;height:150px;position:relative;-webkit-tap-highlight-color:transparent}
+.bg-glow{position:absolute;inset:-6px;border-radius:50%;background:radial-gradient(circle,rgba(255,240,170,.95),rgba(255,210,90,.35) 42%,transparent 68%);animation:bgGlow 2.4s ease-in-out infinite}
+.bg-box{position:absolute;left:28px;right:28px;bottom:14px;top:38px;animation:bgBob 2.4s ease-in-out infinite}
+.bg-base{position:absolute;left:5px;right:5px;bottom:0;top:30px;border-radius:10px;overflow:hidden;background:linear-gradient(160deg,#ff3b6b,#b5124f);box-shadow:inset 0 -10px 16px rgba(0,0,0,.25),0 10px 18px rgba(80,0,40,.45)}
+.bg-base::after{content:"";position:absolute;top:-30%;bottom:-30%;width:34%;left:-70%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.65),transparent);transform:skewX(-18deg);animation:bgShine 3.2s ease-in-out infinite}
+.bg-rib,.bg-lid::before{content:"";position:absolute;left:50%;margin-left:-9px;width:18px;top:0;bottom:0;background:linear-gradient(#fff3b0,#f5b400);box-shadow:0 0 6px rgba(255,220,100,.8)}
+.bg-lid{position:absolute;left:0;right:0;top:14px;height:24px;border-radius:7px;background:linear-gradient(160deg,#ff6a92,#d81b60);box-shadow:0 5px 8px rgba(80,0,40,.35);transform-origin:15% 100%;transition:transform .7s cubic-bezier(.3,1.5,.5,1),opacity .7s}
+.bg-bow{position:absolute;top:-17px;left:50%;width:62px;margin-left:-31px;height:22px}
+.bg-bow::before,.bg-bow::after{content:"";position:absolute;top:0;width:26px;height:18px;border:6px solid #ffd54a;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;box-sizing:border-box;box-shadow:0 0 6px rgba(255,220,100,.8)}
+.bg-bow::before{left:2px;transform:rotate(-24deg)}.bg-bow::after{right:2px;transform:rotate(24deg)}
+.bg-sp{position:absolute;color:#fff7c2;font-size:16px;text-shadow:0 0 8px #ffe08a;animation:bgTw 1.8s ease-in-out infinite}
+.bg-sp:nth-child(2){left:6px;top:30px;animation-delay:.3s}.bg-sp:nth-child(3){right:4px;top:18px;font-size:12px;animation-delay:.9s}.bg-sp:nth-child(4){right:10px;bottom:30px;animation-delay:1.3s}.bg-sp:nth-child(5){left:16px;bottom:14px;font-size:11px;animation-delay:.6s}
+.bgbtn.ready .bg-box{animation:bgWiggle 1.8s ease-in-out infinite}
+.bgbtn.shake .bg-box{animation:bgShake .55s ease}
+.bgbtn.open .bg-lid{transform:translate(34px,-78px) rotate(38deg);opacity:0}
+.bgbtn.open .bg-glow{animation:none;transform:scale(1.7);transition:transform .6s}
+.bgc.rev .bgbig{font-size:46px;line-height:1;margin:4px 0 6px;animation:bgPop .6s cubic-bezier(.3,1.6,.5,1)}
+.bgc.rev .bgoffer{margin:10px 0 0;padding:12px;border-radius:16px;background:rgba(255,255,255,.95);color:#b5124f;font:800 18px/1.35 var(--sans,system-ui)}
+.bgfw{position:fixed;inset:0;z-index:2147483000;pointer-events:none}
+@keyframes bgGlow{0%,100%{opacity:.6;transform:scale(.92)}50%{opacity:1;transform:scale(1.05)}}
+@keyframes bgBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes bgShine{0%,55%{left:-70%}85%,100%{left:130%}}
+@keyframes bgTw{0%,100%{opacity:.2;transform:scale(.6)}50%{opacity:1;transform:scale(1.15)}}
+@keyframes bgWiggle{0%,60%,100%{transform:rotate(0)}66%{transform:rotate(-7deg)}74%{transform:rotate(7deg)}82%{transform:rotate(-5deg)}90%{transform:rotate(4deg)}}
+@keyframes bgShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px) rotate(-4deg)}40%{transform:translateX(8px) rotate(4deg)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@keyframes bgPop{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
 .wbday{background:linear-gradient(135deg,rgba(255,201,77,.22),rgba(232,120,160,.16));border-color:rgba(255,201,77,.4)}.wbday b{display:block;font:800 18px var(--sans,system-ui);margin-bottom:6px}.wbday p{margin:0;color:rgba(255,255,255,.88);line-height:1.45}
 .wbonus .big{font:800 34px var(--sans,system-ui);color:#FFD27A;letter-spacing:-.5px}.wbonus .how{margin:4px 0 0;color:rgba(255,255,255,.75);font-size:14px;line-height:1.45}.wbonus .wlist{margin-top:12px}
 .wcode{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.07);border:1px dashed rgba(255,201,77,.5)}.wcode span{font-size:13px;color:rgba(255,255,255,.65)}.wcode b{font:800 20px ui-monospace,monospace;letter-spacing:1.5px;color:#FFD27A}
@@ -1524,7 +1560,7 @@ var WT=(function(){
   function go(i){
     if(i===tab && i!==0){ var pg=document.querySelector(".wpage.on"); if(pg) pg.scrollTo({top:0,behavior:"smooth"}); return; }
     tab=i; hap("tick"); try{ SFX.select(); }catch(_){}
-    if(tab===1) renderBook(); else if(tab===2) renderAbout(); else if(tab===3){ renderProfile(); loadNews(); loadBonus(); syncBday(); }
+    if(tab===1) renderBook(); else if(tab===2) renderAbout(); else if(tab===3){ renderProfile(); loadNews(); loadBonus(); syncBday(); loadBGift(); }
     /* the new page is filled first, then shown in the same frame as the old one goes */
     ["book","about","profile"].forEach(function(id,k){ var p=$("wp-"+id); if(p) p.classList.toggle("on",tab===k+1); });
     document.documentElement.classList.toggle("wt-pg", tab!==0);
@@ -1666,7 +1702,7 @@ var WT=(function(){
       "bq.ok":"Arizangiz qabul qilindi! Menejerimiz tez orada siz bilan bog'lanadi.","bq.hint":"Menyu, bezak va narxni menejer siz bilan alohida kelishib oladi.",
       "ab.events":"Afisha","ab.halls":"Zallarimiz","ab.cap":"%@ kishigacha","ab.bookEv":"Stol band qilish","ab.banq":"To'y yoki banket uchun ariza",
       "pf.bday":"Tug'ilgan kun","pf.bdayHint":"Tug'ilgan kuningizda sizni maxsus taklif kutadi 🎁","pf.bdayOnce":"Diqqat: sana bir marta kiritiladi, keyin o'zgartirib bo'lmaydi.","pf.bdayLocked":"Sanani o'zgartirish uchun restoranga murojaat qiling (pasport bilan).",
-      "bd.title":"Tug'ilgan kuningiz yaqinlashmoqda! 🎂","bd.today":"Tug'ilgan kuningiz muborak! 🎉","bd.book":"Bayramni bron qilish","bd.def":"UNO Airways'da nishonlang — sizga maxsus sovg'a tayyorlab qo'yamiz.","bd.push":"Tug'ilgan kuningiz yaqin! 🎂",
+      "bd.title":"Tug'ilgan kuningiz yaqinlashmoqda! 🎂","bd.today":"Tug'ilgan kuningiz muborak! 🎉","bd.book":"Bayramni bron qilish","bg.title":"Sizga sovg'a bor! 🎁","bg.lock":"Sovg'ani faqat tug'ilgan kuningiz kuni ochishingiz mumkin","bg.days":"Yana %@ kun qoldi","bg.tap":"Bugun sizning kuningiz! Qutini bosing 🎉","bg.need":"Profilda tug'ilgan kuningizni kiriting — sizga sovg'a tayyorlab qo'yamiz","bg.happy":"Tug'ilgan kuningiz muborak","bg.show":"Sovg'ani olish uchun shu sahifani ofitsiant yoki kassirga ko'rsating","bg.today":"Bugun","bd.def":"UNO Airways'da nishonlang — sizga maxsus sovg'a tayyorlab qo'yamiz.","bd.push":"Tug'ilgan kuningiz yaqin! 🎂",
       "bn.title":"Bonuslarim","bn.how":"Har tashrifda chekdan %@% bonus yig'iladi. Kassada telefon raqamingizni ayting.","bn.need":"Bonuslarni ko'rish uchun yuqorida ism va telefon raqamingizni saqlang.",
       "bn.earn":"Yig'ildi","bn.spend":"Ishlatildi","bn.ref":"Do'st taklifi",
       "rf.title":"Do'stingizni taklif qiling","rf.how":"Do'stingiz ilovada sizning kodingizni kiritib, birinchi marta kelsa, sizga %@ bonus beriladi.","rf.code":"Sizning kodingiz","rf.share":"Kodni ulashish",
@@ -1679,7 +1715,7 @@ var WT=(function(){
       "bq.ok":"Заявка принята! Наш менеджер скоро свяжется с вами.","bq.hint":"Меню, оформление и стоимость менеджер обсудит с вами отдельно.",
       "ab.events":"Афиша","ab.halls":"Наши залы","ab.cap":"до %@ гостей","ab.bookEv":"Забронировать стол","ab.banq":"Заявка на свадьбу или банкет",
       "pf.bday":"День рождения","pf.bdayHint":"В ваш день рождения вас ждёт особое предложение 🎁","pf.bdayOnce":"Внимание: дата указывается один раз, изменить её потом нельзя.","pf.bdayLocked":"Чтобы изменить дату, обратитесь в ресторан (с паспортом).",
-      "bd.title":"Скоро ваш день рождения! 🎂","bd.today":"С днём рождения! 🎉","bd.book":"Забронировать праздник","bd.def":"Отметьте в UNO Airways — мы приготовим для вас особый подарок.","bd.push":"Скоро ваш день рождения! 🎂",
+      "bd.title":"Скоро ваш день рождения! 🎂","bd.today":"С днём рождения! 🎉","bd.book":"Забронировать праздник","bg.title":"Для вас есть подарок! 🎁","bg.lock":"Подарок можно открыть только в ваш день рождения","bg.days":"Осталось дней: %@","bg.tap":"Сегодня ваш день! Нажмите на коробку 🎉","bg.need":"Укажите день рождения в профиле — мы приготовим для вас подарок","bg.happy":"С днём рождения","bg.show":"Чтобы получить подарок, покажите этот экран официанту или кассиру","bg.today":"Сегодня","bd.def":"Отметьте в UNO Airways — мы приготовим для вас особый подарок.","bd.push":"Скоро ваш день рождения! 🎂",
       "bn.title":"Мои бонусы","bn.how":"С каждого чека начисляется %@% бонусов. Назовите номер телефона на кассе.","bn.need":"Сохраните имя и телефон выше, чтобы видеть бонусы.",
       "bn.earn":"Начислено","bn.spend":"Списано","bn.ref":"Приглашение друга",
       "rf.title":"Пригласите друга","rf.how":"Если друг введёт ваш код в приложении и придёт впервые, вы получите %@ бонусов.","rf.code":"Ваш код","rf.share":"Поделиться кодом",
@@ -1692,7 +1728,7 @@ var WT=(function(){
       "bq.ok":"Request received! Our manager will contact you soon.","bq.hint":"The manager will agree the menu, decor and price with you.",
       "ab.events":"What's on","ab.halls":"Our halls","ab.cap":"up to %@ guests","ab.bookEv":"Book a table","ab.banq":"Wedding or banquet request",
       "pf.bday":"Birthday","pf.bdayHint":"A special offer awaits you on your birthday 🎁","pf.bdayOnce":"Note: the date can be entered only once and cannot be changed later.","pf.bdayLocked":"To change the date, please contact the restaurant (with your passport).",
-      "bd.title":"Your birthday is coming! 🎂","bd.today":"Happy birthday! 🎉","bd.book":"Book the celebration","bd.def":"Celebrate at UNO Airways — we'll have a special gift for you.","bd.push":"Your birthday is coming! 🎂",
+      "bd.title":"Your birthday is coming! 🎂","bd.today":"Happy birthday! 🎉","bd.book":"Book the celebration","bg.title":"There's a gift for you! 🎁","bg.lock":"The gift can only be opened on your birthday","bg.days":"%@ days to go","bg.tap":"It's your day! Tap the box 🎉","bg.need":"Add your birthday in the profile — we'll prepare a gift for you","bg.happy":"Happy birthday","bg.show":"Show this screen to the waiter or cashier to get your gift","bg.today":"Today","bd.def":"Celebrate at UNO Airways — we'll have a special gift for you.","bd.push":"Your birthday is coming! 🎂",
       "bn.title":"My bonuses","bn.how":"Get %@% back in bonuses from every bill. Tell your phone number at the cashier.","bn.need":"Save your name and phone above to see your bonuses.",
       "bn.earn":"Earned","bn.spend":"Spent","bn.ref":"Friend invite",
       "rf.title":"Invite a friend","rf.how":"When a friend enters your code in the app and visits for the first time, you get %@ in bonuses.","rf.code":"Your code","rf.share":"Share code",
@@ -1791,10 +1827,56 @@ var WT=(function(){
     if(d<t0) d=new Date(y+1,+m[2]-1,+m[3]); return d;
   }
   function bdayDays(){ var n=nextBday(bday()); if(!n) return null; var t=new Date(); t=new Date(t.getFullYear(),t.getMonth(),t.getDate()); return Math.round((n-t)/864e5); }
-  function bdayBanner(){
-    var g=G(); if(!g.bdayOn) return ""; var dd=bdayDays(); if(dd===null || dd>7) return "";
-    var tx=gtxt(g,"bdayText")||T("bd.def");
-    return '<div class="wcard wbday"><b>'+esc(T(dd===0?"bd.today":"bd.title"))+'</b><p>'+esc(tx)+'</p><button class="wbtn wsm" type="button" data-wx="bdbook">🎉 '+esc(T("bd.book"))+'</button></div>';
+  /* ---- birthday gift: a shiny box that opens (with fireworks) only on the birthday; the server decides, by Tashkent date ---- */
+  var BG={data:null, busy:false, opening:false};
+  function loadBGift(){
+    var g=G(); if(!g.bdayOn || BG.busy) return; var p=profile(); if(!ready(p.name,p.phone)){ BG.data=null; return; }
+    BG.busy=true;
+    sbRpc("uno_bday_gift",{p_device:device(),p_lang:S.lang||"uz"}).then(function(r){ BG.busy=false; if(!r.error && r.data){ BG.data=r.data; var box=$("wpBGift"); if(box && tab===3) box.innerHTML=bgiftInner(); } },function(){ BG.busy=false; });
+  }
+  function bgiftHTML(){ if(!G().bdayOn) return ""; return '<div id="wpBGift">'+bgiftInner()+'</div>'; }
+  function bgDate(iso){ var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(iso||""); return m?m[3]+"."+m[2]+"."+m[1]:""; }
+  function bgiftInner(){
+    var d=BG.data||{}, p=profile();
+    if(d.on===false) return "";
+    if(d.open && store("uno_bgift")===d.today){
+      return '<div class="bgc rev"><div class="bgbig">🎉</div><h3>'+esc(T("bg.happy"))+(p.name?', '+esc(p.name.split(" ")[0]):'')+'!</h3>'+
+        '<div class="bgoffer">'+esc(d.text||gtxt(G(),"bdayText")||T("bd.def"))+'</div>'+
+        '<span class="bgd">'+esc(T("bg.today"))+': '+bgDate(d.today)+' · 🎂 '+bgDate(d.birthday)+'</span>'+
+        '<p>'+esc(T("bg.show"))+'</p><button class="wbtn wsm" type="button" data-wx="bdbook">🥂 '+esc(T("bd.book"))+'</button></div>';
+    }
+    var has=d.has!==undefined?d.has:!!bday(), sub, cls="";
+    if(!has) sub='<p>'+esc(T("bg.need"))+'</p>';
+    else if(d.open){ sub='<p><b>'+esc(T("bg.tap"))+'</b></p>'; cls=" ready"; }
+    else sub='<p>'+esc(T("bg.lock"))+'</p>'+(d.days?'<span class="bgd">⏳ '+esc(T("bg.days").replace("%@",d.days))+'</span>':'');
+    return '<div class="bgc"><h3>'+esc(T("bg.title"))+'</h3>'+
+      '<button type="button" class="bgbtn'+cls+'" data-wx="bgift" aria-label="'+esc(T("bg.title"))+'"><i class="bg-glow"></i><i class="bg-sp">✦</i><i class="bg-sp">✦</i><i class="bg-sp">✧</i><i class="bg-sp">✦</i>'+
+      '<span class="bg-box"><span class="bg-base"><i class="bg-rib"></i></span><span class="bg-lid"><i class="bg-bow"></i></span></span></button>'+sub+'</div>';
+  }
+  function bgiftTap(b){
+    var d=BG.data||{};
+    if(d.open){
+      if(BG.opening) return; BG.opening=true; b.classList.remove("ready"); b.classList.add("open"); hap("ok"); fireworks();
+      setTimeout(function(){ store("uno_bgift",d.today); BG.opening=false; var box=$("wpBGift"); if(box) box.innerHTML=bgiftInner(); },1100);
+      return;
+    }
+    b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); hap("err");
+    if(!d.has && !bday()){ var n=$("wpName"); if(n) n.scrollIntoView({behavior:"smooth",block:"center"}); }
+  }
+  function fireworks(){
+    var c=document.createElement("canvas"); c.className="bgfw"; var W=innerWidth, H=innerHeight, k=Math.min(2,window.devicePixelRatio||1);
+    c.width=W*k; c.height=H*k; c.style.width=W+"px"; c.style.height=H+"px"; document.body.appendChild(c);
+    var x=c.getContext("2d"); if(!x){ c.remove(); return; } x.scale(k,k);
+    var P=[], cols=["#FFD54A","#FF4F6D","#7CF5FF","#B388FF","#69F0AE","#FF9A3C"], t0=0, last=-1e9, n=0;
+    function burst(){ var cx=W*(.15+Math.random()*.7), cy=H*(.12+Math.random()*.38), col=cols[Math.random()*cols.length|0], m=54;
+      for(var i=0;i<m;i++){ var a=Math.PI*2*i/m, sp=2.2+Math.random()*3.4; P.push({x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,l:1,c:Math.random()<.25?"#fff":col}); } }
+    function f(now){ if(!t0) t0=now; var el=now-t0;
+      if(n<9 && el-last>320){ burst(); n++; last=el; }
+      x.clearRect(0,0,W,H); x.globalCompositeOperation="lighter";
+      for(var i=P.length-1;i>=0;i--){ var q=P[i]; q.vx*=.982; q.vy=q.vy*.982+.055; q.x+=q.vx; q.y+=q.vy; q.l-=.0125; if(q.l<=0){ P.splice(i,1); continue; }
+        x.globalAlpha=q.l; x.fillStyle=q.c; x.beginPath(); x.arc(q.x,q.y,2.3,0,6.2832); x.fill(); }
+      if(n<9 || P.length) requestAnimationFrame(f); else c.remove(); }
+    requestAnimationFrame(f);
   }
   function scheduleBday(){
     var g=G(); if(!g.bdayOn || !canRemind()) return; var n=nextBday(bday()); if(!n) return;
@@ -1812,7 +1894,7 @@ var WT=(function(){
     BN.busy=false;
   }
   function growHTML(){
-    var g=G(), p=profile(), h=bdayBanner();
+    var g=G(), p=profile(), h=bgiftHTML();
     if(g.bonusOn){
       var pct=+(BN.data&&BN.data.pct)||+g.bonusPct||5;
       h+='<h2>💳 '+esc(T("bn.title"))+'</h2><div class="wbonus">';
@@ -1891,6 +1973,7 @@ var WT=(function(){
     if(a==="bqsend"){ sendBanq(); return; }
     if(a==="banq"){ B.mode="b"; B.msg=null; go(1); return; }
     if(a==="evbook"){ B.mode="t"; B.msg=null; B.pre={at:b.dataset.d+"T"+b.dataset.t}; go(1); return; }
+    if(a==="bgift"){ bgiftTap(b); return; }
     if(a==="bdbook"){ B.mode="t"; B.msg=null; B.pre={occ:1}; go(1); return; }
     if(a==="refshare"){ shareText(T("rf.text").replace("%@",ph9(profile().phone))+" "+location.origin+location.pathname); return; }
     if(a==="ref"){ applyRef(); return; }
@@ -1966,7 +2049,7 @@ var WT=(function(){
       if(navigator.share) navigator.share({title:"UNO Airways",text:T("share.text"),url:u}).catch(function(){}); else { try{ navigator.clipboard.writeText(T("share.text")+" "+u).catch(function(){}); }catch(_){} } return; }
     if(b.dataset.wp==="save"){ var n=$("wpName").value.trim(), ph=$("wpPhone").value.trim(); if(!ready(n,ph)) { $("wpName").focus(); return; }
       hap("ok"); saveProfile(n,ph); var bdv=bday()?"":(($("wpBday")||{}).value||""); if(bdv) store("uno_bday",bdv);
-      syncCustomer(true, function(){ var after=function(){ BN.data=null; loadBonus(); syncBday(); };
+      syncCustomer(true, function(){ var after=function(){ BN.data=null; loadBonus(); syncBday(); setTimeout(loadBGift,600); };
         if(bdv) sbRpc("uno_customer_extra",{p_device:device(),p_birthday:bdv}).then(function(r){ if(r && r.data && r.data.birthday) store("uno_bday",r.data.birthday); after(); },after); else after(); }); scheduleBday(); P.msg=1; renderProfile(); setTimeout(function(){ P.msg=null; if(tab===3) renderProfile(); },2000); return; }
     if(b.dataset.wp==="delphoto"){ store("uno_photo",null); syncCustomer(true); renderProfile(); return; }
     if(b.dataset.wp==="reload"){ loadNews(); return; }

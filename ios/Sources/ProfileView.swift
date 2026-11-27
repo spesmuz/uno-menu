@@ -103,6 +103,9 @@ struct ProfileView: View {
     @ObservedObject private var news = NewsModel.shared
     @State private var photo: UIImage? = nil
     @State private var photoRead = false
+    @State private var gift: BdayGift? = nil
+    @AppStorage("uno.giftOpened") private var giftOpened = ""     /* the server's "today" when the box was opened */
+    @State private var fireworks = false
     @State private var picking = false
     @State private var saved = false
     @FocusState private var focus: Bool
@@ -168,6 +171,11 @@ struct ProfileView: View {
                     .glassCard()
                     Text(L.t("pf.hint")).font(.footnote).foregroundColor(Color.white.opacity(0.6)).padding(.horizontal, 6)
 
+                    /* birthday gift */
+                    if let g = gift, g.on {
+                        GiftCard(g: g, opened: giftOpened == g.today, guestName: name) { openGift(g) }
+                    }
+
                     /* news */
                     HStack {
                         sectionTitle(L.t("pf.news"))
@@ -197,12 +205,14 @@ struct ProfileView: View {
                 .frame(maxWidth: 640)
                 .frame(maxWidth: .infinity)
             }
-            .modifier(Refresh { news.load() })
+            .modifier(Refresh { news.load(); loadGift() })
+            if fireworks { FireworksView(size: UIScreen.main.bounds.size) }
         }
         .onAppear {
             news.start(); CustomerAPI.syncOnLaunch()
             if !photoRead { photoRead = true; photo = CustomerAPI.localPhoto() }
             refreshBday()
+            loadGift()
         }
         .sheet(isPresented: $picking) { PhotoPicker { img in if let img = img { setPhoto(img) } } }
         .toolbar {
@@ -311,6 +321,16 @@ struct ProfileView: View {
         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color.white.opacity(0.08), lineWidth: 1))
     }
 
+    private func loadGift() {
+        guard ready else { return }
+        CustomerAPI.bdayGift { g in if let g = g, g != gift { gift = g } }
+    }
+    private func openGift(_ g: BdayGift) {
+        fireworks = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { withAnimation(.easeOut(duration: 0.35)) { giftOpened = g.today } }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4.3) { fireworks = false }
+    }
+
     /* the server keeps the date per phone number: show what it has (also after a reinstall) */
     private func refreshBday() {
         guard ready else { return }
@@ -333,6 +353,7 @@ struct ProfileView: View {
                 CustomerAPI.birthday(b) { server in
                     DispatchQueue.main.async {
                         if let s = server { bday = s; bdayLocked = true; CustomerAPI.scheduleBirthday(s) } else { refreshBday() }
+                        loadGift()
                     }
                 }
             } else { DispatchQueue.main.async { refreshBday() } }

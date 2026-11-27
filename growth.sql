@@ -543,3 +543,29 @@ begin
 end $$;
 revoke all on function public.uno_tg_miniapp_setup() from public;
 grant execute on function public.uno_tg_miniapp_setup() to authenticated;
+
+-- ---------- tug'ilgan kun sovg'asi: quti faqat tug'ilgan kuni ochiladi (sana serverda, Toshkent vaqti bilan tekshiriladi) ----------
+create or replace function public.uno_bday_gift(p_device text, p_lang text default 'uz') returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare b date := public.uno_bday_locked(p_device); g jsonb; today date := (now() at time zone 'Asia/Tashkent')::date;
+        y int; nxt date; tx text; l text := lower(coalesce(p_lang,'uz'));
+begin
+  select data->'grow' into g from public.uno_docs where path = 'settings/main';
+  if coalesce((g->>'bdayOn')::boolean, false) is not true then return jsonb_build_object('on', false); end if;
+  if b is null then return jsonb_build_object('on', true, 'has', false); end if;
+  y := extract(year from today)::int;
+  -- 29-fevral: kabisa bo'lmagan yili 28-fevralda ochiladi
+  nxt := make_date(y, extract(month from b)::int, least(extract(day from b)::int, extract(day from (make_date(y, extract(month from b)::int, 1) + interval '1 month - 1 day'))::int));
+  if nxt < today then
+    y := y + 1;
+    nxt := make_date(y, extract(month from b)::int, least(extract(day from b)::int, extract(day from (make_date(y, extract(month from b)::int, 1) + interval '1 month - 1 day'))::int));
+  end if;
+  if nxt = today then
+    tx := coalesce(nullif(case when l in ('ru','en') then g->>('bdayText_' || l) end, ''), nullif(g->>'bdayText', ''), '');
+    return jsonb_build_object('on', true, 'has', true, 'open', true, 'days', 0, 'birthday', b, 'today', today, 'text', tx,
+      'name', (select name from public.uno_customers where device = btrim(coalesce(p_device,''))));
+  end if;
+  return jsonb_build_object('on', true, 'has', true, 'open', false, 'days', nxt - today, 'birthday', b, 'today', today);
+end $$;
+revoke all on function public.uno_bday_gift(text,text) from public;
+grant execute on function public.uno_bday_gift(text,text) to anon, authenticated;
