@@ -15,24 +15,11 @@ enum Config {
     static let bg = Color(red: 0x0E / 255, green: 0x0F / 255, blue: 0x12 / 255)
     static let card = Color(red: 0x1A / 255, green: 0x1B / 255, blue: 0x20 / 255)
     static let uiBg = UIColor(red: 0x0E / 255, green: 0x0F / 255, blue: 0x12 / 255, alpha: 1)
-    static let uiGold = UIColor(red: 0xE8 / 255, green: 0xB0 / 255, blue: 0x4B / 255, alpha: 1)
 }
 
 final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         UNUserNotificationCenter.current().delegate = self
-        /* see-through tab bar: the menu background runs to the bottom edge */
-        let tab = UITabBarAppearance()
-        tab.configureWithTransparentBackground()
-        if #available(iOS 26.0, *) { } else {
-            tab.backgroundEffect = UIBlurEffect(style: .systemUltraThinMaterialDark)
-            tab.backgroundColor = UIColor.black.withAlphaComponent(0.25)
-        }
-        tab.shadowColor = .clear
-        UITabBar.appearance().standardAppearance = tab
-        if #available(iOS 15.0, *) { UITabBar.appearance().scrollEdgeAppearance = tab }
-        UITabBar.appearance().tintColor = Config.uiGold
-        UITabBar.appearance().unselectedItemTintColor = UIColor.white.withAlphaComponent(0.55)
         return true
     }
     /* show the booking reminder even while the app is open */
@@ -66,6 +53,7 @@ struct RootView: View {
     }()
     @ObservedObject private var news = NewsModel.shared
     @ObservedObject private var lang = LangStore.shared
+    @Environment(\.scenePhase) private var phase
     var body: some View {
         GeometryReader { geo in
             let land = geo.size.width > geo.size.height
@@ -85,10 +73,15 @@ struct RootView: View {
         }
         .background(Config.bg.ignoresSafeArea())
         .accentColor(Config.gold)
-        .onAppear { news.start(); news.visible = tab == 3 }
+        .onAppear { news.start(); news.visible = tab == 3; MenuVisibility.set(tab == 0) }
         .onChange(of: tab) { t in
             news.visible = t == 3
             if t == 3 { news.load(); news.markSeen() }
+            MenuVisibility.set(t == 0 && phase == .active)
+        }
+        .onChange(of: phase) { p in
+            MenuVisibility.set(tab == 0 && p == .active)
+            news.active = p == .active
         }
         .onChange(of: lang.lang) { _ in news.load() }
     }
@@ -151,7 +144,6 @@ struct UNOTabBar: View {
         .frame(height: UNOBar.height(landscape))
         .background(.ultraThinMaterial, in: Capsule())
         .overlay(Capsule().strokeBorder(Color.white.opacity(0.18), lineWidth: 1))
-        .shadow(color: Color.black.opacity(0.35), radius: 14, x: 0, y: 6)
         .padding(.horizontal, landscape ? 0 : 14)
         .environment(\.colorScheme, .dark)
         .animation(.easeOut(duration: 0.18), value: tab)

@@ -67,7 +67,8 @@ struct BookingView: View {
     @AppStorage("uno.remind") private var remind = true
     @State private var sending = false
     @State private var alert: AlertInfo?
-    @State private var mine = BookingStore.load()
+    @State private var mine: [Booking] = []
+    @State private var mineRead = false
 
     struct AlertInfo: Identifiable { let id = UUID(); let title: String; let text: String; let ok: Bool }
 
@@ -164,6 +165,7 @@ struct BookingView: View {
                 }
             }
             .modifier(ClearForm())
+            .onAppear { if !mineRead { mineRead = true; mine = BookingStore.load() } }
             .background(UNOSky())
             .navigationTitle(L.t("book.title"))
             .toolbar {
@@ -186,10 +188,7 @@ struct BookingView: View {
 
     private var upcoming: [Booking] { mine.filter { $0.at > Date().addingTimeInterval(-3 * 3600) }.sorted { $0.at < $1.at } }
 
-    static var fmt: DateFormatter {
-        let f = DateFormatter(); f.dateStyle = .medium; f.timeStyle = .short
-        f.locale = L.locale; return f
-    }
+    static var fmt: DateFormatter { L.dateFormatter(time: true) }
 
     private func callUs() {
         if let u = URL(string: "tel://" + Config.phone) { UIApplication.shared.open(u) }

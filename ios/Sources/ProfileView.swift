@@ -4,7 +4,7 @@ import PhotosUI
 import UserNotifications
 
 /* "Profil" tab: the guest's name and phone (filled in everywhere automatically) + restaurant news with photos */
-struct NewsItem: Identifiable {
+struct NewsItem: Identifiable, Equatable {
     let id: String
     let title: String
     let text: String
@@ -20,17 +20,21 @@ final class NewsModel: ObservableObject {
     @Published var unseen = false
     private var timer: Timer?
     var visible = false   /* the Profil tab is on screen: new posts count as seen */
+    var active = true     /* app in the foreground: only then the timer asks the server */
     private var started = false
 
-    /* new posts show up by themselves: checked every 45 s while the app is open and whenever it comes back */
+    /* new posts show up by themselves: checked every 2 minutes while the app is open and whenever it comes back */
     func start() {
         if started { return }; started = true
         load()
-        timer = Timer.scheduledTimer(withTimeInterval: 45, repeats: true) { [weak self] _ in self?.load() }
+        let t = Timer(timeInterval: 120, repeats: true) { [weak self] _ in if self?.active == true { self?.load() } }
+        t.tolerance = 20          /* lets iOS bundle the wake-up with others: less battery */
+        RunLoop.main.add(t, forMode: .common)
+        timer = t
         NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in self?.load() }
     }
     private var newestKey: String { items.first.map { $0.id + "|" + String($0.at?.timeIntervalSince1970 ?? 0) } ?? "" }
-    func markSeen() { if !items.isEmpty { UserDefaults.standard.set(newestKey, forKey: "uno.newsSeen") }; unseen = false }
+    func markSeen() { if !items.isEmpty { UserDefaults.standard.set(newestKey, forKey: "uno.newsSeen") }; if unseen { unseen = false } }
 
     func load() {
         guard var c = URLComponents(string: Config.supabaseURL + "/rest/v1/uno_docs") else { return }
@@ -39,7 +43,7 @@ final class NewsModel: ObservableObject {
         var r = URLRequest(url: url, timeoutInterval: 20)
         r.setValue(Config.supabaseKey, forHTTPHeaderField: "apikey")
         r.setValue("Bearer " + Config.supabaseKey, forHTTPHeaderField: "Authorization")
-        if items.isEmpty { loading = true }
+        if items.isEmpty && !loading { loading = true }
         URLSession.shared.dataTask(with: r) { data, resp, err in
             var list: [NewsItem] = []
             var bad = err != nil
@@ -65,9 +69,18 @@ final class NewsModel: ObservableObject {
                 }
                 list.sort { ($0.at ?? .distantPast) > ($1.at ?? .distantPast) }
             } else { bad = true }
-            DispatchQueue.main.async { self.loading = false; self.failed = bad && list.isEmpty; if !bad || !list.isEmpty { self.items = list
-                    self.unseen = !list.isEmpty && UserDefaults.standard.string(forKey: "uno.newsSeen") != self.newestKey
-                    if self.visible { self.markSeen() } } }
+            /* only real changes are published: every publish redraws all four tabs */
+            DispatchQueue.main.async {
+                if self.loading { self.loading = false }
+                let f = bad && list.isEmpty
+                if self.failed != f { self.failed = f }
+                if !bad || !list.isEmpty {
+                    if self.items != list { self.items = list }
+                    let u = !list.isEmpty && UserDefaults.standard.string(forKey: "uno.newsSeen") != self.newestKey
+                    if self.unseen != u { self.unseen = u }
+                    if self.visible { self.markSeen() }
+                }
+            }
         }.resume()
     }
 }
@@ -87,7 +100,8 @@ struct ProfileView: View {
     @AppStorage("uno.phone") private var phone = "+998 "
     @AppStorage("uno.bday") private var bday = ""          /* YYYY-MM-DD, empty = not given */
     @ObservedObject private var news = NewsModel.shared
-    @State private var photo: UIImage? = CustomerAPI.localPhoto()
+    @State private var photo: UIImage? = nil
+    @State private var photoRead = false
     @State private var picking = false
     @State private var saved = false
     @FocusState private var focus: Bool
@@ -184,7 +198,10 @@ struct ProfileView: View {
             }
             .modifier(Refresh { news.load() })
         }
-        .onAppear { news.start(); CustomerAPI.syncOnLaunch() }
+        .onAppear {
+            news.start(); CustomerAPI.syncOnLaunch()
+            if !photoRead { photoRead = true; photo = CustomerAPI.localPhoto() }
+        }
         .sheet(isPresented: $picking) { PhotoPicker { img in if let img = img { setPhoto(img) } } }
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
@@ -242,10 +259,7 @@ struct ProfileView: View {
         return s.isEmpty ? "?" : s
     }
 
-    static var fmt: DateFormatter {
-        let f = DateFormatter(); f.dateStyle = .medium; f.timeStyle = .none
-        f.locale = L.locale; return f
-    }
+    static var fmt: DateFormatter { L.dateFormatter(time: false) }
 
     private func setPhoto(_ img: UIImage?) {
         photo = img.map { CustomerAPI.square($0, side: 360) }
@@ -333,8 +347,10 @@ struct UNOSky: View {
                     .position(x: w / 2, y: h - h * 0.06 + r)
             }
             .frame(width: w, height: h)
+            .drawingGroup()      /* drawn once into a single bitmap; the big glow is not re-blurred while scrolling */
         }
         .ignoresSafeArea()
+        .allowsHitTesting(false)
     }
 }
 
@@ -353,7 +369,6 @@ struct GlassCard: ViewModifier {
             )
             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Color.white.opacity(0.16), lineWidth: 1))
-            .shadow(color: Color.black.opacity(0.35), radius: 16, x: 0, y: 10)
             .environment(\.colorScheme, .dark)
     }
 }

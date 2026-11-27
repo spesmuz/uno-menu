@@ -34,6 +34,15 @@ enum L {
 
     static func t(_ k: String) -> String { (d[lang]?[k]) ?? (d["uz"]?[k]) ?? k }
 
+    /* date formatters are slow to make: one per language and style, reused */
+    private static var fmts: [String: DateFormatter] = [:]
+    static func dateFormatter(time: Bool) -> DateFormatter {
+        let key = lang + (time ? "T" : "D")
+        if let f = fmts[key] { return f }
+        let f = DateFormatter(); f.dateStyle = .medium; f.timeStyle = time ? .short : .none; f.locale = locale
+        fmts[key] = f; return f
+    }
+
     static let d: [String: [String: String]] = [
         "uz": [
             "done": "Tayyor", "pf.bday": "Tug'ilgan kun", "pf.bdayAdd": "Sanani kiritish", "pf.bdayHint": "Tug'ilgan kuningizda sizni maxsus taklif kutadi 🎁", "bd.push": "Tug'ilgan kuningiz yaqin! 🎂", "bd.def": "UNO Airways'da nishonlang — sizga maxsus sovg'a tayyorlab qo'yamiz.", "tab.profile": "Profil", "pf.photo": "Surat qo'yish", "pf.photoChange": "Suratni almashtirish", "pf.photoDel": "Suratni olib tashlash",  "pf.me": "Mening ma'lumotlarim", "pf.name": "Ism familiya", "pf.hint": "Bir marta yozib qo'ying: bron, yetkazib berish va fikr qoldirishda ism va telefon o'zi to'ldiriladi.", "pf.save": "Saqlash", "pf.saved": "Saqlandi", "pf.news": "Yangiliklar", "pf.noNews": "Hozircha yangilik yo'q.",  "tab.menu": "Menyu", "tab.book": "Bron", "tab.about": "UNO",

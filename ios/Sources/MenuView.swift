@@ -79,6 +79,7 @@ final class WebModel: NSObject, ObservableObject, WKNavigationDelegate, WKUIDele
     }
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         (webView as? InsetWebView)?.resend()
+        MenuVisibility.apply()
         loadedOnce = true; loading = false; failed = false
     }
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { fail(error) }
@@ -146,12 +147,22 @@ final class InsetWebView: WKWebView {
         evaluateJavaScript("window.UNO_INSETS={t:\(Int(top.rounded())),b:\(Int(bottom.rounded())),l:\(Int(left.rounded())),r:\(Int(right.rounded())),island:\(island.isEmpty ? "null" : island)};window.dispatchEvent(new Event('resize'));", completionHandler: nil)
     }
     func resend() { sent = UIEdgeInsets(top: -1, left: -1, bottom: -1, right: -1); sentIsland = "-"; setNeedsLayout() }
-    static func tabBar(in vc: UIViewController?) -> UITabBar? {
-        guard let vc = vc else { return nil }
-        if let t = vc as? UITabBarController { return t.tabBar }
-        for c in vc.children { if let t = tabBar(in: c) { return t } }
-        if let p = vc.presentedViewController { return tabBar(in: p) }
-        return nil
+}
+
+/* The menu page stays alive under the other tabs. While it is not on screen (another tab, app in the background)
+   its videos and animations are stopped, so the phone does not decode video and redraw the page for nobody. */
+enum MenuVisibility {
+    static weak var web: WKWebView?
+    private static var on = true
+    static func set(_ v: Bool) {
+        if v == on { return }
+        on = v
+        apply()
+    }
+    static func apply() {
+        guard let w = web else { return }
+        if #available(iOS 15.0, *) { w.setAllMediaPlaybackSuspended(!on, completionHandler: nil) }
+        w.evaluateJavaScript("window.UNO_APPVIS&&window.UNO_APPVIS(\(on))", completionHandler: nil)
     }
 }
 
@@ -186,6 +197,7 @@ struct WebView: UIViewRepresentable {
         w.allowsLinkPreview = false
         if #available(iOS 16.4, *) { w.isInspectable = false }
         model.web = w
+        MenuVisibility.web = w
         w.load(URLRequest(url: Config.siteURL))
         return w
     }

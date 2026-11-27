@@ -977,6 +977,12 @@ html.in-app .gai-in{padding-bottom:12px}
   box-shadow:0 14px 34px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.12);-webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%)}
 html.web-tabs #wtabs{display:flex}
 /* Android WebView: a live blur over the moving carousel costs a frame every time; a solid bar looks the same */
+/* iPhone app: no endless decorative loops (each one keeps the GPU redrawing the blurred cards 60–120 times a second), nothing at all while the menu tab is hidden */
+html.iosapp.th-boarding #menuView::before{animation:none;opacity:.85}
+html.iosapp .gai-fab::before,html.iosapp #agFab::before{animation:none;opacity:.8}
+html.iosapp.th-boarding .slide.center .media::after{animation:none;display:none}
+html.iosapp.th-aurora #sky *{animation-play-state:paused!important}
+html.app-off *{animation-play-state:paused!important}
 html.and #wtabs{-webkit-backdrop-filter:none;backdrop-filter:none;background:linear-gradient(180deg,rgba(24,30,52,.97),rgba(9,12,26,.98))}
 /* Android phones: the same look without the effects their GPUs choke on while cards slide
    (live glass blur, the boarding-pass notch mask, stacked card shadows) */
@@ -2377,8 +2383,17 @@ function scheduleVideo(m, id){
   var shown=function(){ blurReveal(m, m.querySelector("img.thumb"), function(){ w.classList.add("show"); m.classList.add("has-vid"); }, t0, ok); };
   _vidT=setTimeout(function(){ if(ok()) playWhenReady(v, ok, shown); }, VIDEO_DELAY-VIDEO_LEAD);
 }
+/* iPhone app: the native tab bar says whether the menu is on screen (other tab / app in the background = off) */
+if(/UNOAirwaysApp/.test(navigator.userAgent||"")) document.documentElement.classList.add("iosapp");
+window.UNO_APPVIS=function(on){
+  var de=document.documentElement; if(de.classList.contains("app-off")===!on) return;
+  de.classList.toggle("app-off",!on);
+  try{ skySync(); }catch(_){}
+  try{ if(!on) pauseCarouselVideo(); else if(S.view==="menu" && !S.detail) resumeCarouselVideo(); }catch(_){}
+};
 function pauseCarouselVideo(){ clearTimeout(_vidT); slidesEl.querySelectorAll("video").forEach(function(v){ try{ v.pause(); }catch(_){} }); }
 function resumeCarouselVideo(){
+  if(document.documentElement.classList.contains("app-off")) return;   /* iPhone app: menu tab not on screen */
   var el=slideNodes[S.idx]; if(!el) return; var v=el.querySelector(".media video"); if(!v) return;
   if(el.querySelector(".vidwrap.show")){ var pr=v.play(); if(pr&&pr.catch) pr.catch(function(){}); }
   else scheduleVideo(el.querySelector(".media"), curList[S.idx].id);
@@ -3026,7 +3041,7 @@ function liquidSky(sky, adm){
   }
   function frame(now){
     if(sky.dataset.t!=="liquid"){ document.documentElement.classList.remove(ON); return; }
-    if(!document.hidden && S.view===VIEW){ size();
+    if(!document.hidden && S.view===VIEW && !document.documentElement.classList.contains("app-off")){ size();
       /* background: ~30 fps is plenty for a slow flow */
       if(now-last>33){ last=now;
         gl.bindFramebuffer(gl.FRAMEBUFFER,fbo); gl.viewport(0,0,tw,th); gl.useProgram(P1); gl.bindBuffer(gl.ARRAY_BUFFER,buf); bindQuad(P1);
@@ -3042,7 +3057,7 @@ function liquidSky(sky, adm){
 }
 /* Android phones: the flight-route sky stands still (its SVG animation kept the processor busy every frame and
    heated the phone); elsewhere it only stops while a tab page covers the menu or cards are moving */
-function skyStill(){ var de=document.documentElement; return de.classList.contains("and") || de.classList.contains("wt-pg"); }
+function skyStill(){ var de=document.documentElement; return de.classList.contains("and") || de.classList.contains("wt-pg") || de.classList.contains("iosapp") || de.classList.contains("app-off"); }
 function skySync(){ try{ var sv=document.querySelector("#sky svg"); if(!sv||!sv.pauseAnimations) return; if(skyStill()) sv.pauseAnimations(); else if(!skyT) sv.unpauseAnimations(); }catch(_){} }
 function applyTheme(){
   var url=(location.search.match(/[?&]theme=(\w+)/)||[])[1], t=url||(S.settings&&S.settings.theme)||"classic", root=document.documentElement;
