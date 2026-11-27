@@ -18,13 +18,14 @@ final class DemoTests: XCTestCase {
             web.swipeRight(); pause(3)
         }
 
-        let tabs = app.tabBars.firstMatch
-        if tabs.buttons["Bron"].exists { tabs.buttons["Bron"].tap() }
+        /* the app draws its own tab bar (not a system UITabBar): its buttons are found by their labels */
+        func tab(_ t: String) { let b = app.buttons[t].firstMatch; if b.waitForExistence(timeout: 3) { b.tap() } }
+        tab("Bron")
         pause(2)
         let name = app.textFields["Ismingiz"]
-        if name.waitForExistence(timeout: 5) { name.tap(); pause(0.5); name.typeText("Aziz Karimov"); pause(1) }
+        if name.waitForExistence(timeout: 5) && name.isHittable { name.tap(); pause(0.5); name.typeText("Aziz Karimov"); pause(1) }
         let phone = app.textFields.element(boundBy: 1)
-        if phone.exists { phone.tap(); pause(0.5); phone.typeText("90 123 45 67"); pause(1) }
+        if phone.exists && phone.isHittable { phone.tap(); pause(0.5); phone.typeText("90 123 45 67"); pause(1) }
         if app.buttons["Tayyor"].exists { app.buttons["Tayyor"].tap() }   // hide keyboard
         pause(1)
         let stepper = app.steppers.firstMatch
@@ -49,12 +50,12 @@ final class DemoTests: XCTestCase {
         app.swipeUp(); pause(2.5)
         app.swipeDown(); pause(1.5)
 
-        if tabs.buttons["UNO"].exists { tabs.buttons["UNO"].tap() }
+        tab("UNO")
         pause(3)
         app.swipeUp(); pause(2.5)
         app.swipeDown(); pause(2)
 
-        if tabs.buttons["Menyu"].exists { tabs.buttons["Menyu"].tap() }
+        tab("Menyu")
         pause(5)
     }
 }
