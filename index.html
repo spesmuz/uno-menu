@@ -5430,7 +5430,8 @@ Att.todayHTML=function(){
       '<div style="display:flex;flex-direction:column;gap:8px">'+gr.items.map(function(x){
       return '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:#191A1F">'+
         '<div style="flex:1;min-width:0"><b>'+esc(x.s.name)+'</b> <small style="color:var(--muted)">'+(x.s.role?esc(x.s.role)+' · ':'')+String(x.s.shift_start).slice(0,5)+'–'+String(x.s.shift_end).slice(0,5)+'</small><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">'+x.st+'</div></div>'+
-        (x.ph?'<button class="btn sm" data-att="photo" data-id="'+x.ph.id+'">Surat</button>':'')+'</div>';
+        (x.ph?'<button class="btn sm'+(Att.photo&&Att.photo.where==="list"&&String(Att.photo.id)===String(x.ph.id)?' gold':'')+'" data-att="photo" data-where="list" data-id="'+x.ph.id+'">Surat</button>':'')+'</div>'+
+        (x.ph&&Att.photo&&Att.photo.where==="list"&&String(Att.photo.id)===String(x.ph.id)?Att.photoHTML():'');
     }).join("")+'</div>';
   }).join("");
   var okIds={}; act.forEach(function(s){ okIds[s.id]=1; });
@@ -5439,9 +5440,10 @@ Att.todayHTML=function(){
     var by={}; Att.staff.forEach(function(s){ by[s.id]=s; });
     h+='<h3 style="font-size:14px;margin:18px 0 8px">Bugungi belgilar</h3><div style="overflow-x:auto"><table class="aitab"><thead><tr><th>Xodim</th><th>Vaqt</th><th>Belgi</th><th>Izoh</th><th></th></tr></thead><tbody>'+
       today.map(function(r){ var s=by[r.staff_id]||{name:"?"}; var note=r.kind==="in"?(r.late_min>g?'kechikdi '+attDur(r.late_min):'vaqtida'):((r.worked_min!=null?'ishladi '+attDur(r.worked_min):'')+(r.early_min>g?', '+attDur(r.early_min)+' erta':''));
-        return '<tr><td>'+esc(s.name)+'</td><td>'+attHM(r.at)+'</td><td>'+(r.kind==="in"?'Keldi':'Ketdi')+'</td><td>'+esc(note)+(r.offline?' · internetsiz':'')+'</td><td><button class="btn sm" data-att="photo" data-id="'+r.id+'">Surat</button> <button class="btn sm danger" data-att="delRow" data-id="'+r.id+'">'+(Att.confirmRow===r.id?'Tasdiqlang':'O\'chirish')+'</button></td></tr>'; }).join("")+'</tbody></table></div>';
+        return '<tr><td>'+esc(s.name)+'</td><td>'+attHM(r.at)+'</td><td>'+(r.kind==="in"?'Keldi':'Ketdi')+'</td><td>'+esc(note)+(r.offline?' · internetsiz':'')+'</td><td><button class="btn sm'+(Att.photo&&Att.photo.where==="tab"&&String(Att.photo.id)===String(r.id)?' gold':'')+'" data-att="photo" data-where="tab" data-id="'+r.id+'">Surat</button> <button class="btn sm danger" data-att="delRow" data-id="'+r.id+'">'+(Att.confirmRow===r.id?'Tasdiqlang':'O\'chirish')+'</button></td></tr>'+
+          (Att.photo&&Att.photo.where==="tab"&&String(Att.photo.id)===String(r.id)?'<tr><td colspan="5" style="padding:0 0 10px">'+Att.photoHTML()+'</td></tr>':''); }).join("")+'</tbody></table></div>';
   }
-  h+='<div id="attPhoto">'+(Att.photo?'<div style="margin-top:14px;display:flex;gap:12px;align-items:center"><img src="'+Att.photo.src+'" style="width:160px;height:160px;border-radius:16px;object-fit:cover;transform:scaleX(-1)"><div><b>'+esc(Att.photo.name)+'</b><br><small style="color:var(--muted)">'+esc(Att.photo.when)+'</small><br><button class="btn sm" style="margin-top:8px" data-att="photoClose">Yopish</button></div></div>':'')+'</div>'+Att.msg("today");
+  h+=Att.msg("today");
   return h;
 };
 Att.staffHTML=function(){
@@ -5613,6 +5615,10 @@ Att.saveBlob=function(name, blob){
 };
 Att.csv=function(rows){ return "﻿sep=;\r\n"+rows.map(function(r){ return r.map(function(c){ c=String(c==null?"":c); return /[;"\r\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c; }).join(";"); }).join("\r\n"); };
 Att.download=function(name,text){ if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.unoLang){ return Att.saveBlob(name,new Blob([text],{type:"text/csv"})); } var a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type:"text/csv;charset=utf-8"})); a.download=name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1000); };
+/* the selfie opens right under the row whose "Surat" was tapped (not at the bottom of the page) */
+Att.photoHTML=function(){ var P=Att.photo; return '<div id="attPhoto" style="margin:6px 0 4px;display:flex;gap:12px;align-items:center;padding:10px;border:1px solid rgba(232,176,75,.35);border-radius:14px;background:rgba(232,176,75,.06)">'+
+  '<img src="'+P.src+'" alt="" style="width:150px;height:150px;border-radius:14px;object-fit:cover;transform:scaleX(-1);flex:none"><div style="min-width:0"><b>'+esc(P.name)+'</b><br><small style="color:var(--muted)">'+esc(P.when)+'</small>'+(P.note?'<br><small style="color:var(--muted)">'+esc(P.note)+'</small>':'')+
+  '<br><button class="btn sm" style="margin-top:8px" data-att="photoClose">Yopish</button></div></div>'; };
 Att.cfgHTML=function(){
   var c=Att.cfg||{}, term=Att.isTerminal(), myDev=""; try{ myDev=localStorage.getItem("uno_att_dev")||""; }catch(_){}
   var h='<h3 style="font-size:14px;margin:0 0 8px">Eshik terminali (shu telefon)</h3>';
@@ -5692,9 +5698,13 @@ Att.click=async function(ev){
       var pr=await Att.q(S.sb.rpc("uno_att_pay_all",{p_staff:id})); var nowIso=new Date().toISOString();
       (Att.fines||[]).forEach(function(f){ if(f.staff_id===id && f.status!=="excused" && !f.paid_at){ f.paid_at=nowIso; if(f.status==="pending") f.status="confirmed"; } });
       Att.say("fines",((Att.staff||[]).find(function(x){ return x.id===id; })||{}).name+": "+fmt((pr&&pr.paid)||0)+" to'landi deb belgilandi.","ok"); return; }
-    if(a==="photo"){ var rr=await Att.q(S.sb.from("uno_att").select("photo,at,kind,staff_id").eq("id",id).single()); var st=(Att.staff||[]).find(function(s){ return s.id===rr.staff_id; })||{};
+    if(a==="photo"){ var where=b.dataset.where||"list";
+      if(Att.photo && String(Att.photo.id)===String(id) && Att.photo.where===where){ Att.photo=null; Att.render(); return; }
+      b.disabled=true; var rr=await Att.q(S.sb.from("uno_att").select("photo,at,kind,staff_id,late_min,worked_min").eq("id",id).single()); b.disabled=false; if(!rr) return; var st=(Att.staff||[]).find(function(s){ return s.id===rr.staff_id; })||{};
       if(!rr.photo){ Att.say("today","Bu belgida surat yo'q (kamera yoqilmagan bo'lgan).",""); return; }
-      Att.photo={src:rr.photo,name:st.name||"",when:attDay(rr.at)+" "+attHM(rr.at)+" · "+(rr.kind==="in"?"keldi":"ketdi")}; Att.render(); var ph=$("attPhoto"); if(ph) ph.scrollIntoView({block:"nearest",behavior:"smooth"}); return; }
+      var gm=Att.grace(), nt=rr.kind==="in"?(rr.late_min>gm?"Kechikdi: "+attDur(rr.late_min):"Vaqtida keldi"):(rr.worked_min!=null?"Ishladi: "+attDur(rr.worked_min):"");
+      Att.photo={id:id,where:where,src:rr.photo,name:(st.name||"")+(st.role?" · "+st.role:""),when:attDay(rr.at)+" "+attHM(rr.at)+" · "+(rr.kind==="in"?"keldi":"ketdi"),note:nt};
+      Att.render(); var ph=$("attPhoto"); if(ph) ph.scrollIntoView({block:"nearest",behavior:"smooth"}); return; }
     if(a==="photoClose"){ Att.photo=null; Att.render(); return; }
     if(a==="delRow"){ if(Att.confirmRow!==Number(id)){ Att.confirmRow=Number(id); Att.render(); setTimeout(function(){ Att.confirmRow=null; Att.render(); },4000); return; }
       Att.confirmRow=null; await Att.q(S.sb.from("uno_att").delete().eq("id",id)); await Att.load("today"); return; }
