@@ -5015,7 +5015,22 @@ async function ksClick(e){
 function ksSync(){ if((location.hash||"").replace("#","")==="kassa") ksOpen(); else ksClose(); }
 window.addEventListener("hashchange",ksSync); setTimeout(ksSync,0);
 /* ---- canvas pictures: Instagram story for an event, a boarding-pass gift certificate ---- */
-function gxImg(src){ return new Promise(function(res){ if(!src){ res(null); return; } var im=new Image(); im.crossOrigin="anonymous"; im.onload=function(){ res(im); }; im.onerror=function(){ res(null); }; im.src=src; setTimeout(function(){ res(null); },8000); }); }
+/* a photo for a canvas must come with permission to read it back: the copy the page already shows was loaded
+   without it, and iPhone / the offline cache hand out that copy, so the picture came out without the photo.
+   The photo is fetched again under its own address (?cv=1) as a file, then drawn from that. */
+function gxImg(src){
+  return new Promise(function(res){
+    if(!src){ res(null); return; }
+    var done=false, fin=function(v){ if(!done){ done=true; res(v); } };
+    setTimeout(function(){ fin(null); },12000);
+    var u=/^(data:|blob:)/.test(src)?src:src+(src.indexOf("?")>=0?"&":"?")+"cv=1";
+    var viaTag=function(){ var im=new Image(); im.crossOrigin="anonymous"; im.onload=function(){ fin(im); }; im.onerror=function(){ fin(null); }; im.src=u; };
+    if(/^(data:|blob:)/.test(src) || src.indexOf("/")<0 || src.indexOf(location.origin)===0 || !/^https?:/.test(src)){ viaTag(); return; }
+    fetch(u,{mode:"cors",credentials:"omit"}).then(function(r){ if(!r.ok) throw 0; return r.blob(); }).then(function(b){
+      var ou=URL.createObjectURL(b), im=new Image(); im.onload=function(){ fin(im); setTimeout(function(){ URL.revokeObjectURL(ou); },30000); }; im.onerror=function(){ URL.revokeObjectURL(ou); viaTag(); }; im.src=ou;
+    }).catch(viaTag);
+  });
+}
 function gxWrap(x, text, maxW){ var w=String(text||"").split(/\s+/), lines=[], cur=""; w.forEach(function(t){ var n=cur?cur+" "+t:t; if(x.measureText(n).width>maxW && cur){ lines.push(cur); cur=t; } else cur=n; }); if(cur) lines.push(cur); return lines; }
 function gxCover(x, im, X, Y, W, H){ var r=Math.max(W/im.naturalWidth, H/im.naturalHeight), w=im.naturalWidth*r, h=im.naturalHeight*r; x.drawImage(im, X+(W-w)/2, Y+(H-h)/2, w, h); }
 /* the finished picture opens in its own window with Save/Share and Close: never as a page of its own
