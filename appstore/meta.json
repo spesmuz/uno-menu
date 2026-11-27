@@ -17,7 +17,8 @@
       "keywords": "restaurant,menu,Fergana,booking,table,delivery,Turkish,European,food,concert,live music,UNO",
       "promotionalText": "Live music every evening. Book a table or order delivery in a few taps.",
       "supportUrl": "https://spesmuz.github.io/uno-menu/",
-      "marketingUrl": "https://spesmuz.github.io/uno-menu/"
+      "marketingUrl": "https://spesmuz.github.io/uno-menu/",
+      "whatsNew": "• Add your birthday in Profile — a special offer from the restaurant arrives a week before it.\n• Stability and speed improvements."
     },
     "ru": {
       "subtitle": "Меню, бронь и доставка",
@@ -26,7 +27,8 @@
       "keywords": "ресторан,меню,Фергана,бронь,столик,доставка,турецкая,европейская,кухня,концерт,музыка,UNO",
       "promotionalText": "Живая музыка каждый вечер. Бронируйте столик или заказывайте доставку в пару касаний.",
       "supportUrl": "https://spesmuz.github.io/uno-menu/",
-      "marketingUrl": "https://spesmuz.github.io/uno-menu/"
+      "marketingUrl": "https://spesmuz.github.io/uno-menu/",
+      "whatsNew": "• В профиле можно указать день рождения — за неделю до него придёт особое предложение от ресторана.\n• Улучшения стабильности и скорости."
     }
   }
 }

@@ -212,6 +212,7 @@ def main():
         have = {l["attributes"]["locale"]: l["id"] for l in call("GET", f"/v1/appStoreVersions/{V}/appStoreVersionLocalizations")["data"]}
         for loc, m in META["locales"].items():
             a = {k: m[k] for k in ("description", "keywords", "promotionalText", "supportUrl", "marketingUrl")}
+            if m.get("whatsNew"): a["whatsNew"] = m["whatsNew"]   # required for every update after the first release
             if loc in have:
                 call("PATCH", f"/v1/appStoreVersionLocalizations/{have[loc]}", {"data": {"type": "appStoreVersionLocalizations", "id": have[loc], "attributes": a}})
             else:
