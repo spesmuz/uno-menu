@@ -1612,8 +1612,8 @@ function renderTabs(){
   if(tb._key===key && tb.children.length===ids.length){
     /* same row: just move the highlight (crossing into the next category happens mid-swipe, so keep it light) */
     ids.forEach(function(id,i){ var b=tb.children[i], on=String(id===S.cat); if(b.getAttribute("aria-pressed")!==on) b.setAttribute("aria-pressed",on); });
-    var a=tb.querySelector('[aria-pressed="true"]'); if(a && !tabsHint.busy && tb.scrollWidth>tb.clientWidth+1) tb.scrollLeft=tabTarget(tb,a);
-    tabsEdges(); return;
+    requestAnimationFrame(function(){ var a=tb.querySelector('[aria-pressed="true"]'); if(a && !tabsHint.busy && tb.scrollWidth>tb.clientWidth+1) tb.scrollLeft=tabTarget(tb,a); tabsEdges(); });
+    return;
   }
   tb._key=key; tb.innerHTML="";
   cats().forEach(function(c){
@@ -1700,19 +1700,30 @@ function actionsHTML(d){
   var lbl=d.kcal ? ICON.flame+'<span class="kc-v">'+(d.kcalEst?'≈ ':'')+num(d.kcal)+' '+esc(t("kcal"))+'</span>' : ICON.info+esc(t("more"));
   return '<button class="more-btn'+(d.kcal?' kc':'')+'" data-more="'+esc(d.id)+'" aria-label="'+esc(dn(d))+' — '+esc(t("more"))+'">'+lbl+'</button>'+stepHTML(d);
 }
+/* Every dish card is made once and kept (hidden when not in use). Crossing into the next category then only moves
+   cards that already exist, with their photos already decoded, instead of tearing them down and painting new ones
+   (each crossing used to rebuild every card and decode its 1200px photo again, which stuttered on phones). */
+var POOL={};
+function cardNode(d, used){
+  var list=POOL[d.id]||(POOL[d.id]=[]);
+  for(var i=0;i<list.length;i++){ if(!used.has(list[i])){ used.add(list[i]); return list[i]; } }
+  var el=document.createElement("div"); el.className="slide"; el.dataset.id=d.id;
+  el.innerHTML='<div class="glow" aria-hidden="true"></div><article class="card">'+
+    '<div class="media"></div>'+
+    '<div class="info"><h2 class="clamp2"></h2><span class="price"></span></div>'+
+    '<p class="desc clamp3"></p><div class="actions"></div></article>';
+  el.classList.add("nojump"); slidesEl.appendChild(el); list.push(el); used.add(el); return el;
+}
+function showNode(el){ if(el.style.display==="none"){ el.style.display=""; el.classList.add("nojump"); } }
 function buildSlides(){
   curList = S.cat ? dishesOf(S.cat) : [];
-  /* cards of the next category already stand on screen as "ghosts": keep those nodes (already drawn) so crossing
-     into the category does not flash an empty card while new ones are painted */
-  var keepG={}; ghostNodes.forEach(function(el){ if(el._d && !keepG[el.dataset.id]) keepG[el.dataset.id]=el; });
-  var wanted={}; curList.forEach(function(d){ wanted[d.id]=1; });
-  Array.prototype.slice.call(slidesEl.children).forEach(function(el){
-    if(keepG[el.dataset.id]===el && wanted[el.dataset.id]) return;
-    el.querySelectorAll("video").forEach(releaseVideo); el.remove();
-  });
-  slideNodes=[]; ghostNodes=[]; lastCenterId=null;
+  /* drop cards of dishes that no longer exist (deleted / edited away) */
+  var alive={}; S.dishes.forEach(function(d){ alive[d.id]=1; });
+  Object.keys(POOL).forEach(function(id){ if(!alive[id]){ POOL[id].forEach(function(el){ el.querySelectorAll("video").forEach(releaseVideo); el.remove(); }); delete POOL[id]; } });
+  var used=new Set(); slideNodes=[]; ghostNodes=[]; lastCenterId=null;
   var empty=$("emptyMsg");
   if(!curList.length){
+    hideUnused(used);
     empty.classList.remove("hidden");
     var m = !S.loadedDishes ? t("loading") : t("empty");
     empty.innerHTML='<b style="font-size:18px;color:var(--text)">'+esc(m)+'</b>'+(S.canEdit&&S.loadedDishes?'<a class="btn gold" href="#admin">Admin panel</a>':'');
@@ -1722,47 +1733,55 @@ function buildSlides(){
   var many=curList.length>1 || catSeq().length>1;
   $("prevBtn").classList.toggle("hidden",!many); $("nextBtn").classList.toggle("hidden",!many);
   if(S.idx>=curList.length) S.idx=0;
+  /* prefer the node that already plays this role, so the card under the finger stays the same element */
   curList.forEach(function(d,i){
-    var g=keepG[d.id];
-    if(g && g.isConnected){
-      delete keepG[d.id]; g.className="slide"; g._vi=undefined; g._d=undefined;
-      var gm=g.querySelector(".media"), gb=gm&&gm.querySelector("[data-gsel]");
-      if(gb){ gb.removeAttribute("data-gsel"); gb.setAttribute("data-sel",i); gm.dataset.k="s:"+(d.imgId||"")+":"+S.lang+":"+dn(d)+":"+d.cat; }
-      fillSlide(g,d); slideNodes.push(g); return;
-    }
-    var el=document.createElement("div"); el.className="slide"; el.dataset.id=d.id;
-    el.innerHTML='<div class="glow" aria-hidden="true"></div><article class="card">'+
-      '<div class="media"></div>'+
-      '<div class="info"><h2 class="clamp2"></h2><span class="price"></span></div>'+
-      '<p class="desc clamp3"></p><div class="actions"></div></article>';
-    fillSlide(el,d);
-    slidesEl.appendChild(el); slideNodes.push(el);
+    var el=cardNode(d,used); showNode(el);
+    el.className="slide"+(el.classList.contains("nojump")?" nojump":""); el._vi=undefined; el._d=undefined;
+    var m=el.querySelector(".media"), gb=m.querySelector("[data-gsel]");
+    if(gb){ gb.removeAttribute("data-gsel"); gb.setAttribute("data-sel",i); }
+    else { var sb=m.querySelector("[data-sel]"); if(sb) sb.setAttribute("data-sel",i); }
+    fillSlide(el,d); slideNodes.push(el);
   });
-  buildGhosts();
+  buildGhosts(used);
+  hideUnused(used);
   renderDots(); layout(true);
 }
+function hideUnused(used){
+  Object.keys(POOL).forEach(function(id){ POOL[id].forEach(function(el){
+    if(used.has(el) || el.style.display==="none") return;
+    el.style.display="none"; el.classList.remove("center");
+    var m=el.querySelector(".media");
+    /* a card that was in the middle loses its video; it gets its photo back when it is used again */
+    if(m && m.querySelector("video")){ m.querySelectorAll("video").forEach(releaseVideo); m.dataset.k=""; m.innerHTML=""; }
+  }); });
+}
 function fillSlide(el,d){
-  el.querySelector("h2").textContent=dn(d);
-  el.querySelector(".price").textContent=fmtL(d.price);
-  el.querySelector(".desc").textContent=dd(d);
-  el.querySelector(".actions").innerHTML=actionsHTML(d);
+  var h=el.querySelector("h2"), pr=el.querySelector(".price"), ds=el.querySelector(".desc"), ac=el.querySelector(".actions"), a=actionsHTML(d), n=dn(d), p=fmtL(d.price), x=dd(d);
+  if(h.textContent!==n) h.textContent=n;
+  if(pr.textContent!==p) pr.textContent=p;
+  if(ds.textContent!==x) ds.textContent=x;
+  if(ac._h!==a){ ac.innerHTML=a; ac._h=a; }
 }
 /* the neighbouring categories' dishes stand beside the ends of this one, so the row runs on without a gap */
-function buildGhosts(){
+function buildGhosts(used){
+  used=used||new Set();
   var seq=catSeq(), L=seq.length, ci=seq.indexOf(S.cat), len=curList.length; if(L<2||ci<0) return;
   var nx=dishesOf(seq[(ci+1)%L]), pv=dishesOf(seq[(ci-1+L)%L]), list=[];
   nx.slice(0,2).forEach(function(d,k){ list.push([len+k,d]); });
   pv.slice(-2).reverse().forEach(function(d,k){ list.push([-1-k,d]); });
   list.forEach(function(x){
-    var vi=x[0], d=x[1], el=document.createElement("div"); el.className="slide ghost"; el.dataset.id=d.id; el._vi=vi; el._d=d;
-    el.innerHTML='<div class="glow" aria-hidden="true"></div><article class="card">'+
-      '<div class="media"><button class="sel" data-gsel="'+vi+'" aria-label="'+esc(dn(d))+' — '+esc(t("toCenter"))+'">'+mediaThumb(d)+'</button><span class="badge cat">'+esc(catL(d.cat))+'</span>'+rvBadge(d)+'</div>'+
-      '<div class="info"><h2 class="clamp2"></h2><span class="price"></span></div>'+
-      '<p class="desc clamp3"></p><div class="actions"></div></article>';
-    fillSlide(el,d);
-    slidesEl.appendChild(el); ghostNodes.push(el);
+    var vi=x[0], d=x[1], el=cardNode(d,used); showNode(el);
+    el.className="slide ghost"+(el.classList.contains("nojump")?" nojump":""); el._vi=vi; el._d=d;
+    var m=el.querySelector(".media"), want="s:"+(d.imgId||"")+":"+S.lang+":"+dn(d)+":"+d.cat, btn=m.querySelector("button.sel:not(.open)");
+    if(m.dataset.k===want && btn){ btn.removeAttribute("data-sel"); btn.setAttribute("data-gsel",vi); }
+    else {
+      m.querySelectorAll("video").forEach(releaseVideo); m.classList.remove("has-vid");
+      m.dataset.k=want;
+      m.innerHTML='<button class="sel" data-gsel="'+vi+'" aria-label="'+esc(dn(d))+' — '+esc(t("toCenter"))+'">'+mediaThumb(d)+'</button><span class="badge cat">'+esc(catL(d.cat))+'</span>'+rvBadge(d);
+      m.querySelectorAll("img[data-fit]").forEach(fitImg);
+    }
+    fillSlide(el,d); ghostNodes.push(el);
   });
-  ghostNodes.forEach(function(el){ var m=el.querySelector(".media"); m.querySelectorAll("img[data-fit]").forEach(fitImg); });
 }
 function renderDots(){
   var h=""; curList.forEach(function(d,i){ h+='<button data-dot="'+i+'" aria-label="'+esc(dn(d))+'" aria-current="'+(i===S.idx)+'"><span></span></button>'; });
@@ -1770,12 +1789,12 @@ function renderDots(){
 }
 function catSeq(){ return cats().filter(function(c){ return dishesOf(c.id).length; }).map(function(c){ return c.id; }); }
 /* with several categories the row does not wrap: after the last dish comes the next category */
-function offOf(i){ var n=curList.length; if(catSeq().length>1) return i-S.idx; var o=((i-S.idx)%n+n)%n; if(o>n/2) o-=n; return o; }
+function offOf(i,multi){ var n=curList.length; if(multi===undefined) multi=catSeq().length>1; if(multi) return i-S.idx; var o=((i-S.idx)%n+n)%n; if(o>n/2) o-=n; return o; }
 function layout(initial){
   var n=curList.length; if(!n) return;
-  var drag=S.drag/SLOT, half=n/2, nj=[];
+  var drag=S.drag/SLOT, half=n/2, nj=[], multi=catSeq().length>1;
   slideNodes.forEach(function(el,i){
-    var d=curList[i], off=offOf(i), p=off+drag, a=Math.abs(p), sign=p<0?-1:1;
+    var d=curList[i], off=offOf(i,multi), p=off+drag, a=Math.abs(p), sign=p<0?-1:1;
     var x=sign*lerpA(XS,a), sc=lerpA(SC,a), op=lerpA(OP,a), br=lerpA(BR,a), ry=-sign*lerpA(RY,a);
     var jumped = prevOff[d.id]!==undefined && Math.abs(prevOff[d.id]-off)>half;
     if(jumped||initial){ el.classList.add("nojump"); }
@@ -1799,7 +1818,7 @@ function layout(initial){
     el.setAttribute("aria-hidden", String(op<.05));
     if(initial) nj.push(el);
   });
-  if(nj.length){ nj[0].getBoundingClientRect(); requestAnimationFrame(function(){ nj.forEach(function(el){ el.classList.remove("nojump"); }); }); }
+  if(nj.length){ requestAnimationFrame(function(){ requestAnimationFrame(function(){ nj.forEach(function(el){ el.classList.remove("nojump"); }); }); }); }
   updateMedia();
   var dots=$("dots").querySelectorAll("button"); dots.forEach(function(b,i){ b.setAttribute("aria-current", String(i===S.idx)); });
 }
@@ -1977,8 +1996,9 @@ function resumeCarouselVideo(){
   else scheduleVideo(el.querySelector(".media"), curList[S.idx].id);
 }
 function updateMedia(){
+  var multi=catSeq().length>1;
   slideNodes.forEach(function(el,i){
-    var d=curList[i], center=offOf(i)===0, m=el.querySelector(".media");
+    var d=curList[i], center=offOf(i,multi)===0, m=el.querySelector(".media");
     var want = (center ? "c:"+d.id+":"+(d.imgId||"")+":"+(d.videoId||"") : "s:"+(d.imgId||""))+":"+S.lang+":"+dn(d)+":"+d.cat;
     if(m.dataset.k===want) return;
     m.dataset.k=want;
@@ -2356,8 +2376,9 @@ function refreshCartUI(){
   Object.keys(S.cart).forEach(function(id){ if(!S.dishes.some(function(d){return d.id===id;})) delete S.cart[id]; });
   var items=cartItems(), count=0,total=0; items.forEach(function(it){count+=it.q; total+=it.q*(Number(it.d.price)||0);});
   $("cartTotal").textContent=fmtShort(total); $("cartCount").textContent=count+" "+t("items"); fitTabs(); fitIsland();
-  slideNodes.forEach(function(el,i){ el.querySelector(".actions").innerHTML=actionsHTML(curList[i]); });
-  ghostNodes.forEach(function(el){ el.querySelector(".actions").innerHTML=actionsHTML(el._d); });
+  var setAct=function(el,d){ var ac=el.querySelector(".actions"), h=actionsHTML(d); if(ac._h!==h){ ac.innerHTML=h; ac._h=h; } };
+  slideNodes.forEach(function(el,i){ setAct(el,curList[i]); });
+  ghostNodes.forEach(function(el){ setAct(el,el._d); });
   if(S.query) renderResults();
   if(S.cartOpen) renderCart();
   if(S.detail){ var da=$("detailHost").querySelector(".d-act"), d=S.dishes.find(function(x){return x.id===S.detail;}); if(da&&d) da.innerHTML=stepHTML(d); }
