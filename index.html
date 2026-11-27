@@ -1829,17 +1829,21 @@ var WT=(function(){
   function bdayDays(){ var n=nextBday(bday()); if(!n) return null; var t=new Date(); t=new Date(t.getFullYear(),t.getMonth(),t.getDate()); return Math.round((n-t)/864e5); }
   /* ---- birthday gift: a shiny box that opens (with fireworks) only on the birthday; the server decides, by Tashkent date ---- */
   var BG={data:null, busy:false, opening:false};
+  /* preview link ?bgdemo=1: only on this screen the box behaves as on the birthday (nothing is saved, nobody else is affected) */
+  var BG_DEMO=/[?&]bgdemo=1/.test(location.search);
+  function bgDemoData(){ var t=todayISO(), p=profile(); return {on:true,has:true,open:true,days:0,demo:true,today:t,birthday:bday()||t,text:gtxt(G(),"bdayText")||"",name:p.name||""}; }
   function loadBGift(){
+    if(BG_DEMO){ BG.data=bgDemoData(); var bx=$("wpBGift"); if(bx && tab===3) bx.innerHTML=bgiftInner(); return; }
     var g=G(); if(!g.bdayOn || BG.busy) return; var p=profile(); if(!ready(p.name,p.phone)){ BG.data=null; return; }
     BG.busy=true;
     sbRpc("uno_bday_gift",{p_device:device(),p_lang:S.lang||"uz"}).then(function(r){ BG.busy=false; if(!r.error && r.data){ BG.data=r.data; var box=$("wpBGift"); if(box && tab===3) box.innerHTML=bgiftInner(); } },function(){ BG.busy=false; });
   }
-  function bgiftHTML(){ if(!G().bdayOn) return ""; return '<div id="wpBGift">'+bgiftInner()+'</div>'; }
+  function bgiftHTML(){ if(BG_DEMO && !BG.data) BG.data=bgDemoData(); if(!G().bdayOn && !BG_DEMO) return ""; return '<div id="wpBGift">'+bgiftInner()+'</div>'; }
   function bgDate(iso){ var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(iso||""); return m?m[3]+"."+m[2]+"."+m[1]:""; }
   function bgiftInner(){
     var d=BG.data||{}, p=profile();
     if(d.on===false) return "";
-    if(d.open && store("uno_bgift")===d.today){
+    if(d.open && (d.demo ? BG.demoOpen : store("uno_bgift")===d.today)){
       return '<div class="bgc rev"><div class="bgbig">🎉</div><h3>'+esc(T("bg.happy"))+(p.name?', '+esc(p.name.split(" ")[0]):'')+'!</h3>'+
         '<div class="bgoffer">'+esc(d.text||gtxt(G(),"bdayText")||T("bd.def"))+'</div>'+
         '<span class="bgd">'+esc(T("bg.today"))+': '+bgDate(d.today)+' · 🎂 '+bgDate(d.birthday)+'</span>'+
@@ -1857,7 +1861,7 @@ var WT=(function(){
     var d=BG.data||{};
     if(d.open){
       if(BG.opening) return; BG.opening=true; b.classList.remove("ready"); b.classList.add("open"); hap("ok"); fireworks();
-      setTimeout(function(){ store("uno_bgift",d.today); BG.opening=false; var box=$("wpBGift"); if(box) box.innerHTML=bgiftInner(); },1100);
+      setTimeout(function(){ if(d.demo) BG.demoOpen=true; else store("uno_bgift",d.today); BG.opening=false; var box=$("wpBGift"); if(box) box.innerHTML=bgiftInner(); },1100);
       return;
     }
     b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); hap("err");
@@ -2062,7 +2066,7 @@ var WT=(function(){
   return {
     sync:function(){
       var on=document.documentElement.classList.contains("web-tabs");
-      if(on){ build(); renderBar(); if(!timer){ loadNews(); timer=setInterval(function(){ if(!document.hidden) loadNews(); },60000);
+      if(on){ build(); renderBar(); if(BG_DEMO && !BG.auto){ BG.auto=1; setTimeout(function(){ go(3); setTimeout(function(){ var b=$("wpBGift"); if(b) b.scrollIntoView({behavior:"smooth",block:"center"}); },500); },700); } if(!timer){ loadNews(); timer=setInterval(function(){ if(!document.hidden) loadNews(); },60000);
           if(!store("uno_custSynced")) syncCustomer(true);
           setTimeout(rateCheck, 2500); scheduleBday(); setTimeout(syncBday, 4000);
           document.addEventListener("visibilitychange",function(){ if(!document.hidden) setTimeout(rateCheck, 1200); }); } }
