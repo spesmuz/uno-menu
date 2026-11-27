@@ -1665,7 +1665,7 @@ var WT=(function(){
       "rf.title":"Do'stingizni taklif qiling","rf.how":"Do'stingiz ilovada sizning kodingizni kiritib, birinchi marta kelsa, sizga %@ bonus beriladi.","rf.code":"Sizning kodingiz","rf.share":"Kodni ulashish",
       "rf.text":"UNO Airways'ga keling! Ilovada mening kodimni kiriting: %@","rf.enter":"Do'stingiz kodi bormi?","rf.ph":"Do'stingiz kodi (telefon raqami)","rf.ok":"Kod qabul qilindi ✓","rf.bad":"Bunday kod topilmadi","rf.self":"O'z kodingizni kiritib bo'lmaydi","rf.apply":"Qo'llash",
       "rt.title":"Tashrifingiz qanday o'tdi?","rt.sub":"Fikringiz biz uchun juda muhim","rt.thanks":"Rahmat! 🙏","rt.ask":"Boshqalarga ham tavsiya qilasizmi? Sharhingiz bizga katta yordam beradi.",
-      "rt.google":"Google'da sharh qoldirish","rt.gis":"2GIS'da sharh qoldirish","rt.bad":"Nima yoqmadi? Rahbariyat albatta o'qiydi.","rt.send":"Yuborish","rt.later":"Keyinroq","rt.close":"Yopish",
+      "rt.google":"Google'da sharh qoldirish","rt.gis":"2GIS'da sharh qoldirish","rt.yandex":"Yandex'da sharh qoldirish","rt.bad":"Nima yoqmadi? Rahbariyat albatta o'qiydi.","rt.send":"Yuborish","rt.later":"Keyinroq","rt.close":"Yopish",
       "rt.sent":"Rahmat! Fikringiz rahbariyatga yetkazildi.","rt.push.t":"Tashrifingiz qanday o'tdi? ⭐","rt.push.b":"UNO Airways'ga baho bering — bir daqiqa vaqt oladi."},
     ru:{"seg.table":"Столик","seg.banq":"Свадьба / банкет","bq.title":"Заявка на мероприятие","bq.date":"Дата","bq.type":"Тип мероприятия","bq.hall":"Зал","bq.any":"Без разницы","bq.guests":"Количество гостей",
       "bq.t.wed":"Свадьба","bq.t.bday":"День рождения","bq.t.corp":"Корпоратив","bq.t.conf":"Конференция","bq.t.other":"Другое","bq.send":"Отправить заявку",
@@ -1678,7 +1678,7 @@ var WT=(function(){
       "rf.title":"Пригласите друга","rf.how":"Если друг введёт ваш код в приложении и придёт впервые, вы получите %@ бонусов.","rf.code":"Ваш код","rf.share":"Поделиться кодом",
       "rf.text":"Приходите в UNO Airways! Введите мой код в приложении: %@","rf.enter":"Есть код друга?","rf.ph":"Код друга (номер телефона)","rf.ok":"Код принят ✓","rf.bad":"Такой код не найден","rf.self":"Нельзя ввести свой код","rf.apply":"Применить",
       "rt.title":"Как прошёл ваш визит?","rt.sub":"Ваше мнение очень важно для нас","rt.thanks":"Спасибо! 🙏","rt.ask":"Порекомендуете нас другим? Ваш отзыв нам очень поможет.",
-      "rt.google":"Оставить отзыв в Google","rt.gis":"Оставить отзыв в 2GIS","rt.bad":"Что не понравилось? Руководство обязательно прочитает.","rt.send":"Отправить","rt.later":"Позже","rt.close":"Закрыть",
+      "rt.google":"Оставить отзыв в Google","rt.gis":"Оставить отзыв в 2GIS","rt.yandex":"Оставить отзыв в Яндексе","rt.bad":"Что не понравилось? Руководство обязательно прочитает.","rt.send":"Отправить","rt.later":"Позже","rt.close":"Закрыть",
       "rt.sent":"Спасибо! Ваш отзыв передан руководству.","rt.push.t":"Как прошёл визит? ⭐","rt.push.b":"Оцените UNO Airways — это займёт минуту."},
     en:{"seg.table":"Table","seg.banq":"Wedding / banquet","bq.title":"Event request","bq.date":"Date","bq.type":"Event type","bq.hall":"Hall","bq.any":"Any","bq.guests":"Number of guests",
       "bq.t.wed":"Wedding","bq.t.bday":"Birthday","bq.t.corp":"Corporate","bq.t.conf":"Conference","bq.t.other":"Other","bq.send":"Send request",
@@ -1691,7 +1691,7 @@ var WT=(function(){
       "rf.title":"Invite a friend","rf.how":"When a friend enters your code in the app and visits for the first time, you get %@ in bonuses.","rf.code":"Your code","rf.share":"Share code",
       "rf.text":"Come to UNO Airways! Enter my code in the app: %@","rf.enter":"Have a friend's code?","rf.ph":"Friend's code (phone number)","rf.ok":"Code accepted ✓","rf.bad":"Code not found","rf.self":"You can't use your own code","rf.apply":"Apply",
       "rt.title":"How was your visit?","rt.sub":"Your opinion matters to us","rt.thanks":"Thank you! 🙏","rt.ask":"Would you recommend us? A review helps us a lot.",
-      "rt.google":"Review on Google","rt.gis":"Review on 2GIS","rt.bad":"What went wrong? The management will read it.","rt.send":"Send","rt.later":"Later","rt.close":"Close",
+      "rt.google":"Review on Google","rt.gis":"Review on 2GIS","rt.yandex":"Review on Yandex","rt.bad":"What went wrong? The management will read it.","rt.send":"Send","rt.later":"Later","rt.close":"Close",
       "rt.sent":"Thank you! Your feedback reached the management.","rt.push.t":"How was your visit? ⭐","rt.push.b":"Rate UNO Airways — it takes a minute."}
   };
   Object.keys(DX).forEach(function(l){ D[l]=D[l]||{}; Object.keys(DX[l]).forEach(function(k){ D[l][k]=DX[l][k]; }); });
@@ -1854,6 +1854,7 @@ var WT=(function(){
     else if(RT.step===1 && s>=4){
       var gl=g.reviewG||("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent("UNO Airways Restaurante, "+ADDR));
       h+='<b class="t">'+esc(T("rt.thanks"))+'</b>'+stars+'<p>'+esc(T("rt.ask"))+'</p><button class="wbtn" type="button" data-wr="g" data-u="'+esc(gl)+'">⭐ '+esc(T("rt.google"))+'</button>'+
+        (g.reviewY?'<button class="wbtn ghost" type="button" data-wr="g" data-u="'+esc(g.reviewY)+'" style="margin-top:10px">'+esc(T("rt.yandex"))+'</button>':'')+
         (g.review2gis?'<button class="wbtn ghost" type="button" data-wr="g" data-u="'+esc(g.review2gis)+'" style="margin-top:10px">'+esc(T("rt.gis"))+'</button>':'')+
         '<button class="wlater" type="button" data-wr="close">'+esc(T("rt.close"))+'</button>';
     }
@@ -4904,10 +4905,11 @@ Fb.mount=function(){ gxMount(Fb,"fbSlot"); };
 Fb.load=async function(){ var r=await S.sb.from("uno_feedback").select("*").order("created_at",{ascending:false}).limit(200); if(r.error){ Fb.err=gxErr(r.error); Fb.rows=[]; } else { Fb.err=""; Fb.rows=r.data||[]; } Fb.render(); };
 Fb.render=function(){
   if(!Fb.el) return; var g=gxGrow();
-  var h='<h2>Mehmon fikrlari</h2><p class="help">Bron qilgan mehmondan tashrifdan keyin ilovada «Tashrifingiz qanday o\'tdi?» deb so\'raladi (Android ilovada keyingi kuni telefonga xabar ham keladi). <b>4–5 yulduz</b> qo\'ygan mehmonga Google yoki 2GIS\'da sharh qoldirish taklif qilinadi, shu bilan internetdagi reytingingiz ko\'tariladi. <b>1–3 yulduz</b> va izohlar faqat shu yerga va Telegram guruhga keladi.</p>'+
+  var h='<h2>Mehmon fikrlari</h2><p class="help">Bron qilgan mehmondan tashrifdan keyin ilovada «Tashrifingiz qanday o\'tdi?» deb so\'raladi (Android ilovada keyingi kuni telefonga xabar ham keladi). <b>4–5 yulduz</b> qo\'ygan mehmonga Google, Yandex yoki 2GIS\'da sharh qoldirish taklif qilinadi, shu bilan internetdagi reytingingiz ko\'tariladi. <b>1–3 yulduz</b> va izohlar faqat shu yerga va Telegram guruhga keladi.</p>'+
     '<label class="a-row" style="gap:10px;align-items:center;margin:8px 0"><input type="checkbox" id="fbOn" '+(g.rateOn!==false?'checked':'')+'><b>Tashrifdan keyin baho so\'rash</b></label>'+
     '<label class="fld" style="max-width:none"><span>Google sharh havolasi</span><input id="fbG" value="'+esc(g.reviewG||"")+'" placeholder="https://g.page/r/…/review"></label><p class="help" style="margin:4px 0 8px">Google Maps → restoraningiz → «Sharh so\'rash / Ask for reviews» → havolani nusxalang. Bo\'sh qolsa, restoran Google Maps\'da qidiruv orqali ochiladi.</p>'+
     '<label class="fld" style="max-width:none"><span>2GIS havolasi (ixtiyoriy)</span><input id="fbGis" value="'+esc(g.review2gis||"")+'" placeholder="https://2gis.uz/fergana/firm/…"></label>'+
+    '<label class="fld" style="max-width:none;margin-top:8px"><span>Yandex Kartalar havolasi (ixtiyoriy)</span><input id="fbY" value="'+esc(g.reviewY||"")+'" placeholder="https://yandex.uz/maps/org/…/reviews/"></label><p class="help" style="margin:4px 0 0">Yandex Kartalar\'da restoraningizni oching → «Поделиться» → havolani nusxalang (oxiriga <code>reviews/</code> qo\'shsangiz, to\'g\'ridan-to\'g\'ri sharhlar ochiladi).</p>'+
     '<button class="btn gold" data-fb="save" style="margin-top:10px">Saqlash</button>'+(Fb.msg?'<div class="msg ok">'+esc(Fb.msg)+'</div>':'')+(Fb.err?gxSqlMsg(Fb.err):'');
   if(Fb.rows===null){ Fb.el.innerHTML=h+'<div class="msg">Yuklanmoqda…</div>'; return; }
   var n=Fb.rows.length, avg=n?Fb.rows.reduce(function(s,r){ return s+r.stars; },0)/n:0;
@@ -4917,7 +4919,7 @@ Fb.render=function(){
 };
 Fb.click=async function(e){
   var b=e.target.closest("[data-fb]"); if(!b) return;
-  try{ await gxSaveGrow({rateOn:$("fbOn").checked, reviewG:$("fbG").value.trim(), review2gis:$("fbGis").value.trim()}); Fb.msg="Saqlandi."; Fb.err=""; }catch(err){ Fb.err=gxErr(err); }
+  try{ await gxSaveGrow({rateOn:$("fbOn").checked, reviewG:$("fbG").value.trim(), review2gis:$("fbGis").value.trim(), reviewY:$("fbY").value.trim()}); Fb.msg="Saqlandi."; Fb.err=""; }catch(err){ Fb.err=gxErr(err); }
   Fb.render();
 };
 
