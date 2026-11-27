@@ -4622,8 +4622,9 @@ async function handleFile(kind,file){
   var E=S.editing; if(!E) return; var m=$("edMsg");
   if(!S.assets){ msg(m,"Fayl yuklash bu ko'rinishda mavjud emas.","err"); return; }
   if(kind==="img" && !/^image\//.test(file.type)){ msg(m,"Faqat rasm fayli (PNG, JPG) tanlang.","err"); return; }
-  if(kind==="vid" && !/^video\//.test(file.type)){ msg(m,"Faqat video fayli (MP4) tanlang.","err"); return; }
-  if(file.size>20*1024*1024){ msg(m,"Fayl 20 MB dan katta. Kichikroq fayl tanlang.","err"); return; }
+  if(kind==="vid" && !/^video\//.test(file.type) && !/\.(mov|mp4|m4v|webm)$/i.test(file.name||"")){ msg(m,"Faqat video fayli (MP4 yoki MOV) tanlang.","err"); return; }
+  var lim=kind==="vid"?50:20;   /* storage bucket allows 50 MB; a 4K iPhone clip of 8–10 s is 20–40 MB */
+  if(file.size>lim*1024*1024){ msg(m,(kind==="vid"?"Video":"Rasm")+" "+Math.round(file.size/1048576)+" MB — "+lim+" MB dan katta. "+(kind==="vid"?"iPhone'da videoni qisqaroq kesing yoki Sozlamalar → Kamera → Video yozish → 1080p tanlang.":"Kichikroq rasm tanlang."),"err"); return; }
   msg(m,"");
   E[kind==="img"?"uploadingImg":"uploadingVid"]=true; updateEditorMedia();
   try{
