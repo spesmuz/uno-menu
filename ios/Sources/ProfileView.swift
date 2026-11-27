@@ -1,6 +1,7 @@
 import SwiftUI
 import UIKit
 import PhotosUI
+import UserNotifications
 
 /* "Profil" tab: the guest's name and phone (filled in everywhere automatically) + restaurant news with photos */
 struct NewsItem: Identifiable {
@@ -84,6 +85,7 @@ enum ProfileBridge {
 struct ProfileView: View {
     @AppStorage("uno.name") private var name = ""
     @AppStorage("uno.phone") private var phone = "+998 "
+    @AppStorage("uno.bday") private var bday = ""          /* YYYY-MM-DD, empty = not given */
     @ObservedObject private var news = NewsModel.shared
     @State private var photo: UIImage? = CustomerAPI.localPhoto()
     @State private var picking = false
@@ -132,6 +134,7 @@ struct ProfileView: View {
                                 glassField(L.t("book.phone"), text: $phone, kb: .phonePad, ct: .telephoneNumber)
                             }
                         }
+                        bdayRow
                         Button(action: save) {
                             Label(saved ? L.t("pf.saved") : L.t("pf.save"), systemImage: saved ? "checkmark.circle.fill" : "square.and.arrow.down")
                                 .font(.system(size: 16, weight: .bold))
@@ -250,8 +253,47 @@ struct ProfileView: View {
         if ready { CustomerAPI.sync(name: name, phone: phone, photoChanged: true) }
     }
 
+    /* birthday: the guest gives it once; a week before it the restaurant's offer arrives as a notification */
+    private static let isoDay: DateFormatter = { let f = DateFormatter(); f.calendar = Calendar(identifier: .gregorian); f.locale = Locale(identifier: "en_US_POSIX"); f.dateFormat = "yyyy-MM-dd"; return f }()
+    private var bdayDate: Binding<Date> {
+        Binding(get: { ProfileView.isoDay.date(from: bday) ?? (Calendar.current.date(from: DateComponents(year: 1995, month: 1, day: 1)) ?? Date()) },
+                set: { bday = ProfileView.isoDay.string(from: $0) })
+    }
+    private var bdayRange: ClosedRange<Date> {
+        (Calendar.current.date(from: DateComponents(year: 1920, month: 1, day: 1)) ?? Date.distantPast)...Date()
+    }
+    private var bdayRow: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 10) {
+                Text("🎂 " + L.t("pf.bday")).font(.system(size: 15, weight: .semibold)).foregroundColor(.white)
+                Spacer(minLength: 6)
+                if bday.isEmpty {
+                    Button { bday = ProfileView.isoDay.string(from: bdayDate.wrappedValue) } label: {
+                        Text(L.t("pf.bdayAdd")).font(.system(size: 14, weight: .bold)).foregroundColor(Config.gold)
+                            .padding(.horizontal, 14).frame(height: 36)
+                            .background(Capsule().fill(Config.gold.opacity(0.14)))
+                            .overlay(Capsule().strokeBorder(Config.gold.opacity(0.45), lineWidth: 1))
+                    }.buttonStyle(.plain)
+                } else {
+                    DatePicker("", selection: bdayDate, in: bdayRange, displayedComponents: .date)
+                        .labelsHidden().datePickerStyle(.compact).colorScheme(.dark).environment(\.locale, L.locale)
+                    Button { bday = "" } label: { Image(systemName: "xmark.circle.fill").font(.system(size: 18)).foregroundColor(Color.white.opacity(0.4)) }
+                        .buttonStyle(.plain)
+                }
+            }
+            if bday.isEmpty { Text(L.t("pf.bdayHint")).font(.footnote).foregroundColor(Color.white.opacity(0.6)) }
+        }
+        .padding(.horizontal, 14).padding(.vertical, 10)
+        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.black.opacity(0.22)))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color.white.opacity(0.08), lineWidth: 1))
+    }
+
     private func save() {
-        CustomerAPI.sync(name: name.trimmingCharacters(in: .whitespacesAndNewlines), phone: phone.trimmingCharacters(in: .whitespacesAndNewlines), photoChanged: true)
+        let b = bday
+        CustomerAPI.sync(name: name.trimmingCharacters(in: .whitespacesAndNewlines), phone: phone.trimmingCharacters(in: .whitespacesAndNewlines), photoChanged: true) {
+            if !b.isEmpty { CustomerAPI.birthday(b) }
+        }
+        CustomerAPI.scheduleBirthday(b)
         focus = false
         name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         phone = phone.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -350,7 +392,49 @@ enum CustomerAPI {
             sync(name: n, phone: p, photoChanged: true)
         }
     }
-    static func sync(name: String, phone: String, photoChanged: Bool) {
+    /* birthday to the restaurant (admin → "Tug'ilgan kunlar"); needs growth.sql */
+    static func birthday(_ iso: String) {
+        guard let url = URL(string: Config.supabaseURL + "/rest/v1/rpc/uno_customer_extra") else { return }
+        var r = URLRequest(url: url, timeoutInterval: 25)
+        r.httpMethod = "POST"
+        r.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        r.setValue(Config.supabaseKey, forHTTPHeaderField: "apikey")
+        r.setValue("Bearer " + Config.supabaseKey, forHTTPHeaderField: "Authorization")
+        r.httpBody = try? JSONSerialization.data(withJSONObject: ["p_device": device, "p_birthday": iso])
+        URLSession.shared.dataTask(with: r).resume()
+    }
+    /* a week before the birthday at 11:00, every year - only when the admin turned the birthday offer on */
+    static func scheduleBirthday(_ iso: String) {
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: ["uno.bday"])
+        let p = iso.split(separator: "-").compactMap { Int($0) }
+        guard p.count == 3 else { return }
+        var c = URLComponents(string: Config.supabaseURL + "/rest/v1/uno_docs")!
+        c.queryItems = [URLQueryItem(name: "select", value: "data"), URLQueryItem(name: "path", value: "eq.settings/main")]
+        guard let url = c.url else { return }
+        var r = URLRequest(url: url, timeoutInterval: 20)
+        r.setValue(Config.supabaseKey, forHTTPHeaderField: "apikey")
+        r.setValue("Bearer " + Config.supabaseKey, forHTTPHeaderField: "Authorization")
+        URLSession.shared.dataTask(with: r) { data, _, _ in
+            guard let data = data, let rows = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
+                  let d = rows.first?["data"] as? [String: Any], let g = d["grow"] as? [String: Any], (g["bdayOn"] as? Bool) == true else { return }
+            let lang = L.lang
+            var text = (lang != "uz" ? g["bdayText_" + lang] as? String : nil) ?? ""
+            if text.isEmpty { text = (g["bdayText"] as? String) ?? "" }
+            if text.isEmpty { text = L.t("bd.def") }
+            /* the day 7 days before the birthday, as month/day (repeats yearly) */
+            let cal = Calendar(identifier: .gregorian)
+            guard let bd = cal.date(from: DateComponents(year: 2001, month: p[1], day: p[2])), let wk = cal.date(byAdding: .day, value: -7, to: bd) else { return }
+            var dc = cal.dateComponents([.month, .day], from: wk); dc.hour = 11; dc.minute = 0
+            let content = UNMutableNotificationContent()
+            content.title = L.t("bd.push"); content.body = text; content.sound = .default
+            center.requestAuthorization(options: [.alert, .sound, .badge]) { ok, _ in
+                guard ok else { return }
+                center.add(UNNotificationRequest(identifier: "uno.bday", content: content, trigger: UNCalendarNotificationTrigger(dateMatching: dc, repeats: true)))
+            }
+        }.resume()
+    }
+    static func sync(name: String, phone: String, photoChanged: Bool, then: (() -> Void)? = nil) {
         guard let url = URL(string: Config.supabaseURL + "/rest/v1/rpc/uno_customer_save") else { return }
         var body: [String: Any] = ["p_device": device, "p_name": name, "p_phone": phone, "p_platform": "ios", "p_lang": L.lang]
         if photoChanged {
@@ -364,7 +448,7 @@ enum CustomerAPI {
         r.setValue("Bearer " + Config.supabaseKey, forHTTPHeaderField: "Authorization")
         r.httpBody = try? JSONSerialization.data(withJSONObject: body)
         URLSession.shared.dataTask(with: r) { _, resp, _ in
-            if let h = resp as? HTTPURLResponse, (200..<300).contains(h.statusCode) { UserDefaults.standard.set(true, forKey: "uno.custSynced") }
+            if let h = resp as? HTTPURLResponse, (200..<300).contains(h.statusCode) { UserDefaults.standard.set(true, forKey: "uno.custSynced"); then?() }
         }.resume()
     }
 }
