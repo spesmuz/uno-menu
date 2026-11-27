@@ -5,6 +5,9 @@ on:
     - cron: '*/20 * * * *'
 permissions:
   contents: write
+concurrency:
+  group: opt-videos
+  cancel-in-progress: false
 jobs:
   v:
     runs-on: ubuntu-latest

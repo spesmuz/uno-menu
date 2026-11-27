@@ -3746,6 +3746,16 @@ function renderAdmin(){
         (ns.length?ns.map(function(n){ return '<div class="a-row" style="align-items:flex-start;gap:8px;margin:4px 0"><span style="flex:1;line-height:1.45">'+esc(n.text)+'</span><button class="btn" data-a="aiNoteDel" data-id="'+esc(n.id)+'" aria-label="O\'chirish">✕</button></div>'; }).join(''):'<p class="help muted">Hozircha yo\'q.</p>'); })()+
       '<div id="aiMsg"></div><div id="aiBulkBox" style="margin-top:12px">'+(S.aiBoxHTML||'')+'</div></section>';
   }
+  if(!ro && sessionOK()){
+    if(S.gh===undefined){ S.gh=null; S.sb.rpc("uno_gh_status").then(function(r){ S.gh=r.error?{err:1}:(r.data||{}); if(S.view==="admin") renderAdmin(); }); }
+    var gh=S.gh||{};
+    h+='<section class="a-sec"><h2>🎬 Videolarni darhol avtomatik tuzatish</h2>'+
+      (gh.err?'<div class="msg err">Avval media_kick.sql faylini Supabase SQL Editor\'da ishga tushiring.</div>':
+       gh.has?'<div class="msg ok">Ulangan ✅ Taomga yangi video yoki surat qo\'shib saqlaganingizda, u 2–4 daqiqada telefonlar uchun avtomatik tuzatiladi.'+(gh.last?' Oxirgi signal: '+esc(String(gh.last).replace("T"," ").slice(0,16))+' (UTC).':'')+'</div>':
+       '<p class="help">Hozir videolar har 20 daqiqada tuzatiladi. GitHub kalitini kiritsangiz, saqlagan zahoti tuzatiladi. Kalit bazada maxfiy saqlanadi va qayta ko\'rsatilmaydi.</p>')+
+      '<div class="a-row"><label class="fld"><span>GitHub kaliti (token)</span><input id="ghTok" type="password" autocomplete="off" placeholder="'+(gh.has?'saqlangan — almashtirish uchun yangisini kiriting':'github_pat_…')+'"></label><button class="btn gold" data-a="ghSave">Saqlash</button>'+
+      (gh.has?'<button class="btn" data-a="ghKick">Hozir tuzatish</button><button class="btn danger" data-a="ghDel">O\'chirish</button>':'')+'</div><div id="ghMsg"></div></section>';
+  }
   h+='<section class="a-sec"><h2>Taomlar</h2><p class="help"><b style="color:var(--gold2)">Surat o\'lchami: 1080 × 1080 piksel (kvadrat, 1:1).</b> Menyudagi surat maydoni har doim kvadrat, shuning uchun barcha suratlarni shu o\'lchamda tayyorlang. Video ham kvadrat (1080 × 1080) bo\'lsin, 20 MB dan oshmasin. Video bo\'lsa, taom markazga kelganda surat o\'rniga video o\'ynaydi.</p>';
   var groups=cats().concat([{id:"__none",label:"Kategoriyasiz"}]);
   groups.forEach(function(c){
@@ -3799,7 +3809,7 @@ function renderAdmin(){
   if(S.editing) renderEditor();
 }
 /* ---------- admin sections as swipeable cards ---------- */
-var ADM_PAGES=[["Taomlar",/^Taomlar/],["Kategoriyalar",/^Kategoriyalar/],["AI",/intellekt/i],["Davomat",/davomati/i],["Yetkazish",/^Yetkazib berish/],["Yangiliklar",/^Yangiliklar/],["Afisha",/^Afisha/],["Zallar",/^Zallar/],["Bonus",/^Bonus/],["Tug'ilgan kun",/^Tug.ilgan kunlar/],["Fikrlar",/^Mehmon fikrlari/],["Statistika",/^Statistika/],["Sertifikat",/^Sovg.a sertifikat/],["Mijozlar",/^Mijozlar/],["Baholar",/^Baholar/],["Stollar va QR",/^Stollar/],["Telegram",/^Telegram/],["Mini App",/^Mini App/],["Restoran",/^Restoran/],["Oflayn",/^Oflayn/],["Planshet",/^Planshet/],["Parol",/^Parol/]];
+var ADM_PAGES=[["Taomlar",/^Taomlar/],["Video",/Videolarni darhol/],["Kategoriyalar",/^Kategoriyalar/],["AI",/intellekt/i],["Davomat",/davomati/i],["Yetkazish",/^Yetkazib berish/],["Yangiliklar",/^Yangiliklar/],["Afisha",/^Afisha/],["Zallar",/^Zallar/],["Bonus",/^Bonus/],["Tug'ilgan kun",/^Tug.ilgan kunlar/],["Fikrlar",/^Mehmon fikrlari/],["Statistika",/^Statistika/],["Sertifikat",/^Sovg.a sertifikat/],["Mijozlar",/^Mijozlar/],["Baholar",/^Baholar/],["Stollar va QR",/^Stollar/],["Telegram",/^Telegram/],["Mini App",/^Mini App/],["Restoran",/^Restoran/],["Oflayn",/^Oflayn/],["Planshet",/^Planshet/],["Parol",/^Parol/]];
 function admKeep(){
   var pg=A.querySelector(".adm-pager"); if(!pg) return null;
   var tops={}; pg.querySelectorAll(".adm-page").forEach(function(p){ tops[p.dataset.k]=p.scrollTop; });
@@ -3908,6 +3918,19 @@ A.addEventListener("click", async function(e){
       var rk=await S.sb.rpc("uno_set_ai_key",{p_key:kv});
       if(rk.error){ msg($("aiMsg"),/uno_set_ai_key|function/.test(rk.error.message)?"Avval ai.sql ni ishga tushiring.":errText(rk.error),"err"); return; }
       try{ localStorage.removeItem("uno_gem_model"); }catch(_){} S.sample.reset(); S.aiOn=true; S.aiSql=true; renderAdmin(); setTimeout(function(){ msg($("aiMsg"),"Kalit saqlandi. AI tayyor.","ok"); },50);
+    }
+    else if(act==="ghSave"){
+      var gv=$("ghTok").value.replace(/\s+/g,""); if(!/^(github_pat_|ghp_)[A-Za-z0-9_]{20,}$/.test(gv)){ msg($("ghMsg"),"Kalit noto'g'ri ko'rinadi. U github_pat_ bilan boshlanishi kerak.","err"); return; }
+      var rg=await S.sb.rpc("uno_set_gh_token",{p_token:gv});
+      if(rg.error){ msg($("ghMsg"),/uno_set_gh_token|function/.test(rg.error.message)?"Avval media_kick.sql ni ishga tushiring.":errText(rg.error),"err"); return; }
+      S.gh={has:true}; renderAdmin(); setTimeout(function(){ msg($("ghMsg"),"Kalit saqlandi. Endi «Hozir tuzatish» tugmasi bilan sinab ko'ring.","ok"); },50);
+    }
+    else if(act==="ghDel"){ var rd=await S.sb.rpc("uno_set_gh_token",{p_token:""}); if(rd.error){ msg($("ghMsg"),errText(rd.error),"err"); return; } S.gh={has:false}; renderAdmin(); }
+    else if(act==="ghKick"){
+      var rkk=await S.sb.rpc("uno_media_kick",{p_force:true});
+      if(rkk.error){ msg($("ghMsg"),errText(rkk.error),"err"); return; }
+      msg($("ghMsg"),rkk.data==="sent"?"Signal yuborildi. 2–4 daqiqada videolar tuzatiladi.":rkk.data==="no_token"?"Kalit kiritilmagan.":"Biroz kuting.", rkk.data==="sent"?"ok":"err");
+      S.gh=undefined;
     }
     else if(act==="aiNoteDel"){ var left=aiNotesOf(S.settings).filter(function(n){ return n.id!==id; }); await saveSettings({aiNotes:left}); S.settings.aiNotes=left; renderAdmin(); }
     else if(act==="aiTest"){
@@ -4645,6 +4668,7 @@ async function saveDish(){
     var ref = E.id ? S.db.doc("dishes/"+E.id) : S.db.collection("dishes").doc();
     if(!E.id) E.id=ref.id||(ref.path||"").split("/").pop()||E.id;   /* a retry must update the same dish, not make a second one */
     await netRetry(function(){ return ref.set(data); });
+    if((data.videoId && data.videoId!==E.origVid) || (data.imgId && data.imgId!==E.origImg)) mediaKick();
     // remove replaced media
     if(S.assets){
       if(E.origImg && E.origImg!==data.imgId) S.assets.delete(E.origImg).catch(function(){});
@@ -6492,6 +6516,8 @@ async function agRunRead(c){
   return agFR(c,out);
 }
 
+/* new dish media → ask GitHub to optimise it now instead of waiting for the 20-minute run */
+function mediaKick(){ try{ if(S.sb && sessionOK()) S.sb.rpc("uno_media_kick").then(function(){ S.gh=undefined; },function(){}); }catch(_){} }
 /* ---------- tools: write (run after the admin confirms) ---------- */
 async function agUpload(att, as){
   if(!att) throw new Error("fayl topilmadi");
@@ -6522,6 +6548,7 @@ async function agRunWrite(c){ AG._wrote=true;
     if(pa||va) data.imgId=await agUpload(pa||va,"image");
     var ref=S.db.collection("dishes").doc();
     await netRetry(function(){ return ref.set(data); });
+    if(data.videoId||data.imgId) mediaKick();
     return {ok:true, dish_id:ref.id, label:"Qo'shildi: "+data.name+" — "+agMoney(price)};
   }
   if(c.name==="update_dish"){
@@ -6538,6 +6565,7 @@ async function agRunWrite(c){ AG._wrote=true;
     if(pa2) patch.imgId=await agUpload(pa2,"image"); else if(va2&&!d.imgId) patch.imgId=await agUpload(va2,"image");
     if(a.remove_photo) patch.imgId=""; if(a.remove_video) patch.videoId="";
     await netRetry(function(){ return S.db.doc("dishes/"+d.id).update(patch); });
+    if(patch.videoId||patch.imgId) mediaKick();
     if(patch.imgId!==undefined&&oldImg&&oldImg!==patch.imgId) S.assets.delete(oldImg).catch(function(){});
     if(patch.videoId!==undefined&&oldVid&&oldVid!==patch.videoId) S.assets.delete(oldVid).catch(function(){});
     return {ok:true, label:"O'zgartirildi: "+(patch.name||d.name)+(patch.price?" — "+agMoney(patch.price):"")};
