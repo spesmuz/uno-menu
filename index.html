@@ -1042,6 +1042,34 @@ html.web-tabs.wt-pg #menuView *{animation-play-state:paused!important}
 .wnews img{display:block;width:100%;aspect-ratio:8.5/2.8;object-fit:cover;background:rgba(255,255,255,.06)}
 .wnews .tx{padding:16px}.wnews b{display:block;font:800 18px var(--sans,system-ui);margin-bottom:6px}.wnews p{margin:0;color:rgba(255,255,255,.82);font-size:15px;line-height:1.45;white-space:pre-line}
 .wnews small{display:block;margin-top:8px;color:rgba(232,176,75,.85);font-size:12px}
+.wpass{position:relative;border-radius:20px;padding:16px 16px 12px;color:#fff;overflow:hidden;background:linear-gradient(135deg,#1b2a5a,#0d1430);border:1px solid rgba(255,255,255,.14);box-shadow:0 14px 30px rgba(0,0,0,.35)}
+.wpass.t-business{background:linear-gradient(135deg,#3a2a12,#16120a);border-color:rgba(255,201,77,.45)}
+.wpass.t-first{background:linear-gradient(135deg,#2b1640,#0e0718);border-color:rgba(220,180,255,.45)}
+.wpass::before,.wpass::after{content:"";position:absolute;width:22px;height:22px;border-radius:50%;background:#070b18;top:58%}
+.wpass::before{left:-11px}.wpass::after{right:-11px}
+.wpass .ptop{display:flex;justify-content:space-between;align-items:center;font:700 12px ui-monospace,monospace;letter-spacing:2px;color:rgba(255,255,255,.7)}
+.wpass .ptop b{font:800 14px var(--sans,system-ui);letter-spacing:2px;color:#FFD27A}
+.wpass.t-first .ptop b{color:#E2C7FF}
+.wpass small{display:block;font:600 10px ui-monospace,monospace;letter-spacing:1.5px;color:rgba(255,255,255,.55)}
+.wpass .pmid{display:flex;justify-content:space-between;gap:10px;margin:14px 0 10px}.wpass .pmid b{font:800 17px var(--sans,system-ui)}.wpass b.gold{color:#FFD27A;font-size:22px}
+.wpass .prow{display:flex;justify-content:space-between;padding-top:10px;border-top:1px dashed rgba(255,255,255,.22)}.wpass .prow b{font:800 18px var(--sans,system-ui)}
+.wpass .pbar{height:6px;border-radius:3px;background:rgba(255,255,255,.12);margin-top:12px;overflow:hidden}.wpass .pbar i{display:block;height:100%;background:linear-gradient(90deg,#E8B04B,#FFD27A)}
+.wpass .pnext{margin:6px 0 0;font-size:12px;color:rgba(255,255,255,.7)}
+.wpass .pcode{display:flex;align-items:center;gap:10px;margin-top:10px}.wpass .pcode i{flex:1;height:26px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.85) 0 2px,transparent 2px 4px,rgba(255,255,255,.85) 4px 5px,transparent 5px 8px);opacity:.75}
+.wpass .pcode span{font:700 12px ui-monospace,monospace;letter-spacing:1.5px;color:rgba(255,255,255,.75)}
+.wbonus .how{margin:10px 2px 0;color:rgba(255,255,255,.75);font-size:14px;line-height:1.45}
+.wpre{margin-top:4px;padding:12px;border-radius:14px;background:rgba(255,201,77,.08);border:1px solid rgba(255,201,77,.28)}.wpre small{color:rgba(255,255,255,.7)}.wpre p{margin:6px 0 0;font-size:14px;line-height:1.45;color:rgba(255,255,255,.88)}
+.kassa{position:fixed;inset:0;z-index:2147483100;background:linear-gradient(180deg,#0b1022,#05070f);color:#fff;overflow:auto;-webkit-overflow-scrolling:touch;font-family:var(--sans,system-ui)}
+.kassa .kwrap{max-width:520px;margin:0 auto;padding:calc(16px + env(safe-area-inset-top,0px)) 16px 40px}
+.kassa .khead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.kassa .khead b{font:800 22px var(--sans,system-ui)}.kassa .khead button{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);color:#fff;font-size:18px}
+.kassa .kcard{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:16px;margin-bottom:12px}
+.kassa label{display:block;font-size:13px;color:rgba(255,255,255,.7)}.kassa input{display:block;width:100%;box-sizing:border-box;height:50px;margin-top:6px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:#141a30;color:#fff;font-size:18px;padding:0 14px}
+.kassa .kbtn{display:block;width:100%;height:50px;margin-top:10px;border:0;border-radius:14px;font:800 16px var(--sans,system-ui);color:#1A1306;background:linear-gradient(180deg,#FFE08A,#FFC94D)}.kassa .kbtn.ghost{background:rgba(255,255,255,.1);color:#FFD27A;border:1px solid rgba(255,201,77,.35)}
+.kassa .kbtn:disabled{opacity:.6}.kassa .ktabs{display:flex;gap:6px;padding:4px;border-radius:14px;background:rgba(255,255,255,.07);margin-bottom:12px}.kassa .ktabs button{flex:1;height:42px;border:0;border-radius:11px;background:none;color:rgba(255,255,255,.75);font:700 15px var(--sans,system-ui)}.kassa .ktabs button.on{background:linear-gradient(180deg,#FFE08A,#FFC94D);color:#1A1306}
+.kassa .krow{display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:15px}.kassa .krow span{color:rgba(255,255,255,.65)}.kassa .kgold{color:#FFD27A}
+.kassa .kmsg{padding:12px 14px;border-radius:14px;margin-top:4px;line-height:1.5}.kassa .kmsg.ok{background:rgba(63,191,127,.15);border:1px solid rgba(63,191,127,.4)}.kassa .kmsg.err{background:rgba(255,110,90,.12);border:1px solid rgba(255,110,90,.4)}
+.kassa .klink{display:block;margin:14px auto 0;border:0;background:none;color:rgba(255,255,255,.5);font-size:14px}
+.kassa p{margin:0 0 10px;color:rgba(255,255,255,.8)}
 .wseg{display:flex;gap:6px;padding:4px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);margin:0 0 14px}
 .wseg button{flex:1;height:40px;border:0;border-radius:11px;background:none;color:rgba(255,255,255,.75);font:700 14px var(--sans,system-ui)}
 .wseg button.on{background:linear-gradient(180deg,#FFE08A,#FFC94D);color:#1A1306}
@@ -1170,6 +1198,31 @@ function safeInsets(){
 /* the iPhone app is recognised by its name in the user agent even before it reports its bar size */
 /* phones outside the iPhone app get the same four tabs as the iPhone app, drawn by the page itself
    (not on restaurant tablets, the door terminal or kiosk mode) */
+/* Uzbek dates written out by hand: many Android WebViews have no Uzbek locale and print "M11 29" */
+var UZ_M=["yanvar","fevral","mart","aprel","may","iyun","iyul","avgust","sentabr","oktabr","noyabr","dekabr"], UZ_W=["yakshanba","dushanba","seshanba","chorshanba","payshanba","juma","shanba"];
+function uzDate(d, withWeek){ return (withWeek?UZ_W[d.getDay()]+", ":"")+d.getDate()+"-"+UZ_M[d.getMonth()]; }
+/* where this guest came from: ?src=instagram (or utm_source), a table QR (?stol=), the Telegram Mini App, the Android app.
+   The last known source is kept 90 days, so a booking made days later still says where the guest first came from. */
+var SRC=(function(){
+  var q, s="", tg=false; try{ q=new URLSearchParams(location.search); }catch(_){ q=null; }
+  try{ tg=/tgWebApp/.test(location.hash||"") || !!window.TelegramWebviewProxy || /Telegram/i.test(navigator.userAgent||""); }catch(_){}
+  if(q){ s=String(q.get("src")||q.get("utm_source")||"").toLowerCase().replace(/[^a-z0-9_.-]/g,"").slice(0,24); if(!s && q.get("stol")) s="qr"; }
+  if(tg) s="telegram";
+  try{ var old=JSON.parse(localStorage.getItem("uno_src")||"null"); if(s) localStorage.setItem("uno_src",JSON.stringify({s:s,at:Date.now()})); else if(old && Date.now()-old.at<90*864e5) s=old.s; }catch(_){}
+  return {s:s, tg:tg};
+})();
+/* Telegram Mini App: Telegram's own script, only when opened inside Telegram */
+var TG=null;
+if(SRC.tg && /tgWebApp/.test(location.hash||"")){
+  (function(){ var sc=document.createElement("script"); sc.src="https://telegram.org/js/telegram-web-app.js"; sc.async=true;
+    sc.onload=function(){ try{ var W=window.Telegram&&Telegram.WebApp; if(!W) return; TG=W; W.ready(); W.expand(); try{ W.disableVerticalSwipes(); }catch(_){}
+      try{ W.setHeaderColor("#0b1022"); W.setBackgroundColor("#060a18"); }catch(_){}
+      document.documentElement.classList.add("tg");
+      var u=W.initDataUnsafe&&W.initDataUnsafe.user;
+      try{ if(u && !localStorage.getItem("uno_profile")) localStorage.setItem("uno_profile",JSON.stringify({name:[u.first_name,u.last_name].filter(Boolean).join(" "),phone:""})); }catch(_){}
+    }catch(_){} };
+    document.head.appendChild(sc); })();
+}
 function webTabsOn(){
   if(window.UNO_INSETS || /UNOAirwaysApp/.test(navigator.userAgent||"")) return false;
   if(Math.min(window.innerWidth||0, window.innerHeight||0) >= 600) return false;
@@ -1439,8 +1492,8 @@ var WT=(function(){
   function profile(){ try{ var p=JSON.parse(store("uno_profile")||"null")||{}; return {name:p.name||"", phone:p.phone||""}; }catch(_){ return {name:"",phone:""}; } }
   function saveProfile(n,ph){ store("uno_profile", JSON.stringify({name:n, phone:ph})); }
   function device(){ var d=store("uno_device"); if(!d){ d=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2)); store("uno_device",d); } return d; }
-  function platform(){ return window.UnoKiosk?"android":"web"; }
-  function source(){ return window.UnoKiosk?"Android ilovasi":"Sayt (telefon)"; }
+  function platform(){ return SRC.tg?"telegram":window.UnoKiosk?"android":"web"; }
+  function source(){ if(SRC.tg) return "Telegram ilova"; var b=window.UnoKiosk?"Android ilovasi":"Sayt (telefon)"; return (SRC.s && SRC.s!=="telegram")?b+" · "+SRC.s:b; }
   function build(){
     if(built) return; built=true;
     if(/Android/i.test(navigator.userAgent||"")){ document.documentElement.classList.add("and"); try{ skySync(); }catch(_){} }
@@ -1475,7 +1528,7 @@ var WT=(function(){
   function fmtDT(ms){ try{ return new Date(ms).toLocaleString(S.lang==="uz"?"uz-Latn-UZ":S.lang,{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}); }catch(_){ return new Date(ms).toLocaleString(); } }
   var B={guests:2,msg:null,busy:false,rem:store("uno_remind")!=="0"};
   function canRemind(){ return !!(window.UnoKiosk && UnoKiosk.remind); }
-  function hap(k){ try{ if(window.UnoKiosk && UnoKiosk.haptic) UnoKiosk.haptic(k||"tick"); }catch(_){} }
+  function hap(k){ try{ if(window.UnoKiosk && UnoKiosk.haptic){ UnoKiosk.haptic(k||"tick"); return; } if(TG && TG.HapticFeedback){ if(k==="ok") TG.HapticFeedback.notificationOccurred("success"); else if(k==="err") TG.HapticFeedback.notificationOccurred("error"); else TG.HapticFeedback.selectionChanged(); } }catch(_){} }
   function renderBook(){
     var p=profile(), pg=$("wp-book"), up=mine.filter(function(b){ return b.at>Date.now()-3*36e5; }).sort(function(a,b){ return a.at-b.at; });
     var seg='<div class="wseg"><button type="button" data-wx="mode" data-v="t" class="'+(B.mode!=="b"?"on":"")+'">'+esc(T("seg.table"))+'</button><button type="button" data-wx="mode" data-v="b" class="'+(B.mode==="b"?"on":"")+'">💍 '+esc(T("seg.banq"))+'</button></div>';
@@ -1487,7 +1540,7 @@ var WT=(function(){
       '<div class="wfld"><span>'+esc(T("book.guests"))+'</span><div class="wstep"><button type="button" data-wb="-">−</button><b id="wbG">'+B.guests+'</b><button type="button" data-wb="+">+</button></div></div>'+
       '<div class="wrow2"><label class="wfld"><span>'+esc(T("book.zone"))+'</span><select id="wbZone">'+ZONES.map(function(z,i){ return '<option value="'+i+'">'+esc(T(z))+'</option>'; }).join("")+'</select></label>'+
       '<label class="wfld"><span>'+esc(T("book.occasion"))+'</span><select id="wbOcc">'+OCC.map(function(z,i){ return '<option value="'+i+'">'+esc(T(z))+'</option>'; }).join("")+'</select></label></div>'+
-      '<label class="wfld"><span>'+esc(T("book.note"))+'</span><textarea id="wbNote" rows="2"></textarea></label>'+
+      '<label class="wfld"><span>'+esc(T("book.note"))+'</span><textarea id="wbNote" rows="2"></textarea></label>'+preHTML()+
       (canRemind()?'<label class="wrem"><span>🔔 '+esc(T("book.remind"))+'</span><input type="checkbox" id="wbRem"'+(B.rem?' checked':'')+'></label>':'')+'</div>'+
       (B.msg?'<div class="wmsg '+B.msg[0]+'">'+esc(B.msg[1])+'</div>':'')+
       '<button class="wbtn" type="button" data-wb="send"'+(B.busy?' disabled':'')+'>'+(B.busy?'…':'✓ '+esc(T("book.send")))+'</button>'+
@@ -1502,17 +1555,19 @@ var WT=(function(){
     if(err){ hap("err"); B.msg=["err",T(err)]; keepRender(); return; }
     B.busy=true; B.msg=null; keepRender();
     saveProfile(nm,ph);
-    var r=await sbRpc("uno_booking_create",{p_name:nm,p_phone:ph,p_at:at.toISOString(),p_guests:B.guests,p_zone:zi===0?null:D.uz[ZONES[zi]],p_occasion:D.uz[OCC[oi]],p_note:note,p_source:source()});
+    var pn=preNote(); if(pn) note=(note+pn).trim();
+    var r=await sbRpc("uno_booking_create",{p_name:nm,p_phone:ph,p_at:at.toISOString(),p_guests:B.guests,p_zone:zi===0?null:D.uz[ZONES[zi]],p_occasion:D.uz[OCC[oi]],p_note:note.slice(0,1400),p_source:source()});
     B.busy=false;
     var remEl=$("wbRem"); if(remEl){ B.rem=remEl.checked; store("uno_remind",B.rem?"1":"0"); }
     if(r.error){ hap("err"); var m=r.error.message||""; B.msg=["err",T(/bad_phone/.test(m)?"book.err.phone":/bad_name/.test(m)?"book.err.name":/bad_time/.test(m)?"book.err.time":/too_many/.test(m)?"book.err.many":"book.err")]; }
     else { hap("ok"); var bid=(r.data&&r.data.id)||Date.now();
       if(B.rem && canRemind()){ try{ var hm=("0"+at.getHours()).slice(-2)+":"+("0"+at.getMinutes()).slice(-2); UnoKiosk.remind(String(bid), String(at.getTime()-2*36e5), T("remind.title"), T("remind.body").replace("%@",hm)); }catch(_){} }
       if(G().rateOn!==false){ var rd=new Date(at.getTime()); rd.setDate(rd.getDate()+1); rd.setHours(12,0,0,0); if(rd.getTime()<at.getTime()+3*36e5) rd=new Date(at.getTime()+3*36e5); remindAt("r"+bid, rd.getTime(), T("rt.push.t"), T("rt.push.b")); }
+      if(pn){ try{ S.cart={}; refreshCartUI(); }catch(_){} }
       mine.push({id:bid, at:at.getTime(), guests:B.guests, zone:ZONES[zi], occasion:OCC[oi]}); store("uno_bookings",JSON.stringify(mine.slice(-30))); B.msg=["ok",T("book.ok.t")+" "+T("book.ok")]; try{ SFX.ok&&SFX.ok(); }catch(_){} }
     renderBook();
   }
-  function keepRender(){ var rm=$("wbRem"); if(rm) B.rem=rm.checked; var keep={}; ["wbName","wbPhone","wbAt","wbZone","wbOcc","wbNote","wqName","wqPhone","wqDate","wqG","wqType","wqHall","wqNote"].forEach(function(k){ var el=$(k); if(el) keep[k]=el.value; }); renderBook(); Object.keys(keep).forEach(function(k){ var el=$(k); if(el) el.value=keep[k]; }); }
+  function keepRender(){ var rm=$("wbRem"); if(rm) B.rem=rm.checked; var pe=$("wbPre"); if(pe) B.pre2=pe.checked; var keep={}; ["wbName","wbPhone","wbAt","wbZone","wbOcc","wbNote","wqName","wqPhone","wqDate","wqG","wqType","wqHall","wqNote"].forEach(function(k){ var el=$(k); if(el) keep[k]=el.value; }); renderBook(); Object.keys(keep).forEach(function(k){ var el=$(k); if(el) el.value=keep[k]; }); }
   /* ---------- UNO (about) ---------- */
   function renderAbout(){
     var logo=S.settings&&S.settings.logoId?blob(S.settings.logoId):"icons/menu-512.png";
@@ -1639,7 +1694,7 @@ var WT=(function(){
   function gtxt(o,k){ var v=o[k+"_"+S.lang]; return (S.lang!=="uz"&&v)?v:(o[k]||""); }
   function openOut(u){ if(!u) return; if(window.UnoKiosk && UnoKiosk.openUrl){ try{ UnoKiosk.openUrl(u); return; }catch(_){} } try{ window.open(u,"_blank","noopener"); }catch(_){ location.href=u; } }
   function remindAt(id, at, title, body){ if(!canRemind() || !(at>Date.now()+60000)) return; try{ UnoKiosk.remind(String(id), String(Math.round(at)), title, body); }catch(_){} }
-  function shareText(t){ if(window.UnoKiosk && UnoKiosk.share){ try{ UnoKiosk.share(t); return; }catch(_){} } if(navigator.share) navigator.share({text:t}).catch(function(){}); else { try{ navigator.clipboard.writeText(t).catch(function(){}); }catch(_){} } }
+  function shareText(t){ if(window.UnoKiosk && UnoKiosk.share){ try{ UnoKiosk.share(t); return; }catch(_){} } if(TG && TG.openTelegramLink){ try{ TG.openTelegramLink("https://t.me/share/url?url="+encodeURIComponent(location.origin+location.pathname)+"&text="+encodeURIComponent(t)); return; }catch(_){} } if(navigator.share) navigator.share({text:t}).catch(function(){}); else { try{ navigator.clipboard.writeText(t).catch(function(){}); }catch(_){} } }
 
   /* ---- halls and events (admin keeps them as docs "halls/*" and "events/*") ---- */
   var EX={halls:[], events:[], loaded:false, busy:false};
@@ -1661,7 +1716,7 @@ var WT=(function(){
     EX.busy=false;
   }
   function evDate(e){
-    try{ var d=new Date(e.date+"T"+(e.time||"12:00")); return d.toLocaleDateString(S.lang==="uz"?"uz-Latn-UZ":S.lang,{weekday:"short",day:"numeric",month:"long"})+(e.time?" · "+e.time:""); }catch(_){ return e.date+(e.time?" · "+e.time:""); }
+    try{ var d=new Date(e.date+"T"+(e.time||"12:00")); return (S.lang==="uz"?uzDate(d,true):d.toLocaleDateString(S.lang,{weekday:"short",day:"numeric",month:"long"}))+(e.time?" · "+e.time:""); }catch(_){ return e.date+(e.time?" · "+e.time:""); }
   }
   function aboutExtra(){
     if(!EX.loaded){ loadExtra(); return ""; }
@@ -1744,12 +1799,12 @@ var WT=(function(){
     var g=G(), p=profile(), h=bdayBanner();
     if(g.bonusOn){
       var pct=+(BN.data&&BN.data.pct)||+g.bonusPct||5;
-      h+='<h2>💳 '+esc(T("bn.title"))+'</h2><div class="wcard wbonus">';
-      if(!ready(p.name,p.phone)) h+='<p style="margin:0;color:rgba(255,255,255,.75)">'+esc(T("bn.need"))+'</p>';
+      h+='<h2>💳 '+esc(T("bn.title"))+'</h2><div class="wbonus">';
+      if(!ready(p.name,p.phone)) h+='<div class="wcard"><p style="margin:0;color:rgba(255,255,255,.75)">'+esc(T("bn.need"))+'</p></div>';
       else {
-        h+='<div class="big">'+esc(fmtL(+(BN.data&&BN.data.balance)||0))+'</div><p class="how">'+esc(T("bn.how").replace("%@",pct))+'</p>';
+        h+=milesHTML()+'<p class="how">'+esc(T("bn.how").replace("%@",pct))+'</p>';
         var tx=(BN.data&&BN.data.tx)||[];
-        if(tx.length) h+='<div class="wlist">'+tx.slice(0,5).map(function(t){ return '<div class="it"><div><b>'+esc(T(t.kind==="spend"?"bn.spend":t.kind==="ref"?"bn.ref":"bn.earn"))+'</b><small>'+esc(new Date(t.at).toLocaleDateString(S.lang==="uz"?"uz-Latn-UZ":S.lang,{day:"numeric",month:"short"}))+'</small></div><b style="color:'+(t.amount<0?'#ff9a8a':'#7CE0A6')+'">'+(t.amount>0?'+':'')+esc(fmtL(t.amount))+'</b></div>'; }).join("")+'</div>';
+        if(tx.length) h+='<div class="wcard np wlist" style="margin-top:10px">'+tx.slice(0,5).map(function(t){ return '<div class="it"><div><b>'+esc(T(t.kind==="spend"?"bn.spend":t.kind==="ref"?"bn.ref":"bn.earn"))+'</b><small>'+esc(new Date(t.at).toLocaleDateString(S.lang==="uz"?"uz-Latn-UZ":S.lang,{day:"numeric",month:"short"}))+'</small></div><b style="color:'+(t.amount<0?'#ff9a8a':'#7CE0A6')+'">'+(t.amount>0?'+':'')+esc(fmtL(t.amount))+'</b></div>'; }).join("")+'</div>';
       }
       h+='</div>';
       var rb=+(BN.data&&BN.data.ref)||+g.refBonus||0;
@@ -1763,7 +1818,7 @@ var WT=(function(){
         h+='</div>';
       }
     }
-    return h;
+    return h+giftHTML();
   }
   async function applyRef(){
     var v=($("wpRef")||{}).value||""; if(ph9(v).length<9){ BN.refMsg=["err",T("rf.bad")]; renderProfile(); return; }
@@ -1822,6 +1877,64 @@ var WT=(function(){
     if(a==="bdbook"){ B.mode="t"; B.msg=null; B.pre={occ:1}; go(1); return; }
     if(a==="refshare"){ shareText(T("rf.text").replace("%@",ph9(profile().phone))+" "+location.origin+location.pathname); return; }
     if(a==="ref"){ applyRef(); return; }
+    if(a==="gift"){ checkGift(); return; }
+    if(a==="prepick"){ go(0); return; }
+  }
+  /* ================= UNO Miles card, gift certificate check, pre-order with a booking ================= */
+  var DX2={
+    uz:{"ms.title":"UNO Miles","ms.pass":"YO'LOVCHI","ms.bonus":"BONUS","ms.visits":"TASHRIF","ms.cash":"KESHBEK","ms.class":"DARAJA",
+      "ms.economy":"Economy","ms.business":"Business","ms.first":"First Class","ms.next":"%1 darajasigacha yana %2 tashrif","ms.top":"Siz eng yuqori darajadasiz ✈️",
+      "ms.rules":"Economy %1% · Business %2% (%3+ tashrif) · First Class %4% (%5+ tashrif)",
+      "gf.title":"Sovg'a sertifikati","gf.ph":"Sertifikat kodi: UNO-XXXX-XXXX","gf.check":"Tekshirish","gf.left":"Qoldiq: %@","gf.until":"Amal qiladi: %@ gacha","gf.bad":"Bunday sertifikat topilmadi","gf.exp":"Muddati tugagan","gf.how":"Sertifikatni kassada ko'rsating, summasi hisobdan yechiladi.",
+      "pre.title":"Oldindan buyurtma","pre.add":"Bronga qo'shish","pre.pick":"🍽 Taomlarni oldindan tanlash","pre.hint":"Menyudan taomlarni savatchaga qo'shing, keyin shu yerga qayting — oshxona kelishingizga tayyorlab qo'yadi.","pre.n":"%@ ta taom"},
+    ru:{"ms.title":"UNO Miles","ms.pass":"ПАССАЖИР","ms.bonus":"БОНУСЫ","ms.visits":"ВИЗИТЫ","ms.cash":"КЭШБЭК","ms.class":"КЛАСС",
+      "ms.economy":"Economy","ms.business":"Business","ms.first":"First Class","ms.next":"До уровня %1 ещё %2 визитов","ms.top":"У вас высший уровень ✈️",
+      "ms.rules":"Economy %1% · Business %2% (от %3 визитов) · First Class %4% (от %5 визитов)",
+      "gf.title":"Подарочный сертификат","gf.ph":"Код сертификата: UNO-XXXX-XXXX","gf.check":"Проверить","gf.left":"Остаток: %@","gf.until":"Действует до %@","gf.bad":"Сертификат не найден","gf.exp":"Срок действия истёк","gf.how":"Покажите сертификат на кассе — сумма спишется с баланса.",
+      "pre.title":"Предзаказ","pre.add":"Добавить к брони","pre.pick":"🍽 Выбрать блюда заранее","pre.hint":"Добавьте блюда из меню в корзину и вернитесь сюда — кухня подготовит их к вашему приходу.","pre.n":"%@ блюд"},
+    en:{"ms.title":"UNO Miles","ms.pass":"PASSENGER","ms.bonus":"BONUS","ms.visits":"VISITS","ms.cash":"CASHBACK","ms.class":"CLASS",
+      "ms.economy":"Economy","ms.business":"Business","ms.first":"First Class","ms.next":"%2 more visits to %1","ms.top":"You're at the top tier ✈️",
+      "ms.rules":"Economy %1% · Business %2% (%3+ visits) · First Class %4% (%5+ visits)",
+      "gf.title":"Gift certificate","gf.ph":"Certificate code: UNO-XXXX-XXXX","gf.check":"Check","gf.left":"Balance: %@","gf.until":"Valid until %@","gf.bad":"Certificate not found","gf.exp":"Expired","gf.how":"Show the certificate at the cashier; the amount is taken from its balance.",
+      "pre.title":"Pre-order","pre.add":"Add to the booking","pre.pick":"🍽 Choose dishes in advance","pre.hint":"Add dishes from the menu to the cart and come back here — the kitchen will have them ready when you arrive.","pre.n":"%@ dishes"}
+  };
+  Object.keys(DX2).forEach(function(l){ Object.keys(DX2[l]).forEach(function(k){ D[l][k]=DX2[l][k]; }); });
+  function milesHTML(){
+    var d=BN.data||{}, g=G(), p=profile(), tier=d.tier||"economy", v=+d.visits||0, tB=+d.tierB||+g.tierB||5, tF=+d.tierF||+g.tierF||15;
+    var pE=+d.pctE||+g.bonusPct||5, pB=+d.pctB||+g.pctB||7, pF=+d.pctF||+g.pctF||10, pct=tier==="first"?pF:tier==="business"?pB:pE;
+    var next=tier==="economy"?["business",tB]:tier==="business"?["first",tF]:null, prev=tier==="first"?tF:tier==="business"?tB:0;
+    var prog=next?Math.max(4,Math.min(100,Math.round(100*(v-prev)/Math.max(1,next[1]-prev)))):100;
+    return '<div class="wpass t-'+tier+'"><div class="ptop"><span>✈ '+esc(T("ms.title"))+'</span><b>'+esc(T("ms."+tier)).toUpperCase()+'</b></div>'+
+      '<div class="pmid"><div><small>'+esc(T("ms.pass"))+'</small><b>'+esc((p.name||"—").toUpperCase())+'</b></div><div style="text-align:right"><small>'+esc(T("ms.bonus"))+'</small><b class="gold">'+esc(fmtL(+d.balance||0))+'</b></div></div>'+
+      '<div class="prow"><div><small>'+esc(T("ms.visits"))+'</small><b>'+v+'</b></div><div><small>'+esc(T("ms.cash"))+'</small><b>'+pct+'%</b></div><div><small>'+esc(T("ms.class"))+'</small><b>'+(tier==="first"?"F":tier==="business"?"J":"Y")+'</b></div></div>'+
+      '<div class="pbar"><i style="width:'+prog+'%"></i></div><p class="pnext">'+esc(next?T("ms.next").replace("%1",T("ms."+next[0])).replace("%2",Math.max(0,next[1]-v)):T("ms.top"))+'</p>'+
+      '<div class="pcode"><i></i><span>'+esc(ph9(p.phone))+'</span></div></div>'+
+      '<p class="whint" style="margin-top:8px">'+esc(T("ms.rules").replace("%1",pE).replace("%2",pB).replace("%3",tB).replace("%4",pF).replace("%5",tF))+'</p>';
+  }
+  var GF={res:null};
+  function fmtCode(c){ c=String(c||""); return c.length===11?c.slice(0,3)+"-"+c.slice(3,7)+"-"+c.slice(7):c; }
+  function giftHTML(){
+    if(!G().giftOn) return "";
+    var r=GF.res, m="";
+    if(r){ if(!r.ok) m='<div class="wmsg err">'+esc(T("gf.bad"))+'</div>';
+      else m='<div class="wmsg '+(r.expired?'err':'ok')+'"><b>'+esc(fmtCode(r.code))+'</b>'+(r.name?' · '+esc(r.name):'')+'<br>'+esc(T("gf.left").replace("%@",fmtL(r.balance)))+' · '+esc(r.expired?T("gf.exp"):T("gf.until").replace("%@",String(r.expires||"").split("-").reverse().join(".")))+'</div>'; }
+    return '<h2>🎁 '+esc(T("gf.title"))+'</h2><div class="wcard"><div style="display:flex;gap:8px"><input id="wpGift" autocapitalize="characters" placeholder="'+esc(T("gf.ph"))+'" style="flex:1;min-width:0"><button class="wbtn wsm" type="button" data-wx="gift" style="width:auto;margin:0;padding:0 16px">'+esc(T("gf.check"))+'</button></div>'+m+'<p class="whint" style="margin:8px 0 0">'+esc(T("gf.how"))+'</p></div>';
+  }
+  async function checkGift(){ var v=(($("wpGift")||{}).value||"").trim(); if(v.replace(/[^A-Za-z0-9]/g,"").length<6){ GF.res={ok:false}; renderProfile(); return; }
+    var r=await sbRpc("uno_gift_check",{p_code:v}); GF.res=r.error?{ok:false}:r.data; renderProfile(); }
+  /* pre-order: the cart travels with the table booking as a list in the note */
+  function preItems(){ try{ return cartItems(); }catch(_){ return []; } }
+  function preHTML(){
+    var it=preItems();
+    if(!it.length) return '<button class="wbtn ghost wsm" type="button" data-wx="prepick" style="margin-top:4px">'+esc(T("pre.pick"))+'</button><p class="whint" style="margin:6px 0 0">'+esc(T("pre.hint"))+'</p>';
+    var n=0,sum=0; it.forEach(function(x){ n+=x.q; sum+=x.q*(+x.d.price||0); });
+    return '<div class="wpre"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><b>🍽 '+esc(T("pre.title"))+'</b><small>'+esc(T("pre.n").replace("%@",n))+' · '+esc(fmtL(sum))+'</small></div>'+
+      '<p>'+it.map(function(x){ return esc(dn(x.d))+' × '+x.q; }).join(", ")+'</p><label class="wrem" style="padding-top:8px"><span>'+esc(T("pre.add"))+'</span><input type="checkbox" id="wbPre"'+(B.pre2!==false?' checked':'')+'></label></div>';
+  }
+  function preNote(){
+    var el=$("wbPre"); if(!el || !el.checked) return ""; var it=preItems(); if(!it.length) return "";
+    var sum=0; it.forEach(function(x){ sum+=x.q*(+x.d.price||0); });
+    return "\n🍽 Oldindan buyurtma: "+it.map(function(x){ return x.d.name+" ×"+x.q; }).join(", ")+" — jami "+String(Math.round(sum)).replace(/\B(?=(\d{3})+(?!\d))/g," ")+" so'm";
   }
   /* ---------- events ---------- */
   function onClick(e){
@@ -1831,6 +1944,7 @@ var WT=(function(){
     if(b.dataset.wb==="send"){ sendBook(); return; }
     if(b.dataset.wbdel){ try{ if(window.UnoKiosk&&UnoKiosk.cancelRemind){ UnoKiosk.cancelRemind(String(b.dataset.wbdel)); UnoKiosk.cancelRemind("r"+b.dataset.wbdel); } }catch(_){} mine=mine.filter(function(x){ return String(x.id)!==b.dataset.wbdel; }); store("uno_bookings",JSON.stringify(mine)); renderBook(); return; }
     if(b.dataset.wa==="share"){ var u=location.origin+location.pathname;
+      if(TG && TG.openTelegramLink){ try{ TG.openTelegramLink("https://t.me/share/url?url="+encodeURIComponent(u)+"&text="+encodeURIComponent(T("share.text"))); return; }catch(_){} }
       if(window.UnoKiosk && UnoKiosk.share){ try{ UnoKiosk.share(T("share.text")+" "+u); return; }catch(_){} }
       if(navigator.share) navigator.share({title:"UNO Airways",text:T("share.text"),url:u}).catch(function(){}); else { try{ navigator.clipboard.writeText(T("share.text")+" "+u).catch(function(){}); }catch(_){} } return; }
     if(b.dataset.wp==="save"){ var n=$("wpName").value.trim(), ph=$("wpPhone").value.trim(); if(!ready(n,ph)) { $("wpName").focus(); return; }
@@ -3602,7 +3716,7 @@ function renderAdmin(){
       '<button class="btn gold" data-a="tgSave">Saqlash</button>'+(tg.configured?'<button class="btn" data-a="tgTest">Sinov xabari</button>':'')+'</div>'+
       '<div id="tgMsg"></div></section>';
   }
-  if(!ro && S.sb && sessionOK()) h+='<div id="attSlot"></div><div id="dlvSlot"></div><div id="newsSlot"></div><div id="custSlot"></div><div id="revSlot"></div><div id="hallSlot"></div><div id="evSlot"></div><div id="bonusSlot"></div><div id="bdaySlot"></div><div id="fbSlot"></div><div id="statSlot"></div>';
+  if(!ro && S.sb && sessionOK()) h+='<div id="attSlot"></div><div id="dlvSlot"></div><div id="newsSlot"></div><div id="custSlot"></div><div id="revSlot"></div><div id="hallSlot"></div><div id="evSlot"></div><div id="bonusSlot"></div><div id="bdaySlot"></div><div id="fbSlot"></div><div id="statSlot"></div><div id="giftSlot"></div><div id="miniSlot"></div>';
   // categories
   h+='<section class="a-sec"><h2>Kategoriyalar</h2><p class="help" style="margin-bottom:10px">Har bir kategoriya nomini o\'zbek, rus va ingliz tilida yozing. Rus/ingliz bo\'sh qolsa, o\'zbekchasi ko\'rsatiladi.</p>';
   cats().forEach(function(c,i){
@@ -3679,7 +3793,7 @@ function renderAdmin(){
   if(S.editing) renderEditor();
 }
 /* ---------- admin sections as swipeable cards ---------- */
-var ADM_PAGES=[["Taomlar",/^Taomlar/],["Kategoriyalar",/^Kategoriyalar/],["AI",/intellekt/i],["Davomat",/davomati/i],["Yetkazish",/^Yetkazib berish/],["Yangiliklar",/^Yangiliklar/],["Afisha",/^Afisha/],["Zallar",/^Zallar/],["Bonus",/^Bonus/],["Tug'ilgan kun",/^Tug.ilgan kunlar/],["Fikrlar",/^Mehmon fikrlari/],["Statistika",/^Statistika/],["Mijozlar",/^Mijozlar/],["Baholar",/^Baholar/],["Stollar va QR",/^Stollar/],["Telegram",/^Telegram/],["Restoran",/^Restoran/],["Oflayn",/^Oflayn/],["Planshet",/^Planshet/],["Parol",/^Parol/]];
+var ADM_PAGES=[["Taomlar",/^Taomlar/],["Kategoriyalar",/^Kategoriyalar/],["AI",/intellekt/i],["Davomat",/davomati/i],["Yetkazish",/^Yetkazib berish/],["Yangiliklar",/^Yangiliklar/],["Afisha",/^Afisha/],["Zallar",/^Zallar/],["Bonus",/^Bonus/],["Tug'ilgan kun",/^Tug.ilgan kunlar/],["Fikrlar",/^Mehmon fikrlari/],["Statistika",/^Statistika/],["Sertifikat",/^Sovg.a sertifikat/],["Mijozlar",/^Mijozlar/],["Baholar",/^Baholar/],["Stollar va QR",/^Stollar/],["Telegram",/^Telegram/],["Mini App",/^Mini App/],["Restoran",/^Restoran/],["Oflayn",/^Oflayn/],["Planshet",/^Planshet/],["Parol",/^Parol/]];
 function admKeep(){
   var pg=A.querySelector(".adm-pager"); if(!pg) return null;
   var tops={}; pg.querySelectorAll(".adm-page").forEach(function(p){ tops[p.dataset.k]=p.scrollTop; });
@@ -4663,7 +4777,7 @@ function DocList(cfg){
       var dim=x.hidden||(cfg.past&&cfg.past(x));
       h+='<div class="drow" style="align-items:flex-start;margin-top:10px;'+(dim?'opacity:.55':'')+'">'+(x.imgId?'<img src="'+blob(x.imgId)+'" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:12px;flex:none">':'')+
         '<div class="mid">'+cfg.line(x)+(x.hidden?'<small style="display:block">yashirilgan</small>':'')+'</div>'+
-        '<div class="acts"><button class="btn sm" data-dl2="'+(x.hidden?'show':'hide')+'" data-id="'+esc(x.id)+'">'+(x.hidden?'Ko\'rsatish':'Yashirish')+'</button><button class="btn sm danger" data-dl2="del" data-id="'+esc(x.id)+'">'+(M.del===x.id?'Tasdiqlang':'O\'chirish')+'</button></div></div>';
+        '<div class="acts">'+(cfg.extra?cfg.extra(x):'')+'<button class="btn sm" data-dl2="'+(x.hidden?'show':'hide')+'" data-id="'+esc(x.id)+'">'+(x.hidden?'Ko\'rsatish':'Yashirish')+'</button><button class="btn sm danger" data-dl2="del" data-id="'+esc(x.id)+'">'+(M.del===x.id?'Tasdiqlang':'O\'chirish')+'</button></div></div>';
     });
     M.el.innerHTML=h;
   };
@@ -4671,6 +4785,7 @@ function DocList(cfg){
   M.click=async function(e){
     var b=e.target.closest("[data-dl2]"); if(!b||M.busy) return; var a=b.dataset.dl2, id=b.dataset.id;
     if(a==="del" && M.del!==id){ M.del=id; M.render(); return; }
+    if(a==="story"){ var ev=(M.rows||[]).find(function(r){ return r.id===id; }); if(ev) gxStory(ev); return; }
     M.busy=true; M.msg=""; M.err="";
     try{
       if(a==="add"){
@@ -4696,11 +4811,12 @@ var Halls=DocList({key:"halls", slot:"hallSlot", title:"Zallar", empty:"Hozircha
   sort:function(a,b){ return (+a.order||0)-(+b.order||0); },
   line:function(x){ return '<b>'+esc(x.name||"")+'</b><small style="display:block;margin:2px 0">'+(+x.cap?'👥 '+x.cap+' kishigacha':'')+'</small>'+(x.desc?'<p style="margin:2px 0;font-size:13px;line-height:1.45">'+esc(x.desc)+'</p>':''); }});
 var Afisha=DocList({key:"events", slot:"evSlot", title:"Afisha", empty:"Hozircha tadbir yo'q.", added:"Tadbir qo'shildi. Ilovada «UNO» bo'limida, Afisha ichida ko'rinadi.",
-  help:"Jonli musiqa, shou, konsertlar jadvali. Mehmon ilovaning <b>«UNO»</b> bo'limida ko'radi va <b>«Stol band qilish»</b> tugmasi bilan o'sha kunga bron qiladi. O'tib ketgan tadbirlar mehmonlarga ko'rinmaydi.",
+  help:"Jonli musiqa, shou, konsertlar jadvali. Mehmon ilovaning <b>«UNO»</b> bo'limida ko'radi va <b>«Stol band qilish»</b> tugmasi bilan o'sha kunga bron qiladi. O'tib ketgan tadbirlar mehmonlarga ko'rinmaydi. <b>📸 Stories</b> tugmasi tadbir uchun Instagram stories'ga tayyor rasm (1080×1920) yasab beradi.",
   fields:[{k:"date",label:"Sana",type:"date"},{k:"time",label:"Vaqt",type:"time",ph:"20:00"},{k:"title",label:"Sarlavha",ph:"Masalan: Jonli jazz kechasi",tr:1},{k:"text",label:"Tavsif",type:"area",ph:"Kim chiqadi, nima bo'ladi…",tr:1}],
   check:function(d){ return !/^\d{4}-\d{2}-\d{2}$/.test(d.date)?"Sanani tanlang.":(!d.title?"Sarlavha yozing.":""); },
   sort:function(a,b){ return (String(a.date)+String(a.time||"")).localeCompare(String(b.date)+String(b.time||"")); },
   past:function(x){ var t=new Date(), z=function(n){ return ("0"+n).slice(-2); }; return String(x.date||"")<t.getFullYear()+"-"+z(t.getMonth()+1)+"-"+z(t.getDate()); },
+  extra:function(x){ return '<button class="btn sm gold" data-dl2="story" data-id="'+esc(x.id)+'">📸 Stories</button>'; },
   line:function(x){ return '<b>'+esc(x.title||"")+'</b><small style="display:block;margin:2px 0">📅 '+esc(x.date||"")+(x.time?' · '+esc(x.time):'')+(Afisha.cfgPast(x)?' · o\'tgan':'')+'</small>'+(x.text?'<p style="margin:2px 0;font-size:13px;line-height:1.45">'+esc(x.text)+'</p>':''); }});
 Afisha.cfgPast=function(x){ var t=new Date(), z=function(n){ return ("0"+n).slice(-2); }; return String(x.date||"")<t.getFullYear()+"-"+z(t.getMonth()+1)+"-"+z(t.getDate()); };
 
@@ -4713,12 +4829,17 @@ Bonus.render=function(){
     '<label class="a-row" style="gap:10px;align-items:center;margin:8px 0"><input type="checkbox" id="bnOn" '+(g.bonusOn?'checked':'')+'><b>Bonus tizimi yoqilgan</b></label>'+
     '<div class="a-row" style="gap:10px;flex-wrap:wrap"><label class="fld" style="flex:1;min-width:140px;max-width:none"><span>Bonus foizi (%)</span><input id="bnPct" type="number" min="0" max="50" step="1" value="'+(g.bonusPct!=null?g.bonusPct:5)+'"></label>'+
     '<label class="fld" style="flex:1;min-width:140px;max-width:none"><span>Taklif bonusi (so\'m)</span><input id="bnRef" type="number" min="0" step="1000" value="'+(g.refBonus!=null?g.refBonus:20000)+'"></label></div>'+
+    '<h3 style="margin:18px 0 6px">✈️ UNO Miles darajalari</h3><p class="help" style="margin:0 0 8px">Mehmon necha marta kelganiga (chekdan bonus yozilgan tashriflar) qarab darajasi oshadi va bonus foizi ko\'payadi. Yuqoridagi foiz Economy uchun.</p>'+
+    '<div class="a-row" style="gap:10px;flex-wrap:wrap"><label class="fld" style="flex:1;min-width:120px;max-width:none"><span>Business: tashriflar</span><input id="bnTB" type="number" min="1" value="'+(g.tierB||5)+'"></label><label class="fld" style="flex:1;min-width:120px;max-width:none"><span>Business: foiz (%)</span><input id="bnPB" type="number" min="0" max="50" value="'+(g.pctB!=null?g.pctB:7)+'"></label></div>'+
+    '<div class="a-row" style="gap:10px;flex-wrap:wrap;margin-top:8px"><label class="fld" style="flex:1;min-width:120px;max-width:none"><span>First Class: tashriflar</span><input id="bnTF" type="number" min="1" value="'+(g.tierF||15)+'"></label><label class="fld" style="flex:1;min-width:120px;max-width:none"><span>First Class: foiz (%)</span><input id="bnPF" type="number" min="0" max="50" value="'+(g.pctF!=null?g.pctF:10)+'"></label></div>'+
     '<button class="btn gold" data-bn="save" style="margin-top:10px">Saqlash</button>'+
+    '<h3 style="margin:22px 0 6px">🧾 Kassir uchun sahifa</h3><p class="help" style="margin:0 0 8px">Kassir admin panelga kirmaydi: kassadagi telefon yoki kompyuterda <b>'+esc(location.origin+location.pathname)+'#kassa</b> sahifasini ochib, PIN-kod bilan kiradi. U yerda faqat bonus va sertifikat bilan ishlash mumkin.</p>'+
+    '<div class="a-row" style="gap:10px;align-items:flex-end;flex-wrap:wrap"><label class="fld" style="flex:1;min-width:140px;max-width:none"><span>Yangi PIN-kod (4–8 raqam)</span><input id="bnPin" type="password" inputmode="numeric" maxlength="8" autocomplete="new-password"></label><button class="btn" data-bn="pin">PIN-kodni saqlash</button><a class="btn" href="#kassa">Kassani ochish</a></div>'+
     '<h3 style="margin:22px 0 8px">Kassa</h3><div class="a-row" style="gap:10px;flex-wrap:wrap"><label class="fld" style="flex:1;min-width:150px;max-width:none"><span>Mehmon telefoni</span><input id="bnPhone" type="tel" inputmode="tel" placeholder="+998 91 123 45 67"></label>'+
     '<label class="fld" style="flex:1;min-width:150px;max-width:none"><span>Summa (so\'m)</span><input id="bnSum" type="number" min="0" step="1000" placeholder="Chek summasi yoki ishlatiladigan bonus"></label></div>'+
     '<div class="a-row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn gold" data-bn="earn">➕ Chekdan bonus yozish</button><button class="btn" data-bn="spend">➖ Bonusdan to\'lash</button><button class="btn" data-bn="look">🔍 Balansni ko\'rish</button></div>'+
     (Bonus.msg?'<div class="msg ok">'+Bonus.msg+'</div>':'')+(Bonus.err?gxSqlMsg(Bonus.err):'');
-  if(Bonus.look) h+='<div class="drow" style="margin-top:12px"><div class="mid"><b>'+esc(Bonus.look.phone)+'</b><small style="display:block">Balans: <b style="color:var(--gold)">'+fmtL(Bonus.look.balance)+'</b></small>'+
+  if(Bonus.look) h+='<div class="drow" style="margin-top:12px"><div class="mid"><b>'+esc(Bonus.look.phone)+'</b><small style="display:block">Balans: <b style="color:var(--gold)">'+fmtL(Bonus.look.balance)+'</b> · '+({economy:"Economy",business:"Business",first:"First Class"}[Bonus.look.tier]||"Economy")+' · '+(Bonus.look.visits||0)+' tashrif</small>'+
     (Bonus.lookTx&&Bonus.lookTx.length?'<p style="margin:6px 0 0;font-size:13px;line-height:1.6">'+Bonus.lookTx.map(function(t){ return rvDate(t.created_at)+' · '+(t.kind==="spend"?"ishlatildi":t.kind==="ref"?"taklif":"yig'ildi")+' <b>'+(t.amount>0?'+':'')+fmtL(t.amount)+'</b>'+(t.check_sum?' (chek '+fmtL(t.check_sum)+')':''); }).join("<br>")+'</p>':'')+'</div></div>';
   Bonus.el.innerHTML=h;
 };
@@ -4727,7 +4848,10 @@ Bonus.click=async function(e){
   var keep={p:($("bnPhone")||{}).value||"", s:($("bnSum")||{}).value||""};
   Bonus.busy=true;
   try{
-    if(a==="save"){ await gxSaveGrow({bonusOn:$("bnOn").checked, bonusPct:Math.max(0,Math.min(50,Math.round(+$("bnPct").value||0))), refBonus:Math.max(0,Math.round(+$("bnRef").value||0))}); Bonus.msg="Saqlandi."; }
+    if(a==="save"){ var cl=function(id,mx,df){ var v=Math.round(+$(id).value); return isFinite(v)?Math.max(0,Math.min(mx,v)):df; };
+      var tb=Math.max(1,cl("bnTB",999,5)), tf=Math.max(tb+1,cl("bnTF",999,15));
+      await gxSaveGrow({bonusOn:$("bnOn").checked, bonusPct:cl("bnPct",50,5), refBonus:cl("bnRef",100000000,20000), tierB:tb, pctB:cl("bnPB",50,7), tierF:tf, pctF:cl("bnPF",50,10)}); Bonus.msg="Saqlandi."; }
+    else if(a==="pin"){ var pn=($("bnPin")||{}).value||""; if(!/^\d{4,8}$/.test(pn)) throw new Error("PIN-kod 4–8 ta raqamdan iborat bo'lsin."); var rp=await S.sb.rpc("uno_cashier_set_pin",{p_pin:pn}); if(rp.error) throw rp.error; Bonus.msg="Kassa PIN-kodi saqlandi. Kassirga faqat PIN-kodni ayting."; }
     else {
       var ph=keep.p.replace(/\D/g,"").slice(-9), sum=Math.round(+keep.s||0);
       if(ph.length<9) throw new Error("Telefon raqamini to'liq kiriting.");
@@ -4735,12 +4859,11 @@ Bonus.click=async function(e){
         if(sum<=0) throw new Error("Summani kiriting.");
         var r=await S.sb.rpc(a==="earn"?"uno_bonus_earn":"uno_bonus_spend",a==="earn"?{p_phone:ph,p_sum:sum}:{p_phone:ph,p_amount:sum});
         if(r.error){ if(/not_enough/.test(r.error.message||"")) throw new Error("Bonus yetarli emas."); if(/function.*does not exist|Could not find/i.test(r.error.message||"")) throw r.error; throw r.error; }
-        Bonus.msg=a==="earn"?('Yozildi: <b>+'+fmtL(r.data.amount)+'</b> ('+r.data.pct+'%). Yangi balans: <b>'+fmtL(r.data.balance)+'</b>'+(r.data.ref&&r.data.ref_bonus?'. Taklif qilgan do\'stga ham '+fmtL(r.data.ref_bonus)+' yozildi.':'')):('Ishlatildi: <b>−'+fmtL(sum)+'</b>. Qoldiq: <b>'+fmtL(r.data.balance)+'</b>');
+        Bonus.msg=a==="earn"?('Yozildi: <b>+'+fmtL(r.data.amount)+'</b> ('+r.data.pct+'%). Yangi balans: <b>'+fmtL(r.data.balance)+'</b>'+(r.data.up?'. 🎉 Mehmon yangi darajaga chiqdi: <b>'+({business:"Business",first:"First Class"}[r.data.tier]||r.data.tier)+'</b>':'')+(r.data.ref&&r.data.ref_bonus?'. Taklif qilgan do\'stga ham '+fmtL(r.data.ref_bonus)+' yozildi.':'')):('Ishlatildi: <b>−'+fmtL(sum)+'</b>. Qoldiq: <b>'+fmtL(r.data.balance)+'</b>');
         keep.s="";
       }
-      var q=await S.sb.from("uno_bonus").select("*").eq("phone",ph).maybeSingle(); if(q.error) throw q.error;
-      var t=await S.sb.from("uno_bonus_tx").select("*").eq("phone",ph).order("created_at",{ascending:false}).limit(10);
-      Bonus.look={phone:ph, balance:(q.data&&q.data.balance)||0}; Bonus.lookTx=t.data||[];
+      var q=await S.sb.rpc("uno_bonus_admin_info",{p_phone:ph}); if(q.error) throw q.error;
+      Bonus.look={phone:ph, balance:q.data.balance||0, tier:q.data.tier, visits:q.data.visits}; Bonus.lookTx=(q.data.tx||[]).map(function(t){ return {created_at:t.at, kind:t.kind, amount:t.amount, check_sum:t.check_sum}; });
     }
   }catch(err){ Bonus.err=gxErr(err); }
   Bonus.busy=false; Bonus.render(); if($("bnPhone")) $("bnPhone").value=keep.p; if($("bnSum")) $("bnSum").value=keep.s;
@@ -4797,7 +4920,9 @@ Fb.click=async function(e){
 var Stat={el:null, rows:null, err:"", days:7};
 Stat.mount=function(){ gxMount(Stat,"statSlot"); };
 Stat.load=async function(){ var d=new Date(Date.now()-(Stat.days-1)*864e5), z=function(n){ return ("0"+n).slice(-2); }; var from=d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate());
-  var r=await S.sb.from("uno_stats").select("dish,views,opens,day").gte("day",from).limit(20000); if(r.error){ Stat.err=gxErr(r.error); Stat.rows=[]; } else { Stat.err=""; Stat.rows=r.data||[]; } Stat.render(); };
+  var r=await S.sb.from("uno_stats").select("dish,views,opens,day").gte("day",from).limit(20000); if(r.error){ Stat.err=gxErr(r.error); Stat.rows=[]; } else { Stat.err=""; Stat.rows=r.data||[]; }
+  try{ var bk=await S.sb.from("uno_bookings").select("source").gte("created_at",from+"T00:00:00").limit(5000); if(!bk.error){ var c={}; (bk.data||[]).forEach(function(x){ var k=String(x.source||"—").replace(/^(Sayt \(telefon\)|Android ilovasi) · /,""); c[k]=(c[k]||0)+1; }); Stat.bk=Object.keys(c).map(function(k){ return [k==="ios"?"iPhone ilovasi":k,c[k]]; }).sort(function(a,b){ return b[1]-a[1]; }).slice(0,8); } }catch(_){}
+  Stat.render(); };
 Stat.render=function(){
   if(!Stat.el) return;
   var h='<h2>Statistika</h2><p class="help">Qaysi taomlarni mehmonlar ko\'proq ko\'radi va ochadi. <b>Ko\'rildi</b>: taom menyuda o\'rtada 2 soniyadan ko\'p turdi. <b>Ochildi</b>: batafsil oynasi ochildi. Ko\'p ko\'rilib, kam buyurtma qilinayotgan taomning narxi yoki surati haqida o\'ylab ko\'ring. Eng ko\'p ko\'rilganlarini Instagram\'da reklama qiling.</p>'+
@@ -4809,11 +4934,184 @@ Stat.render=function(){
   var max=list.length?Math.max(1,list[0].v):1, tv=list.reduce(function(s,x){ return s+x.v; },0), to=list.reduce(function(s,x){ return s+x.o; },0);
   h+='<div class="help">Jami: <b style="color:var(--text)">'+tv+'</b> ko\'rish · <b style="color:var(--text)">'+to+'</b> ochish</div>';
   if(!list.length) h+='<div class="msg" style="margin-top:10px">Hozircha ma\'lumot yo\'q. Mehmonlar menyuni ko\'rgan sari shu yerda paydo bo\'ladi.</div>';
+  var srcs=Object.keys(agg).filter(function(k){ return /^src:/.test(k); }).map(function(k){ return {s:k.slice(4), v:agg[k].v}; }).sort(function(a,b){ return b.v-a.v; });
+  var SN={instagram:"Instagram",google:"Google",telegram:"Telegram",qr:"Stol QR-kodi",app:"Android ilova",direct:"To'g'ridan-to'g'ri",tiktok:"TikTok","2gis":"2GIS",facebook:"Facebook",yandex:"Yandex"};
+  h+='<h3 style="margin:22px 0 6px">🧭 Mehmonlar qayerdan kirdi</h3>';
+  if(!srcs.length) h+='<div class="help">Hozircha ma\'lumot yo\'q.</div>';
+  var smax=srcs.length?Math.max(1,srcs[0].v):1;
+  srcs.forEach(function(x){ h+='<div style="margin-top:8px"><div style="display:flex;justify-content:space-between;font-size:14px"><span>'+esc(SN[x.s]||x.s)+'</span><span style="color:var(--muted)">'+x.v+'</span></div><div style="height:8px;border-radius:4px;background:rgba(255,255,255,.08);margin-top:4px;overflow:hidden"><i style="display:block;height:100%;width:'+Math.round(100*x.v/smax)+'%;background:linear-gradient(90deg,#4B8BE8,#7AB8FF)"></i></div></div>'; });
+  if(Stat.bk) h+='<div class="help" style="margin-top:10px">Bronlar manbasi: '+Stat.bk.map(function(b){ return esc(b[0])+' — <b style="color:var(--text)">'+b[1]+'</b>'; }).join(" · ")+'</div>';
+  var base=location.origin+location.pathname;
+  h+='<h3 style="margin:22px 0 6px">🔗 Tayyor havolalar</h3><p class="help" style="margin:0 0 6px">Har joyga o\'z havolasini qo\'ying, shunda qaysi biri ko\'proq mehmon olib kelayotgani shu yerda ko\'rinadi.</p>'+
+    [["Instagram (bio, stories)","instagram"],["Google Maps / Biznes profil","google"],["2GIS","2gis"],["TikTok","tiktok"],["Telegram kanal","tgkanal"],["Reklama banner / flayer","flayer"]].map(function(l){ var u=base+"?src="+l[1]; return '<div class="drow" style="margin-top:6px"><div class="mid"><b>'+l[0]+'</b><small style="display:block;word-break:break-all">'+esc(u)+'</small></div><div class="acts"><button class="btn sm" data-st="copy" data-u="'+esc(u)+'">Nusxa</button></div></div>'; }).join("");
+  h+='<h3 style="margin:22px 0 6px">📊 Haftalik hisobot</h3><p class="help" style="margin:0 0 8px">Har dushanba soat 09:00 da Telegram guruhga avtomatik keladi: bronlar, banket arizalari, baholar, bonuslar, top taomlar va mehmonlar qayerdan kirgani.</p><button class="btn" data-st="report">Hozir yuborish</button>'+(Stat.msg?'<div class="msg ok">'+esc(Stat.msg)+'</div>':'');
   list.slice(0,30).forEach(function(x,i){ h+='<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;gap:10px;font-size:14px"><span><b>'+(i+1)+'.</b> '+esc(x.name)+'</span><span style="color:var(--muted);white-space:nowrap">👁 '+x.v+' · 📖 '+x.o+'</span></div><div style="height:8px;border-radius:4px;background:rgba(255,255,255,.08);margin-top:4px;overflow:hidden"><i style="display:block;height:100%;width:'+Math.round(100*x.v/max)+'%;background:linear-gradient(90deg,#E8B04B,#FFD27A)"></i></div></div>'; });
   Stat.el.innerHTML=h;
 };
-Stat.click=function(e){ var b=e.target.closest("[data-st]"); if(!b) return; Stat.days=+b.dataset.st; Stat.rows=null; Stat.render(); Stat.load(); };
-var GROW_MODS=[Halls,Afisha,Bonus,Bday,Fb,Stat];
+Stat.click=async function(e){ var b=e.target.closest("[data-st]"); if(!b) return;
+  if(b.dataset.st==="copy"){ try{ await navigator.clipboard.writeText(b.dataset.u); b.textContent="✓"; }catch(_){ prompt("Havola:",b.dataset.u); } return; }
+  if(b.dataset.st==="report"){ var r=await S.sb.rpc("uno_weekly_report_now"); Stat.msg=r.error?("Xato: "+(r.error.message||r.error)):"Hisobot Telegram guruhga yuborildi."; Stat.render(); return; }
+  Stat.days=+b.dataset.st; Stat.rows=null; Stat.render(); Stat.load(); };
+/* ================= Kassa: the cashier's page (…/#kassa). A PIN set by the admin; only bonus and gift certificates ================= */
+var KS={el:null, pin:"", tab:"bonus", info:null, gift:null, msg:null, busy:false};
+function ksErr(e){ var m=String((e&&(e.message||e.msg))||e||"");
+  if(/bad_pin/.test(m)) return "PIN-kod noto'g'ri."; if(/locked/.test(m)) return "Juda ko'p xato urinish. 10 daqiqadan keyin qayta urinib ko'ring.";
+  if(/no_pin/.test(m)) return "Admin hali kassa PIN-kodini o'rnatmagan (Admin panel → Bonus)."; if(/not_enough/.test(m)) return "Mablag' yetarli emas.";
+  if(/no_gift/.test(m)) return "Bunday sertifikat topilmadi."; if(/expired/.test(m)) return "Sertifikat muddati tugagan."; if(/bad_phone/.test(m)) return "Telefon raqamini to'liq kiriting.";
+  if(/bad_sum/.test(m)) return "Summani kiriting."; if(/Could not find the function|does not exist|schema cache/i.test(m)) return "Bazani tayyorlang: growth.sql faylini Supabase'da ishga tushiring.";
+  return m||"Xatolik. Qayta urinib ko'ring."; }
+function ksFmt(n){ return String(Math.round(+n||0)).replace(/\B(?=(\d{3})+(?!\d))/g," ")+" so'm"; }
+async function ksCall(action, args){ var r=await sbRpc("uno_kassa", Object.assign({p_pin:KS.pin, p_action:action}, args||{})); if(r.error) throw r.error; return r.data; }
+function ksOpen(){
+  if(KS.el) return; var el=document.createElement("div"); el.className="kassa"; document.body.appendChild(el); KS.el=el;
+  el.addEventListener("click",ksClick); el.addEventListener("keydown",function(e){ if(e.key==="Enter"){ var b=el.querySelector("[data-ks].dflt"); if(b) b.click(); } });
+  try{ KS.pin=sessionStorage.getItem("uno_kassa_pin")||""; }catch(_){} ksRender();
+}
+function ksClose(){ if(KS.el){ KS.el.remove(); KS.el=null; } }
+function ksRender(){
+  if(!KS.el) return; var h='<div class="kwrap"><div class="khead"><b>✈️ UNO Kassa</b><button type="button" data-ks="exit">✕</button></div>';
+  if(!KS.pin){
+    h+='<div class="kcard" style="text-align:center"><p>Kassir PIN-kodini kiriting</p><input id="ksPin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" style="text-align:center;font-size:26px;letter-spacing:8px"><button class="kbtn dflt" type="button" data-ks="login">Kirish</button></div>';
+  } else {
+    h+='<div class="ktabs"><button type="button" data-ks="tab" data-v="bonus" class="'+(KS.tab==="bonus"?"on":"")+'">💳 Bonus</button><button type="button" data-ks="tab" data-v="gift" class="'+(KS.tab==="gift"?"on":"")+'">🎁 Sertifikat</button></div>';
+    if(KS.tab==="bonus"){
+      h+='<div class="kcard"><label>Mehmon telefoni<input id="ksPhone" type="tel" inputmode="tel" placeholder="+998 91 123 45 67"></label><button class="kbtn ghost dflt" type="button" data-ks="info">🔍 Balansni ko\'rish</button></div>';
+      if(KS.info){ var i=KS.info; h+='<div class="kcard"><div class="krow"><span>Telefon</span><b>…'+esc(i.phone)+'</b></div><div class="krow"><span>Balans</span><b class="kgold">'+ksFmt(i.balance)+'</b></div><div class="krow"><span>Daraja</span><b>'+({economy:"Economy",business:"Business",first:"First Class"}[i.tier]||i.tier)+' · '+i.visits+' tashrif</b></div></div>'; }
+      h+='<div class="kcard"><label>Summa (so\'m)<input id="ksSum" type="number" inputmode="numeric" min="0" step="1000" placeholder="Chek summasi yoki ishlatiladigan bonus"></label>'+
+        '<button class="kbtn" type="button" data-ks="earn">➕ Chekdan bonus yozish</button><button class="kbtn ghost" type="button" data-ks="spend">➖ Bonusdan to\'lash</button></div>';
+    } else {
+      h+='<div class="kcard"><label>Sertifikat kodi<input id="ksCode" autocapitalize="characters" placeholder="UNO-XXXX-XXXX"></label><button class="kbtn ghost dflt" type="button" data-ks="gift">🔍 Tekshirish</button></div>';
+      if(KS.gift){ var g=KS.gift; h+=g.ok?'<div class="kcard"><div class="krow"><span>Kod</span><b>'+esc(g.code)+'</b></div>'+(g.name?'<div class="krow"><span>Kimga</span><b>'+esc(g.name)+'</b></div>':'')+'<div class="krow"><span>Qoldiq</span><b class="kgold">'+ksFmt(g.balance)+' / '+ksFmt(g.amount)+'</b></div><div class="krow"><span>Muddati</span><b style="color:'+(g.expired?'#ff9a8a':'inherit')+'">'+esc(String(g.expires||"").split("-").reverse().join("."))+(g.expired?' (tugagan)':'')+'</b></div></div>':'<div class="kmsg err">Bunday sertifikat topilmadi.</div>'; }
+      h+='<div class="kcard"><label>Yechiladigan summa (so\'m)<input id="ksGSum" type="number" inputmode="numeric" min="0" step="1000"></label><button class="kbtn" type="button" data-ks="redeem">🎁 Sertifikatdan yechish</button></div>';
+    }
+    h+='<button type="button" class="klink" data-ks="logout">Chiqish (PIN-kodni unutish)</button>';
+  }
+  if(KS.msg) h+='<div class="kmsg '+KS.msg[0]+'">'+KS.msg[1]+'</div>';
+  KS.el.innerHTML=h+'</div>';
+}
+async function ksClick(e){
+  var b=e.target.closest("[data-ks]"); if(!b||KS.busy) return; var a=b.dataset.ks;
+  if(a==="exit"){ location.hash="#menyu"; return; }
+  if(a==="tab"){ KS.tab=b.dataset.v; KS.msg=null; ksRender(); return; }
+  if(a==="logout"){ KS.pin=""; try{ sessionStorage.removeItem("uno_kassa_pin"); }catch(_){} KS.info=KS.gift=KS.msg=null; ksRender(); return; }
+  var keep={}; KS.el.querySelectorAll("input").forEach(function(i){ keep[i.id]=i.value; });
+  KS.busy=true; KS.msg=null; b.disabled=true;
+  try{
+    if(a==="login"){ KS.pin=String(keep.ksPin||""); await ksCall("login"); try{ sessionStorage.setItem("uno_kassa_pin",KS.pin); }catch(_){} keep={}; }
+    var ph=String(keep.ksPhone||""), sum=Math.round(+keep.ksSum||0), code=String(keep.ksCode||""), gs=Math.round(+keep.ksGSum||0);
+    if(a==="info"){ KS.info=await ksCall("info",{p_phone:ph}); }
+    if(a==="earn"){ var r=await ksCall("earn",{p_phone:ph,p_sum:sum}); KS.msg=["ok","Bonus yozildi: <b>+"+ksFmt(r.amount)+"</b> ("+r.pct+"%). Balans: <b>"+ksFmt(r.balance)+"</b>"+(r.up?"<br>🎉 Mehmon yangi darajaga chiqdi: <b>"+({business:"Business",first:"First Class"}[r.tier]||r.tier)+"</b>":"")+(r.ref&&r.ref_bonus?"<br>Taklif qilgan do'stga ham "+ksFmt(r.ref_bonus)+" yozildi.":"")]; KS.info=await ksCall("info",{p_phone:ph}); keep.ksSum=""; }
+    if(a==="spend"){ var r2=await ksCall("spend",{p_phone:ph,p_sum:sum}); KS.msg=["ok","Bonusdan to'landi: <b>−"+ksFmt(sum)+"</b>. Qoldiq: <b>"+ksFmt(r2.balance)+"</b>"]; KS.info=await ksCall("info",{p_phone:ph}); keep.ksSum=""; }
+    if(a==="gift"){ KS.gift=await ksCall("gift",{p_code:code}); }
+    if(a==="redeem"){ var r3=await ksCall("redeem",{p_code:code,p_sum:gs}); KS.msg=["ok","Sertifikatdan yechildi: <b>−"+ksFmt(gs)+"</b>. Qoldiq: <b>"+ksFmt(r3.balance)+"</b>"]; KS.gift=await ksCall("gift",{p_code:code}); keep.ksGSum=""; }
+  }catch(err){ KS.msg=["err",esc(ksErr(err))]; if(a==="login"){ KS.pin=""; } }
+  KS.busy=false; ksRender(); Object.keys(keep).forEach(function(k){ var i=$(k); if(i) i.value=keep[k]; });
+}
+function ksSync(){ if((location.hash||"").replace("#","")==="kassa") ksOpen(); else ksClose(); }
+window.addEventListener("hashchange",ksSync); setTimeout(ksSync,0);
+/* ---- canvas pictures: Instagram story for an event, a boarding-pass gift certificate ---- */
+function gxImg(src){ return new Promise(function(res){ if(!src){ res(null); return; } var im=new Image(); im.crossOrigin="anonymous"; im.onload=function(){ res(im); }; im.onerror=function(){ res(null); }; im.src=src; setTimeout(function(){ res(null); },8000); }); }
+function gxWrap(x, text, maxW){ var w=String(text||"").split(/\s+/), lines=[], cur=""; w.forEach(function(t){ var n=cur?cur+" "+t:t; if(x.measureText(n).width>maxW && cur){ lines.push(cur); cur=t; } else cur=n; }); if(cur) lines.push(cur); return lines; }
+function gxCover(x, im, X, Y, W, H){ var r=Math.max(W/im.naturalWidth, H/im.naturalHeight), w=im.naturalWidth*r, h=im.naturalHeight*r; x.drawImage(im, X+(W-w)/2, Y+(H-h)/2, w, h); }
+async function gxSaveCanvas(c, name){
+  var blobP=new Promise(function(res){ try{ c.toBlob(function(b){ res(b); },"image/png"); }catch(_){ res(null); } }); var b=await blobP;
+  if(!b){ alert("Rasmni saqlab bo'lmadi."); return; }
+  if(window.UnoKiosk && UnoKiosk.saveFile){ var fr=new FileReader(); fr.onload=function(){ try{ var r=UnoKiosk.saveFile(name, String(fr.result).split(",")[1], "image/png"); alert(r&&String(r).indexOf("err")<0?"Rasm saqlandi: Yuklanmalar (Download) papkasida.":"Saqlab bo'lmadi."); }catch(_){ alert("Saqlab bo'lmadi."); } }; fr.readAsDataURL(b); return; }
+  try{ var f=new File([b], name, {type:"image/png"}); if(navigator.canShare && navigator.canShare({files:[f]})){ await navigator.share({files:[f]}); return; } }catch(_){}
+  var a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1500);
+}
+async function gxStory(ev){
+  var c=document.createElement("canvas"); c.width=1080; c.height=1920; var x=c.getContext("2d");
+  var bg=x.createLinearGradient(0,0,0,1920); bg.addColorStop(0,"#0f1b3d"); bg.addColorStop(1,"#04060d"); x.fillStyle=bg; x.fillRect(0,0,1080,1920);
+  var ph=await gxImg(ev.imgId?blob(ev.imgId):""); var photoH=ph?1100:0;
+  if(ph){ x.save(); gxCover(x,ph,0,0,1080,photoH); x.restore(); var fd=x.createLinearGradient(0,photoH-420,0,photoH); fd.addColorStop(0,"rgba(4,6,13,0)"); fd.addColorStop(1,"rgba(4,6,13,1)"); x.fillStyle=fd; x.fillRect(0,photoH-420,1080,420); }
+  else { x.strokeStyle="rgba(232,176,75,.25)"; x.lineWidth=3; x.setLineDash([18,16]); for(var i=0;i<5;i++){ x.beginPath(); x.arc(540,560,180+i*90,Math.PI*1.05,Math.PI*1.95); x.stroke(); } x.setLineDash([]); x.font="200px serif"; x.textAlign="center"; x.fillStyle="rgba(255,210,122,.9)"; x.fillText("✈",540,640); }
+  var logo=await gxImg(S.settings&&S.settings.logoId?blob(S.settings.logoId):"icons/menu-512.png");
+  if(logo){ x.save(); x.beginPath(); x.arc(130,130,70,0,Math.PI*2); x.closePath(); x.clip(); x.drawImage(logo,60,60,140,140); x.restore(); }
+  x.textAlign="left"; x.fillStyle="#FFD27A"; x.font="700 34px ui-monospace,monospace"; x.fillText("UNO AIRWAYS RESTAURANTE",220,145);
+  var y=Math.max(photoH-60, 820);
+  x.fillStyle="#E8B04B"; x.font="800 44px system-ui,-apple-system,Segoe UI,Roboto,sans-serif"; x.fillText("A F I S H A",80,y); y+=90;
+  var d=""; try{ d=uzDate(new Date(ev.date+"T"+(ev.time||"12:00")), true); d=d.charAt(0).toUpperCase()+d.slice(1); }catch(_){ d=ev.date; }
+  x.fillStyle="#fff"; x.font="700 52px system-ui,-apple-system,Segoe UI,Roboto,sans-serif"; x.fillText(d+(ev.time?" · "+ev.time:""),80,y); y+=110;
+  x.font="900 96px system-ui,-apple-system,Segoe UI,Roboto,sans-serif"; gxWrap(x, ev.title||"", 920).slice(0,3).forEach(function(l){ x.fillText(l,80,y); y+=108; });
+  if(ev.text){ y+=10; x.fillStyle="rgba(255,255,255,.82)"; x.font="500 46px system-ui,-apple-system,Segoe UI,Roboto,sans-serif"; gxWrap(x, ev.text, 920).slice(0,4).forEach(function(l){ x.fillText(l,80,y); y+=62; }); }
+  x.fillStyle="rgba(255,201,77,.12)"; x.strokeStyle="rgba(255,201,77,.55)"; x.lineWidth=3; var by=1680; x.beginPath(); if(x.roundRect) x.roundRect(80,by,920,150,40); else x.rect(80,by,920,150); x.fill(); x.stroke();
+  x.fillStyle="#FFD27A"; x.textAlign="center"; x.font="800 50px system-ui,-apple-system,Segoe UI,Roboto,sans-serif"; x.fillText("Stol bron: +998 91 881 69 79",540,by+72);
+  x.fillStyle="rgba(255,255,255,.7)"; x.font="500 34px system-ui,-apple-system,Segoe UI,Roboto,sans-serif"; x.fillText("Farg'ona sh., S. Temur 30 · ilovada bron qiling",540,by+122);
+  await gxSaveCanvas(c, "uno-afisha-"+(ev.date||"")+".png");
+}
+async function gxGiftCard(g){
+  var c=document.createElement("canvas"); c.width=1600; c.height=820; var x=c.getContext("2d"), F="system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+  var bg=x.createLinearGradient(0,0,1600,820); bg.addColorStop(0,"#1b2a5a"); bg.addColorStop(1,"#070b18"); x.fillStyle=bg; if(x.roundRect){ x.beginPath(); x.roundRect(0,0,1600,820,48); x.fill(); } else x.fillRect(0,0,1600,820);
+  x.fillStyle="#E8B04B"; x.fillRect(0,0,1600,120); x.fillStyle="#1A1306"; x.font="800 46px "+F; x.textAlign="left"; x.fillText("✈  UNO AIRWAYS",60,78); x.textAlign="right"; x.font="700 34px ui-monospace,monospace"; x.fillText("BOARDING PASS · SOVG'A SERTIFIKATI",1540,76);
+  x.setLineDash([16,14]); x.strokeStyle="rgba(255,255,255,.35)"; x.lineWidth=4; x.beginPath(); x.moveTo(1180,150); x.lineTo(1180,790); x.stroke(); x.setLineDash([]);
+  x.fillStyle="#070b18"; [[1180,120],[1180,820]].forEach(function(p){ x.beginPath(); x.arc(p[0],p[1],34,0,Math.PI*2); x.fill(); });
+  var lab=function(t,X,Y){ x.textAlign="left"; x.fillStyle="rgba(255,255,255,.55)"; x.font="700 26px ui-monospace,monospace"; x.fillText(t,X,Y); };
+  var val=function(t,X,Y,sz,col){ x.textAlign="left"; x.fillStyle=col||"#fff"; x.font="800 "+sz+"px "+F; x.fillText(t,X,Y); };
+  lab("PASSENGER / KIMGA",70,210); val(String(g.name||"Aziz mehmon").toUpperCase().slice(0,26),70,275,58);
+  lab("AMOUNT / SUMMA",70,370); val(String(Math.round(g.amount)).replace(/\B(?=(\d{3})+(?!\d))/g," ")+" so'm",70,460,96,"#FFD27A");
+  lab("VALID UNTIL",70,560); val(String(g.expires||"").slice(0,10).split("-").reverse().join("."),70,620,50);
+  lab("FROM",520,560); val("FERGANA",520,620,50); lab("TO",820,560); val("UNO ✈",820,620,50);
+  x.fillStyle="rgba(255,255,255,.75)"; x.font="500 28px "+F; x.fillText("Kassada ko'rsating · +998 91 881 69 79 · S. Temur 30",70,730);
+  var code=String(g.code||""), pretty=code.length===11?code.slice(0,3)+"-"+code.slice(3,7)+"-"+code.slice(7):code;
+  lab("CODE",1230,210); x.save(); x.translate(1230,250); x.fillStyle="#fff"; x.font="800 44px ui-monospace,monospace"; x.fillText(pretty,0,30); x.restore();
+  for(var i=0;i<60;i++){ var w=(i*7919%5)+2; x.fillStyle="rgba(255,255,255,.85)"; if(i%3) x.fillRect(1230+i*5.4,330,w*0.9,260); }
+  x.fillStyle="#E8B04B"; x.font="800 40px "+F; x.fillText("GATE  UNO",1230,680); x.fillStyle="rgba(255,255,255,.6)"; x.font="700 28px ui-monospace,monospace"; x.fillText("SEAT  1A",1230,730);
+  await gxSaveCanvas(c, "uno-sertifikat-"+code+".png");
+}
+
+/* ---- gift certificates ---- */
+var Gifts={el:null, rows:null, err:"", msg:"", busy:false, last:null};
+Gifts.mount=function(){ gxMount(Gifts,"giftSlot"); };
+Gifts.load=async function(){ var r=await S.sb.from("uno_gifts").select("*").order("created_at",{ascending:false}).limit(300); if(r.error){ Gifts.err=gxErr(r.error); Gifts.rows=[]; } else { Gifts.err=""; Gifts.rows=r.data||[]; } Gifts.render(); };
+Gifts.render=function(){
+  if(!Gifts.el) return; var g=gxGrow();
+  var h='<h2>Sovg\'a sertifikatlari</h2><p class="help">"Boarding pass" ko\'rinishidagi sovg\'a sertifikati. Summa va kimga ekanini kiriting, <b>Yaratish</b>ni bosing. Tayyor rasmni yuklab olib mijozga yuboring yoki chop eting. Kassada kod bo\'yicha ishlatiladi (Kassa sahifasi yoki pastdagi forma). Yoqilgan bo\'lsa, mehmon ilovaning «Profil» bo\'limida sertifikat qoldig\'ini tekshira oladi.</p>'+
+    '<label class="a-row" style="gap:10px;align-items:center;margin:8px 0"><input type="checkbox" id="gfOn" '+(g.giftOn?'checked':'')+'><b>Mehmon ilovada sertifikatni tekshira oladi</b></label><button class="btn" data-gf="saveon">Saqlash</button>'+
+    '<h3 style="margin:20px 0 8px">Yangi sertifikat</h3><div class="a-row" style="gap:10px;flex-wrap:wrap"><label class="fld" style="flex:1;min-width:140px;max-width:none"><span>Summa (so\'m)</span><input id="gfAmt" type="number" min="1000" step="10000" placeholder="500000"></label>'+
+    '<label class="fld" style="flex:1;min-width:140px;max-width:none"><span>Amal qilish muddati (oy)</span><input id="gfMon" type="number" min="1" max="36" value="12"></label></div>'+
+    '<div class="a-row" style="gap:10px;flex-wrap:wrap;margin-top:8px"><label class="fld" style="flex:1;min-width:140px;max-width:none"><span>Kimga (ism)</span><input id="gfName" maxlength="40" placeholder="Masalan: Dilnoza"></label><label class="fld" style="flex:1;min-width:140px;max-width:none"><span>Xaridor telefoni (ixtiyoriy)</span><input id="gfPhone" type="tel"></label></div>'+
+    '<button class="btn gold" data-gf="create" style="margin-top:10px">'+(Gifts.busy?'Yaratilmoqda…':'🎁 Yaratish')+'</button>'+
+    '<h3 style="margin:20px 0 8px">Ishlatish (kassa)</h3><div class="a-row" style="gap:10px;flex-wrap:wrap"><label class="fld" style="flex:1;min-width:140px;max-width:none"><span>Kod</span><input id="gfCode" placeholder="UNO-XXXX-XXXX"></label><label class="fld" style="flex:1;min-width:140px;max-width:none"><span>Summa (so\'m)</span><input id="gfUse" type="number" min="0" step="1000"></label></div>'+
+    '<button class="btn" data-gf="redeem" style="margin-top:10px">Sertifikatdan yechish</button>'+
+    (Gifts.msg?'<div class="msg ok">'+Gifts.msg+'</div>':'')+(Gifts.err?gxSqlMsg(Gifts.err):'');
+  if(Gifts.rows===null){ Gifts.el.innerHTML=h+'<div class="msg">Yuklanmoqda…</div>'; return; }
+  var sold=Gifts.rows.reduce(function(s,r){ return s+(+r.amount||0); },0), left=Gifts.rows.reduce(function(s,r){ return s+(+r.balance||0); },0);
+  h+='<div class="help" style="margin-top:14px">Jami: <b style="color:var(--text)">'+Gifts.rows.length+'</b> ta · sotilgan: <b style="color:var(--text)">'+fmtL(sold)+'</b> · ishlatilmagan qoldiq: <b style="color:var(--gold)">'+fmtL(left)+'</b></div>';
+  Gifts.rows.forEach(function(r){ r.code=String(r.code||""); r.amount=+r.amount||0; r.balance=+r.balance||0; var ex=String(r.expires||"")<new Date().toISOString().slice(0,10); var pc=r.code.length===11?r.code.slice(0,3)+"-"+r.code.slice(3,7)+"-"+r.code.slice(7):r.code;
+    h+='<div class="drow" style="margin-top:8px;'+(r.balance===0||ex?'opacity:.55':'')+'"><div class="mid"><b>'+esc(pc)+' · '+fmtL(r.amount)+'</b><small style="display:block">'+(r.name?esc(r.name)+' · ':'')+'qoldiq '+fmtL(r.balance)+' · '+esc(String(r.expires||"").split("-").reverse().join("."))+' gacha'+(ex?' (tugagan)':'')+'</small></div><div class="acts"><button class="btn sm" data-gf="img" data-c="'+esc(r.code)+'">🖼 Rasm</button></div></div>'; });
+  Gifts.el.innerHTML=h;
+};
+Gifts.click=async function(e){
+  var b=e.target.closest("[data-gf]"); if(!b||Gifts.busy) return; var a=b.dataset.gf; Gifts.msg=""; Gifts.err="";
+  if(a==="img"){ var r=(Gifts.rows||[]).find(function(x){ return x.code===b.dataset.c; }); if(r) gxGiftCard(r); return; }
+  Gifts.busy=true;
+  try{
+    if(a==="saveon"){ await gxSaveGrow({giftOn:$("gfOn").checked}); Gifts.msg="Saqlandi."; }
+    if(a==="create"){ var amt=Math.round(+$("gfAmt").value||0); if(amt<1000) throw new Error("Summani kiriting (kamida 1 000 so'm).");
+      var res=await S.sb.rpc("uno_gift_create",{p_amount:amt,p_name:$("gfName").value.trim()||null,p_phone:$("gfPhone").value.trim()||null,p_note:null,p_months:Math.max(1,Math.round(+$("gfMon").value||12))}); if(res.error) throw res.error;
+      var gg={code:res.data.code, amount:amt, name:$("gfName").value.trim(), expires:String(res.data.expires).slice(0,10)};
+      Gifts.msg="Sertifikat yaratildi: <b>"+esc(gg.code.slice(0,3)+"-"+gg.code.slice(3,7)+"-"+gg.code.slice(7))+"</b>. Rasm saqlanmoqda…"; Gifts.busy=false; Gifts.render(); gxGiftCard(gg); await Gifts.load(); return; }
+    if(a==="redeem"){ var c=$("gfCode").value, u=Math.round(+$("gfUse").value||0); var rr=await S.sb.rpc("uno_gift_redeem",{p_code:c,p_amount:u}); if(rr.error) throw rr.error; Gifts.msg="Yechildi: <b>−"+fmtL(u)+"</b>. Qoldiq: <b>"+fmtL(rr.data.balance)+"</b>"; }
+  }catch(err){ Gifts.err=ksErr(err); }
+  Gifts.busy=false; await Gifts.load();
+};
+
+/* ---- Telegram Mini App ---- */
+var MiniApp={el:null, msg:"", err:""};
+MiniApp.mount=function(){ gxMount(MiniApp,"miniSlot"); };
+MiniApp.render=function(){
+  if(!MiniApp.el) return;
+  MiniApp.el.innerHTML='<h2>Mini App (Telegram)</h2><p class="help">Menyu, stol bron qilish, banket arizasi va bonuslar Telegram bot ichida ilova kabi ochiladi. Mehmon hech narsa o\'rnatmaydi. Tugma restoran botingizga (Telegram bo\'limida ulangan bot) <b>«🍽 Menyu»</b> tugmasini, bot tavsifini va qisqa matnni o\'rnatadi. Shundan keyin botni ochgan har bir mehmon pastda menyu tugmasini ko\'radi.</p>'+
+    '<button class="btn gold" data-mi="setup">🤖 Botga menyu tugmasini o\'rnatish</button>'+
+    '<p class="help" style="margin-top:12px"><b>Instagram bio</b> va reklamalarda bot havolasini bering: <code>https://t.me/BOT_NOMI</code>. Botni to\'liq ekranli ilova qilish (ixtiyoriy): @BotFather → /mybots → bot → Bot Settings → Configure Mini App → Enable → manzil: <code>https://spesmuz.github.io/uno-menu/?src=telegram</code></p>'+
+    (MiniApp.msg?'<div class="msg ok">'+MiniApp.msg+'</div>':'')+(MiniApp.err?gxSqlMsg(MiniApp.err):'');
+};
+MiniApp.click=async function(e){ var b=e.target.closest("[data-mi]"); if(!b) return; MiniApp.msg=""; MiniApp.err="";
+  try{ var r=await S.sb.rpc("uno_tg_miniapp_setup"); if(r.error) throw r.error; MiniApp.msg="Tayyor! Botni Telegram'da oching: pastda «🍽 Menyu» tugmasi paydo bo'ladi (bir necha daqiqada)."; }
+  catch(err){ var m=gxErr(err); MiniApp.err=/no_bot/.test(m)?"Avval «Telegram» bo'limida bot kalitini ulang.":m; }
+  MiniApp.render(); };
+var GROW_MODS=[Halls,Afisha,Bonus,Gifts,Bday,Fb,Stat,MiniApp];
 /* ---- admin: delivery settings + incoming delivery orders ---- */
 var Dlv={el:null, rows:null, err:"", f:"active", busy:false, msg:""};
 Dlv.ST={new:"Yangi",accepted:"Qabul qilindi",onway:"Yo'lda",done:"Yetkazildi",cancelled:"Bekor qilindi"};
@@ -5494,6 +5792,7 @@ function offlineUI(){
 }
 window.addEventListener("online",function(){ setTimeout(syncMedia,3000); });
 setInterval(syncMedia, 30*60000);
+setTimeout(function(){ try{ if(!dlvTablet() && S.view==='menu') statBump("src:"+(SRC.s||(window.UnoKiosk?"app":"direct")),"v"); }catch(_){} },4000);
 /* load the Supabase library without blocking the page; give up after a few seconds when offline */
 function loadSupabase(ms){
   return new Promise(function(done){

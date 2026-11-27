@@ -64,6 +64,18 @@ drop policy if exists uno_bonus_tx_admin on public.uno_bonus_tx;
 create policy uno_bonus_tx_admin on public.uno_bonus_tx for select using (public.uno_is_admin());
 grant select on public.uno_bonus, public.uno_bonus_tx to authenticated;
 
+-- ---------- UNO Miles: darajalar (tashriflar soniga qarab) ----------
+-- Economy: boshlang'ich; Business: tierB marta kelgandan keyin; First Class: tierF marta. Har darajaning o'z bonus foizi.
+create or replace function public.uno_miles_visits(ph text) returns int language sql stable security definer set search_path = public as $$
+  select count(*)::int from public.uno_bonus_tx where phone = ph and kind = 'earn'
+$$;
+create or replace function public.uno_miles_tier(v int) returns text language sql stable security definer set search_path = public as $$
+  select case when v >= public.uno_cfg_int('tierF', 15) then 'first' when v >= public.uno_cfg_int('tierB', 5) then 'business' else 'economy' end
+$$;
+create or replace function public.uno_miles_pct(t text) returns int language sql stable security definer set search_path = public as $$
+  select least(greatest(case t when 'first' then public.uno_cfg_int('pctF', 10) when 'business' then public.uno_cfg_int('pctB', 7) else public.uno_cfg_int('bonusPct', 5) end, 0), 50)
+$$;
+
 -- mehmon o'z balansini ko'radi: faqat shu qurilmaning profilidagi raqam bo'yicha
 create or replace function public.uno_bonus_me(p_device text)
 returns jsonb language plpgsql stable security definer set search_path = public as $$
@@ -74,27 +86,28 @@ begin
   select balance into bal from public.uno_bonus where phone = ph;
   select coalesce(jsonb_agg(jsonb_build_object('at', created_at, 'amount', amount, 'kind', kind) order by created_at desc), '[]'::jsonb) into tx
     from (select created_at, amount, kind from public.uno_bonus_tx where phone = ph order by created_at desc limit 10) t;
-  return jsonb_build_object('balance', coalesce(bal, 0), 'tx', tx, 'pct', public.uno_cfg_int('bonusPct', 5), 'ref', public.uno_cfg_int('refBonus', 20000));
+  return jsonb_build_object('balance', coalesce(bal, 0), 'tx', tx, 'pct', public.uno_miles_pct(public.uno_miles_tier(public.uno_miles_visits(ph))),
+    'ref', public.uno_cfg_int('refBonus', 20000), 'visits', public.uno_miles_visits(ph), 'tier', public.uno_miles_tier(public.uno_miles_visits(ph)),
+    'tierB', public.uno_cfg_int('tierB', 5), 'tierF', public.uno_cfg_int('tierF', 15),
+    'pctE', public.uno_miles_pct('economy'), 'pctB', public.uno_miles_pct('business'), 'pctF', public.uno_miles_pct('first'));
 end $$;
 revoke all on function public.uno_bonus_me(text) from public;
 grant execute on function public.uno_bonus_me(text) to anon, authenticated;
 
--- admin (kassa): chek summasidan bonus yozadi; mehmonning birinchi bonusida uni taklif qilgan do'stga ham bonus
-create or replace function public.uno_bonus_earn(p_phone text, p_sum int, p_note text default null)
+-- ichki: chekdan bonus (admin yoki kassir chaqiradi)
+create or replace function public.uno_bonus_earn_core(p_phone text, p_sum int, p_note text, p_by text)
 returns jsonb language plpgsql security definer set search_path = public as $$
-declare ph text := public.uno_ph9(p_phone); pct int; amt int; first boolean; rb text; rbonus int := 0; bal int;
+declare ph text := public.uno_ph9(p_phone); v int; tier text; pct int; amt int; rb text; rbonus int := 0; bal int; tier2 text;
 begin
-  if not public.uno_is_admin() then raise exception 'forbidden'; end if;
   if length(ph) <> 9 then raise exception 'bad_phone'; end if;
   if p_sum is null or p_sum <= 0 or p_sum > 100000000 then raise exception 'bad_sum'; end if;
-  pct := least(greatest(public.uno_cfg_int('bonusPct', 5), 0), 50);
+  v := public.uno_miles_visits(ph); tier := public.uno_miles_tier(v); pct := public.uno_miles_pct(tier);
   amt := floor(p_sum * pct / 100.0);
-  first := not exists (select 1 from public.uno_bonus_tx where phone = ph and kind = 'earn');
   insert into public.uno_bonus as b (phone, balance) values (ph, amt)
     on conflict (phone) do update set balance = b.balance + amt, updated_at = now()
     returning balance into bal;
-  insert into public.uno_bonus_tx (phone, amount, check_sum, kind, note) values (ph, amt, p_sum, 'earn', left(p_note, 200));
-  if first then
+  insert into public.uno_bonus_tx (phone, amount, check_sum, kind, note) values (ph, amt, p_sum, 'earn', left(coalesce(p_by || ': ', '') || coalesce(p_note, ''), 200));
+  if v = 0 then
     select ref_by into rb from public.uno_customers where public.uno_ph9(phone) = ph and ref_by is not null order by created_at limit 1;
     if rb is not null and rb <> ph then
       rbonus := public.uno_cfg_int('refBonus', 20000);
@@ -105,24 +118,46 @@ begin
       end if;
     end if;
   end if;
-  return jsonb_build_object('amount', amt, 'balance', bal, 'pct', pct, 'ref', rb, 'ref_bonus', rbonus);
+  tier2 := public.uno_miles_tier(v + 1);
+  return jsonb_build_object('amount', amt, 'balance', bal, 'pct', pct, 'tier', tier2, 'up', tier2 <> tier, 'visits', v + 1, 'ref', rb, 'ref_bonus', rbonus);
 end $$;
-revoke all on function public.uno_bonus_earn(text,int,text) from public;
-grant execute on function public.uno_bonus_earn(text,int,text) to authenticated;
+revoke all on function public.uno_bonus_earn_core(text,int,text,text) from public, anon, authenticated;
 
--- admin (kassa): bonusdan to'lash
-create or replace function public.uno_bonus_spend(p_phone text, p_amount int, p_note text default null)
+create or replace function public.uno_bonus_spend_core(p_phone text, p_amount int, p_note text, p_by text)
 returns jsonb language plpgsql security definer set search_path = public as $$
 declare ph text := public.uno_ph9(p_phone); bal int;
 begin
-  if not public.uno_is_admin() then raise exception 'forbidden'; end if;
   if length(ph) <> 9 then raise exception 'bad_phone'; end if;
   if p_amount is null or p_amount <= 0 then raise exception 'bad_sum'; end if;
   update public.uno_bonus set balance = balance - p_amount, updated_at = now() where phone = ph and balance >= p_amount returning balance into bal;
   if not found then raise exception 'not_enough'; end if;
-  insert into public.uno_bonus_tx (phone, amount, kind, note) values (ph, -p_amount, 'spend', left(p_note, 200));
+  insert into public.uno_bonus_tx (phone, amount, kind, note) values (ph, -p_amount, 'spend', left(coalesce(p_by || ': ', '') || coalesce(p_note, ''), 200));
   return jsonb_build_object('balance', bal);
 end $$;
+revoke all on function public.uno_bonus_spend_core(text,int,text,text) from public, anon, authenticated;
+
+create or replace function public.uno_bonus_info(p_phone text)
+returns jsonb language plpgsql stable security definer set search_path = public as $$
+declare ph text := public.uno_ph9(p_phone); bal int; v int; tx jsonb;
+begin
+  select balance into bal from public.uno_bonus where phone = ph;
+  v := public.uno_miles_visits(ph);
+  select coalesce(jsonb_agg(jsonb_build_object('at', created_at, 'amount', amount, 'kind', kind, 'check_sum', check_sum) order by created_at desc), '[]'::jsonb) into tx
+    from (select * from public.uno_bonus_tx where phone = ph order by created_at desc limit 10) t;
+  return jsonb_build_object('phone', ph, 'balance', coalesce(bal, 0), 'visits', v, 'tier', public.uno_miles_tier(v), 'tx', tx);
+end $$;
+revoke all on function public.uno_bonus_info(text) from public, anon, authenticated;
+
+-- admin paneldan
+create or replace function public.uno_bonus_earn(p_phone text, p_sum int, p_note text default null)
+returns jsonb language plpgsql security definer set search_path = public as $$
+begin if not public.uno_is_admin() then raise exception 'forbidden'; end if; return public.uno_bonus_earn_core(p_phone, p_sum, p_note, 'admin'); end $$;
+revoke all on function public.uno_bonus_earn(text,int,text) from public;
+grant execute on function public.uno_bonus_earn(text,int,text) to authenticated;
+
+create or replace function public.uno_bonus_spend(p_phone text, p_amount int, p_note text default null)
+returns jsonb language plpgsql security definer set search_path = public as $$
+begin if not public.uno_is_admin() then raise exception 'forbidden'; end if; return public.uno_bonus_spend_core(p_phone, p_amount, p_note, 'admin'); end $$;
 revoke all on function public.uno_bonus_spend(text,int,text) from public;
 grant execute on function public.uno_bonus_spend(text,int,text) to authenticated;
 
@@ -201,3 +236,268 @@ begin
 end $$;
 revoke all on function public.uno_stat_add(jsonb) from public;
 grant execute on function public.uno_stat_add(jsonb) to anon, authenticated;
+
+-- ---------- sovg'a sertifikati ("Boarding Pass") ----------
+create table if not exists public.uno_gifts (
+  code       text primary key,                     -- UNO-XXXX-XXXX
+  amount     int  not null check (amount > 0),
+  balance    int  not null check (balance >= 0),
+  name       text,                                 -- kimga
+  phone      text,
+  note       text,
+  expires    date,
+  created_at timestamptz not null default now()
+);
+create table if not exists public.uno_gift_tx (
+  id         bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  code       text not null,
+  amount     int  not null,
+  by_who     text
+);
+alter table public.uno_gifts   enable row level security;
+alter table public.uno_gift_tx enable row level security;
+revoke all on public.uno_gifts, public.uno_gift_tx from anon, authenticated;
+drop policy if exists uno_gifts_admin on public.uno_gifts;
+create policy uno_gifts_admin on public.uno_gifts for select using (public.uno_is_admin());
+drop policy if exists uno_gift_tx_admin on public.uno_gift_tx;
+create policy uno_gift_tx_admin on public.uno_gift_tx for select using (public.uno_is_admin());
+grant select on public.uno_gifts, public.uno_gift_tx to authenticated;
+
+create or replace function public.uno_gift_norm(c text) returns text language sql immutable as $$
+  select upper(regexp_replace(coalesce(c,''), '[^A-Za-z0-9]', '', 'g'))
+$$;
+
+create or replace function public.uno_gift_create(p_amount int, p_name text default null, p_phone text default null, p_note text default null, p_months int default 12)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare al text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; c text; i int; tries int := 0;
+begin
+  if not public.uno_is_admin() then raise exception 'forbidden'; end if;
+  if p_amount is null or p_amount < 1000 or p_amount > 100000000 then raise exception 'bad_sum'; end if;
+  loop
+    c := 'UNO';
+    for i in 1..8 loop c := c || substr(al, 1 + floor(random() * length(al))::int, 1); end loop;
+    exit when not exists (select 1 from public.uno_gifts where code = c);
+    tries := tries + 1; if tries > 20 then raise exception 'retry'; end if;
+  end loop;
+  insert into public.uno_gifts (code, amount, balance, name, phone, note, expires)
+    values (c, p_amount, p_amount, left(p_name, 80), left(p_phone, 30), left(p_note, 200), current_date + make_interval(months => greatest(coalesce(p_months, 12), 1)));
+  return jsonb_build_object('code', c, 'amount', p_amount, 'expires', current_date + make_interval(months => greatest(coalesce(p_months, 12), 1)));
+end $$;
+revoke all on function public.uno_gift_create(int,text,text,text,int) from public;
+grant execute on function public.uno_gift_create(int,text,text,text,int) to authenticated;
+
+-- har kim kod bo'yicha qoldiqni ko'ra oladi (kodni bilish = sertifikat egasi)
+create or replace function public.uno_gift_check(p_code text)
+returns jsonb language plpgsql stable security definer set search_path = public as $$
+declare g record;
+begin
+  select * into g from public.uno_gifts where code = public.uno_gift_norm(p_code);
+  if not found then return jsonb_build_object('ok', false); end if;
+  return jsonb_build_object('ok', true, 'code', g.code, 'amount', g.amount, 'balance', g.balance, 'name', g.name, 'expires', g.expires, 'expired', g.expires < current_date);
+end $$;
+revoke all on function public.uno_gift_check(text) from public;
+grant execute on function public.uno_gift_check(text) to anon, authenticated;
+
+create or replace function public.uno_gift_redeem_core(p_code text, p_amount int, p_by text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare c text := public.uno_gift_norm(p_code); bal int; ex date;
+begin
+  if p_amount is null or p_amount <= 0 then raise exception 'bad_sum'; end if;
+  select expires into ex from public.uno_gifts where code = c;
+  if not found then raise exception 'no_gift'; end if;
+  if ex < current_date then raise exception 'expired'; end if;
+  update public.uno_gifts set balance = balance - p_amount where code = c and balance >= p_amount returning balance into bal;
+  if not found then raise exception 'not_enough'; end if;
+  insert into public.uno_gift_tx (code, amount, by_who) values (c, -p_amount, p_by);
+  return jsonb_build_object('balance', bal);
+end $$;
+revoke all on function public.uno_gift_redeem_core(text,int,text) from public, anon, authenticated;
+
+create or replace function public.uno_gift_redeem(p_code text, p_amount int)
+returns jsonb language plpgsql security definer set search_path = public as $$
+begin if not public.uno_is_admin() then raise exception 'forbidden'; end if; return public.uno_gift_redeem_core(p_code, p_amount, 'admin'); end $$;
+revoke all on function public.uno_gift_redeem(text,int) from public;
+grant execute on function public.uno_gift_redeem(text,int) to authenticated;
+
+-- ---------- kassa: kassir PIN-kod bilan kiradi (faqat bonus va sertifikat) ----------
+create table if not exists public.uno_cashier_fails (at timestamptz not null default now());
+alter table public.uno_cashier_fails enable row level security;
+revoke all on public.uno_cashier_fails from anon, authenticated;
+
+create or replace function public.uno_cashier_set_pin(p_pin text)
+returns void language plpgsql security definer set search_path = public as $$
+declare salt text := md5(random()::text || clock_timestamp()::text);
+begin
+  if not public.uno_is_admin() then raise exception 'forbidden'; end if;
+  if p_pin is null or p_pin !~ '^[0-9]{4,8}$' then raise exception 'bad_pin'; end if;
+  insert into public.uno_private(key, value) values ('cashier_pin', salt || ':' || encode(sha256(convert_to(salt || p_pin, 'UTF8')), 'hex'))
+    on conflict (key) do update set value = excluded.value;
+end $$;
+revoke all on function public.uno_cashier_set_pin(text) from public;
+grant execute on function public.uno_cashier_set_pin(text) to authenticated;
+
+create or replace function public.uno_cashier_has_pin() returns boolean
+language sql stable security definer set search_path = public as $$
+  select coalesce(public.uno_priv('cashier_pin'), '') <> ''
+$$;
+grant execute on function public.uno_cashier_has_pin() to anon, authenticated;
+
+-- PIN tekshiruvi: 10 daqiqada 8 marta xato bo'lsa, kassa vaqtincha yopiladi
+create or replace function public.uno_cashier_ok(p_pin text) returns void
+language plpgsql security definer set search_path = public as $$
+declare v text := public.uno_priv('cashier_pin'); salt text; h text;
+begin
+  if coalesce(v, '') = '' then raise exception 'no_pin'; end if;
+  if (select count(*) from public.uno_cashier_fails where at > now() - interval '10 minutes') >= 8 then raise exception 'locked'; end if;
+  salt := split_part(v, ':', 1); h := split_part(v, ':', 2);
+  if encode(sha256(convert_to(salt || coalesce(p_pin, ''), 'UTF8')), 'hex') <> h then
+    insert into public.uno_cashier_fails default values;
+    raise exception 'bad_pin';
+  end if;
+end $$;
+revoke all on function public.uno_cashier_ok(text) from public, anon, authenticated;
+
+create or replace function public.uno_kassa(p_pin text, p_action text, p_phone text default null, p_sum int default null, p_code text default null)
+returns jsonb language plpgsql security definer set search_path = public as $$
+begin
+  perform public.uno_cashier_ok(p_pin);
+  delete from public.uno_cashier_fails where at < now() - interval '1 day';
+  if p_action = 'login'   then return jsonb_build_object('ok', true); end if;
+  if p_action = 'info'    then return public.uno_bonus_info(p_phone); end if;
+  if p_action = 'earn'    then return public.uno_bonus_earn_core(p_phone, p_sum, null, 'kassa'); end if;
+  if p_action = 'spend'   then return public.uno_bonus_spend_core(p_phone, p_sum, null, 'kassa'); end if;
+  if p_action = 'gift'    then return public.uno_gift_check(p_code); end if;
+  if p_action = 'redeem'  then return public.uno_gift_redeem_core(p_code, p_sum, 'kassa'); end if;
+  raise exception 'bad_action';
+end $$;
+revoke all on function public.uno_kassa(text,text,text,int,text) from public;
+grant execute on function public.uno_kassa(text,text,text,int,text) to anon, authenticated;
+
+-- admin uchun ham mehmon balansi (darajasi bilan)
+create or replace function public.uno_bonus_admin_info(p_phone text)
+returns jsonb language plpgsql stable security definer set search_path = public as $$
+begin if not public.uno_is_admin() then raise exception 'forbidden'; end if; return public.uno_bonus_info(p_phone); end $$;
+revoke all on function public.uno_bonus_admin_info(text) from public;
+grant execute on function public.uno_bonus_admin_info(text) to authenticated;
+
+-- ---------- bron manbasi uzunroq bo'lishi uchun (masalan: "Sayt (telefon) · instagram") ----------
+create or replace function public.uno_booking_create(
+  p_name text, p_phone text, p_at timestamptz, p_guests int,
+  p_zone text default null, p_occasion text default null, p_note text default null, p_source text default 'ios')
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare
+  nm text := left(trim(coalesce(p_name,'')), 80);
+  ph text := regexp_replace(coalesce(p_phone,''), '[^0-9+]', '', 'g');
+  bid bigint; txt text;
+begin
+  if length(nm) < 2 then raise exception 'bad_name'; end if;
+  if length(regexp_replace(ph,'[^0-9]','','g')) < 9 then raise exception 'bad_phone'; end if;
+  if p_at is null or p_at < now() - interval '10 minutes' or p_at > now() + interval '400 days' then raise exception 'bad_time'; end if;
+  if p_guests is null or p_guests < 1 or p_guests > 350 then raise exception 'bad_guests'; end if;
+  if (select count(*) from public.uno_bookings where phone = ph and created_at > now() - interval '10 minutes') >= 3 then raise exception 'too_many'; end if;
+  if (select count(*) from public.uno_bookings where created_at > now() - interval '1 minute') >= 20 then raise exception 'too_many'; end if;
+
+  insert into public.uno_bookings(name, phone, at, guests, zone, occasion, note, source)
+  values (nm, ph, p_at, p_guests, left(p_zone,40), left(p_occasion,40), left(trim(coalesce(p_note,'')),1500), left(coalesce(p_source,'ios'),50))
+  returning id into bid;
+
+  txt := '📅 <b>Yangi bron #' || bid || '</b>' || chr(10) ||
+         '👤 ' || public.uno_tg_esc(nm) || chr(10) ||
+         '📞 ' || public.uno_tg_esc(ph) || chr(10) ||
+         '🕒 ' || to_char(p_at at time zone 'Asia/Tashkent', 'DD.MM.YYYY HH24:MI') || chr(10) ||
+         '👥 ' || p_guests || ' kishi' ||
+         coalesce(chr(10) || '🏷 ' || nullif(public.uno_tg_esc(p_zone),''), '') ||
+         coalesce(chr(10) || '🎉 ' || nullif(public.uno_tg_esc(p_occasion),''), '') ||
+         coalesce(chr(10) || '💬 ' || nullif(public.uno_tg_esc(trim(p_note)),''), '') ||
+         chr(10) || '📱 ' || case when p_source = 'ios' then 'iPhone ilovasi' else public.uno_tg_esc(p_source) end;
+  perform public.uno_tg_send(txt);
+  return jsonb_build_object('id', bid);
+end $$;
+revoke all on function public.uno_booking_create(text,text,timestamptz,int,text,text,text,text) from public;
+grant execute on function public.uno_booking_create(text,text,timestamptz,int,text,text,text,text) to anon, authenticated;
+
+-- ---------- haftalik hisobot: har dushanba 09:00 (Toshkent) Telegram guruhga ----------
+create or replace function public.uno_weekly_report() returns text
+language plpgsql security definer set search_path = public as $$
+declare t text; n int; g int; a numeric; s1 int; s2 int; r record; since timestamptz := now() - interval '7 days'; part text;
+begin
+  t := '📊 <b>UNO Airways — haftalik hisobot</b>' || chr(10) || to_char((now() - interval '7 days') at time zone 'Asia/Tashkent', 'DD.MM') || ' — ' || to_char(now() at time zone 'Asia/Tashkent', 'DD.MM.YYYY') || chr(10);
+  begin
+    select count(*), coalesce(sum(guests),0) into n, g from public.uno_bookings where created_at > since and coalesce(note,'') not like '💍 BANKET%';
+    t := t || chr(10) || '📅 Stol bronlari: <b>' || n || '</b> (' || g || ' mehmon)';
+    select count(*) into n from public.uno_bookings where created_at > since and coalesce(note,'') like '💍 BANKET%';
+    t := t || chr(10) || '💍 To''y / banket arizalari: <b>' || n || '</b>';
+  exception when others then null; end;
+  begin
+    select count(*), coalesce(sum(total),0) into n, a from public.uno_orders where created_at > since and status <> 'cancelled';
+    t := t || chr(10) || '🛵 Yetkazib berish: <b>' || n || '</b> ta, ' || public.uno_money(a);
+  exception when others then null; end;
+  begin
+    select count(*), avg(stars) into n, a from public.uno_feedback where created_at > since;
+    t := t || chr(10) || '⭐ Mehmon fikrlari: <b>' || n || '</b>' || case when n > 0 then ', o''rtacha <b>' || round(a, 1) || '</b>' else '' end;
+    select count(*) into n from public.uno_feedback where created_at > since and stars <= 3;
+    if n > 0 then t := t || ' (past baho: ' || n || ')'; end if;
+  exception when others then null; end;
+  begin
+    select coalesce(sum(amount) filter (where kind = 'earn'),0), coalesce(-sum(amount) filter (where kind = 'spend'),0) into s1, s2 from public.uno_bonus_tx where created_at > since;
+    select count(*) into n from public.uno_bonus_tx where created_at > since and kind = 'earn';
+    t := t || chr(10) || '💳 Bonus: ' || n || ' ta tashrif, yozildi ' || public.uno_money(s1) || ', ishlatildi ' || public.uno_money(s2);
+  exception when others then null; end;
+  begin
+    select count(*) into n from public.uno_customers where created_at > since;
+    t := t || chr(10) || '👤 Yangi mijozlar (ilova): <b>' || n || '</b>';
+  exception when others then null; end;
+  begin
+    part := '';
+    for r in select coalesce(d.data->>'name', s.dish) as nm, sum(s.views) as v from public.uno_stats s left join public.uno_docs d on d.path = 'dishes/' || s.dish
+             where s.day > (now() at time zone 'Asia/Tashkent')::date - 7 and s.dish not like 'src:%' group by 1 order by 2 desc limit 5 loop
+      part := part || chr(10) || '   • ' || public.uno_tg_esc(r.nm) || ' — ' || r.v;
+    end loop;
+    if part <> '' then t := t || chr(10) || chr(10) || '🔥 Eng ko''p ko''rilgan taomlar:' || part; end if;
+    part := '';
+    for r in select substr(dish, 5) as src, sum(views) as v from public.uno_stats where day > (now() at time zone 'Asia/Tashkent')::date - 7 and dish like 'src:%' group by 1 order by 2 desc limit 6 loop
+      part := part || chr(10) || '   • ' || public.uno_tg_esc(r.src) || ' — ' || r.v;
+    end loop;
+    if part <> '' then t := t || chr(10) || chr(10) || '🧭 Mehmonlar qayerdan kirdi:' || part; end if;
+  exception when others then null; end;
+  perform public.uno_tg_send(t);
+  return t;
+end $$;
+revoke all on function public.uno_weekly_report() from public, anon, authenticated;
+
+create or replace function public.uno_weekly_report_now() returns text
+language plpgsql security definer set search_path = public as $$
+begin if not public.uno_is_admin() then raise exception 'forbidden'; end if; return public.uno_weekly_report(); end $$;
+revoke all on function public.uno_weekly_report_now() from public;
+grant execute on function public.uno_weekly_report_now() to authenticated;
+
+do $$
+begin
+  begin create extension if not exists pg_cron; exception when others then raise notice 'pg_cron yoqilmadi: %', sqlerrm; return; end;
+  begin perform cron.unschedule('uno-weekly'); exception when others then null; end;
+  perform cron.schedule('uno-weekly', '0 4 * * 1', 'select public.uno_weekly_report()');   -- 04:00 UTC = 09:00 Toshkent, dushanba
+exception when others then raise notice 'cron: %', sqlerrm;
+end $$;
+
+-- ---------- Telegram Mini App: botdagi "Menyu" tugmasi saytni ilova kabi ochadi ----------
+create or replace function public.uno_tg_miniapp_setup()
+returns jsonb language plpgsql security definer set search_path = public, extensions as $$
+declare tok text := public.uno_priv('tg_token'); site text := coalesce(nullif(public.uno_priv('site_url'),''), 'https://spesmuz.github.io/uno-menu/'); u text;
+begin
+  if not public.uno_is_admin() then raise exception 'forbidden'; end if;
+  if coalesce(tok,'') = '' then raise exception 'no_bot'; end if;
+  u := site || case when position('?' in site) > 0 then '&' else '?' end || 'src=telegram';
+  perform net.http_post(url := 'https://api.telegram.org/bot' || tok || '/setChatMenuButton',
+    body := jsonb_build_object('menu_button', jsonb_build_object('type','web_app','text','🍽 Menyu','web_app', jsonb_build_object('url', u))),
+    headers := '{"Content-Type":"application/json"}'::jsonb);
+  perform net.http_post(url := 'https://api.telegram.org/bot' || tok || '/setMyShortDescription',
+    body := jsonb_build_object('short_description', 'UNO Airways Restaurante — menyu, stol bron qilish, bonuslar. Farg''ona, S. Temur 30'),
+    headers := '{"Content-Type":"application/json"}'::jsonb);
+  perform net.http_post(url := 'https://api.telegram.org/bot' || tok || '/setMyDescription',
+    body := jsonb_build_object('description', '✈️ UNO Airways Restaurante — turk va yevropa oshxonasi, har kuni jonli musiqa.' || chr(10) || chr(10) || 'Pastdagi «🍽 Menyu» tugmasini bosing: menyu, stol bron qilish, to''y/banket arizasi va bonuslaringiz.' || chr(10) || '📞 +998 91 881 69 79'),
+    headers := '{"Content-Type":"application/json"}'::jsonb);
+  return jsonb_build_object('ok', true, 'url', u);
+end $$;
+revoke all on function public.uno_tg_miniapp_setup() from public;
+grant execute on function public.uno_tg_miniapp_setup() to authenticated;
