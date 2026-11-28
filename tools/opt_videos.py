@@ -1,11 +1,12 @@
 """Light, colour-enhanced copies of dish media, served from this site (saves Supabase traffic).
-Videos: square crop (what the menu card shows), no sound, up to 1080x1080 H.264.  Photos: up to 1200 px JPEG.
+Videos: square crop (what the menu card shows), no sound, up to 1080x1080 H.264, plus a light 540x540 copy for weak tablets/phones
+(map key "<id>@s").  Photos: up to 1200 px WebP (about a third smaller than JPEG at the same look).
 Exposure is checked per file: only too dark or too bright media are corrected; normal ones keep their colours. media/opt.json maps original id -> copy;
 the same map is written into index.html (var VOPT) so the menu uses the copies at once."""
 import json, os, re, subprocess, urllib.request
 U="https://eaxavnixuqgwashplnhz.supabase.co"; K="sb_publishable_gILXDU_L8vepyEbsF87Tcg_hYyMpril"
 H={"apikey":K,"Authorization":"Bearer "+K}
-TAG="-c5"   # bump to rebuild every copy with new settings
+TAG="-c6"   # bump to rebuild every copy with new settings
 VCOL="unsharp=5:5:0.35"
 PCOL="unsharp=5:5:0.3"
 rows=json.load(urllib.request.urlopen(urllib.request.Request(U+"/rest/v1/uno_docs?select=path,data",headers=H),timeout=60))
@@ -44,13 +45,22 @@ for r in rows:
         urllib.request.urlretrieve(U+"/storage/v1/object/public/uno-media/"+urllib.request.quote(mid), src)
         if key=="videoId":
             out="media/v/"+base+TAG+".mp4"
-            ff("-i",src,"-vf","crop='min(iw,ih)':'min(iw,ih)',scale='min(1080,min(iw,ih))':'min(1080,min(iw,ih))':flags=lanczos,fps=30,"+expose(src,True)+VCOL,
+            ex=expose(src,True)
+            ff("-i",src,"-vf","crop='min(iw,ih)':'min(iw,ih)',scale='min(1080,min(iw,ih))':'min(1080,min(iw,ih))':flags=lanczos,fps=30,"+ex+VCOL,
                "-c:v","libx264","-preset","slow","-crf","22","-profile:v","high","-pix_fmt","yuv420p","-movflags","+faststart","-an",out)
+            # light copy: 540x540, Main profile, 25 fps — decodes easily on cheap tablets
+            small="media/v/"+base+TAG+"s.mp4"
+            ff("-i",src,"-vf","crop='min(iw,ih)':'min(iw,ih)',scale=540:540:flags=lanczos,fps=25,"+ex+VCOL,
+               "-c:v","libx264","-preset","slow","-crf","25","-profile:v","main","-level","3.1","-pix_fmt","yuv420p","-movflags","+faststart","-an",small)
+            olds=opt.get(mid+"@s")
+            if olds and olds!=small and os.path.exists(olds): os.remove(olds)
+            opt[mid+"@s"]=small
+            print("   light copy", round(os.path.getsize(small)/1e6,2),"MB")
             ff("-ss","1.5","-i",src,"-vf","crop='min(iw,ih)':'min(iw,ih)',scale=540:540","-frames:v","1","/tmp/a.png")
             ff("-ss","1.5","-i",out,"-vf","scale=540:540","-frames:v","1","/tmp/b.png")
         else:
-            out="media/p/"+base+TAG+".jpg"
-            ff("-i",src,"-vf","scale='min(1200,iw)':-2:flags=lanczos,"+expose(src,False)+PCOL,"-q:v","3",out)
+            out="media/p/"+base+TAG+".webp"
+            ff("-i",src,"-vf","scale='min(1200,iw)':-2:flags=lanczos,"+expose(src,False)+PCOL,"-c:v","libwebp","-quality","82","-compression_level","6","-preset","picture",out)
             ff("-i",src,"-vf","scale=540:-2","/tmp/a.png"); ff("-i",out,"-vf","scale=540:-2","/tmp/b.png")
         ff("-i","/tmp/a.png","-i","/tmp/b.png","-filter_complex","[0][1]scale2ref[a][b];[a][b]hstack","/tmp/cmp/"+base+".jpg")
         print(key, mid, round(os.path.getsize(src)/1e6,2),"MB ->", round(os.path.getsize(out)/1e6,2),"MB")

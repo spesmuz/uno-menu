@@ -1191,6 +1191,11 @@ function fmt(n){ n=Math.round(Number(n)||0); return String(n).replace(/\B(?=(\d{
 /* light copies of dish videos (square, no sound), served from this site; kept in step by tools/opt_videos.py */
 var VOPT={"mwqjfzft-66exjq.mov":"media/v/mwqjfzft-66exjq-c5.mp4","mwnogf4x-mij44v.mov":"media/v/mwnogf4x-mij44v-c5.mp4","mwqkl81a-e5emhw.mov":"media/v/mwqkl81a-e5emhw-c5.mp4","mwqjt4tk-khe57h.mov":"media/v/mwqjt4tk-khe57h-c5.mp4","mwqk2zuf-u2rp1d.mov":"media/v/mwqk2zuf-u2rp1d-c5.mp4","mws58qzn-7rwumn.mov":"media/v/mws58qzn-7rwumn-c5.mp4","mwqjfik2-3x2t57.jpg":"media/p/mwqjfik2-3x2t57-c5.jpg","mwnofxuv-ournk6.jpg":"media/p/mwnofxuv-ournk6-c5.jpg","mwqkl0eb-75sb1i.jpg":"media/p/mwqkl0eb-75sb1i-c5.jpg","mwqjsxdu-caz6k4.jpg":"media/p/mwqjsxdu-caz6k4-c5.jpg","mwqk2qzj-od5o8f.jpg":"media/p/mwqk2qzj-od5o8f-c5.jpg","mws58top-6etutl.jpg":"media/p/mws58top-6etutl-c5.jpg","mwz18vvo-m5f2mo.mov":"media/v/mwz18vvo-m5f2mo-c5.mp4","mwz195bq-rml6zr.jpg":"media/p/mwz195bq-rml6zr-c5.jpg","mwz7l92x-49elcb.jpg":"media/p/mwz7l92x-49elcb-c5.jpg","mwz7p1hs-l818n7.jpg":"media/p/mwz7p1hs-l818n7-c5.jpg","mwz11amg-kk3g1o.mov":"media/v/mwz11amg-kk3g1o-c5.mp4","mwz11l7i-5oez7x.jpg":"media/p/mwz11l7i-5oez7x-c5.jpg","mwze4xw7-p9mgh6.mov":"media/v/mwze4xw7-p9mgh6-c5.mp4","mwze5uxm-17f3wq.mov":"media/v/mwze5uxm-17f3wq-c5.mp4"};
 try{ fetch("media/opt.json",{cache:"no-cache"}).then(function(r){ return r.ok?r.json():null; }).then(function(j){ if(!j) return; var add=Object.keys(j).some(function(k){ return VOPT[k]!==j[k]; }); Object.assign(VOPT,j); if(add&&typeof refreshMenu==="function"&&S.view!=="admin") try{ refreshMenu(); }catch(_){} }).catch(function(){}); }catch(_){}
+/* weak devices (cheap tablets, ≤3 GB memory or ≤4 cores, the restaurant's kiosk tablets) play the light 540×540 video copy */
+var LIGHT_MEDIA=(function(){ try{ var dm=navigator.deviceMemory||0, hc=navigator.hardwareConcurrency||0, kiosk=false;
+  try{ kiosk=!!(window.UnoKiosk && UnoKiosk.kioskOn && UnoKiosk.kioskOn()); }catch(_){}
+  return kiosk || (dm && dm<=3) || (hc && hc<=4) || /[?&]light=1/.test(location.search); }catch(_){ return false; } })();
+function vblob(id){ return id && LIGHT_MEDIA && VOPT[id+"@s"] ? VOPT[id+"@s"] : blob(id); }
 function blob(id){ if(!id) return ""; if(VOPT[id]) return VOPT[id]; if(/^(https?:|data:|blob:)/.test(id)||id.indexOf("/")>=0) return id; return SB_URL+"/storage/v1/object/public/"+SB_BUCKET+"/"+encodeURIComponent(id); }
 function cats(){ return (S.settings.cats||[]).slice(); }
 function catLabel(id){ var c=cats().find(function(x){return x.id===id;}); return c?c.label:""; }
@@ -2535,7 +2540,7 @@ function updateMedia(){
       var open='<button class="sel open" data-more="'+esc(d.id)+'" aria-label="'+esc(dn(d))+' — '+esc(t("more"))+'"></button>';
       if(d.videoId){
         m.innerHTML=photoHTML(d)+'<div class="vidwrap"></div><span class="badge vid"><i></i>VIDEO</span>'+cl+rvBadge(d)+open;
-        var pv=pooledVideo("car"); parkPooled(pv); loadPooled(pv, blob(d.videoId)); pv.setAttribute("aria-label", dn(d)+" "+t("video"));
+        var pv=pooledVideo("car"); parkPooled(pv); loadPooled(pv, vblob(d.videoId)); pv.setAttribute("aria-label", dn(d)+" "+t("video"));
         m.querySelector(".vidwrap").appendChild(pv);
         scheduleVideo(m, d.id);
       } else {
@@ -2811,7 +2816,7 @@ function setupLayer(layer, d){
   layer.querySelectorAll("img[data-fit]").forEach(fitImg);
   var slot=layer.querySelector(".dvid-slot");
   if(slot && d.videoId){
-    var pv=pooledVideo("det"); parkPooled(pv); pv.className="dvid"; pv.muted=true; loadPooled(pv, blob(d.videoId)); pv.setAttribute("aria-label", dn(d)+" "+t("video"));
+    var pv=pooledVideo("det"); parkPooled(pv); pv.className="dvid"; pv.muted=true; loadPooled(pv, vblob(d.videoId)); pv.setAttribute("aria-label", dn(d)+" "+t("video"));
     slot.parentNode.replaceChild(pv, slot);
   }
   var v=layer.querySelector("video"); if(!v) return;
@@ -5990,7 +5995,7 @@ function mediaUrls(){
   var out=[], seen={};
   function add(id){ if(!id) return; var u=new URL(blob(id),location.href).href; if(!seen[u]){ seen[u]=1; out.push(u); } }
   if(S.settings) add(S.settings.logoId);
-  (S.dishes||[]).forEach(function(d){ add(d.imgId); add(d.videoId); });
+  (S.dishes||[]).forEach(function(d){ add(d.imgId); if(d.videoId){ var u=new URL(vblob(d.videoId),location.href).href; if(!seen[u]){ seen[u]=1; out.push(u); } } });
   return out;
 }
 /* downloading every photo and video in advance costs traffic: only on menu tablets / kiosks, never on guests' phones */
