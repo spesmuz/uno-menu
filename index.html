@@ -1663,7 +1663,7 @@ var WT=(function(){
       '<p class="whint">'+esc(T("pf.hint"))+'</p>'+
       '<div id="wpGrow">'+growHTML()+'</div>'+
       '<h2 style="display:flex;align-items:center;justify-content:space-between">'+esc(T("pf.news"))+'<button type="button" data-wp="reload" style="border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#E8B04B;width:34px;height:34px;border-radius:50%;font-size:16px">↻</button></h2>'+
-      '<div id="wpNews">'+newsHTML()+'</div></div>';
+      '<div id="wpNews">'+newsHTML()+'</div>'+bgiftHTML()+'</div>';   /* news first (newest on top), then the birthday gift */
   }
   function newsHTML(){
     if(!news.length) return '<div class="wcard" style="text-align:center;color:rgba(255,255,255,.6)">'+esc(T("pf.noNews"))+'</div>';
@@ -1898,7 +1898,7 @@ var WT=(function(){
     BN.busy=false;
   }
   function growHTML(){
-    var g=G(), p=profile(), h=bgiftHTML();
+    var g=G(), p=profile(), h="";
     if(g.bonusOn){
       var pct=+(BN.data&&BN.data.pct)||+g.bonusPct||5;
       h+='<h2>💳 '+esc(T("bn.title"))+'</h2><div class="wbonus">';

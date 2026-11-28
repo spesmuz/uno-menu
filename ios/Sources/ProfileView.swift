@@ -171,10 +171,6 @@ struct ProfileView: View {
                     .glassCard()
                     Text(L.t("pf.hint")).font(.footnote).foregroundColor(Color.white.opacity(0.6)).padding(.horizontal, 6)
 
-                    /* birthday gift */
-                    if let g = gift, g.on {
-                        GiftCard(g: g, opened: giftOpened == g.today, guestName: name) { openGift(g) }
-                    }
 
                     /* news */
                     HStack {
@@ -199,6 +195,12 @@ struct ProfileView: View {
                         .glassCard()
                     }
                     ForEach(news.items) { n in newsCard(n) }
+
+                    /* birthday gift: below the news (new posts always go on top) */
+                    if let g = gift, g.on {
+                        GiftCard(g: g, opened: giftOpened == g.today, guestName: name) { openGift(g) }
+                            .padding(.top, 6)
+                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 24)
