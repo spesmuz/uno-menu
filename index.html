@@ -1662,7 +1662,11 @@ var WT=(function(){
   function pfDirtySync(e){ var id=e.target&&e.target.id; if(id!=="wpName"&&id!=="wpPhone"&&id!=="wpBday") return; var b=document.querySelector('[data-wp="save"]'); if(b && !P.msg) b.style.display=pfDirty()?"":"none"; }
   function renderProfile(){
     var p=profile(), ph=photo(), pg=$("wp-profile");
-    pg.innerHTML='<div class="wrap"><h1>'+esc(T("tab.profile"))+'</h1><h2>'+esc(T("pf.me"))+'</h2>'+
+    pg.innerHTML='<div class="wrap"><h1>'+esc(T("tab.profile"))+'</h1>'+
+      /* news before everything else, newest on top */
+      '<h2 style="display:flex;align-items:center;justify-content:space-between">'+esc(T("pf.news"))+'<button type="button" data-wp="reload" style="border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#E8B04B;width:34px;height:34px;border-radius:50%;font-size:16px">↻</button></h2>'+
+      '<div id="wpNews">'+newsHTML()+'</div>'+
+      '<h2>'+esc(T("pf.me"))+'</h2>'+
       '<div class="wcard"><div class="wpf"><label class="wava" title="'+esc(T(ph?"pf.photoChange":"pf.photo"))+'">'+(ph?'<img src="'+ph+'" alt="">':esc(initials(p.name)))+'<i>📷</i><input id="wpPhoto" type="file" accept="image/*" hidden></label>'+
       '<div style="flex:1;min-width:0"><label class="wfld"><input id="wpName" placeholder="'+esc(T("pf.name"))+'" autocomplete="name" value="'+esc(p.name)+'"></label>'+
       '<label class="wfld"><input id="wpPhone" type="tel" inputmode="tel" placeholder="'+esc(T("book.phone"))+'" autocomplete="tel" value="'+esc(p.phone||"+998 ")+'"></label></div></div>'+
@@ -1672,8 +1676,7 @@ var WT=(function(){
       '<button class="wbtn" type="button" data-wp="save" style="margin-top:12px'+(P.msg||pfDirty()?'':';display:none')+'">'+(P.msg?'✓ '+esc(T("pf.saved")):esc(T("pf.save")))+'</button></div>'+
       '<p class="whint">'+esc(T("pf.hint"))+'</p>'+
       '<div id="wpGrow">'+growHTML()+'</div>'+
-      '<h2 style="display:flex;align-items:center;justify-content:space-between">'+esc(T("pf.news"))+'<button type="button" data-wp="reload" style="border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#E8B04B;width:34px;height:34px;border-radius:50%;font-size:16px">↻</button></h2>'+
-      '<div id="wpNews">'+newsHTML()+'</div>'+bgiftHTML()+'</div>';   /* news first (newest on top), then the birthday gift */
+      bgiftHTML()+'</div>';   /* the birthday gift closes the page */
   }
   function newsHTML(){
     if(!news.length) return '<div class="wcard" style="text-align:center;color:rgba(255,255,255,.6)">'+esc(T("pf.noNews"))+'</div>';
@@ -1713,7 +1716,7 @@ var WT=(function(){
       "ab.events":"Afisha","ab.halls":"Zallarimiz","ab.cap":"%@ kishigacha","ab.bookEv":"Stol band qilish","ab.banq":"To'y yoki banket uchun ariza",
       "pf.bday":"Tug'ilgan kun","pf.bdayHint":"Tug'ilgan kuningizda sizni maxsus taklif kutadi 🎁","pf.bdayOnce":"Diqqat: sana bir marta kiritiladi, keyin o'zgartirib bo'lmaydi.","pf.bdayLocked":"Sanani o'zgartirish uchun restoranga murojaat qiling (pasport bilan).",
       "bd.title":"Tug'ilgan kuningiz yaqinlashmoqda! 🎂","bd.today":"Tug'ilgan kuningiz muborak! 🎉","bd.book":"Bayramni bron qilish","bg.title":"Sizga sovg'a bor! 🎁","bg.lock":"Sovg'ani faqat tug'ilgan kuningiz kuni ochishingiz mumkin","bg.days":"Yana %@ kun qoldi","bg.tap":"Bugun sizning kuningiz! Qutini bosing 🎉","bg.need":"Profilda tug'ilgan kuningizni kiriting — sizga sovg'a tayyorlab qo'yamiz","bg.happy":"Tug'ilgan kuningiz muborak","bg.show":"Sovg'ani olish uchun shu sahifani ofitsiant yoki kassirga ko'rsating","bg.today":"Bugun","bd.def":"UNO Airways'da nishonlang — sizga maxsus sovg'a tayyorlab qo'yamiz.","bd.push":"Tug'ilgan kuningiz yaqin! 🎂",
-      "bn.title":"Bonuslarim","bn.how":"Har tashrifda chekdan %@% bonus yig'iladi. Kassada telefon raqamingizni ayting.","bn.need":"Bonuslarni ko'rish uchun yuqorida ism va telefon raqamingizni saqlang.",
+      "bn.title":"Bonuslarim","bn.all":"Barcha tarix","bn.less":"Yig'ish","bn.how":"Har tashrifda chekdan %@% bonus yig'iladi. Kassada telefon raqamingizni ayting.","bn.need":"Bonuslarni ko'rish uchun yuqorida ism va telefon raqamingizni saqlang.",
       "bn.earn":"Yig'ildi","bn.spend":"Ishlatildi","bn.ref":"Do'st taklifi",
       "rf.title":"Do'stingizni taklif qiling","rf.how":"Do'stingiz ilovada sizning kodingizni kiritib, birinchi marta kelsa, sizga %@ bonus beriladi.","rf.code":"Sizning kodingiz","rf.share":"Kodni ulashish",
       "rf.text":"UNO Airways'ga keling! Ilovada mening kodimni kiriting: %@","rf.enter":"Do'stingiz kodi bormi?","rf.ph":"Do'stingiz kodi (telefon raqami)","rf.ok":"Kod qabul qilindi ✓","rf.bad":"Bunday kod topilmadi","rf.self":"O'z kodingizni kiritib bo'lmaydi","rf.apply":"Qo'llash",
@@ -1726,7 +1729,7 @@ var WT=(function(){
       "ab.events":"Афиша","ab.halls":"Наши залы","ab.cap":"до %@ гостей","ab.bookEv":"Забронировать стол","ab.banq":"Заявка на свадьбу или банкет",
       "pf.bday":"День рождения","pf.bdayHint":"В ваш день рождения вас ждёт особое предложение 🎁","pf.bdayOnce":"Внимание: дата указывается один раз, изменить её потом нельзя.","pf.bdayLocked":"Чтобы изменить дату, обратитесь в ресторан (с паспортом).",
       "bd.title":"Скоро ваш день рождения! 🎂","bd.today":"С днём рождения! 🎉","bd.book":"Забронировать праздник","bg.title":"Для вас есть подарок! 🎁","bg.lock":"Подарок можно открыть только в ваш день рождения","bg.days":"Осталось дней: %@","bg.tap":"Сегодня ваш день! Нажмите на коробку 🎉","bg.need":"Укажите день рождения в профиле — мы приготовим для вас подарок","bg.happy":"С днём рождения","bg.show":"Чтобы получить подарок, покажите этот экран официанту или кассиру","bg.today":"Сегодня","bd.def":"Отметьте в UNO Airways — мы приготовим для вас особый подарок.","bd.push":"Скоро ваш день рождения! 🎂",
-      "bn.title":"Мои бонусы","bn.how":"С каждого чека начисляется %@% бонусов. Назовите номер телефона на кассе.","bn.need":"Сохраните имя и телефон выше, чтобы видеть бонусы.",
+      "bn.title":"Мои бонусы","bn.all":"Вся история","bn.less":"Свернуть","bn.how":"С каждого чека начисляется %@% бонусов. Назовите номер телефона на кассе.","bn.need":"Сохраните имя и телефон выше, чтобы видеть бонусы.",
       "bn.earn":"Начислено","bn.spend":"Списано","bn.ref":"Приглашение друга",
       "rf.title":"Пригласите друга","rf.how":"Если друг введёт ваш код в приложении и придёт впервые, вы получите %@ бонусов.","rf.code":"Ваш код","rf.share":"Поделиться кодом",
       "rf.text":"Приходите в UNO Airways! Введите мой код в приложении: %@","rf.enter":"Есть код друга?","rf.ph":"Код друга (номер телефона)","rf.ok":"Код принят ✓","rf.bad":"Такой код не найден","rf.self":"Нельзя ввести свой код","rf.apply":"Применить",
@@ -1739,7 +1742,7 @@ var WT=(function(){
       "ab.events":"What's on","ab.halls":"Our halls","ab.cap":"up to %@ guests","ab.bookEv":"Book a table","ab.banq":"Wedding or banquet request",
       "pf.bday":"Birthday","pf.bdayHint":"A special offer awaits you on your birthday 🎁","pf.bdayOnce":"Note: the date can be entered only once and cannot be changed later.","pf.bdayLocked":"To change the date, please contact the restaurant (with your passport).",
       "bd.title":"Your birthday is coming! 🎂","bd.today":"Happy birthday! 🎉","bd.book":"Book the celebration","bg.title":"There's a gift for you! 🎁","bg.lock":"The gift can only be opened on your birthday","bg.days":"%@ days to go","bg.tap":"It's your day! Tap the box 🎉","bg.need":"Add your birthday in the profile — we'll prepare a gift for you","bg.happy":"Happy birthday","bg.show":"Show this screen to the waiter or cashier to get your gift","bg.today":"Today","bd.def":"Celebrate at UNO Airways — we'll have a special gift for you.","bd.push":"Your birthday is coming! 🎂",
-      "bn.title":"My bonuses","bn.how":"Get %@% back in bonuses from every bill. Tell your phone number at the cashier.","bn.need":"Save your name and phone above to see your bonuses.",
+      "bn.title":"My bonuses","bn.all":"Full history","bn.less":"Show less","bn.how":"Get %@% back in bonuses from every bill. Tell your phone number at the cashier.","bn.need":"Save your name and phone above to see your bonuses.",
       "bn.earn":"Earned","bn.spend":"Spent","bn.ref":"Friend invite",
       "rf.title":"Invite a friend","rf.how":"When a friend enters your code in the app and visits for the first time, you get %@ in bonuses.","rf.code":"Your code","rf.share":"Share code",
       "rf.text":"Come to UNO Airways! Enter my code in the app: %@","rf.enter":"Have a friend's code?","rf.ph":"Friend's code (phone number)","rf.ok":"Code accepted ✓","rf.bad":"Code not found","rf.self":"You can't use your own code","rf.apply":"Apply",
@@ -1916,7 +1919,9 @@ var WT=(function(){
       else {
         h+=milesHTML()+'<p class="how">'+esc(T("bn.how").replace("%@",pct))+'</p>';
         var tx=(BN.data&&BN.data.tx)||[];
-        if(tx.length) h+='<div class="wcard np wlist" style="margin-top:10px">'+tx.slice(0,5).map(function(t){ return '<div class="it"><div><b>'+esc(T(t.kind==="spend"?"bn.spend":t.kind==="ref"?"bn.ref":"bn.earn"))+'</b><small>'+esc(new Date(t.at).toLocaleDateString(S.lang==="uz"?"uz-Latn-UZ":S.lang,{day:"numeric",month:"short"}))+'</small></div><b style="color:'+(t.amount<0?'#ff9a8a':'#7CE0A6')+'">'+(t.amount>0?'+':'')+esc(fmtL(t.amount))+'</b></div>'; }).join("")+'</div>';
+        /* history: only the latest line; a tap shows the rest */
+        if(tx.length) h+='<div class="wcard np wlist" style="margin-top:10px">'+tx.slice(0,BN.txOpen?10:1).map(function(t){ return '<div class="it"><div><b>'+esc(T(t.kind==="spend"?"bn.spend":t.kind==="ref"?"bn.ref":"bn.earn"))+'</b><small>'+esc(new Date(t.at).toLocaleDateString(S.lang==="uz"?"uz-Latn-UZ":S.lang,{day:"numeric",month:"short"}))+'</small></div><b style="margin-left:auto;color:'+(t.amount<0?'#ff9a8a':'#7CE0A6')+'">'+(t.amount>0?'+':'')+esc(fmtL(t.amount))+'</b></div>'; }).join("")+
+          (tx.length>1?'<button type="button" data-wx="txmore" style="display:block;width:100%;border:0;border-top:1px solid rgba(255,255,255,.08);background:transparent;color:#E8B04B;font:700 14px var(--sans,system-ui);padding:12px">'+(BN.txOpen?'▴ '+esc(T("bn.less")):'▾ '+esc(T("bn.all"))+' ('+tx.length+')')+'</button>':'')+'</div>';
       }
       h+='</div>';
       var rb=+(BN.data&&BN.data.ref)||+g.refBonus||0;
@@ -1988,6 +1993,7 @@ var WT=(function(){
     if(a==="banq"){ B.mode="b"; B.msg=null; go(1); return; }
     if(a==="evbook"){ B.mode="t"; B.msg=null; B.pre={at:b.dataset.d+"T"+b.dataset.t}; go(1); return; }
     if(a==="bgift"){ bgiftTap(b); return; }
+    if(a==="txmore"){ BN.txOpen=!BN.txOpen; var gb=$("wpGrow"); if(gb) gb.innerHTML=growHTML(); return; }
     if(a==="bdbook"){ B.mode="t"; B.msg=null; B.pre={occ:1}; go(1); return; }
     if(a==="refshare"){ shareText(T("rf.text").replace("%@",ph9(profile().phone))+" "+location.origin+location.pathname); return; }
     if(a==="ref"){ applyRef(); return; }
