@@ -3,7 +3,7 @@
 
 create table if not exists public.uno_calls (
   id          bigint generated always as identity primary key,
-  table_no    text not null check (char_length(table_no) between 1 and 12),
+  table_no    text not null check (char_length(table_no) between 1 and 30),
   kind        text not null check (kind in ('waiter','bill')),
   total       numeric check (total is null or (total >= 0 and total < 1000000000)),
   items       jsonb,

@@ -37,6 +37,8 @@
   .card .qr svg { width: 100%; height: 100%; display: block; }
   .card .txt { margin-top: auto; padding-top: 3mm; font-size: 3mm; line-height: 1.45; color: #d9ccb0; }
   .card .txt b { color: #e8b04b; font-weight: 700; }
+  .card.zoned .qr { width: 43mm; height: 43mm; margin-top: 3mm; }
+  .card.zoned .tbl { font-size: 10mm; }
   @media print { body { background: #fff; } .bar, .save1 { display: none !important; } .sheet { padding: 0; grid-template-columns: repeat(2, 90mm); } }
 </style>
 </head>
@@ -50,35 +52,52 @@
 <div class="sheet" id="sheet"></div>
 <script>
 (function () {
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  var base = location.origin + location.pathname.replace(/[^\/]*$/, "");
   var q = new URLSearchParams(location.search);
   var from = Math.max(1, parseInt(q.get("from")) || 1);
   var to = Math.max(from, parseInt(q.get("to")) || from + 19);
   to = Math.min(to, from + 199);
   document.getElementById("from").value = from;
   document.getElementById("to").value = to;
-  var base = location.origin + location.pathname.replace(/[^\/]*$/, "");
+  /* zones from admin → "Hududlar va stollar": ?z=BUSINESS:1-24|COMFORT:1-19 — every zone starts at its own 1 */
+  function nums(spec) {
+    var out = [], seen = {}; String(spec || "").split(/[,\s]+/).forEach(function (p) {
+      var m = p.match(/^(\d{1,4})(?:-(\d{1,4}))?/); if (!m) return; var a = +m[1], b = m[2] ? +m[2] : a; if (b < a) { var t = a; a = b; b = t; }
+      for (var i = a; i <= b && out.length < 300; i++) if (!seen[i]) { seen[i] = 1; out.push(i); }
+    }); return out;
+  }
+  var ZONES = (q.get("z") || "").split("|").map(function (x) { var i = x.lastIndexOf(":"); return i > 0 ? { name: x.slice(0, i).trim(), t: nums(x.slice(i + 1)) } : null; }).filter(function (z) { return z && z.name && z.t.length; });
+  var ITEMS = [];
+  if (ZONES.length) ZONES.forEach(function (z) { z.t.forEach(function (n) { ITEMS.push({ zone: z.name, n: n }); }); });
+  else for (var k = from; k <= to; k++) ITEMS.push({ zone: "", n: k });
+  ITEMS = ITEMS.slice(0, 400);
+  if (ZONES.length) { var rg = document.querySelector(".bar .range"); if (rg) rg.innerHTML = '<span style="font-size:13px;color:#cbbd9e;line-height:1.4">' + ZONES.map(function (z) { return '<b style="color:#e8b04b">' + esc(z.name) + '</b> ' + z.t.length + ' ta'; }).join(" · ") + ' — jami ' + ITEMS.length + ' ta QR-kod</span>'; }
+  function tno(it) { return it.zone ? it.zone + " " + it.n : String(it.n); }
+  function qurl(it) { return base + "?stol=" + encodeURIComponent(tno(it)); }
   var sheet = document.getElementById("sheet");
 
-  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function qrSvg(text) {
     if (typeof qrcode !== "function") return '<div style="color:#000;font-size:3mm;padding:4mm">QR kutubxonasi yuklanmadi. Internetni tekshiring.</div>';
     var qr = qrcode(0, "M"); qr.addData(text); qr.make();
     return qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
   }
-  var html = "";
-  for (var n = from; n <= to; n++) {
-    var url = base + "?stol=" + n;
-    html += '<div class="cell"><div class="card">' +
+  var html = "", lastZone = null;
+  ITEMS.forEach(function (it, idx) {
+    var n = it.n, url = qurl(it);
+    if (it.zone && it.zone !== lastZone) { lastZone = it.zone; html += '<h2 style="grid-column:1/-1;margin:6mm 0 0;font-size:5mm;letter-spacing:.2em;color:#1a1712">' + esc(it.zone) + '</h2>'; }
+    html += '<div class="cell"><div class="card' + (it.zone ? ' zoned' : '') + '">' +
       '<img class="logo" src="media/logo.png" alt="">' +
       '<div class="name">UNO AIRWAYS</div>' +
-      '<div class="tbl">' + n + '<small>STOL · СТОЛ · TABLE</small></div>' +
+      (it.zone ? '<div class="zone" style="margin-top:2.5mm;padding:1.2mm 4mm;border:.3mm solid #c9a35a;border-radius:99mm;font-size:3.4mm;letter-spacing:.25em;font-weight:800;color:#e8b04b">' + esc(it.zone.toUpperCase()) + '</div>' : '') +
+      '<div class="tbl"' + (it.zone ? ' style="margin-top:2mm"' : '') + '>' + n + '<small>STOL · СТОЛ · TABLE</small></div>' +
       '<div class="qr" title="' + esc(url) + '">' + qrSvg(url) + '</div>' +
       '<div class="txt"><b>Menyuni ko\'rish uchun skanerlang</b><br>Сканируйте, чтобы открыть меню<br>Scan to open the menu</div>' +
-      '</div><button class="save1" type="button" data-n="' + n + '">Rasm qilib saqlash</button></div>';
-  }
+      '</div><button class="save1" type="button" data-i="' + idx + '">Rasm qilib saqlash</button></div>';
+  });
   sheet.innerHTML = html;
 
-  document.getElementById("go").onclick = function () {
+  if (document.getElementById("go")) document.getElementById("go").onclick = function () {
     var a = Math.max(1, parseInt(document.getElementById("from").value) || 1);
     var b = Math.max(a, parseInt(document.getElementById("to").value) || a);
     location.search = "?from=" + a + "&to=" + b;
@@ -104,7 +123,8 @@
     x.textAlign = "center";
   }
   var FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
-  function drawCard(n) {
+  function drawCard(it) {
+    var n = it.n;
     var c = document.createElement("canvas"); c.width = W; c.height = H;
     var x = c.getContext("2d"), m = function (v) { return v * MM; };
     x.imageSmoothingEnabled = true; try { x.imageSmoothingQuality = "high"; } catch (_) {}
@@ -117,14 +137,20 @@
     x.textAlign = "center"; x.textBaseline = "top";
     x.fillStyle = "#e8b04b"; x.font = "700 " + m(3.4) + "px " + FONT; spaced(x, "UNO AIRWAYS", W / 2, y, m(3.4) * .3);
     y += m(3.4) * 1.3 + m(3);
+    if (it.zone) {                                   /* zone pill: BUSINESS / COMFORT / … */
+      var zt = it.zone.toUpperCase(); x.font = "800 " + m(3.4) + "px " + FONT;
+      var zw = 0; for (var zi = 0; zi < zt.length; zi++) zw += x.measureText(zt[zi]).width + m(3.4) * .25;
+      zw += m(8); rr(x, (W - zw) / 2, y - m(1.2), zw, m(6), m(3)); x.lineWidth = m(.3); x.strokeStyle = "#c9a35a"; x.stroke();
+      x.fillStyle = "#e8b04b"; spaced(x, zt, W / 2, y + m(.2), m(3.4) * .25); y += m(6) + m(1.5);
+    }
     x.fillStyle = "#f3e7cf"; x.font = "800 " + m(11) + "px " + FONT; x.fillText(String(n), W / 2, y);
     y += m(11) + m(1.5);
     x.fillStyle = "#bba77d"; x.font = "600 " + m(3.2) + "px " + FONT; spaced(x, "STOL · СТОЛ · TABLE", W / 2, y, m(3.2) * .35);
     y += m(3.2) * 1.3 + m(3.5);
-    var qs = m(50), qx = (W - qs) / 2;
+    var qs = m(it.zone ? 43 : 50), qx = (W - qs) / 2;     /* the zone pill takes room: a slightly smaller QR keeps the text inside the card */
     rr(x, qx, y, qs, qs, m(3)); x.fillStyle = "#ffffff"; x.fill();
     if (typeof qrcode === "function") {
-      var qr = qrcode(0, "M"); qr.addData(base + "?stol=" + n); qr.make();
+      var qr = qrcode(0, "M"); qr.addData(qurl(it)); qr.make();
       /* whole-pixel modules: every square has razor-sharp edges, no grey seams */
       var cnt = qr.getModuleCount(), cell = Math.floor((qs - m(5)) / cnt), inner = cell * cnt, ox = Math.round(qx + (qs - inner) / 2), oy = Math.round(y + (qs - inner) / 2);
       x.imageSmoothingEnabled = false; x.fillStyle = "#000000";
@@ -136,7 +162,7 @@
     lines.forEach(function (l, i) { x.font = l[0] + " " + m(3) + "px " + FONT; x.fillStyle = l[1]; x.fillText(l[2], W / 2, ty + i * lh2); });
     return c;
   }
-  function fname(n) { return "UNO_stol_" + (n < 10 ? "0" : "") + n + ".png"; }
+  function fname(it) { var n = it.n; return "UNO_" + (it.zone ? it.zone.replace(/[^A-Za-z0-9]+/g, "_") + "_" : "stol_") + (n < 10 ? "0" : "") + n + ".png"; }
   function toBlob(c) { return new Promise(function (ok) { c.toBlob(function (b) { ok(b); }, "image/png"); }); }
   function download(blob, name) { var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 4000); }
   var inApp = !!window.UnoKiosk, app = inApp && window.UnoKiosk.saveImage ? window.UnoKiosk : null;
@@ -162,11 +188,12 @@
   }
   async function buildAll(asData) {
     await logoReady; var out = [];
-    for (var n = from; n <= to; n++) {
-      status("Tayyorlanmoqda: " + (n - from + 1) + " / " + (to - from + 1));
-      var c = drawCard(n);
-      if (asData === "dataurl") out.push({ n: n, name: fname(n), url: c.toDataURL("image/png") });
-      else { var b = await toBlob(c); out.push({ n: n, name: fname(n), blob: b }); }
+    for (var i = 0; i < ITEMS.length; i++) {
+      var it = ITEMS[i];
+      status("Tayyorlanmoqda: " + (i + 1) + " / " + ITEMS.length);
+      var c = drawCard(it);
+      if (asData === "dataurl") out.push({ n: it.n, name: fname(it), url: c.toDataURL("image/png") });
+      else { var b = await toBlob(c); out.push({ n: it.n, name: fname(it), blob: b }); }
       await new Promise(function (ok) { setTimeout(ok, 0); });
     }
     return out;
@@ -189,7 +216,7 @@
       var items = await buildAll();
       status("ZIP tayyorlanmoqda…");
       var files = []; for (var i = 0; i < items.length; i++) files.push({ name: items[i].name, data: new Uint8Array(await items[i].blob.arrayBuffer()) });
-      var zip = makeZip(files), zname = "UNO_stol_QR_" + from + "-" + to + ".zip";
+      var zip = makeZip(files), zname = ZONES.length ? "UNO_QR_" + ZONES.map(function (z) { return z.name.replace(/[^A-Za-z0-9]+/g, ""); }).join("_").slice(0, 60) + ".zip" : "UNO_stol_QR_" + from + "-" + to + ".zip";
       if (inApp && window.UnoKiosk.saveFile) {
         var r = window.UnoKiosk.saveFile(zname, await dataUrl(zip), "application/zip");
         status(r === "ok" ? "✅ ZIP saqlandi: Fayllar → Yuklanmalar (Download) → UNO → " + zname : r === "perm" ? "Xotiraga yozish uchun ruxsat bering va qayta bosing." : "Saqlab bo'lmadi.");
@@ -222,14 +249,14 @@
   };
   sheet.addEventListener("click", async function (e) {
     var b = e.target.closest(".save1"); if (!b) return;
-    var n = Number(b.dataset.n);
+    var it = ITEMS[Number(b.dataset.i)], n = tno(it);
     if (inApp && !app) { status(OLD_APP); statusEl.scrollIntoView({ block: "nearest" }); return; }
-    status(n + "-stol rasmi tayyorlanmoqda…"); await logoReady; var c = drawCard(n);
-    if (app) { var r = app.saveImage(fname(n), c.toDataURL("image/png")); status(r === "ok" ? "✅ " + n + "-stol rasmi galereyaga saqlandi." : r === "perm" ? "Xotiraga yozish uchun ruxsat bering va qayta bosing." : "Saqlab bo'lmadi."); return; }
-    var blob = await toBlob(c), f = new File([blob], fname(n), { type: "image/png" });
+    status(n + "-stol rasmi tayyorlanmoqda…"); await logoReady; var c = drawCard(it);
+    if (app) { var r = app.saveImage(fname(it), c.toDataURL("image/png")); status(r === "ok" ? "✅ " + n + "-stol rasmi galereyaga saqlandi." : r === "perm" ? "Xotiraga yozish uchun ruxsat bering va qayta bosing." : "Saqlab bo'lmadi."); return; }
+    var blob = await toBlob(c), f = new File([blob], fname(it), { type: "image/png" });
     if (navigator.canShare && navigator.canShare({ files: [f] })) { status("Ochilgan oynada «Rasmni saqlash» ni tanlang."); try { await navigator.share({ files: [f] }); status("✅ Tayyor."); return; } catch (err) { if (err && err.name === "AbortError") { status(""); return; } } }
-    download(blob, fname(n));
-    status("✅ " + fname(n) + " — «Yuklanmalar» (Downloads) papkasiga tushdi.");
+    download(blob, fname(it));
+    status("✅ " + fname(it) + " — «Yuklanmalar» (Downloads) papkasiga tushdi.");
   });
 })();
 </script>

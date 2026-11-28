@@ -15,6 +15,10 @@ alter table public.uno_waiter_fail enable row level security;
 revoke all on public.uno_waiter_sessions from anon, authenticated;
 revoke all on public.uno_waiter_fail from anon, authenticated;
 
+-- stol nomi hudud bilan uzunroq bo'ladi ("KONFERENSIYA 12"): 12 belgi o'rniga 30 gacha
+alter table public.uno_calls drop constraint if exists uno_calls_table_no_check;
+alter table public.uno_calls add constraint uno_calls_table_no_check check (char_length(table_no) between 1 and 30);
+
 -- hudud nomlarini bir xil ko'rinishga keltirish: BUSINESS / Biznes → biznes, COMFORT / Komfort → comfort, …
 create or replace function public.uno_zone_key(s text) returns text language sql immutable as $$
   select case

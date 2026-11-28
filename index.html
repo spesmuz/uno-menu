@@ -3057,7 +3057,7 @@ var TABLE_KEY="uno_table", TABLE_QR_KEY="uno_table_qr", TABLE_QR_HOURS=4;
     var u=new URL(location.href), q=u.searchParams.get("stol");
     if(q!==null) window.__fromQR=true;
     if(q!==null){
-      q=String(q).trim().slice(0,12);
+      q=String(q).trim().slice(0,30);
       if(q && q!=="0") localStorage.setItem(TABLE_QR_KEY, JSON.stringify({t:q, at:Date.now()}));
       else localStorage.removeItem(TABLE_QR_KEY);
       /* remove ?stol= from the address, so a bookmark or home-screen icon does not bring the old table back */
@@ -3182,7 +3182,7 @@ function applyTheme(){
 }
 function callsOn(){ return !!(S.settings && S.settings.callsOn); }
 function tableNo(){ var q=qrTable(); if(q) return q; var pk=pickedTable(); if(pk) return pk; try{ return (localStorage.getItem(TABLE_KEY)||"").trim(); }catch(_){ return ""; } }
-function setTableNo(v){ try{ v=String(v||"").trim().slice(0,12); if(v){ localStorage.setItem(TABLE_KEY,v); localStorage.setItem("uno_table_src","admin"); } else { localStorage.removeItem(TABLE_KEY); localStorage.removeItem("uno_table_src"); } }catch(_){} refreshCallUI(); }
+function setTableNo(v){ try{ v=String(v||"").trim().slice(0,30); if(v){ localStorage.setItem(TABLE_KEY,v); localStorage.setItem("uno_table_src","admin"); } else { localStorage.removeItem(TABLE_KEY); localStorage.removeItem("uno_table_src"); } }catch(_){} refreshCallUI(); }
 /* ---------- installed menu on Android: also paint the strip around the camera hole ----------
    Chrome draws under the camera cutout only in "real" fullscreen (Fullscreen API + viewport-fit=cover),
    so the installed app switches to it on the guest's first touch. Exit: swipe from the edge / back. */
@@ -3283,7 +3283,9 @@ function setTableNo(v){ try{ v=String(v||"").trim().slice(0,12); if(v){ localSto
 })();
 
 /* ---------- waiter picks the zone and table every time the tablet is unlocked (switch: admin panel) ---------- */
-var ZONES_DEFAULT=[{id:"business",name:"BUSINESS",tables:"1-10"},{id:"comfort",name:"COMFORT",tables:"1-10"},{id:"family",name:"FAMILY",tables:"1-10"},{id:"conf",name:"CONFERENSIYA",tables:"1-5"},{id:"balkon",name:"BALKON",tables:"1-10"},{id:"vip",name:"VIP",tables:"1-6"}];
+var ZONES_DEFAULT=[{id:"business",name:"BUSINESS",tables:"1-24"},{id:"comfort",name:"COMFORT",tables:"1-19"},{id:"balkon",name:"BALKON",tables:"1-10"},{id:"conf",name:"KONFERENSIYA",tables:"1-5"},{id:"vip",name:"VIP",tables:"1-6"}];
+/* QR page parameter: BUSINESS:1-24|COMFORT:1-19 */
+function qrZonesParam(zs){ return (zs||[]).filter(function(z){ return z && z.name && parseTables(z.tables).length; }).map(function(z){ return String(z.name).replace(/[|:]/g," ").trim()+":"+String(z.tables).replace(/\s+/g,""); }).join("|"); }
 var PICK_KEY="uno_table_pick";
 function zonesCfg(){ var z=S.settings&&S.settings.zones; return Array.isArray(z)&&z.length?z:ZONES_DEFAULT; }
 function zonePickOn(){ return !!(S.settings&&S.settings.zonePick); }
@@ -3815,11 +3817,13 @@ function renderAdmin(){
      '<p class="help" style="margin-bottom:16px">O\'chiq bo\'lsa, menyuda qo\'ng\'iroqcha va "Hisobni so\'rash" tugmalari umuman chiqmaydi (QR-kod skanerlansa ham). Ofitsiant bosqichiga o\'tganda yoqing.</p>'+
      '<div class="a-row"><label class="fld" style="max-width:220px"><span>Xizmat haqi (%)</span><input id="setSvc" type="number" min="0" max="50" step="1" value="'+svcPct()+'" '+(ro?"disabled":"")+'></label>'+(ro?'':'<button class="btn gold" data-a="saveSvc">Saqlash</button>')+'</div>'+
      '<p class="help" style="margin-top:6px">Savatchada taomlar summasiga qo\'shib hisoblanadi. 0 qo\'yilsa ko\'rsatilmaydi.</p>'+
-     '<div class="a-row" style="margin-top:16px"><label class="fld" style="max-width:220px"><span>Shu planshetning stol raqami</span><input id="setTable" maxlength="12" placeholder="Masalan: 5" value="'+esc(tableNo())+'"></label><button class="btn gold" data-a="saveTable">Saqlash</button></div>'+
+     '<div class="a-row" style="margin-top:16px"><label class="fld" style="max-width:220px"><span>Shu planshetning stol raqami</span><input id="setTable" maxlength="30" placeholder="Masalan: BUSINESS 5" value="'+esc(tableNo())+'"></label><button class="btn gold" data-a="saveTable">Saqlash</button></div>'+
      '<p class="help" style="margin-top:6px">Faqat shu qurilmada saqlanadi. Stol raqami bo\'lsa, menyuda "Ofitsiantni chaqirish" va savatchada "Hisobni so\'rash" tugmalari chiqadi.</p>'+
-     '<div class="a-row" style="margin-top:16px"><label class="fld" style="max-width:140px"><span>Stollar: dan</span><input id="qrFrom" type="number" min="1" value="1"></label><label class="fld" style="max-width:140px"><span>gacha</span><input id="qrTo" type="number" min="1" value="20"></label>'+
-     '<a class="btn" id="qrLink" href="'+esc(base)+'qr.html?from=1&amp;to=20">QR-kodlarni ochish</a></div>'+
-     '<p class="help" style="margin-top:6px">Har stol uchun QR-kod: mijoz o\'z telefoni bilan skanerlasa, menyu shu stol raqami bilan ochiladi. Kartalarni rasm qilib saqlab, bosmaxonaga berishingiz mumkin.</p>'+
+     '<h3 style="font-size:15px;margin:22px 0 6px">🔳 Stol QR-kodlari (hududlar bo\'yicha)</h3>'+
+     '<p class="help">Har hudud uchun stollar 1 dan boshlab alohida raqamlanadi: BUSINESS 1, 2, 3…, COMFORT 1, 2, 3… Mijoz QR-kodni skanerlasa, menyu shu hudud va stol bilan ochiladi va chaqiruv rotatsiya bo\'yicha shu stol ofitsiantiga boradi. Hududlar va stollar sonini pastdagi <b>«Hududlar va stollar»</b> qismida belgilang va Saqlang.</p>'+
+     '<div class="a-row" style="margin-top:10px;flex-wrap:wrap;gap:8px"><a class="btn gold" href="'+esc(base)+'qr.html?z='+encodeURIComponent(qrZonesParam(zonesCfg()))+'">Barcha hududlar QR-kodlari</a>'+
+       zonesCfg().map(function(z){ var c=parseTables(z.tables).length; return c?'<a class="btn" href="'+esc(base)+'qr.html?z='+encodeURIComponent(qrZonesParam([z]))+'">'+esc(z.name)+' · '+c+' ta</a>':''; }).join("")+'</div>'+
+     '<p class="help" style="margin-top:6px">Kartalarni rasm qilib saqlab yoki ZIP qilib bosmaxonaga berishingiz mumkin. Eski (hududsiz, faqat raqamli) QR-kodlar ham ishlayveradi.</p>'+
      '<h3 style="font-size:15px;margin:22px 0 6px">📱 Ofitsiant telefoni rejimi</h3>'+
      (waiterMode()
        ?'<div class="msg ok">Bu qurilma — <b>ofitsiant telefoni</b>'+(function(){ try{ var n=localStorage.getItem("uno_waiter_name"); return n?' ('+esc(n)+')':''; }catch(_){ return ""; } })()+'. Ilova ochilganda menyu emas, ofitsiant ekrani (PIN-kod va bugungi stollar) chiqadi. Admin panelga qaytish: ofitsiant ekranidagi logotipni 3 soniya bosib turing yoki 7 marta bosing.</div>'+
@@ -3828,7 +3832,9 @@ function renderAdmin(){
         '<div class="a-row" style="margin-top:10px"><label class="fld" style="max-width:280px"><span>Ofitsiant</span><select id="waiterSel">'+waiterOpts()+'</select></label><button class="btn gold" data-a="waiterOn">Shu telefonni ofitsiant telefoni qilish</button></div>'+
         '<div class="a-row" style="margin-top:8px"><a class="btn" target="_blank" rel="noopener" href="'+esc(base)+'ofitsiant.html">Ofitsiant ekranini ko\'rish</a></div>')+
      '<div id="tblMsg"></div>'+
-     '<h3 style="font-size:15px;margin:22px 0 6px">Planshet ochilganda zona va stol tanlash</h3>'+
+     '<h3 style="font-size:15px;margin:22px 0 6px">Hududlar va stollar</h3>'+
+     '<p class="help">Hudud nomi va undagi stollar (masalan: 1-24). Shu ro\'yxatdan QR-kodlar va planshetdagi zona tanlash tuziladi. Nomlar rotatsiyadagi hududlar bilan bir xil bo\'lsin: BUSINESS, COMFORT, BALKON, FAMILY, KONFERENSIYA, VIP.</p>'+
+     '<h3 style="font-size:14px;margin:14px 0 6px">Planshet ochilganda zona va stol tanlash</h3>'+
      '<p class="help">Yoqilsa: ofitsiant planshetni blokdan ochganda ekranda zonalar chiqadi, u zonani va mijoz o\'tirgan stol raqamini tanlaydi. Planshet keyingi safar blokdan ochilgunicha shu stolga bog\'lanadi. Faqat UNO ilovasidagi planshetlarda ishlaydi. <b style="color:var(--gold2)">Hozircha o\'chirilgan: ofitsiant va stol bosqichiga o\'tganda yoqiladi.</b></p>'+
      '<label style="display:flex;gap:8px;align-items:center;margin:10px 0"><input type="checkbox" id="zpOn" '+(zonePickOn()?'checked':'')+(ro?' disabled':'')+'> Yoqilgan</label>'+
      '<div style="display:flex;flex-direction:column;gap:8px" id="zpRows">'+zonesCfg().map(function(z,i){ return '<div class="a-row" style="gap:8px"><label class="fld" style="max-width:220px;min-width:150px"><span>Zona</span><input data-zn="'+i+'" maxlength="24" value="'+esc(z.name)+'"></label><label class="fld" style="min-width:180px"><span>Stol raqamlari (masalan: 1-10, 15)</span><input data-zt="'+i+'" maxlength="80" value="'+esc(z.tables||"")+'"></label>'+(ro?'':'<button class="btn sm danger" data-a="zpDel" data-id="'+i+'" style="margin-bottom:4px">O\'chirish</button>')+'</div>'; }).join("")+'</div>'+
@@ -3932,8 +3938,6 @@ function renderAdmin(){
   var lf=$("logoFile"); if(lf) lf.onchange=function(){ var f=this.files[0]; this.value=""; if(f) uploadLogo(f); };
   if(S.aiBulk && $("aiBulkBox")) renderAiBulk();
   offlineUI(); if(!Offline.last && !Offline.busy) syncMedia();
-  var qf=$("qrFrom"), qt=$("qrTo"), ql=$("qrLink");
-  if(qf&&qt&&ql){ var upd=function(){ var a=Math.max(1,parseInt(qf.value)||1), b=Math.max(a,parseInt(qt.value)||a); ql.href=ql.href.replace(/\?.*$/,"")+"?from="+a+"&to="+Math.min(b,a+199); }; qf.oninput=upd; qt.oninput=upd; }
   var co=$("callsOn"); if(co) co.onchange=async function(){ var on=this.checked; try{ await saveSettings({callsOn:on}); msg($("tblMsg"), on?"Ofitsiant tugmalari yoqildi.":"Ofitsiant tugmalari o'chirildi.","ok"); }catch(err){ msg($("tblMsg"),errText(err),"err"); } };
   var ss=$("setSound"); if(ss) ss.onchange=async function(){ var on=this.checked; try{ await saveSettings({soundOn:on}); msg($("setMsg"), on?"Ovozlar yoqildi.":"Ovozlar o'chirildi.","ok"); }catch(err){ msg($("setMsg"),errText(err),"err"); } };
   if(S.editing) renderEditor();
