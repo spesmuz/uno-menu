@@ -7,7 +7,7 @@ def rpc(fn,args):
         r=urllib.request.urlopen(urllib.request.Request(U+"/rest/v1/rpc/"+fn,data=json.dumps(args).encode(),headers=H),timeout=30)
         return "OK "+r.read().decode()[:200]
     except urllib.error.HTTPError as e: return "HTTP %d %s"%(e.code,e.read().decode()[:160])
-for fn,a in [("uno_bday_gift",{"p_device":"check-x","p_lang":"uz"}),("uno_my_birthday",{"p_device":"check-x"}),("uno_media_kick",{})]:
+for fn,a in [("uno_bday_gift",{"p_device":"check-x","p_lang":"uz"}),("uno_my_birthday",{"p_device":"check-x"}),("uno_media_kick",{}),("uno_waiter_calls",{"p_token":"check-x"})]:
     print("FN",fn,"->",rpc(fn,a))
 rows=json.load(urllib.request.urlopen(urllib.request.Request(U+"/rest/v1/uno_docs?select=path,data&path=like.news/*",headers=H),timeout=30))
 for r in rows:
