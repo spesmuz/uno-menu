@@ -1663,9 +1663,6 @@ var WT=(function(){
   function renderProfile(){
     var p=profile(), ph=photo(), pg=$("wp-profile");
     pg.innerHTML='<div class="wrap"><h1>'+esc(T("tab.profile"))+'</h1>'+
-      /* news before everything else, newest on top */
-      '<h2 style="display:flex;align-items:center;justify-content:space-between">'+esc(T("pf.news"))+'<button type="button" data-wp="reload" style="border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#E8B04B;width:34px;height:34px;border-radius:50%;font-size:16px">↻</button></h2>'+
-      '<div id="wpNews">'+newsHTML()+'</div>'+
       '<h2>'+esc(T("pf.me"))+'</h2>'+
       '<div class="wcard"><div class="wpf"><label class="wava" title="'+esc(T(ph?"pf.photoChange":"pf.photo"))+'">'+(ph?'<img src="'+ph+'" alt="">':esc(initials(p.name)))+'<i>📷</i><input id="wpPhoto" type="file" accept="image/*" hidden></label>'+
       '<div style="flex:1;min-width:0"><label class="wfld"><input id="wpName" placeholder="'+esc(T("pf.name"))+'" autocomplete="name" value="'+esc(p.name)+'"></label>'+
@@ -1675,6 +1672,9 @@ var WT=(function(){
       (ph?'<button type="button" data-wp="delphoto" style="margin:10px 0 0;border:0;background:none;color:rgba(255,160,150,.9);font-size:13px">'+esc(T("pf.photoDel"))+'</button>':'')+
       '<button class="wbtn" type="button" data-wp="save" style="margin-top:12px'+(P.msg||pfDirty()?'':';display:none')+'">'+(P.msg?'✓ '+esc(T("pf.saved")):esc(T("pf.save")))+'</button></div>'+
       '<p class="whint">'+esc(T("pf.hint"))+'</p>'+
+      /* always: my details first, then the news (newest on top), then bonuses and the rest */
+      '<h2 style="display:flex;align-items:center;justify-content:space-between">'+esc(T("pf.news"))+'<button type="button" data-wp="reload" style="border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#E8B04B;width:34px;height:34px;border-radius:50%;font-size:16px">↻</button></h2>'+
+      '<div id="wpNews">'+newsHTML()+'</div>'+
       '<div id="wpGrow">'+growHTML()+'</div>'+
       bgiftHTML()+'</div>';   /* the birthday gift closes the page */
   }

@@ -124,29 +124,6 @@ struct ProfileView: View {
                         .font(.system(size: 34, weight: .bold)).foregroundColor(.white)
                         .padding(.top, 8)
 
-                    /* news before everything else, newest on top */
-                    HStack {
-                        sectionTitle(L.t("pf.news"))
-                        Spacer()
-                        Button { news.load() } label: {
-                            Image(systemName: "arrow.clockwise").font(.system(size: 15, weight: .semibold))
-                                .foregroundColor(Config.gold).frame(width: 34, height: 34)
-                                .background(Circle().fill(Color.white.opacity(0.08)))
-                                .overlay(Circle().strokeBorder(Color.white.opacity(0.16), lineWidth: 1))
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    if news.items.isEmpty {
-                        HStack {
-                            Spacer()
-                            if news.loading { ProgressView().tint(Config.gold) }
-                            else { Text(news.failed ? L.t("offline.text") : L.t("pf.noNews")).font(.subheadline).foregroundColor(Color.white.opacity(0.6)).multilineTextAlignment(.center) }
-                            Spacer()
-                        }
-                        .padding(.vertical, 26)
-                        .glassCard()
-                    }
-                    ForEach(news.items) { n in newsCard(n) }
 
                     /* my details */
                     sectionTitle(L.t("pf.me"))
@@ -203,6 +180,30 @@ struct ProfileView: View {
                     Text(L.t("pf.hint")).font(.footnote).foregroundColor(Color.white.opacity(0.6)).padding(.horizontal, 6)
 
 
+
+                    /* always: my details first, then the news (newest on top) */
+                    HStack {
+                        sectionTitle(L.t("pf.news"))
+                        Spacer()
+                        Button { news.load() } label: {
+                            Image(systemName: "arrow.clockwise").font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(Config.gold).frame(width: 34, height: 34)
+                                .background(Circle().fill(Color.white.opacity(0.08)))
+                                .overlay(Circle().strokeBorder(Color.white.opacity(0.16), lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    if news.items.isEmpty {
+                        HStack {
+                            Spacer()
+                            if news.loading { ProgressView().tint(Config.gold) }
+                            else { Text(news.failed ? L.t("offline.text") : L.t("pf.noNews")).font(.subheadline).foregroundColor(Color.white.opacity(0.6)).multilineTextAlignment(.center) }
+                            Spacer()
+                        }
+                        .padding(.vertical, 26)
+                        .glassCard()
+                    }
+                    ForEach(news.items) { n in newsCard(n) }
 
                     /* birthday gift: below the news (new posts always go on top) */
                     if let g = gift, g.on {
