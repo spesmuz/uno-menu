@@ -103,6 +103,21 @@ end $$;
 revoke all on function public.uno_waiter_login(text) from public;
 grant execute on function public.uno_waiter_login(text) to anon, authenticated;
 
+-- admin ofitsiant telefonini aniq xodimga bog'laydi (admin panel → Stollar va QR): ofitsiant PIN terishi shart emas
+create or replace function public.uno_waiter_bind(p_staff uuid) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare s public.uno_staff; tok text;
+begin
+  if not public.uno_is_admin() then raise exception 'not_admin' using errcode = '42501'; end if;
+  select * into s from public.uno_staff where id = p_staff and active;
+  if s.id is null then raise exception 'no_staff'; end if;
+  tok := replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', '');
+  insert into public.uno_waiter_sessions(token, staff_id) values (tok, s.id);
+  return jsonb_build_object('ok', true, 'token', tok, 'name', s.name);
+end $$;
+revoke all on function public.uno_waiter_bind(uuid) from public, anon;
+grant execute on function public.uno_waiter_bind(uuid) to authenticated;
+
 create or replace function public.uno_waiter_logout(p_token text) returns void
 language sql security definer set search_path = public as $$
   delete from public.uno_waiter_sessions where token = p_token;

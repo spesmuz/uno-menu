@@ -40,8 +40,37 @@ public class MainActivity extends Activity {
     } catch (Exception e) { }
   }
   /* the screen stays on only on the restaurant's kiosk tablets; a guest's phone sleeps as usual */
+  /* waiter-phone mode (set in admin → Stollar va QR): the screen stays on and the page keeps checking calls */
+  boolean awake() { return getSharedPreferences("uno", MODE_PRIVATE).getBoolean("awake", false); }
+  android.media.MediaPlayer alarmPlayer; int alarmVol = -1;
+  void alarmNow(boolean on) {
+    android.media.AudioManager am = (android.media.AudioManager) getSystemService(Context.AUDIO_SERVICE);
+    android.os.Vibrator vib = (android.os.Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+    if (on) {
+      if (alarmPlayer != null) return;
+      try { alarmVol = am.getStreamVolume(android.media.AudioManager.STREAM_ALARM); am.setStreamVolume(android.media.AudioManager.STREAM_ALARM, am.getStreamMaxVolume(android.media.AudioManager.STREAM_ALARM), 0); } catch (Exception e) { alarmVol = -1; }
+      try {
+        Uri u = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_ALARM);
+        if (u == null) u = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_RINGTONE);
+        if (u == null) u = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION);
+        android.media.MediaPlayer p = new android.media.MediaPlayer();
+        p.setAudioAttributes(new android.media.AudioAttributes.Builder().setUsage(android.media.AudioAttributes.USAGE_ALARM).setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION).build());
+        p.setDataSource(this, u); p.setLooping(true); p.prepare(); p.start();
+        alarmPlayer = p;
+      } catch (Exception e) { alarmPlayer = null; }
+      try {
+        long[] pattern = new long[]{ 0, 900, 500 };          /* vibrates until the call is accepted */
+        if (Build.VERSION.SDK_INT >= 26) vib.vibrate(android.os.VibrationEffect.createWaveform(pattern, 0)); else vib.vibrate(pattern, 0);
+      } catch (Exception e) { }
+    } else {
+      try { if (alarmPlayer != null) { alarmPlayer.stop(); alarmPlayer.release(); } } catch (Exception e) { }
+      alarmPlayer = null;
+      try { vib.cancel(); } catch (Exception e) { }
+      if (alarmVol >= 0) { try { am.setStreamVolume(android.media.AudioManager.STREAM_ALARM, alarmVol, 0); } catch (Exception e) { } alarmVol = -1; }
+    }
+  }
   void screenOn() {
-    if (kioskOn()) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    if (kioskOn() || awake()) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
   }
 
@@ -147,6 +176,11 @@ public class MainActivity extends Activity {
   /* called from the admin panel (only after admin login) */
   public class Kiosk {
     @JavascriptInterface public boolean isApp() { return true; }
+    @JavascriptInterface public void alarm(final boolean on) { runOnUiThread(new Runnable() { public void run() { alarmNow(on); } }); }
+    @JavascriptInterface public void keepAwake(final boolean on) {
+      getSharedPreferences("uno", MODE_PRIVATE).edit().putBoolean("awake", on).apply();
+      runOnUiThread(new Runnable() { public void run() { screenOn(); } });
+    }
     /* booking reminder two hours before (as in the iPhone app) */
     @JavascriptInterface public String remind(String id, String atMs, String title, String body) {
       try {
@@ -503,7 +537,7 @@ public class MainActivity extends Activity {
     if (kioskOn()) { h.removeCallbacks(pinLater); h.postDelayed(pinLater, 700); if (repin) { h.postDelayed(pinLater, 1800); repin = false; } }
   }
   /* in the background the page stops completely (timers, animations, polling): no work while the phone is in a pocket */
-  @Override protected void onPause() { web.onPause(); if (!kioskOn()) web.pauseTimers(); super.onPause(); }
+  @Override protected void onPause() { web.onPause(); if (!kioskOn() && !awake()) web.pauseTimers(); super.onPause(); }
 
   @Override public void onBackPressed() {
     String cur = web.getUrl();

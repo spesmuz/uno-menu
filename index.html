@@ -3822,10 +3822,11 @@ function renderAdmin(){
      '<p class="help" style="margin-top:6px">Har stol uchun QR-kod: mijoz o\'z telefoni bilan skanerlasa, menyu shu stol raqami bilan ochiladi. Kartalarni rasm qilib saqlab, bosmaxonaga berishingiz mumkin.</p>'+
      '<h3 style="font-size:15px;margin:22px 0 6px">📱 Ofitsiant telefoni rejimi</h3>'+
      (waiterMode()
-       ?'<div class="msg ok">Bu qurilma — <b>ofitsiant telefoni</b>. Ilova ochilganda menyu emas, ofitsiant ekrani (PIN-kod va bugungi stollar) chiqadi. Admin panelga qaytish: ofitsiant ekranidagi logotipni 3 soniya bosib turing yoki 7 marta bosing.</div>'+
+       ?'<div class="msg ok">Bu qurilma — <b>ofitsiant telefoni</b>'+(function(){ try{ var n=localStorage.getItem("uno_waiter_name"); return n?' ('+esc(n)+')':''; }catch(_){ return ""; } })()+'. Ilova ochilganda menyu emas, ofitsiant ekrani (PIN-kod va bugungi stollar) chiqadi. Admin panelga qaytish: ofitsiant ekranidagi logotipni 3 soniya bosib turing yoki 7 marta bosing.</div>'+
         '<div class="a-row" style="margin-top:10px"><a class="btn gold" href="'+esc(base)+'ofitsiant.html">Ofitsiant ekranini ochish</a>'+(window.UnoKiosk&&UnoKiosk.setKiosk?'<button class="btn" data-a="'+(kioskOnNow()?'waiterKioskOff">🔓 Qulfni ochish':'waiterKiosk">🔒 Telefonni shu ekranga qulflash')+'</button>':'')+'<button class="btn danger" data-a="waiterOff">Menyu rejimiga qaytarish</button></div>'
-       :'<p class="help">Ofitsiantning telefonida shu admin panelga kirib tugmani bosing: telefon faqat ofitsiant ekranini ochadigan bo\'ladi. Ofitsiant o\'z Davomat PIN-kodi bilan kiradi, bugungi stollari rotatsiyadan o\'zi biriktiriladi va o\'z stollaridan kelgan chaqiruvda telefon jiringlaydi. So\'ng admin paneldan chiqiladi.</p>'+
-        '<div class="a-row" style="margin-top:10px"><button class="btn gold" data-a="waiterOn">Shu telefonni ofitsiant telefoni qilish</button><a class="btn" target="_blank" rel="noopener" href="'+esc(base)+'ofitsiant.html">Ofitsiant ekranini ko\'rish</a></div>')+
+       :'<p class="help">Ofitsiantning telefonida shu admin panelga kiring, ofitsiantni tanlang va tugmani bosing. Telefon shu ofitsiantga bog\'lanadi va faqat ofitsiant ekranini ochadigan bo\'ladi: har kuni rotatsiyadagi stollari (18:00 da davomat bo\'yicha yangilangani ham) o\'zi ko\'rinadi, o\'sha stollardan chaqiruv kelsa telefon qabul qilinmaguncha jiringlab, titrab turadi. PIN-kod terish shart emas.</p>'+
+        '<div class="a-row" style="margin-top:10px"><label class="fld" style="max-width:280px"><span>Ofitsiant</span><select id="waiterSel">'+waiterOpts()+'</select></label><button class="btn gold" data-a="waiterOn">Shu telefonni ofitsiant telefoni qilish</button></div>'+
+        '<div class="a-row" style="margin-top:8px"><a class="btn" target="_blank" rel="noopener" href="'+esc(base)+'ofitsiant.html">Ofitsiant ekranini ko\'rish</a></div>')+
      '<div id="tblMsg"></div>'+
      '<h3 style="font-size:15px;margin:22px 0 6px">Planshet ochilganda zona va stol tanlash</h3>'+
      '<p class="help">Yoqilsa: ofitsiant planshetni blokdan ochganda ekranda zonalar chiqadi, u zonani va mijoz o\'tirgan stol raqamini tanlaydi. Planshet keyingi safar blokdan ochilgunicha shu stolga bog\'lanadi. Faqat UNO ilovasidagi planshetlarda ishlaydi. <b style="color:var(--gold2)">Hozircha o\'chirilgan: ofitsiant va stol bosqichiga o\'tganda yoqiladi.</b></p>'+
@@ -4082,11 +4083,15 @@ A.addEventListener("click", async function(e){
       try{ await saveSettings({zones:zs, zonePick:on}); msg($("zpMsg"), act==="zpSave"?("Saqlandi. Zona tanlash: "+(on?"yoqilgan":"o'chirilgan")+"."):"", "ok"); }catch(err){ msg($("zpMsg"),errText(err),"err"); }
     }
     else if(act==="waiterOn"){
-      try{ localStorage.setItem("uno_device_mode","waiter"); }catch(_){}
-      msg($("tblMsg"),"Tayyor! Bu telefon endi ofitsiant telefoni. Ofitsiant ekrani ochilmoqda…","ok");
+      var wsel=$("waiterSel"), wid=wsel?wsel.value:"";
+      if(!wid){ msg($("tblMsg"),"Avval ofitsiantni tanlang. Ro'yxat bo'sh bo'lsa, xodimlarni Davomat bo'limiga qo'shing.","err"); return; }
+      var wr=await S.sb.rpc("uno_waiter_bind",{p_staff:wid});
+      if(wr.error){ msg($("tblMsg"),/uno_waiter_bind|function/.test(wr.error.message)?"Avval waiter.sql ni Supabase'da qayta ishga tushiring.":errText(wr.error),"err"); return; }
+      try{ localStorage.setItem("uno_waiter_token",wr.data.token); localStorage.setItem("uno_waiter_name",wr.data.name); localStorage.setItem("uno_device_mode","waiter"); }catch(_){}
+      msg($("tblMsg"),"Tayyor! Bu telefon endi "+wr.data.name+"ning ofitsiant telefoni. Ofitsiant ekrani ochilmoqda…","ok");
       setTimeout(function(){ try{ endSession(); }catch(_){} location.replace("ofitsiant.html"); },1400);
     }
-    else if(act==="waiterOff"){ try{ localStorage.removeItem("uno_device_mode"); localStorage.removeItem("uno_waiter_token"); localStorage.removeItem("uno_waiter_name"); }catch(_){} try{ if(kioskOnNow()) UnoKiosk.setKiosk(false); }catch(_){} renderAdmin(); setTimeout(function(){ msg($("tblMsg"),"Bu qurilma yana oddiy menyu rejimida.","ok"); },60); }
+    else if(act==="waiterOff"){ try{ localStorage.removeItem("uno_device_mode"); localStorage.removeItem("uno_waiter_token"); localStorage.removeItem("uno_waiter_name"); }catch(_){} try{ if(kioskOnNow()) UnoKiosk.setKiosk(false); }catch(_){} try{ if(window.UnoKiosk){ if(UnoKiosk.keepAwake) UnoKiosk.keepAwake(false); if(UnoKiosk.alarm) UnoKiosk.alarm(false); } }catch(_){} renderAdmin(); setTimeout(function(){ msg($("tblMsg"),"Bu qurilma yana oddiy menyu rejimida.","ok"); },60); }
     else if(act==="waiterKiosk"||act==="waiterKioskOff"){ try{ UnoKiosk.setKiosk(act==="waiterKiosk"); }catch(_){} setTimeout(renderAdmin,400); }
     else if(act==="saveTable"){ setTableNo($("setTable").value); msg($("tblMsg"), tableNo()?("Bu planshet: "+tableNo()+"-stol."):"Stol raqami olib tashlandi.","ok"); }
     else if(act==="saveSvc"){ var v=Math.round(Number($("setSvc").value)); if(!isFinite(v)||v<0||v>50){ msg($("tblMsg"),"0 dan 50 gacha son kiriting.","err"); return; } try{ await saveSettings({service:v}); msg($("tblMsg"),"Xizmat haqi: "+v+"%.","ok"); }catch(err){ msg($("tblMsg"),errText(err),"err"); } }
@@ -5940,6 +5945,12 @@ Att.click=async function(ev){
 };
 
 /* device set up in admin → "Stollar va QR" as a waiter phone: it opens only the waiter screen */
+/* active staff for the waiter-phone picker (admin only) */
+var WSTAFF=null;
+function waiterOpts(){
+  if(WSTAFF===null){ WSTAFF=[]; S.sb.from("uno_staff").select("id,name,role,active").eq("active",true).order("name").then(function(r){ WSTAFF=(r&&r.data)||[]; var sel=$("waiterSel"); if(sel) sel.innerHTML=waiterOpts(); },function(){}); }
+  return '<option value="">— tanlang —</option>'+WSTAFF.map(function(x){ return '<option value="'+esc(x.id)+'">'+esc(x.name)+(x.role?' · '+esc(x.role):'')+'</option>'; }).join("");
+}
 function waiterMode(){ try{ return localStorage.getItem("uno_device_mode")==="waiter"; }catch(_){ return false; } }
 function kioskOnNow(){ try{ return !!(window.UnoKiosk && UnoKiosk.kioskOn && UnoKiosk.kioskOn()); }catch(_){ return false; } }
 /* ================= ROUTING & DATA ================= */

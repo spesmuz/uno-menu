@@ -145,7 +145,7 @@
     var on = !!token();
     $("loginBox").style.display = on ? "none" : "block";
     $("appBox").style.display = on ? "block" : "none";
-    $("who").style.display = on ? "block" : "none";
+    $("who").style.display = on && !waiterPhone() ? "block" : "none";
     $("who").textContent = (store("uno_waiter_name") || "Ofitsiant") + " · Chiqish";
     if (!on) { pin = ""; pinDraw(); alarm(false); }
   }
@@ -162,7 +162,7 @@
   var ctx = null, beepT = null;
   function unlock() { try { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); ctx.resume(); } catch (_) {} $("soundBanner").style.display = "none"; }
   $("soundOn").onclick = unlock;
-  if (!app) $("soundBanner").style.display = "block";
+  if (!app && !(window.UnoKiosk && window.UnoKiosk.alarm)) $("soundBanner").style.display = "block";
   function beep() {
     if (!ctx) return;
     var t = ctx.currentTime;
@@ -174,11 +174,19 @@
     });
     try { navigator.vibrate && navigator.vibrate([400, 200, 400]); } catch (_) {}
   }
+  /* inside the UNO menu app (waiter-phone mode): the phone's own alarm sound + continuous vibration until the call is accepted */
+  var K = window.UnoKiosk || null, nativeOn = false;
+  function hasNative() { try { return !!(K && K.alarm); } catch (_) { return false; } }
   function alarm(on) {
     if (app) return;
+    if (hasNative()) { if (on !== nativeOn) { nativeOn = on; try { K.alarm(on); } catch (_) {} } return; }
     if (on && !beepT) { beep(); beepT = setInterval(beep, 1600); }
-    if (!on && beepT) { clearInterval(beepT); beepT = null; }
+    if (!on && beepT) { clearInterval(beepT); beepT = null; try { navigator.vibrate && navigator.vibrate(0); } catch (_) {} }
   }
+  /* any first touch also unlocks the browser sound */
+  document.addEventListener("touchstart", function once() { document.removeEventListener("touchstart", once); unlock(); }, { passive: true });
+  function waiterPhone() { return store("uno_device_mode") === "waiter"; }
+  try { if (waiterPhone() && K && K.keepAwake) K.keepAwake(true); } catch (_) {}
 
   /* ---- today's tables from the rotation ---- */
   function mineHTML(me) {
@@ -189,6 +197,17 @@
       '<div class="note">' + (me.final ? "Davomat bo'yicha yakuniy taqsimot (18:00)." : "Asosiy reja. 18:00 da davomat bo'yicha yangilanadi.") + ' Sizning stollaringizdan kelgan chaqiruvlar faqat sizda jiringlaydi; hech kimga biriktirilmagan stollar chaqiruvi hammaga keladi.</div></div>';
   }
 
+  /* the rotation changed (e.g. at 18:00 after attendance): tell the waiter once */
+  var changedAt = 0;
+  function checkTables(me) {
+    var key = me && !me.unmapped ? (me.zone || "") + "|" + (me.present === false ? "absent" : me.tables || "") + "|" + data.day : "";
+    var last = store("uno_waiter_tables");
+    if (key && last && last !== key && last.split("|")[2] === String(data.day)) {
+      changedAt = Date.now();
+      try { if (K && K.haptic) K.haptic("ok"); else navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (_) {}
+    }
+    if (key) store("uno_waiter_tables", key);
+  }
   function render() {
     if (!data) return;
     var list = data.calls || [];
@@ -197,7 +216,7 @@
     var mine = fresh.filter(function (c) { return unm || c.mine || c.common; }), other = fresh.filter(function (c) { return !(unm || c.mine || c.common); });
     var done = list.filter(function (c) { return c.status !== "new" && Date.now() - new Date(c.accepted_at || c.created_at).getTime() < 3600e3 && (c.mine || c.common || c.accepted_by === data.name); })
                    .sort(function (a, b) { return new Date(b.accepted_at || b.created_at) - new Date(a.accepted_at || a.created_at); }).slice(0, 20);
-    $("mineBox").innerHTML = mineHTML(data.me);
+    $("mineBox").innerHTML = (Date.now() - changedAt < 10 * 60e3 ? '<div class="banner" style="display:block">🔄 Stollaringiz yangilandi (davomat bo\'yicha). Pastdagi ro\'yxatni ko\'ring.</div>' : "") + mineHTML(data.me);
     $("newList").innerHTML = mine.map(function (c) { return card(c, true); }).join("") || '<div class="empty">Stollaringizdan chaqiruv yo\'q.<br>Yangi chaqiruv kelganda telefon jiringlaydi.</div>';
     $("otherBox").innerHTML = other.length ? '<button class="more" type="button" id="othBtn">' + (showOthers ? "▴ Boshqa ofitsiantlar stollarini yashirish" : "▾ Boshqa ofitsiantlar stollari: " + other.length + " ta chaqiruv") + '</button>' + (showOthers ? other.map(function (c) { return card(c, true); }).join("") : "") : "";
     $("doneH").style.display = done.length ? "block" : "none";
@@ -240,7 +259,7 @@
       var r = await sb.rpc("uno_waiter_calls", { p_token: token() });
       if (r.error) { online(false, "Bazaga ulanib bo'lmadi: " + r.error.message); return; }
       if (!r.data || !r.data.ok) { store("uno_waiter_token", null); tellApp(); show(); $("lerr").textContent = "Qaytadan kiring."; return; }
-      data = r.data; store("uno_waiter_name", data.name); $("who").textContent = data.name + " · Chiqish";
+      data = r.data; store("uno_waiter_name", data.name); checkTables(data.me); $("who").textContent = data.name + " · Chiqish";
       online(true, "Ulangan · " + new Date().toLocaleTimeString("uz", { hour: "2-digit", minute: "2-digit" }));
       render();
     } finally { busy = false; }
