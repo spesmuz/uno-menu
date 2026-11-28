@@ -1551,6 +1551,7 @@ var WT=(function(){
     document.addEventListener("click",onClick);
     document.addEventListener("click",outLink);
     document.addEventListener("change",onChange);
+    document.addEventListener("input",pfDirtySync); document.addEventListener("change",pfDirtySync);
   }
   function renderBar(){
     var bar=$("wtabs"); if(!bar) return;
@@ -1650,6 +1651,15 @@ var WT=(function(){
   function photo(){ return store("uno_photo")||""; }
   function initials(n){ var s=String(n||"").trim().split(/\s+/).slice(0,2).map(function(w){ return w.charAt(0); }).join("").toUpperCase(); return s||"?"; }
   function ready(n,ph){ return String(n).trim().length>=2 && String(ph).replace(/\D/g,"").length>=9; }
+  /* the Save button shows only while something is not saved yet (name, phone, a new birthday) */
+  function pfKey(n,ph){ return String(n||"").trim()+"|"+String(ph||"").replace(/\D/g,""); }
+  function pfDirty(){
+    var p=profile(), ne=$("wpName"), pe=$("wpPhone"), be=$("wpBday");
+    var n=ne?ne.value:p.name, ph=pe?pe.value:p.phone, saved=store("uno_pfSaved");
+    if(saved===null && store("uno_custSynced") && ready(p.name,p.phone)){ saved=pfKey(p.name,p.phone); store("uno_pfSaved",saved); }
+    return pfKey(n,ph)!==(saved||"") || !!(be && be.value && !bday());
+  }
+  function pfDirtySync(e){ var id=e.target&&e.target.id; if(id!=="wpName"&&id!=="wpPhone"&&id!=="wpBday") return; var b=document.querySelector('[data-wp="save"]'); if(b && !P.msg) b.style.display=pfDirty()?"":"none"; }
   function renderProfile(){
     var p=profile(), ph=photo(), pg=$("wp-profile");
     pg.innerHTML='<div class="wrap"><h1>'+esc(T("tab.profile"))+'</h1><h2>'+esc(T("pf.me"))+'</h2>'+
@@ -1659,7 +1669,7 @@ var WT=(function(){
       (bday()?'<div class="wfld" style="margin-top:12px"><span>🎂 '+esc(T("pf.bday"))+'</span><div style="display:flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.22);font-weight:700">'+esc(bdayText(bday()))+'<span style="margin-left:auto;opacity:.6">🔒</span></div></div><p class="whint" style="margin:4px 0 0">'+esc(T("pf.bdayLocked"))+'</p>'
         :'<label class="wfld" style="margin-top:12px"><span>🎂 '+esc(T("pf.bday"))+'</span><input id="wpBday" type="date" max="'+todayISO()+'" value=""></label><p class="whint" style="margin:4px 0 0">'+(G().bdayOn?esc(T("pf.bdayHint"))+' ':'')+esc(T("pf.bdayOnce"))+'</p>')+
       (ph?'<button type="button" data-wp="delphoto" style="margin:10px 0 0;border:0;background:none;color:rgba(255,160,150,.9);font-size:13px">'+esc(T("pf.photoDel"))+'</button>':'')+
-      '<button class="wbtn" type="button" data-wp="save" style="margin-top:12px">'+(P.msg?'✓ '+esc(T("pf.saved")):esc(T("pf.save")))+'</button></div>'+
+      '<button class="wbtn" type="button" data-wp="save" style="margin-top:12px'+(P.msg||pfDirty()?'':';display:none')+'">'+(P.msg?'✓ '+esc(T("pf.saved")):esc(T("pf.save")))+'</button></div>'+
       '<p class="whint">'+esc(T("pf.hint"))+'</p>'+
       '<div id="wpGrow">'+growHTML()+'</div>'+
       '<h2 style="display:flex;align-items:center;justify-content:space-between">'+esc(T("pf.news"))+'<button type="button" data-wp="reload" style="border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#E8B04B;width:34px;height:34px;border-radius:50%;font-size:16px">↻</button></h2>'+
@@ -2052,7 +2062,7 @@ var WT=(function(){
       if(window.UnoKiosk && UnoKiosk.share){ try{ UnoKiosk.share(T("share.text")+" "+u); return; }catch(_){} }
       if(navigator.share) navigator.share({title:"UNO Airways",text:T("share.text"),url:u}).catch(function(){}); else { try{ navigator.clipboard.writeText(T("share.text")+" "+u).catch(function(){}); }catch(_){} } return; }
     if(b.dataset.wp==="save"){ var n=$("wpName").value.trim(), ph=$("wpPhone").value.trim(); if(!ready(n,ph)) { $("wpName").focus(); return; }
-      hap("ok"); saveProfile(n,ph); var bdv=bday()?"":(($("wpBday")||{}).value||""); if(bdv) store("uno_bday",bdv);
+      hap("ok"); saveProfile(n,ph); store("uno_pfSaved",pfKey(n,ph)); var bdv=bday()?"":(($("wpBday")||{}).value||""); if(bdv) store("uno_bday",bdv);
       syncCustomer(true, function(){ var after=function(){ BN.data=null; loadBonus(); syncBday(); setTimeout(loadBGift,600); };
         if(bdv) sbRpc("uno_customer_extra",{p_device:device(),p_birthday:bdv}).then(function(r){ if(r && r.data && r.data.birthday) store("uno_bday",r.data.birthday); after(); },after); else after(); }); scheduleBday(); P.msg=1; renderProfile(); setTimeout(function(){ P.msg=null; if(tab===3) renderProfile(); },2000); return; }
     if(b.dataset.wp==="delphoto"){ store("uno_photo",null); syncCustomer(true); renderProfile(); return; }

@@ -100,6 +100,7 @@ struct ProfileView: View {
     @AppStorage("uno.phone") private var phone = "+998 "
     @AppStorage("uno.bday") private var bday = ""          /* YYYY-MM-DD, empty = not given */
     @AppStorage("uno.bdayLocked") private var bdayLocked = false   /* saved on the server: only the restaurant can change it */
+    @AppStorage("uno.savedKey") private var savedKey = ""          /* name|phone digits as last saved: the Save button hides while nothing changed */
     @ObservedObject private var news = NewsModel.shared
     @State private var photo: UIImage? = nil
     @State private var photoRead = false
@@ -110,6 +111,8 @@ struct ProfileView: View {
     @State private var saved = false
     @FocusState private var focus: Bool
 
+    private func key(_ n: String, _ p: String) -> String { n.trimmingCharacters(in: .whitespacesAndNewlines) + "|" + p.filter { $0.isNumber } }
+    private var dirty: Bool { key(name, phone) != savedKey || (!bdayLocked && !bday.isEmpty) }
     private var ready: Bool { name.trimmingCharacters(in: .whitespaces).count >= 2 && phone.filter { $0.isNumber }.count >= 9 }
 
     var body: some View {
@@ -153,6 +156,7 @@ struct ProfileView: View {
                             }
                         }
                         bdayRow
+                        if dirty || saved {
                         Button(action: save) {
                             Label(saved ? L.t("pf.saved") : L.t("pf.save"), systemImage: saved ? "checkmark.circle.fill" : "square.and.arrow.down")
                                 .font(.system(size: 16, weight: .bold))
@@ -167,7 +171,10 @@ struct ProfileView: View {
                         }
                         .buttonStyle(.plain)
                         .disabled(!ready)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                        }
                     }
+                    .animation(.easeOut(duration: 0.25), value: dirty || saved)
                     .glassCard()
                     Text(L.t("pf.hint")).font(.footnote).foregroundColor(Color.white.opacity(0.6)).padding(.horizontal, 6)
 
@@ -213,6 +220,8 @@ struct ProfileView: View {
         .onAppear {
             news.start(); CustomerAPI.syncOnLaunch()
             if !photoRead { photoRead = true; photo = CustomerAPI.localPhoto() }
+            /* profiles saved before this version: count them as saved */
+            if savedKey.isEmpty && ready && UserDefaults.standard.bool(forKey: "uno.custSynced") { savedKey = key(name, phone) }
             refreshBday()
             loadGift()
         }
@@ -364,6 +373,7 @@ struct ProfileView: View {
         focus = false
         name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         phone = phone.trimmingCharacters(in: .whitespacesAndNewlines)
+        savedKey = key(name, phone)
         NotificationCenter.default.post(name: .unoProfileChanged, object: nil)
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         saved = true
