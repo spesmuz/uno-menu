@@ -78,7 +78,7 @@
 </head>
 <body>
 <header>
-  <img src="media/logo.png" alt="">
+  <img src="media/logo.png" alt="" id="logo" style="-webkit-user-select:none;user-select:none;-webkit-touch-callout:none">
   <div class="t"><b>UNO</b><small>OFITSIANT</small></div>
   <button class="who" id="who" type="button" style="display:none">Chiqish</button>
 </header>
@@ -246,6 +246,19 @@
     } finally { busy = false; }
   }
 
+  /* hidden admin entry (waiter-phone mode is switched off there): hold the logo 3 s or tap it 7 times */
+  (function () {
+    var lg = $("logo"), holdT = null, taps = 0, tapT = null;
+    function open() { clearTimeout(holdT); taps = 0; location.href = "index.html#admin"; }
+    function down(e) { if (e.cancelable) e.preventDefault(); clearTimeout(holdT); holdT = setTimeout(open, 3000); taps++; clearTimeout(tapT); tapT = setTimeout(function () { taps = 0; }, 1500); if (taps >= 7) open(); }
+    function up() { clearTimeout(holdT); }
+    lg.addEventListener("touchstart", down, { passive: false }); lg.addEventListener("touchend", up); lg.addEventListener("touchcancel", up);
+    lg.addEventListener("mousedown", function (e) { if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return; down(e); }); lg.addEventListener("mouseup", up); lg.addEventListener("mouseleave", up);
+    lg.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+  })();
+  /* in the UNO menu app the bridge is UnoKiosk: there the phone rings only while this screen is open */
+  if (!app && window.UnoKiosk) $("soundBanner").innerHTML = 'Chaqiruv kelganda telefon jiringlashi uchun ovozni yoqing va shu ekranni ochiq qoldiring.<br><button class="btn gold" id="soundOn2" type="button">Ovozni yoqish</button>';
+  document.addEventListener("click", function (e) { if (e.target && e.target.id === "soundOn2") unlock(); });
   show(); pinDraw();
   if (!window.supabase) { online(false, "Internetga ulanib bo'lmadi"); setTimeout(function () { location.reload(); }, 15000); return; }
   sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: false } });

@@ -1273,7 +1273,7 @@ if(SRC.tg && /tgWebApp/.test(location.hash||"")){
 function webTabsOn(){
   if(window.UNO_INSETS || /UNOAirwaysApp/.test(navigator.userAgent||"")) return false;
   if(Math.min(window.innerWidth||0, window.innerHeight||0) >= 600) return false;
-  try{ if(localStorage.getItem("uno_device_mode")==="att") return false; }catch(_){}
+  try{ var dm=localStorage.getItem("uno_device_mode"); if(dm==="att"||dm==="waiter") return false; }catch(_){}
   try{ if(window.UnoKiosk && UnoKiosk.kioskOn && UnoKiosk.kioskOn()) return false; }catch(_){}
   return true;
 }
@@ -3212,7 +3212,7 @@ function setTableNo(v){ try{ v=String(v||"").trim().slice(0,12); if(v){ localSto
   function skip(){
     if(standalone || window.UnoKiosk) return true;                          /* already an app / restaurant tablet */
     if(/UNOAirwaysApp/.test(navigator.userAgent||"")) return true;          /* inside our iPhone app */
-    try{ if(localStorage.getItem("uno_device_mode")==="att") return true;
+    try{ var dmo=localStorage.getItem("uno_device_mode"); if(dmo==="att"||dmo==="waiter") return true;
          /* every QR scan offers the app again (unless it is installed); otherwise "Later" waits a day */
          if(window.__fromQR || /[?&]install=1/.test(location.search)) return false;
          var t=Number(localStorage.getItem(KEY)||0), wait=864e5;
@@ -3820,7 +3820,12 @@ function renderAdmin(){
      '<div class="a-row" style="margin-top:16px"><label class="fld" style="max-width:140px"><span>Stollar: dan</span><input id="qrFrom" type="number" min="1" value="1"></label><label class="fld" style="max-width:140px"><span>gacha</span><input id="qrTo" type="number" min="1" value="20"></label>'+
      '<a class="btn" id="qrLink" href="'+esc(base)+'qr.html?from=1&amp;to=20">QR-kodlarni ochish</a></div>'+
      '<p class="help" style="margin-top:6px">Har stol uchun QR-kod: mijoz o\'z telefoni bilan skanerlasa, menyu shu stol raqami bilan ochiladi. Kartalarni rasm qilib saqlab, bosmaxonaga berishingiz mumkin.</p>'+
-     '<div class="a-row" style="margin-top:16px"><a class="btn" target="_blank" rel="noopener" href="'+esc(base)+'ofitsiant.html">Ofitsiant ekranini ochish</a></div>'+
+     '<h3 style="font-size:15px;margin:22px 0 6px">📱 Ofitsiant telefoni rejimi</h3>'+
+     (waiterMode()
+       ?'<div class="msg ok">Bu qurilma — <b>ofitsiant telefoni</b>. Ilova ochilganda menyu emas, ofitsiant ekrani (PIN-kod va bugungi stollar) chiqadi. Admin panelga qaytish: ofitsiant ekranidagi logotipni 3 soniya bosib turing yoki 7 marta bosing.</div>'+
+        '<div class="a-row" style="margin-top:10px"><a class="btn gold" href="'+esc(base)+'ofitsiant.html">Ofitsiant ekranini ochish</a>'+(window.UnoKiosk&&UnoKiosk.setKiosk?'<button class="btn" data-a="'+(kioskOnNow()?'waiterKioskOff">🔓 Qulfni ochish':'waiterKiosk">🔒 Telefonni shu ekranga qulflash')+'</button>':'')+'<button class="btn danger" data-a="waiterOff">Menyu rejimiga qaytarish</button></div>'
+       :'<p class="help">Ofitsiantning telefonida shu admin panelga kirib tugmani bosing: telefon faqat ofitsiant ekranini ochadigan bo\'ladi. Ofitsiant o\'z Davomat PIN-kodi bilan kiradi, bugungi stollari rotatsiyadan o\'zi biriktiriladi va o\'z stollaridan kelgan chaqiruvda telefon jiringlaydi. So\'ng admin paneldan chiqiladi.</p>'+
+        '<div class="a-row" style="margin-top:10px"><button class="btn gold" data-a="waiterOn">Shu telefonni ofitsiant telefoni qilish</button><a class="btn" target="_blank" rel="noopener" href="'+esc(base)+'ofitsiant.html">Ofitsiant ekranini ko\'rish</a></div>')+
      '<div id="tblMsg"></div>'+
      '<h3 style="font-size:15px;margin:22px 0 6px">Planshet ochilganda zona va stol tanlash</h3>'+
      '<p class="help">Yoqilsa: ofitsiant planshetni blokdan ochganda ekranda zonalar chiqadi, u zonani va mijoz o\'tirgan stol raqamini tanlaydi. Planshet keyingi safar blokdan ochilgunicha shu stolga bog\'lanadi. Faqat UNO ilovasidagi planshetlarda ishlaydi. <b style="color:var(--gold2)">Hozircha o\'chirilgan: ofitsiant va stol bosqichiga o\'tganda yoqiladi.</b></p>'+
@@ -4076,6 +4081,13 @@ A.addEventListener("click", async function(e){
       var on=$("zpOn")&&$("zpOn").checked;
       try{ await saveSettings({zones:zs, zonePick:on}); msg($("zpMsg"), act==="zpSave"?("Saqlandi. Zona tanlash: "+(on?"yoqilgan":"o'chirilgan")+"."):"", "ok"); }catch(err){ msg($("zpMsg"),errText(err),"err"); }
     }
+    else if(act==="waiterOn"){
+      try{ localStorage.setItem("uno_device_mode","waiter"); }catch(_){}
+      msg($("tblMsg"),"Tayyor! Bu telefon endi ofitsiant telefoni. Ofitsiant ekrani ochilmoqda…","ok");
+      setTimeout(function(){ try{ endSession(); }catch(_){} location.replace("ofitsiant.html"); },1400);
+    }
+    else if(act==="waiterOff"){ try{ localStorage.removeItem("uno_device_mode"); localStorage.removeItem("uno_waiter_token"); localStorage.removeItem("uno_waiter_name"); }catch(_){} try{ if(kioskOnNow()) UnoKiosk.setKiosk(false); }catch(_){} renderAdmin(); setTimeout(function(){ msg($("tblMsg"),"Bu qurilma yana oddiy menyu rejimida.","ok"); },60); }
+    else if(act==="waiterKiosk"||act==="waiterKioskOff"){ try{ UnoKiosk.setKiosk(act==="waiterKiosk"); }catch(_){} setTimeout(renderAdmin,400); }
     else if(act==="saveTable"){ setTableNo($("setTable").value); msg($("tblMsg"), tableNo()?("Bu planshet: "+tableNo()+"-stol."):"Stol raqami olib tashlandi.","ok"); }
     else if(act==="saveSvc"){ var v=Math.round(Number($("setSvc").value)); if(!isFinite(v)||v<0||v>50){ msg($("tblMsg"),"0 dan 50 gacha son kiriting.","err"); return; } try{ await saveSettings({service:v}); msg($("tblMsg"),"Xizmat haqi: "+v+"%.","ok"); }catch(err){ msg($("tblMsg"),errText(err),"err"); } }
     else if(act==="tgFind"){
@@ -5927,6 +5939,9 @@ Att.click=async function(ev){
     var m=String(err&&err.message||err); if(/duplicate key|uno_staff_pin_active/.test(m)) m="Bu PIN-kod boshqa xodimda bor."; else if(/team/.test(m)&&/column|schema/.test(m)) m="Jamoalar uchun attendance.sql faylini Supabase'da qayta ishga tushiring."; Att.say(k,"Xatolik: "+m,"err"); }
 };
 
+/* device set up in admin → "Stollar va QR" as a waiter phone: it opens only the waiter screen */
+function waiterMode(){ try{ return localStorage.getItem("uno_device_mode")==="waiter"; }catch(_){ return false; } }
+function kioskOnNow(){ try{ return !!(window.UnoKiosk && UnoKiosk.kioskOn && UnoKiosk.kioskOn()); }catch(_){ return false; } }
 /* ================= ROUTING & DATA ================= */
 /* the menu never scrolls: after the (scrolling) admin panel, put the page back at the very top,
    otherwise iOS keeps the old offset and the menu's header slides up under the screen edge */
@@ -5938,6 +5953,7 @@ window.addEventListener("scroll",function(){ if(S.view==="menu" && !document.que
 function route(){
   var h=location.hash.replace("#","");
   if(h!=="admin" && Att.isTerminal()){ location.replace("davomat.html"); return; }
+  if(h!=="admin" && waiterMode()){ location.replace("ofitsiant.html"); return; }
   S.view = h==="admin" ? "admin" : "menu";
   $("menuView").classList.toggle("hidden", S.view!=="menu");
   A.classList.toggle("hidden", S.view!=="admin");
