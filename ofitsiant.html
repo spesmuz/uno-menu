@@ -51,33 +51,61 @@
   dialog { border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 20px; padding: 20px; width: min(360px, 90vw); }
   dialog::backdrop { background: rgba(0,0,0,.6); }
   dialog input { width: 100%; margin: 12px 0 14px; padding: 13px; border-radius: 12px; border: 1px solid var(--line); background: #0f0d0a; color: var(--text); font-size: 16px; }
+  .login { max-width: 360px; margin: 8vh auto 0; text-align: center; }
+  .login h1 { font-size: 22px; margin: 10px 0 6px; }
+  .login p { color: var(--muted); font-size: 14px; line-height: 1.45; margin: 0 0 18px; }
+  .pinv { height: 58px; display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 14px; }
+  .pinv i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--gold); }
+  .pinv i.on { background: var(--gold); }
+  .pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .pad button { height: 64px; border-radius: 18px; border: 1px solid var(--line); background: var(--card); color: var(--text); font-size: 24px; font-weight: 700; }
+  .pad button:active { background: #221d13; }
+  .pad .ok { background: var(--gold); color: #1a1306; border-color: var(--gold); font-size: 18px; }
+  .lerr { color: var(--red); font-size: 14px; min-height: 20px; margin: 12px 0 0; }
+  .mine { margin: 0 0 14px; padding: 16px; border-radius: 20px; background: linear-gradient(160deg, #2a2112, #15120c); border: 1px solid rgba(232,176,75,.45); }
+  .mine small { display: block; color: var(--muted); font-size: 11px; letter-spacing: .18em; font-weight: 700; }
+  .mine .z { font-size: 15px; color: var(--gold); font-weight: 800; margin-top: 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .chips b { min-width: 46px; padding: 10px 12px; border-radius: 12px; background: #0f0d0a; border: 1px solid var(--line); text-align: center; font-size: 18px; color: var(--text); }
+  .mine .warn { margin-top: 10px; color: var(--red); font-size: 13px; line-height: 1.4; }
+  .mine .note { margin-top: 10px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+  .tag { display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .04em; vertical-align: middle; }
+  .tag.my { background: rgba(127,209,138,.15); color: var(--green); }
+  .tag.all { background: rgba(232,176,75,.15); color: var(--gold); }
+  .tag.oth { background: rgba(255,255,255,.08); color: var(--muted); }
+  .more { width: 100%; margin: 4px 0 10px; padding: 13px; border-radius: 14px; border: 1px dashed var(--line); background: transparent; color: var(--muted); font-size: 14px; font-weight: 600; }
 </style>
 </head>
 <body>
 <header>
   <img src="media/logo.png" alt="">
   <div class="t"><b>UNO</b><small>OFITSIANT</small></div>
-  <button class="who" id="who" type="button">Ism</button>
+  <button class="who" id="who" type="button" style="display:none">Chiqish</button>
 </header>
 <main>
-  <div class="status"><span class="dot" id="dot"></span><span id="stat">Ulanmoqda…</span></div>
-  <div class="banner" id="soundBanner">Brauzerda chaqiruv kelganda ovoz chiqishi uchun bir marta bosing.<br><button class="btn gold" id="soundOn" type="button">Ovozni yoqish</button></div>
-  <div id="newList"></div>
-  <h2 id="doneH" style="display:none">QABUL QILINGAN</h2>
-  <div id="doneList"></div>
+  <div id="loginBox" class="login" style="display:none">
+    <h1>Xush kelibsiz</h1>
+    <p>Davomatdagi shaxsiy PIN-kodingizni kiriting. Bugungi stollaringiz rotatsiyadan o'zi biriktiriladi.</p>
+    <div class="pinv" id="pinv"></div>
+    <div class="pad" id="pad"></div>
+    <div class="lerr" id="lerr"></div>
+  </div>
+  <div id="appBox" style="display:none">
+    <div class="status"><span class="dot" id="dot"></span><span id="stat">Ulanmoqda…</span></div>
+    <div class="banner" id="soundBanner">Chaqiruv kelganda ovoz chiqishi uchun bir marta bosing.<br><button class="btn gold" id="soundOn" type="button">Ovozni yoqish</button></div>
+    <div id="mineBox"></div>
+    <div id="newList"></div>
+    <div id="otherBox"></div>
+    <h2 id="doneH" style="display:none">QABUL QILINGAN</h2>
+    <div id="doneList"></div>
+  </div>
 </main>
-<dialog id="nameDlg">
-  <b style="font-size:17px">Ismingiz</b>
-  <div style="color:var(--muted);font-size:13px;margin-top:4px">Chaqiruvni kim qabul qilgani boshqa ofitsiantlarga va mijozga ko'rinadi.</div>
-  <input id="nameIn" maxlength="30" placeholder="Masalan: Aziz" autocomplete="name">
-  <div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn gold" id="nameOk" type="button">Saqlash</button></div>
-</dialog>
 <script>
 (function () {
   var SB_URL = "https://eaxavnixuqgwashplnhz.supabase.co", SB_KEY = "sb_publishable_gILXDU_L8vepyEbsF87Tcg_hYyMpril";
   var app = window.UnoWaiter || null;   // native app: it rings by itself
   var $ = function (id) { return document.getElementById(id); };
-  var calls = {}, sb = null, tick = null;
+  var data = null, sb = null, busy = false, showOthers = false, pin = "";
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function money(n) { return String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " so'm"; }
@@ -87,13 +115,48 @@
     if (s < 3600) return Math.floor(s / 60) + " daqiqa oldin";
     return Math.floor(s / 3600) + " soat oldin";
   }
-  function name() { try { return localStorage.getItem("uno_waiter_name") || ""; } catch (_) { return ""; } }
-  function askName() { $("nameIn").value = name(); try { $("nameDlg").showModal(); } catch (_) { var v = prompt("Ismingiz", name()); if (v != null) saveName(v); } }
-  function saveName(v) { v = String(v || "").trim().slice(0, 30); try { localStorage.setItem("uno_waiter_name", v); } catch (_) {} $("who").textContent = v || "Ism"; }
-  $("who").onclick = askName;
-  $("nameOk").onclick = function () { saveName($("nameIn").value); $("nameDlg").close(); };
-  saveName(name());
-  if (!name()) setTimeout(askName, 400);
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k) || ""; if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (_) { return ""; } }
+  function token() { return store("uno_waiter_token"); }
+  function tellApp() { if (app && app.setToken) try { app.setToken(token() || ""); } catch (_) {} }
+
+  /* ---- PIN login (the same PIN as Davomat) ---- */
+  function pinDraw() {
+    var h = ""; for (var i = 0; i < Math.max(4, pin.length); i++) h += '<i class="' + (i < pin.length ? "on" : "") + '"></i>';
+    $("pinv").innerHTML = h;
+  }
+  $("pad").innerHTML = [1,2,3,4,5,6,7,8,9,"⌫",0,"Kirish"].map(function (k) { return '<button type="button" data-k="' + k + '"' + (k === "Kirish" ? ' class="ok"' : "") + '>' + k + '</button>'; }).join("");
+  $("pad").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-k]"); if (!b) return; var k = b.dataset.k; $("lerr").textContent = "";
+    if (k === "⌫") pin = pin.slice(0, -1); else if (k === "Kirish") { login(); return; } else if (pin.length < 8) pin += k;
+    pinDraw();
+  });
+  async function login() {
+    if (pin.length < 3 || !sb) { $("lerr").textContent = "PIN-kodni kiriting."; return; }
+    $("lerr").textContent = "Tekshirilmoqda…";
+    var r = await sb.rpc("uno_waiter_login", { p_pin: pin });
+    pin = ""; pinDraw();
+    if (r.error) { $("lerr").textContent = /uno_waiter_login|function/.test(r.error.message) ? "Admin waiter.sql faylini Supabase'da ishga tushirishi kerak." : "Internet yo'q. Qayta urinib ko'ring."; return; }
+    var d = r.data || {};
+    if (!d.ok) { $("lerr").textContent = d.err === "locked" ? "Ko'p xato urinish. 10 daqiqadan keyin urinib ko'ring." : "PIN-kod noto'g'ri."; return; }
+    store("uno_waiter_token", d.token); store("uno_waiter_name", d.name); tellApp();
+    $("lerr").textContent = ""; show(); load(); afterLogin();
+  }
+  function show() {
+    var on = !!token();
+    $("loginBox").style.display = on ? "none" : "block";
+    $("appBox").style.display = on ? "block" : "none";
+    $("who").style.display = on ? "block" : "none";
+    $("who").textContent = (store("uno_waiter_name") || "Ofitsiant") + " · Chiqish";
+    if (!on) { pin = ""; pinDraw(); alarm(false); }
+  }
+  /* two taps to log out (system dialogs are not shown inside the Android app) */
+  var outArm = 0;
+  $("who").onclick = async function () {
+    if (Date.now() - outArm > 3000) { outArm = Date.now(); $("who").textContent = "Chiqish uchun yana bosing"; setTimeout(function () { if (token()) $("who").textContent = (store("uno_waiter_name") || "Ofitsiant") + " · Chiqish"; }, 3000); return; }
+    outArm = 0;
+    var t = token(); store("uno_waiter_token", null); store("uno_waiter_name", null); data = null; tellApp(); show();
+    if (sb && t) try { await sb.rpc("uno_waiter_logout", { p_token: t }); } catch (_) {}
+  };
 
   /* ---- browser alarm (only when not inside the native app) ---- */
   var ctx = null, beepT = null;
@@ -117,25 +180,38 @@
     if (!on && beepT) { clearInterval(beepT); beepT = null; }
   }
 
+  /* ---- today's tables from the rotation ---- */
+  function mineHTML(me) {
+    if (!me || me.unmapped) return '<div class="mine"><small>BUGUNGI STOLLARIM</small><div class="warn">Siz bugungi rotatsiyada topilmadingiz. Admin panel → Rotatsiya bo\'limida ismingiz xodimlar ro\'yxatiga bog\'langanini tekshirsin. Hozircha barcha chaqiruvlar sizga ham keladi.</div></div>';
+    var t = me.tables || "", chips = t.split(",").map(function (x) { x = x.trim(); return x ? "<b>" + esc(x) + "</b>" : ""; }).join("");
+    return '<div class="mine"><small>BUGUNGI STOLLARIM</small><div class="z">' + esc(me.zone || "") + ' · ' + esc(me.group || "") + '</div>' +
+      (me.present === false ? '<div class="warn">Davomatda bugun kelganingiz belgilanmagan, shuning uchun stollaringiz boshqalarga bo\'lib berilgan. Eshikdagi telefonda PIN-kodingiz bilan belgilang.</div>' : '<div class="chips">' + chips + '</div>') +
+      '<div class="note">' + (me.final ? "Davomat bo'yicha yakuniy taqsimot (18:00)." : "Asosiy reja. 18:00 da davomat bo'yicha yangilanadi.") + ' Sizning stollaringizdan kelgan chaqiruvlar faqat sizda jiringlaydi; hech kimga biriktirilmagan stollar chaqiruvi hammaga keladi.</div></div>';
+  }
+
   function render() {
-    var list = Object.keys(calls).map(function (k) { return calls[k]; });
+    if (!data) return;
+    var list = data.calls || [];
     var fresh = list.filter(function (c) { return c.status === "new"; }).sort(function (a, b) { return new Date(a.created_at) - new Date(b.created_at); });
-    var done = list.filter(function (c) { return c.status !== "new" && Date.now() - new Date(c.accepted_at || c.created_at).getTime() < 3600e3; })
+    var unm = !data.me || data.me.unmapped;
+    var mine = fresh.filter(function (c) { return unm || c.mine || c.common; }), other = fresh.filter(function (c) { return !(unm || c.mine || c.common); });
+    var done = list.filter(function (c) { return c.status !== "new" && Date.now() - new Date(c.accepted_at || c.created_at).getTime() < 3600e3 && (c.mine || c.common || c.accepted_by === data.name); })
                    .sort(function (a, b) { return new Date(b.accepted_at || b.created_at) - new Date(a.accepted_at || a.created_at); }).slice(0, 20);
-    var h = "";
-    fresh.forEach(function (c) { h += card(c, true); });
-    $("newList").innerHTML = h || '<div class="empty">Hozircha chaqiruv yo\'q.<br>Yangi chaqiruv kelganda telefon jiringlaydi.</div>';
+    $("mineBox").innerHTML = mineHTML(data.me);
+    $("newList").innerHTML = mine.map(function (c) { return card(c, true); }).join("") || '<div class="empty">Stollaringizdan chaqiruv yo\'q.<br>Yangi chaqiruv kelganda telefon jiringlaydi.</div>';
+    $("otherBox").innerHTML = other.length ? '<button class="more" type="button" id="othBtn">' + (showOthers ? "▴ Boshqa ofitsiantlar stollarini yashirish" : "▾ Boshqa ofitsiantlar stollari: " + other.length + " ta chaqiruv") + '</button>' + (showOthers ? other.map(function (c) { return card(c, true); }).join("") : "") : "";
     $("doneH").style.display = done.length ? "block" : "none";
     $("doneList").innerHTML = done.map(function (c) { return card(c, false); }).join("");
-    alarm(fresh.length > 0);
-    document.title = (fresh.length ? "(" + fresh.length + ") " : "") + "UNO Ofitsiant";
+    alarm(mine.length > 0);
+    document.title = (mine.length ? "(" + mine.length + ") " : "") + "UNO Ofitsiant";
   }
   function card(c, isNew) {
     var bill = c.kind === "bill";
-    var h = '<div class="call ' + (isNew ? "new" : "done") + '">' +
-      '<div class="num"><b>' + esc(c.table_no) + '</b><small>STOL</small></div>' +
-      '<div class="what' + (bill ? " bill" : "") + '">' + (bill ? "Hisob so'rayapti" : "Ofitsiant chaqiryapti") + '</div>' +
-      '<div class="meta">' + ago(c.created_at) + (isNew ? "" : " · " + esc(c.accepted_by || "") + " qabul qildi") + '</div>';
+    var tag = c.mine ? '<span class="tag my">meniki</span>' : c.common ? '<span class="tag all">umumiy</span>' : '<span class="tag oth">' + esc((c.owners || []).join(", ")) + '</span>';
+    var h = '<div class="call ' + (isNew ? "new" : "done") + '"' + (isNew && !c.mine && !c.common && data.me && !data.me.unmapped ? ' style="animation:none;opacity:.85"' : "") + '>' +
+      '<div class="num"><b>' + esc(String(c.table_no).replace(/^[^0-9]*\s/, "")) + '</b><small>' + esc((String(c.table_no).match(/^[^0-9]+/) || ["STOL"])[0].trim().slice(0, 9).toUpperCase() || "STOL") + '</small></div>' +
+      '<div class="what' + (bill ? " bill" : "") + '">' + (bill ? "Hisob so'rayapti" : "Ofitsiant chaqiryapti") + tag + '</div>' +
+      '<div class="meta">' + esc(c.table_no) + '-stol · ' + ago(c.created_at) + (isNew ? "" : " · " + esc(c.accepted_by || "") + " qabul qildi") + '</div>';
     if (bill && (c.items || c.total)) {
       h += '<div class="items">';
       (c.items || []).forEach(function (it) { h += esc(it.n) + " × " + esc(it.q) + "<br>"; });
@@ -146,58 +222,53 @@
     return h + '</div>';
   }
 
-  $("newList").addEventListener("click", async function (e) {
+  $("appBox").addEventListener("click", async function (e) {
+    if (e.target.id === "othBtn") { showOthers = !showOthers; render(); return; }
     var b = e.target.closest("[data-id]"); if (!b || !sb) return;
-    if (!name()) { askName(); return; }
     var id = Number(b.dataset.id); b.disabled = true; b.textContent = "…";
-    var r = await sb.rpc("uno_accept_call", { p_id: id, p_by: name() });
-    if (r.error) { b.disabled = false; b.textContent = "Qayta urinib ko'ring"; return; }
-    if (calls[id]) { calls[id].status = "accepted"; calls[id].accepted_by = name(); calls[id].accepted_at = new Date().toISOString(); }
-    render();
+    var r = await sb.rpc("uno_waiter_accept", { p_token: token(), p_id: id });
+    if (r.error || !r.data || !r.data.ok) { if (r.data && r.data.err === "logged_out") { store("uno_waiter_token", null); show(); return; } b.disabled = false; b.textContent = "Qayta urinib ko'ring"; return; }
+    (data.calls || []).forEach(function (c) { if (c.id === id && c.status === "new") { c.status = "accepted"; c.accepted_by = data.name; c.accepted_at = new Date().toISOString(); } });
+    render(); load();
     if (app) try { app.poll(); } catch (_) {}
   });
 
   function online(ok, text) { $("dot").classList.toggle("off", !ok); $("stat").textContent = text; }
   async function load() {
-    if (!sb) return;
-    var since = new Date(Date.now() - 12 * 3600e3).toISOString();
-    var r = await sb.from("uno_calls").select("*").gt("created_at", since).order("created_at", { ascending: false }).limit(100);
-    if (r.error) { online(false, "Bazaga ulanib bo'lmadi: " + r.error.message); return; }
-    var n = {}; (r.data || []).forEach(function (c) { n[c.id] = c; }); calls = n;
-    online(true, "Ulangan · " + new Date().toLocaleTimeString("uz", { hour: "2-digit", minute: "2-digit" }));
-    render();
+    if (!sb || !token() || busy) return; busy = true;
+    try {
+      var r = await sb.rpc("uno_waiter_calls", { p_token: token() });
+      if (r.error) { online(false, "Bazaga ulanib bo'lmadi: " + r.error.message); return; }
+      if (!r.data || !r.data.ok) { store("uno_waiter_token", null); tellApp(); show(); $("lerr").textContent = "Qaytadan kiring."; return; }
+      data = r.data; store("uno_waiter_name", data.name); $("who").textContent = data.name + " · Chiqish";
+      online(true, "Ulangan · " + new Date().toLocaleTimeString("uz", { hour: "2-digit", minute: "2-digit" }));
+      render();
+    } finally { busy = false; }
   }
 
+  show(); pinDraw();
   if (!window.supabase) { online(false, "Internetga ulanib bo'lmadi"); setTimeout(function () { location.reload(); }, 15000); return; }
   sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: false } });
+  tellApp();
 
   /* opened from the Telegram "Qabul qildim" button: ofitsiant.html?accept=ID */
   var acceptId = Number(new URLSearchParams(location.search).get("accept") || 0);
-  if (acceptId) {
-    var box = document.createElement("div");
-    box.className = "call new"; box.style.marginBottom = "18px";
-    box.innerHTML = '<div class="what" style="grid-column:1/-1">Yuklanmoqda…</div>';
-    $("newList").parentNode.insertBefore(box, $("newList"));
-    var doAccept = async function () {
-      var g = await sb.from("uno_calls").select("*").eq("id", acceptId).maybeSingle();
-      var c = g.data;
-      if (!c) { box.className = "call done"; box.innerHTML = '<div class="what" style="grid-column:1/-1">Chaqiruv topilmadi yoki eskirgan.</div>'; return; }
-      var label = esc(c.table_no) + "-stol · " + (c.kind === "bill" ? "hisob" : "ofitsiant chaqiruvi");
-      if (c.status !== "new") { box.className = "call done"; box.innerHTML = '<div class="num"><b>' + esc(c.table_no) + '</b><small>STOL</small></div><div class="what">Allaqachon qabul qilingan</div><div class="meta">' + label + ' · ' + esc(c.accepted_by || "") + '</div>'; return; }
-      if (!name()) { box.innerHTML = '<div class="what" style="grid-column:1/-1">Avval ismingizni kiriting</div>'; askName(); $("nameOk").addEventListener("click", function once() { $("nameOk").removeEventListener("click", once); doAccept(); }); return; }
-      var r = await sb.rpc("uno_accept_call", { p_id: acceptId, p_by: name() });
-      if (r.error) { box.innerHTML = '<div class="what" style="grid-column:1/-1">Xatolik: ' + esc(r.error.message) + '</div>'; return; }
+  function afterLogin() {
+    if (!acceptId) return; var id = acceptId; acceptId = 0;
+    var box = document.createElement("div"); box.className = "call new"; box.style.marginBottom = "18px";
+    box.innerHTML = '<div class="what" style="grid-column:1/-1">Qabul qilinmoqda…</div>';
+    $("mineBox").parentNode.insertBefore(box, $("mineBox"));
+    sb.rpc("uno_waiter_accept", { p_token: token(), p_id: id }).then(function (r) {
+      var ok = r.data && r.data.ok;
       box.className = "call done"; box.style.opacity = "1";
-      box.innerHTML = '<div class="num"><b>' + esc(c.table_no) + '</b><small>STOL</small></div><div class="what" style="color:var(--green)">✅ Qabul qildingiz</div><div class="meta">' + label + '</div>';
+      box.innerHTML = '<div class="what" style="grid-column:1/-1;color:' + (ok && r.data.accepted ? "var(--green)" : "var(--muted)") + '">' + (ok ? (r.data.accepted ? "✅ Chaqiruvni qabul qildingiz" : "Bu chaqiruv allaqachon qabul qilingan") : "Xatolik. Qayta urinib ko'ring.") + '</div>';
       try { history.replaceState(null, "", location.pathname); } catch (_) {}
       load();
-    };
-    doAccept();
+    });
   }
-  sb.channel("calls").on("postgres_changes", { event: "*", schema: "public", table: "uno_calls" }, function (pl) {
-    if (pl.new && pl.new.id) calls[pl.new.id] = pl.new;
-    render();
-  }).subscribe(function (st) { if (st === "SUBSCRIBED") load(); });
+  if (token()) afterLogin();
+  sb.channel("calls").on("postgres_changes", { event: "*", schema: "public", table: "uno_calls" }, function () { load(); })
+    .subscribe(function (st) { if (st === "SUBSCRIBED") load(); });
   load();
   setInterval(load, 15000);
   setInterval(render, 30000);

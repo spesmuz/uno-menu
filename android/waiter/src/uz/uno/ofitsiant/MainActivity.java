@@ -24,6 +24,11 @@ public class MainActivity extends Activity {
     @JavascriptInterface public boolean isApp() { return true; }
     @JavascriptInterface public void poll() { WatchService.start(MainActivity.this, "poll"); }
     @JavascriptInterface public void mute() { WatchService.start(MainActivity.this, "mute"); }
+    /* the page logs the waiter in with the Davomat PIN; the background service then rings only for this waiter's tables */
+    @JavascriptInterface public void setToken(String t) {
+      getSharedPreferences("waiter", MODE_PRIVATE).edit().putString("token", t == null ? "" : t).apply();
+      WatchService.start(MainActivity.this, "poll");
+    }
   }
 
   @SuppressWarnings("deprecation")

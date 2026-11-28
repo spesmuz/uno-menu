@@ -59,7 +59,7 @@ $$;
 -- yangi chaqiruv → Telegram
 create or replace function public.uno_calls_notify() returns trigger
 language plpgsql security definer set search_path = public as $$
-declare txt text; it jsonb; site text := coalesce(public.uno_priv('site_url'), 'https://spesmuz.github.io/uno-menu/');
+declare txt text; it jsonb; site text := coalesce(public.uno_priv('site_url'), 'https://spesmuz.github.io/uno-menu/'); who text;
 begin
   if new.kind = 'bill' then
     txt := '🧾 <b>' || uno_tg_esc(new.table_no) || '-stol</b> — hisob so''rayapti';
@@ -72,6 +72,10 @@ begin
     if new.total is not null then txt := txt || E'\n\n<b>Jami (xizmat haqi bilan): ' || uno_money(new.total) || '</b>'; end if;
   else
     txt := '🔔 <b>' || uno_tg_esc(new.table_no) || '-stol</b> — ofitsiant chaqiryapti';
+  end if;
+  if to_regproc('public.uno_call_owner_names') is not null then   -- waiter.sql o'rnatilgan bo'lsa: stol kimga biriktirilgani
+    begin who := public.uno_call_owner_names(new.table_no); exception when others then who := null; end;
+    txt := txt || E'\n👤 ' || case when coalesce(who,'') <> '' then uno_tg_esc(who) else 'biriktirilmagan stol — kim bo''sh bo''lsa' end;
   end if;
   perform public.uno_tg_send(txt, jsonb_build_object('inline_keyboard',
     jsonb_build_array(jsonb_build_array(jsonb_build_object('text', '✅ Qabul qildim', 'url', site || 'ofitsiant.html?accept=' || new.id)))));

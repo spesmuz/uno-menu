@@ -88,7 +88,10 @@ public class WatchService extends Service {
 
   void loop() {
     while (running) {
-      try { handle(new JSONArray(fetch())); } catch (Exception e) { }
+      try {
+        String tok = getSharedPreferences("waiter", MODE_PRIVATE).getString("token", "");
+        handle(tok.length() > 0 ? fetchMine(tok) : new JSONArray(fetch()));
+      } catch (Exception e) { }
       try { Thread.sleep(3000); } catch (InterruptedException e) { }
     }
   }
@@ -109,6 +112,45 @@ public class WatchService extends Service {
       while ((line = r.readLine()) != null) sb.append(line);
       r.close();
       return sb.toString();
+    } finally { c.disconnect(); }
+  }
+
+  /* logged-in waiter: only new calls from this waiter's tables (rotation) and from tables nobody has */
+  JSONArray fetchMine(String tok) throws Exception {
+    URL u = new URL(SB_URL + "/rest/v1/rpc/uno_waiter_calls");
+    HttpURLConnection c = (HttpURLConnection) u.openConnection();
+    c.setConnectTimeout(8000); c.setReadTimeout(8000);
+    c.setRequestMethod("POST"); c.setDoOutput(true);
+    c.setRequestProperty("apikey", SB_KEY);
+    c.setRequestProperty("Authorization", "Bearer " + SB_KEY);
+    c.setRequestProperty("Content-Type", "application/json");
+    c.setRequestProperty("Accept", "application/json");
+    try {
+      byte[] body = new JSONObject().put("p_token", tok).toString().getBytes("UTF-8");
+      c.getOutputStream().write(body);
+      if (c.getResponseCode() == 404) return new JSONArray(fetch());        // waiter.sql not installed yet: as before, every call
+      if (c.getResponseCode() != 200) throw new Exception("http " + c.getResponseCode());
+      BufferedReader r = new BufferedReader(new InputStreamReader(c.getInputStream(), "UTF-8"));
+      StringBuilder sb = new StringBuilder(); String line;
+      while ((line = r.readLine()) != null) sb.append(line);
+      r.close();
+      JSONObject o = new JSONObject(sb.toString());
+      JSONArray out = new JSONArray();
+      if (!o.optBoolean("ok", false)) return out;                            // logged out: the page shows the PIN screen
+      JSONObject me = o.optJSONObject("me");
+      boolean all = me == null || me.optBoolean("unmapped", false);
+      JSONArray a = o.optJSONArray("calls");
+      long since = System.currentTimeMillis() - 45L * 60 * 1000;
+      SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
+      f.setTimeZone(TimeZone.getTimeZone("UTC"));
+      for (int i = a == null ? 0 : a.length() - 1; a != null && i >= 0; i--) {   // oldest first
+        JSONObject x = a.getJSONObject(i);
+        if (!"new".equals(x.optString("status"))) continue;
+        if (!all && !x.optBoolean("mine", false) && !x.optBoolean("common", false)) continue;
+        try { String ts = x.optString("created_at"); if (f.parse(ts.substring(0, 19)).getTime() < since) continue; } catch (Exception e) { }
+        out.put(x);
+      }
+      return out;
     } finally { c.disconnect(); }
   }
 
