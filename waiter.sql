@@ -37,7 +37,7 @@ declare cz text := public.uno_zone_key(regexp_replace(coalesce(p_table_no,''), '
 begin
   if coalesce(p_tables,'') = '' then return false; end if;
   foreach tok in array string_to_array(p_tables, ',') loop
-    if trim(tok) ~ '^[0-9]{1,4}$' then nums := nums || trim(tok)::int; end if;
+    if trim(tok) <> '' and trim(tok) !~ '[^0-9]' and length(trim(tok)) <= 4 then nums := nums || trim(tok)::int; end if;
   end loop;
   if cz in ('biznes','comfort') then return cz = wz and num = any(nums); end if;
   if cz = '' then return num is not null and num = any(nums); end if;          -- QR-kod: faqat raqam (hudud yo'q)
@@ -47,7 +47,7 @@ begin
   if cz = 'vip' then
     if lab not like '%vip%' then return false; end if;
     if num is null or lab !~ 'vip\s*[0-9]' then return true; end if;            -- "VIP" (raqamsiz) — butun VIP hududi
-    return lab ~ ('vip\s*' || num || '([^0-9]|$)') or lab ~ ('va\s*vip\s*' || num || '([^0-9]|$)');
+    return (lab || ' ') ~ ('vip\s*' || num || '[^0-9]');   -- " " at the end instead of an end-of-text sign (the Supabase editor misreads it)
   end if;
   return false;
 end $$;
